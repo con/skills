@@ -1,0 +1,1549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Issue Triage</title>
+<style>
+/* ------------------------------------------------------------------ */
+/* Variables & Reset                                                   */
+/* ------------------------------------------------------------------ */
+:root {
+  --bg:            #0d1117;
+  --bg-secondary:  #161b22;
+  --bg-tertiary:   #21262d;
+  --bg-hover:      #1c2128;
+  --border:        #30363d;
+  --border-light:  #3d444d;
+  --text:          #e6edf3;
+  --text-muted:    #8b949e;
+  --text-dim:      #656d76;
+  --link:          #58a6ff;
+  --accent:        #1f6feb;
+  --accent-hover:  #1158c7;
+  --green:         #2ea043;
+  --green-dim:     #238636;
+  --green-bg:      #0d2818;
+  --red:           #da3633;
+  --red-dim:       #b62324;
+  --red-bg:        #2d1215;
+  --yellow:        #d29922;
+  --yellow-bg:     #2b1d0e;
+  --gray:          #768390;
+  --blue:          #58a6ff;
+  --purple:        #a371f7;
+  --shadow:        0 1px 3px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.15);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ------------------------------------------------------------------ */
+/* Top Navigation                                                      */
+/* ------------------------------------------------------------------ */
+.navbar {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.navbar-brand {
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.navbar-brand svg { width: 20px; height: 20px; fill: var(--link); }
+.navbar-repo {
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 3px 10px;
+  background: var(--bg-tertiary);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+}
+.navbar-spacer { flex: 1; }
+.navbar-status {
+  font-size: 12px;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.navbar-status .dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ------------------------------------------------------------------ */
+/* Layout                                                              */
+/* ------------------------------------------------------------------ */
+.container {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Progress Bar                                                        */
+/* ------------------------------------------------------------------ */
+.progress-section {
+  margin-bottom: 24px;
+}
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+.progress-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+.progress-count {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.progress-bar-track {
+  height: 8px;
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--green), var(--accent));
+  transition: width 0.4s ease;
+}
+
+/* ------------------------------------------------------------------ */
+/* Summary Cards                                                       */
+/* ------------------------------------------------------------------ */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.summary-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  user-select: none;
+}
+.summary-card:hover {
+  border-color: var(--border-light);
+  background: var(--bg-hover);
+}
+.summary-card.active {
+  border-color: var(--accent);
+  background: rgba(31,111,235,0.08);
+}
+.summary-card-count {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.summary-card-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ------------------------------------------------------------------ */
+/* Controls Row                                                        */
+/* ------------------------------------------------------------------ */
+.controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.search-box {
+  flex: 1;
+  min-width: 200px;
+  max-width: 360px;
+  position: relative;
+}
+.search-box input {
+  width: 100%;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 12px 8px 36px;
+  border-radius: 6px;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.search-box input:focus { border-color: var(--accent); }
+.search-box input::placeholder { color: var(--text-dim); }
+.search-box svg {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px; height: 16px;
+  fill: var(--text-dim);
+}
+
+select.control-select {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  outline: none;
+}
+select.control-select:focus { border-color: var(--accent); }
+
+.btn-reset {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.btn-reset:hover {
+  color: var(--text);
+  border-color: var(--border-light);
+}
+
+/* ------------------------------------------------------------------ */
+/* Issue Table                                                         */
+/* ------------------------------------------------------------------ */
+.table-wrapper {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+thead th {
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 12px;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  position: sticky;
+  top: 56px;
+  background: var(--bg-secondary);
+  z-index: 10;
+}
+thead th:hover { color: var(--text); }
+thead th .sort-arrow { margin-left: 4px; font-size: 10px; }
+tbody td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  vertical-align: middle;
+}
+tbody tr { cursor: pointer; transition: background 0.1s; }
+tbody tr:hover { background: var(--bg-hover); }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr.done { opacity: 0.5; }
+tbody tr.done:hover { opacity: 0.75; }
+td.col-number {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  width: 60px;
+}
+td.col-title {
+  max-width: 400px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+td.col-labels { max-width: 180px; }
+
+/* ------------------------------------------------------------------ */
+/* Badges                                                              */
+/* ------------------------------------------------------------------ */
+.badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+.badge-likely_resolved,
+.badge-feature_implemented { background: var(--green); }
+.badge-still_open          { background: var(--red); }
+.badge-needs_investigation { background: var(--yellow); color: #1c1305; }
+.badge-stale_wontfix,
+.badge-unclear             { background: var(--gray); }
+.badge-duplicate           { background: var(--blue); color: #0a1929; }
+.badge-pending             { background: var(--bg-tertiary); color: var(--text-muted); border: 1px solid var(--border); }
+
+.badge-conf-HIGH    { background: var(--green); }
+.badge-conf-MEDIUM  { background: var(--yellow); color: #1c1305; }
+.badge-conf-LOW     { background: var(--red); }
+.badge-conf-PENDING { background: var(--bg-tertiary); color: var(--text-muted); border: 1px solid var(--border); }
+
+.badge-action-closed    { background: var(--green); }
+.badge-action-commented { background: #3fb950; }
+.badge-action-skipped   { background: var(--gray); }
+
+.label-pill {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  white-space: nowrap;
+  margin: 1px 2px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Detail Panel (slide-in overlay)                                     */
+/* ------------------------------------------------------------------ */
+.detail-overlay {
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  width: 680px;
+  max-width: 100vw;
+  background: var(--bg);
+  border-left: 1px solid var(--border);
+  box-shadow: -8px 0 24px rgba(0,0,0,0.4);
+  z-index: 200;
+  transform: translateX(100%);
+  transition: transform 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.detail-overlay.open { transform: translateX(0); }
+
+.detail-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 199;
+  display: none;
+}
+.detail-backdrop.open { display: block; }
+
+.detail-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-secondary);
+  flex-shrink: 0;
+}
+.detail-close-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 20px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  line-height: 1;
+}
+.detail-close-btn:hover { background: var(--bg-tertiary); color: var(--text); }
+
+.detail-nav-btns {
+  display: flex;
+  gap: 4px;
+}
+.detail-nav-btn {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.detail-nav-btn:hover { color: var(--text); border-color: var(--border-light); }
+.detail-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.detail-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.detail-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+.detail-number-link {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.detail-verdict-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.detail-section {
+  margin-bottom: 20px;
+}
+.detail-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+}
+.detail-summary {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.6;
+  background: var(--bg-secondary);
+  padding: 14px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+.evidence-list {
+  list-style: none;
+}
+.evidence-item {
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  line-height: 1.5;
+}
+.evidence-item:last-child { border-bottom: none; }
+.evidence-item strong { color: var(--text); font-weight: 600; }
+.evidence-item code {
+  font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+  background: var(--bg-tertiary);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 12px;
+}
+.evidence-item code a { color: var(--link); }
+.detail-summary a,
+.evidence-item a { text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 2px; }
+.detail-summary a:hover,
+.evidence-item a:hover { text-decoration-style: solid; }
+
+/* ------------------------------------------------------------------ */
+/* Action Box (inside detail panel)                                    */
+/* ------------------------------------------------------------------ */
+.action-box {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 20px;
+}
+.action-box h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+.action-modes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  margin-bottom: 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.action-mode {
+  flex: 1;
+  min-width: 0;
+}
+.action-mode input { display: none; }
+.action-mode label {
+  display: block;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+  cursor: pointer;
+  color: var(--text-muted);
+  background: var(--bg-tertiary);
+  border-right: 1px solid var(--border);
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.action-mode:last-child label { border-right: none; }
+.action-mode label:hover { color: var(--text); background: var(--bg-hover); }
+.action-mode input:checked + label {
+  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.action-mode input[value="close"]:checked + label,
+.action-mode input[value="close_wontfix"]:checked + label { background: var(--red); border-color: var(--red); }
+.action-mode input[value="comment"]:checked + label { background: var(--green-dim); border-color: var(--green-dim); }
+.action-mode input[value="skip"]:checked + label,
+.action-mode input[value="close_silent"]:checked + label { background: var(--gray); border-color: var(--gray); }
+.action-textarea {
+  width: 100%;
+  min-height: 140px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-top: none;
+  color: var(--text);
+  border-radius: 0 0 6px 6px;
+  padding: 12px;
+  font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 13px;
+  resize: vertical;
+  margin-bottom: 12px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.action-textarea:focus { border-color: var(--accent); }
+
+.comment-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 0;
+  border-bottom: 1px solid var(--border);
+}
+.comment-tab {
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 0.15s;
+}
+.comment-tab:hover { color: var(--text); }
+.comment-tab.active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+
+.comment-preview {
+  min-height: 140px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-top: none;
+  color: var(--text);
+  border-radius: 0 0 6px 6px;
+  padding: 12px;
+  font-size: 13px;
+  line-height: 1.6;
+  margin-bottom: 12px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+.comment-preview a { color: var(--link); text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 2px; }
+.comment-preview a:hover { text-decoration-style: solid; }
+.comment-preview code {
+  font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+  background: var(--bg-secondary);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 12px;
+}
+
+.action-btns {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  color: var(--text);
+  background: var(--bg-tertiary);
+  transition: background 0.15s, border-color 0.15s;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn:hover { background: var(--border); text-decoration: none; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-danger { background: var(--red); border-color: var(--red); color: #fff; }
+.btn-danger:hover { background: var(--red-dim); }
+.btn-success { background: var(--green-dim); border-color: var(--green-dim); color: #fff; }
+.btn-success:hover { background: var(--green); }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent-hover); }
+
+.action-done-msg {
+  display: none;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+}
+.action-done-msg.show { display: block; }
+.action-done-msg.success { background: var(--green-bg); border: 1px solid var(--green-dim); color: #3fb950; }
+.action-done-msg.error { background: var(--red-bg); border: 1px solid var(--red); color: #f85149; }
+
+/* ------------------------------------------------------------------ */
+/* Empty / Loading States                                              */
+/* ------------------------------------------------------------------ */
+.empty-state {
+  text-align: center;
+  padding: 80px 24px;
+  color: var(--text-muted);
+}
+.empty-state h2 {
+  color: var(--text);
+  margin-bottom: 8px;
+  font-size: 18px;
+}
+.loading-state {
+  text-align: center;
+  padding: 80px 24px;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Toast notifications                                                 */
+/* ------------------------------------------------------------------ */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 300;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 8px;
+}
+.toast {
+  padding: 12px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: var(--shadow);
+  animation: toast-in 0.3s ease;
+  max-width: 400px;
+}
+.toast-success { background: var(--green-bg); border: 1px solid var(--green-dim); color: #3fb950; }
+.toast-error   { background: var(--red-bg); border: 1px solid var(--red); color: #f85149; }
+.toast-info    { background: #0a1929; border: 1px solid var(--accent); color: var(--link); }
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ------------------------------------------------------------------ */
+/* Responsive                                                          */
+/* ------------------------------------------------------------------ */
+@media (max-width: 768px) {
+  .container { padding: 16px; }
+  .summary-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+  .detail-overlay { width: 100vw; }
+  td.col-title { max-width: 200px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Top navbar -->
+<nav class="navbar">
+  <div class="navbar-brand">
+    <svg viewBox="0 0 16 16"><path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0ZM1.5 8a6.5 6.5 0 1 0 13 0 6.5 6.5 0 0 0-13 0Zm4.879-2.773l4.264 2.559a.25.25 0 0 1 0 .428l-4.264 2.559A.25.25 0 0 1 6 10.559V5.442a.25.25 0 0 1 .379-.215Z"/></svg>
+    Issue Triage
+  </div>
+  <span class="navbar-repo" id="navRepo">--</span>
+  <span class="navbar-spacer"></span>
+  <span class="navbar-status" id="navStatus">
+    <span class="dot"></span>
+    <span id="navStatusText">Loading...</span>
+  </span>
+</nav>
+
+<div class="container">
+  <!-- Progress bar -->
+  <div class="progress-section">
+    <div class="progress-header">
+      <span class="progress-title">Triage Progress</span>
+      <span class="progress-count" id="progressLabel">0 / 0</span>
+    </div>
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- Summary cards -->
+  <div class="summary-grid" id="summaryGrid"></div>
+
+  <!-- Controls row -->
+  <div class="controls">
+    <div class="search-box">
+      <svg viewBox="0 0 16 16"><path d="M11.5 7a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Zm-.82 4.74a6 6 0 1 1 1.06-1.06l3.04 3.04a.75.75 0 1 1-1.06 1.06l-3.04-3.04Z"/></svg>
+      <input type="text" id="searchInput" placeholder="Search issues by title...">
+    </div>
+    <select class="control-select" id="sortSelect">
+      <option value="number">Sort by #</option>
+      <option value="verdict">Sort by Verdict</option>
+      <option value="confidence">Sort by Confidence</option>
+      <option value="age">Sort by Age</option>
+    </select>
+    <select class="control-select" id="showSelect">
+      <option value="all">Show All</option>
+      <option value="pending">Untriaged Only</option>
+      <option value="triaged">Triaged Only</option>
+    </select>
+    <button class="btn-reset" id="resetBtn">Reset Filters</button>
+  </div>
+
+  <!-- Issue table -->
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th data-sort="number"># <span class="sort-arrow"></span></th>
+          <th data-sort="title">Title <span class="sort-arrow"></span></th>
+          <th>Labels</th>
+          <th data-sort="age">Opened <span class="sort-arrow"></span></th>
+          <th>Last Comment</th>
+          <th data-sort="verdict">Verdict <span class="sort-arrow"></span></th>
+          <th data-sort="confidence">Confidence <span class="sort-arrow"></span></th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="issueTableBody">
+        <tr><td colspan="8" class="loading-state">Loading findings...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Detail slide-in panel -->
+<div class="detail-backdrop" id="detailBackdrop"></div>
+<div class="detail-overlay" id="detailPanel">
+  <div class="detail-topbar">
+    <div class="detail-nav-btns">
+      <button class="detail-nav-btn" id="detailPrev" title="Previous issue">&larr; Prev</button>
+      <button class="detail-nav-btn" id="detailNext" title="Next issue">Next &rarr;</button>
+    </div>
+    <button class="detail-close-btn" id="detailCloseBtn" title="Close panel">&times;</button>
+  </div>
+  <div class="detail-body" id="detailBody">
+    <!-- Filled dynamically -->
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+/* ================================================================== */
+/*  State                                                              */
+/* ================================================================== */
+let findings = { issues: [] };
+let state = { triaged: {} };
+let activeVerdictFilter = null;
+let searchTerm = "";
+let sortKey = "number";
+let showFilter = "all";
+let openIssueNumber = null;
+let visibleNumbers = [];   // ordered list of currently-visible issue numbers
+let refreshTimer = null;
+let commentDrafts = {};    // { issueNumber: "draft text" } — survives navigation
+let activeTab = "preview"; // "write" or "preview" — persists across re-renders
+
+/* ================================================================== */
+/*  Helpers                                                            */
+/* ================================================================== */
+function escapeHtml(s) {
+  if (!s) return "";
+  const d = document.createElement("div");
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+/**
+ * Escape text and convert references to GitHub hyperlinks:
+ *   - path/to/file.py:N-M  or  path/to/file.py lines N-M  →  permalink
+ *   - #123  →  issue / PR link
+ *   - 7–40 hex chars  →  commit link
+ * Works on raw text (escapes non-link portions).
+ */
+function linkify(text) {
+  if (!text) return "";
+  const repo = findings.repo || "";
+  const sha  = findings.head_sha || "HEAD";
+  if (!repo) return escapeHtml(text);
+
+  const ghBase = "https://github.com/" + repo;
+
+  // Combined pattern (order matters — file paths first, then issues, then SHAs)
+  // Group 1-3: file path + start line + optional end line
+  // Group 4:   issue/PR number
+  // Group 5:   commit SHA (7-40 hex, must contain at least one digit)
+  const combined = new RegExp(
+    // file path with line ref (require at least one / to avoid false positives)
+    "((?:[\\w.-]+\\/)+[\\w.-]+\\.\\w{1,5})(?:\\s+lines?\\s+|\\s*:\\s*)(\\d+)(?:\\s*[-\u2013]\\s*(\\d+))?" +
+    "|" +
+    // issue/PR: #N not preceded by a word char (avoids &#123; or color#fff)
+    "(?<![\\w])#(\\d+)\\b" +
+    "|" +
+    // commit SHA: 7-40 hex with at least one digit (avoids matching plain words)
+    "\\b((?=[0-9a-f]*[0-9])[0-9a-f]{7,40})\\b",
+    "g"
+  );
+
+  let out = "";
+  let last = 0;
+  let m;
+  while ((m = combined.exec(text)) !== null) {
+    out += escapeHtml(text.slice(last, m.index));
+    if (m[1]) {
+      // file path with line numbers → permalink
+      let frag = "#L" + m[2];
+      if (m[3]) frag += "-L" + m[3];
+      out += '<a href="' + ghBase + "/blob/" + sha + "/" + m[1] + frag
+           + '" target="_blank" rel="noopener">' + escapeHtml(m[0]) + "</a>";
+    } else if (m[4]) {
+      // issue / PR number
+      out += '<a href="' + ghBase + "/issues/" + m[4]
+           + '" target="_blank" rel="noopener">#' + m[4] + "</a>";
+    } else if (m[5]) {
+      // commit SHA
+      out += '<a href="' + ghBase + "/commit/" + m[5]
+           + '" target="_blank" rel="noopener">' + m[5] + "</a>";
+    }
+    last = m.index + m[0].length;
+  }
+  out += escapeHtml(text.slice(last));
+  return out;
+}
+
+/**
+ * Render comment text as HTML: linkify refs and render backtick-code spans.
+ */
+function renderComment(text) {
+  if (!text) return '<span style="color:var(--text-dim)">(empty)</span>';
+  // Linkify first (works on raw text, escapes non-link portions)
+  let html = linkify(text);
+  // Render `backtick` spans as <code>
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+  return html;
+}
+
+/**
+ * Build mode-specific comment variants from the base proposed comment.
+ * Strips trailing "Could you confirm…?" question for close modes and
+ * appends an appropriate closing line.
+ */
+function buildCommentVariants(baseText) {
+  const trimmed = (baseText || "").trimEnd();
+  // Strip trailing question sentence (e.g. "Could you confirm…?")
+  const stripped = trimmed.replace(/\s*[^.!?\n]*\?\s*$/, "").trimEnd();
+  const body = stripped || trimmed;  // fallback if nothing stripped
+  return {
+    close:         body + "\n\nClosing this issue \u2014 if you feel it still needs to be addressed, please open a new one with fresh details and reference this one.",
+    close_wontfix: body + "\n\nClosing as won\u2019t fix. If you feel this still needs attention, please open a new issue with updated context.",
+    comment:       trimmed,  // original text (with trailing question intact)
+    close_silent:  "",
+    skip:          "",
+  };
+}
+
+function verdictLabel(v) {
+  return (v || "pending").replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+}
+
+const VERDICT_ORDER = {
+  likely_resolved: 0, feature_implemented: 1, still_open: 2,
+  needs_investigation: 3, stale_wontfix: 4, duplicate: 5, unclear: 6, pending: 7
+};
+const CONF_ORDER = { HIGH: 0, MEDIUM: 1, LOW: 2, PENDING: 3 };
+
+function verdictBadge(v) {
+  const cls = "badge badge-" + (v || "pending");
+  return '<span class="' + cls + '">' + escapeHtml(verdictLabel(v)) + "</span>";
+}
+function confBadge(c) {
+  const cls = "badge badge-conf-" + (c || "PENDING");
+  return '<span class="' + cls + '">' + escapeHtml(c || "PENDING") + "</span>";
+}
+function actionBadge(a) {
+  if (!a) return '<span class="badge badge-pending">Pending</span>';
+  const cls = "badge badge-action-" + a;
+  return '<span class="' + cls + '">' + escapeHtml(a.charAt(0).toUpperCase() + a.slice(1)) + "</span>";
+}
+function labelPills(labels) {
+  if (!labels || !labels.length) return "";
+  return labels.map(l => '<span class="label-pill">' + escapeHtml(typeof l === "object" ? l.name : l) + "</span>").join(" ");
+}
+
+function showToast(msg, type) {
+  type = type || "info";
+  const el = document.createElement("div");
+  el.className = "toast toast-" + type;
+  el.textContent = msg;
+  document.getElementById("toastContainer").appendChild(el);
+  setTimeout(() => { el.remove(); }, 4000);
+}
+
+/* ================================================================== */
+/*  Data Fetching                                                      */
+/* ================================================================== */
+async function fetchFindings() {
+  try {
+    const r = await fetch("/api/findings");
+    if (r.ok) findings = await r.json();
+  } catch (e) { /* ignore */ }
+}
+
+async function fetchState() {
+  try {
+    const r = await fetch("/api/state");
+    if (r.ok) state = await r.json();
+    if (!state.triaged) state.triaged = {};
+  } catch (e) { /* ignore */ }
+}
+
+async function loadData() {
+  await Promise.all([fetchFindings(), fetchState()]);
+  updateNavbar();
+  renderSummary();
+  renderTable();
+  if (openIssueNumber !== null && !isUserEditing()) renderDetail(openIssueNumber);
+}
+
+function scheduleRefresh() {
+  if (refreshTimer) clearInterval(refreshTimer);
+  refreshTimer = setInterval(async () => {
+    const prevCount = (findings.issues || []).length;
+    await Promise.all([fetchFindings(), fetchState()]);
+    const newCount = (findings.issues || []).length;
+    if (newCount !== prevCount) {
+      showToast("Findings updated (" + newCount + " issues)", "info");
+    }
+    updateNavbar();
+    renderSummary();
+    renderTable();
+    // Never blow away the detail panel while the user is editing
+    if (openIssueNumber !== null && !isUserEditing()) renderDetail(openIssueNumber);
+  }, 30000);
+}
+
+/* ================================================================== */
+/*  Navbar                                                             */
+/* ================================================================== */
+function updateNavbar() {
+  const repo = findings.repo || state.repo || "--";
+  document.getElementById("navRepo").textContent = repo;
+  const total = (findings.issues || []).length;
+  const triaged = Object.keys(state.triaged || {}).length;
+  document.getElementById("navStatusText").textContent = triaged + "/" + total + " triaged";
+}
+
+/* ================================================================== */
+/*  Progress                                                           */
+/* ================================================================== */
+function renderProgress(total, triaged) {
+  const pct = total > 0 ? Math.round((triaged / total) * 100) : 0;
+  document.getElementById("progressBar").style.width = pct + "%";
+  document.getElementById("progressLabel").textContent = triaged + " / " + total + " triaged (" + pct + "%)";
+}
+
+/* ================================================================== */
+/*  Summary Grid                                                       */
+/* ================================================================== */
+function renderSummary() {
+  const issues = findings.issues || [];
+  const triaged = state.triaged || {};
+  const counts = {};
+  let triagedCount = 0;
+  issues.forEach(f => {
+    const v = f.verdict || "pending";
+    counts[v] = (counts[v] || 0) + 1;
+    if (triaged[String(f.number)]) triagedCount++;
+  });
+
+  renderProgress(issues.length, triagedCount);
+
+  const order = [
+    "likely_resolved", "feature_implemented", "still_open",
+    "needs_investigation", "stale_wontfix", "duplicate", "unclear", "pending"
+  ];
+
+  let html = "";
+  // Total card
+  html += '<div class="summary-card' + (activeVerdictFilter === null ? " active" : "") + '" data-filter="">';
+  html += '<div class="summary-card-count">' + issues.length + "</div>";
+  html += '<div class="summary-card-label">Total</div></div>';
+
+  order.forEach(v => {
+    if (!counts[v]) return;
+    const isActive = activeVerdictFilter === v;
+    html += '<div class="summary-card' + (isActive ? " active" : "") + '" data-filter="' + v + '">';
+    html += '<div class="summary-card-count">' + counts[v] + "</div>";
+    html += '<div class="summary-card-label">' + escapeHtml(verdictLabel(v)) + "</div></div>";
+  });
+
+  document.getElementById("summaryGrid").innerHTML = html;
+
+  // Attach click handlers
+  document.querySelectorAll(".summary-card").forEach(card => {
+    card.addEventListener("click", () => {
+      const f = card.getAttribute("data-filter");
+      activeVerdictFilter = f || null;
+      renderSummary();
+      renderTable();
+    });
+  });
+}
+
+/* ================================================================== */
+/*  Table                                                              */
+/* ================================================================== */
+function getFilteredSorted() {
+  let issues = (findings.issues || []).slice();
+  const triaged = state.triaged || {};
+
+  // Verdict filter
+  if (activeVerdictFilter) {
+    issues = issues.filter(i => (i.verdict || "pending") === activeVerdictFilter);
+  }
+
+  // Search
+  if (searchTerm) {
+    const q = searchTerm.toLowerCase();
+    issues = issues.filter(i => (i.title || "").toLowerCase().includes(q));
+  }
+
+  // Show filter
+  if (showFilter === "pending") {
+    issues = issues.filter(i => !triaged[String(i.number)]);
+  } else if (showFilter === "triaged") {
+    issues = issues.filter(i => !!triaged[String(i.number)]);
+  }
+
+  // Sort
+  issues.sort((a, b) => {
+    if (sortKey === "number") return a.number - b.number;
+    if (sortKey === "title") return (a.title || "").localeCompare(b.title || "");
+    if (sortKey === "verdict") {
+      return (VERDICT_ORDER[a.verdict || "pending"] || 7) - (VERDICT_ORDER[b.verdict || "pending"] || 7);
+    }
+    if (sortKey === "confidence") {
+      return (CONF_ORDER[a.confidence || "PENDING"] || 3) - (CONF_ORDER[b.confidence || "PENDING"] || 3);
+    }
+    if (sortKey === "age") {
+      return (a.created_at || "").localeCompare(b.created_at || "");
+    }
+    return 0;
+  });
+
+  return issues;
+}
+
+function renderTable() {
+  const issues = getFilteredSorted();
+  const triaged = state.triaged || {};
+  const tbody = document.getElementById("issueTableBody");
+
+  visibleNumbers = issues.map(i => i.number);
+
+  if (issues.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><h2>No issues match</h2><p>Try adjusting filters or click Reset.</p></td></tr>';
+    return;
+  }
+
+  let html = "";
+  issues.forEach(issue => {
+    const num = issue.number;
+    const triageEntry = triaged[String(num)];
+    const rowClass = triageEntry ? "done" : "";
+    const labels = issue.labels || [];
+    html += '<tr class="' + rowClass + '" data-number="' + num + '">';
+    html += '<td class="col-number">#' + num + "</td>";
+    html += '<td class="col-title">' + escapeHtml(issue.title) + "</td>";
+    html += '<td class="col-labels">' + labelPills(labels) + "</td>";
+    const opened = issue.created_at ? issue.created_at.slice(0, 10) : "\u2014";
+    const lastCmt = issue.last_comment_at ? issue.last_comment_at.slice(0, 10) : "\u2014";
+    html += '<td style="white-space:nowrap;color:var(--text-muted);font-size:12px">' + opened + "</td>";
+    html += '<td style="white-space:nowrap;color:var(--text-muted);font-size:12px">' + lastCmt + "</td>";
+    html += "<td>" + verdictBadge(issue.verdict) + "</td>";
+    html += "<td>" + confBadge(issue.confidence) + "</td>";
+    html += "<td>" + actionBadge(triageEntry ? triageEntry.action : null) + "</td>";
+    html += "</tr>";
+  });
+  tbody.innerHTML = html;
+
+  // Attach row click
+  tbody.querySelectorAll("tr[data-number]").forEach(row => {
+    row.addEventListener("click", () => {
+      const num = parseInt(row.getAttribute("data-number"), 10);
+      openDetail(num);
+    });
+  });
+}
+
+/* ================================================================== */
+/*  Detail Panel                                                       */
+/* ================================================================== */
+function openDetail(number) {
+  if (openIssueNumber !== number) activeTab = "preview"; // reset for new issue
+  openIssueNumber = number;
+  document.getElementById("detailPanel").classList.add("open");
+  document.getElementById("detailBackdrop").classList.add("open");
+  renderDetail(number);
+}
+
+function closeDetail() {
+  saveCommentDraft();
+  openIssueNumber = null;
+  document.getElementById("detailPanel").classList.remove("open");
+  document.getElementById("detailBackdrop").classList.remove("open");
+}
+
+function saveCommentDraft() {
+  if (openIssueNumber === null) return;
+  const el = document.getElementById("commentText");
+  if (el) commentDrafts[openIssueNumber] = el.value;
+}
+
+function isUserEditing() {
+  const el = document.getElementById("commentText");
+  return el && (document.activeElement === el || activeTab === "write");
+}
+
+function navigateDetail(direction) {
+  if (openIssueNumber === null) return;
+  const idx = visibleNumbers.indexOf(openIssueNumber);
+  if (idx < 0) return;
+  const nextIdx = idx + direction;
+  if (nextIdx >= 0 && nextIdx < visibleNumbers.length) {
+    saveCommentDraft();
+    openDetail(visibleNumbers[nextIdx]);
+  }
+}
+
+function renderDetail(number) {
+  const issue = (findings.issues || []).find(i => i.number === number);
+  if (!issue) {
+    document.getElementById("detailBody").innerHTML = '<div class="loading-state">Issue not found in findings.</div>';
+    return;
+  }
+
+  const triageEntry = (state.triaged || {})[String(number)];
+  const isTriaged = !!triageEntry;
+  const repo = findings.repo || "";
+  const ghUrl = issue.url || ("https://github.com/" + repo + "/issues/" + number);
+
+  // Nav button state
+  const idx = visibleNumbers.indexOf(number);
+  document.getElementById("detailPrev").disabled = idx <= 0;
+  document.getElementById("detailNext").disabled = idx >= visibleNumbers.length - 1;
+
+  let html = "";
+
+  // Title & link
+  html += '<div class="detail-title">' + escapeHtml(issue.title) + "</div>";
+  html += '<div class="detail-number-link">';
+  html += '<a href="' + escapeHtml(ghUrl) + '" target="_blank" rel="noopener">#' + number + " on GitHub &nearr;</a>";
+  const created = issue.created_at ? issue.created_at.slice(0, 10) : null;
+  const lastComment = issue.last_comment_at ? issue.last_comment_at.slice(0, 10) : null;
+  if (created) {
+    html += ' <span style="color:var(--text-dim);font-size:12px">&middot; opened ' + created;
+    if (lastComment) html += ' &middot; last comment ' + lastComment;
+    html += '</span>';
+  }
+  html += "</div>";
+
+  // Verdict row
+  html += '<div class="detail-verdict-row">';
+  html += verdictBadge(issue.verdict);
+  html += confBadge(issue.confidence);
+  if (isTriaged) html += actionBadge(triageEntry.action);
+  html += "</div>";
+
+  // Labels
+  if (issue.labels && issue.labels.length) {
+    html += '<div class="detail-section">';
+    html += '<div class="detail-section-title">Labels</div>';
+    html += labelPills(issue.labels);
+    html += "</div>";
+  }
+
+  // Summary
+  if (issue.summary) {
+    html += '<div class="detail-section">';
+    html += '<div class="detail-section-title">Summary</div>';
+    html += '<div class="detail-summary">' + linkify(issue.summary) + "</div>";
+    html += "</div>";
+  }
+
+  // Evidence
+  const evidence = issue.evidence || [];
+  if (evidence.length) {
+    html += '<div class="detail-section">';
+    html += '<div class="detail-section-title">Evidence</div>';
+    html += '<ul class="evidence-list">';
+    evidence.forEach(e => {
+      let line = "<strong>" + escapeHtml(e.type || "") + "</strong>";
+      if (e.ref) line += ": <code>" + linkify(e.ref) + "</code>";
+      if (e.message) line += " &mdash; " + linkify(e.message);
+      if (e.date) line += " <span style='color:var(--text-dim)'>(" + escapeHtml(e.date) + ")</span>";
+      html += '<li class="evidence-item">' + line + "</li>";
+    });
+    html += "</ul></div>";
+  }
+
+  // Action box
+  html += '<div class="action-box">';
+  html += '<div class="action-done-msg" id="actionMsg"></div>';
+
+  if (isTriaged) {
+    html += "<h3>Already Triaged</h3>";
+    html += "<p style='color:var(--text-muted);font-size:13px;margin-bottom:12px'>";
+    html += "Action: " + actionBadge(triageEntry.action);
+    html += " at " + escapeHtml(triageEntry.at || "");
+    html += "</p>";
+    html += '<div class="action-btns">';
+    html += '<a href="' + escapeHtml(ghUrl) + '" target="_blank" rel="noopener" class="btn">Open on GitHub</a>';
+    html += "</div>";
+  } else {
+    const isWontfix = (issue.verdict || "") === "stale_wontfix";
+    // Fall back to summary when proposed_comment is empty
+    let defaultComment = issue.proposed_comment || "";
+    if (!defaultComment.trim() && issue.summary) {
+      defaultComment = issue.summary;
+    }
+    const variants = buildCommentVariants(defaultComment);
+
+    // Pick default mode based on verdict
+    const defaultMode = isWontfix ? "close_wontfix"
+      : (issue.proposed_action === "close" || issue.verdict === "likely_resolved" || issue.verdict === "feature_implemented") ? "close"
+      : issue.proposed_action === "comment" ? "comment"
+      : "close";
+
+    // Mode selector
+    html += "<h3>Action</h3>";
+    html += '<div class="action-modes">';
+    const modes = [
+      ["close", "Comment &amp; Close"],
+      ["comment", "Comment Only"],
+      ["close_silent", "Close Silently"],
+      ["skip", "Skip"],
+    ];
+    if (isWontfix) {
+      modes.unshift(["close_wontfix", "Won\u2019t Fix"]);
+    }
+    modes.forEach(([val, label]) => {
+      const checked = val === defaultMode ? " checked" : "";
+      html += '<div class="action-mode">';
+      html += '<input type="radio" name="actionMode" id="mode_' + val + '" value="' + val + '"' + checked + '>';
+      html += '<label for="mode_' + val + '">' + label + '</label>';
+      html += '</div>';
+    });
+    html += '</div>';
+
+    // Comment area (hidden for silent/skip modes)
+    const needsComment = defaultMode !== "close_silent" && defaultMode !== "skip";
+    const draft = commentDrafts[number] !== undefined ? commentDrafts[number] : (variants[defaultMode] || "");
+    const showWrite = activeTab === "write";
+    html += '<div id="commentSection"' + (needsComment ? "" : ' style="display:none"') + '>';
+    html += '<div class="comment-tabs">';
+    html += '<button class="comment-tab' + (showWrite ? " active" : "") + '" id="tabWrite">Write</button>';
+    html += '<button class="comment-tab' + (showWrite ? "" : " active") + '" id="tabPreview">Preview</button>';
+    html += '</div>';
+    html += '<textarea class="action-textarea" id="commentText"' + (showWrite ? "" : ' style="display:none"') + '>' + escapeHtml(draft) + "</textarea>";
+    html += '<div class="comment-preview" id="commentPreview"' + (showWrite ? ' style="display:none"' : "") + '>' + renderComment(draft) + "</div>";
+    html += '</div>';
+
+    // Submit + GitHub link
+    html += '<div class="action-btns">';
+    html += '<button class="btn btn-primary" id="btnSubmit">Submit</button>';
+    html += '<a href="' + escapeHtml(ghUrl) + '" target="_blank" rel="noopener" class="btn">Open on GitHub</a>';
+    html += "</div>";
+  }
+
+  html += "</div>"; // close action-box
+
+  document.getElementById("detailBody").innerHTML = html;
+  document.getElementById("detailBody").scrollTop = 0;
+
+  // Attach action handlers
+  if (!isTriaged) {
+    const isWontfix = (issue.verdict || "") === "stale_wontfix";
+    let defaultComment = issue.proposed_comment || "";
+    if (!defaultComment.trim() && issue.summary) defaultComment = issue.summary;
+    const variants = buildCommentVariants(defaultComment);
+
+    const textarea     = document.getElementById("commentText");
+    const preview      = document.getElementById("commentPreview");
+    const commentSec   = document.getElementById("commentSection");
+    const tabWrite     = document.getElementById("tabWrite");
+    const tabPrev      = document.getElementById("tabPreview");
+    let userEdited     = commentDrafts[number] !== undefined;  // respect saved drafts
+
+    // Track manual edits
+    textarea.addEventListener("input", () => { userEdited = true; });
+
+    // Tab switching
+    function switchTab(tab) {
+      activeTab = tab;
+      if (tab === "write") {
+        tabWrite.classList.add("active");
+        tabPrev.classList.remove("active");
+        textarea.style.display = "";
+        preview.style.display = "none";
+        textarea.focus();
+      } else {
+        tabPrev.classList.add("active");
+        tabWrite.classList.remove("active");
+        preview.innerHTML = renderComment(textarea.value);
+        textarea.style.display = "none";
+        preview.style.display = "";
+      }
+    }
+    tabWrite.addEventListener("click", () => switchTab("write"));
+    tabPrev.addEventListener("click", () => switchTab("preview"));
+
+    // Mode switching — swap comment text and show/hide comment area
+    function getSelectedMode() {
+      const el = document.querySelector('input[name="actionMode"]:checked');
+      return el ? el.value : "close";
+    }
+
+    document.querySelectorAll('input[name="actionMode"]').forEach(radio => {
+      radio.addEventListener("change", () => {
+        const mode = radio.value;
+        const needsComment = mode !== "close_silent" && mode !== "skip";
+        commentSec.style.display = needsComment ? "" : "none";
+        // Swap comment text if user hasn't manually edited
+        if (!userEdited && variants[mode] !== undefined) {
+          textarea.value = variants[mode];
+          preview.innerHTML = renderComment(variants[mode]);
+        }
+      });
+    });
+
+    // Submit
+    document.getElementById("btnSubmit").addEventListener("click", () => {
+      const mode = getSelectedMode();
+      // Map UI modes to server actions
+      const serverAction = mode === "close_silent" ? "close" : mode;
+      doAction(number, serverAction);
+    });
+  }
+}
+
+/* ================================================================== */
+/*  Actions                                                            */
+/* ================================================================== */
+async function doAction(number, action) {
+  const commentEl = document.getElementById("commentText");
+  const comment = commentEl ? commentEl.value : "";
+
+  // Disable buttons during request
+  document.querySelectorAll(".action-btns .btn").forEach(b => b.disabled = true);
+
+  try {
+    const r = await fetch("/api/action", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ number: number, action: action, comment: comment }),
+    });
+    const data = await r.json();
+    if (data.ok) {
+      // Update local state
+      state.triaged[String(number)] = data.entry;
+      delete commentDrafts[number];
+      const verb = action === "close" || action === "close_wontfix" ? "closed"
+                 : action === "skip" ? "skipped"
+                 : action + "ed";
+      showToast("#" + number + " " + verb, "success");
+
+      // Show done message in panel
+      const msg = document.getElementById("actionMsg");
+      if (msg) {
+        msg.className = "action-done-msg show success";
+        msg.textContent = "Done! Issue #" + number + " " + data.action + ".";
+      }
+
+      // Mark row as done
+      renderTable();
+
+      // Auto-advance to next untriaged
+      setTimeout(() => {
+        const idx = visibleNumbers.indexOf(number);
+        let nextNum = null;
+        for (let i = idx + 1; i < visibleNumbers.length; i++) {
+          if (!state.triaged[String(visibleNumbers[i])]) {
+            nextNum = visibleNumbers[i];
+            break;
+          }
+        }
+        if (nextNum === null) {
+          for (let i = 0; i < idx; i++) {
+            if (!state.triaged[String(visibleNumbers[i])]) {
+              nextNum = visibleNumbers[i];
+              break;
+            }
+          }
+        }
+        if (nextNum !== null) {
+          openDetail(nextNum);
+        } else {
+          renderDetail(number); // re-render as triaged
+        }
+        renderSummary();
+      }, 600);
+    } else {
+      const msg = document.getElementById("actionMsg");
+      if (msg) {
+        msg.className = "action-done-msg show error";
+        msg.textContent = data.error || "Action failed.";
+      }
+      showToast(data.error || "Action failed", "error");
+      document.querySelectorAll(".action-btns .btn").forEach(b => b.disabled = false);
+    }
+  } catch (e) {
+    showToast("Network error: " + e.message, "error");
+    document.querySelectorAll(".action-btns .btn").forEach(b => b.disabled = false);
+  }
+}
+
+/* ================================================================== */
+/*  Event Binding                                                      */
+/* ================================================================== */
+function bindEvents() {
+  // Search
+  document.getElementById("searchInput").addEventListener("input", e => {
+    searchTerm = e.target.value;
+    renderTable();
+  });
+
+  // Sort select
+  document.getElementById("sortSelect").addEventListener("change", e => {
+    sortKey = e.target.value;
+    renderTable();
+  });
+
+  // Show filter
+  document.getElementById("showSelect").addEventListener("change", e => {
+    showFilter = e.target.value;
+    renderTable();
+  });
+
+  // Reset
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    activeVerdictFilter = null;
+    searchTerm = "";
+    sortKey = "number";
+    showFilter = "all";
+    document.getElementById("searchInput").value = "";
+    document.getElementById("sortSelect").value = "number";
+    document.getElementById("showSelect").value = "all";
+    renderSummary();
+    renderTable();
+  });
+
+  // Table header sort
+  document.querySelectorAll("thead th[data-sort]").forEach(th => {
+    th.addEventListener("click", () => {
+      sortKey = th.getAttribute("data-sort");
+      document.getElementById("sortSelect").value = sortKey;
+      renderTable();
+    });
+  });
+
+  // Detail panel close
+  document.getElementById("detailCloseBtn").addEventListener("click", closeDetail);
+  document.getElementById("detailBackdrop").addEventListener("click", closeDetail);
+
+  // Detail nav
+  document.getElementById("detailPrev").addEventListener("click", () => navigateDetail(-1));
+  document.getElementById("detailNext").addEventListener("click", () => navigateDetail(1));
+
+  // Keyboard — skip navigation when editing text
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape") closeDetail();
+    if (openIssueNumber === null) return;
+    const tag = (e.target.tagName || "").toLowerCase();
+    const isEditing = tag === "textarea" || tag === "input" || tag === "select" || e.target.isContentEditable;
+    if (isEditing) return;  // let arrow keys work normally in form fields
+    if (e.key === "ArrowLeft" || e.key === "ArrowUp") { e.preventDefault(); navigateDetail(-1); }
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") { e.preventDefault(); navigateDetail(1); }
+  });
+}
+
+/* ================================================================== */
+/*  Init                                                               */
+/* ================================================================== */
+document.addEventListener("DOMContentLoaded", async () => {
+  bindEvents();
+  await loadData();
+  scheduleRefresh();
+});
+</script>
+</body>
+</html>
