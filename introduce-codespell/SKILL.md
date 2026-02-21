@@ -755,7 +755,7 @@ This project has had X prior commits fixing typos manually, demonstrating the va
 Identify the fork remote and upstream repository:
 
 ```bash
-# List remotes to find fork (e.g., gh-yarikoptic) and upstream (e.g., origin)
+# List remotes to find fork (e.g., gh-<username>) and upstream (e.g., origin)
 git remote -v
 
 # Get current branch name
@@ -773,7 +773,7 @@ git push <fork-remote> <branch-name> && gh pr create --repo <upstream-org>/<repo
 
 **Example:**
 ```bash
-git push gh-yarikoptic enh-codespell && gh pr create --repo grobidOrg/grobid --title "Add codespell support with configuration and fixes" --body-file .git/pr-description.md --web
+git push gh-<username> enh-codespell && gh pr create --repo grobidOrg/grobid --title "Add codespell support with configuration and fixes" --body-file .git/pr-description.md --web
 ```
 
 The `--web` flag opens the PR in browser for final review before submission.

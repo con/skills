@@ -9,6 +9,17 @@ Review PRs from the improveit-dashboard where upstream authors have requested ch
 
 For codespell PRs requiring rebase, the skill will automatically attempt the rebase and clean up history to maintain a tight, clean commit structure.
 
+## Configuration
+
+This skill uses the following values. Adjust for your setup by editing this section:
+
+- **DASHBOARD_DIR**: `~/proj/improveit-dashboard` — path to improveit-dashboard checkout
+- **REPOS_DIR**: `~/proj/misc` — path where PR repos are cloned
+- **GITHUB_USER**: `yarikoptic` — your GitHub username
+- **FORK_REMOTE**: `gh-yarikoptic` — git remote name for your fork
+
+Throughout this document, these names refer to the configured values above.
+
 ## User Arguments
 
 The user may provide optional arguments:
@@ -21,19 +32,19 @@ The user may provide optional arguments:
 
 ## Prerequisites
 
-- Dashboard data at `/home/yoh/proj/improveit-dashboard/data/repositories.json`
-- User's README at `/home/yoh/proj/improveit-dashboard/READMEs/yarikoptic.md`
-- Repos typically cloned in `/home/yoh/proj/misc/` with PR branch checked out
+- Dashboard data at `$DASHBOARD_DIR/data/repositories.json`
+- User's README at `$DASHBOARD_DIR/READMEs/$GITHUB_USER.md`
+- Repos typically cloned in `$REPOS_DIR/` with PR branch checked out
 - GitHub CLI (`gh`) authenticated for fetching additional PR details if needed
 
 ## Execution Steps
 
 ### 1. Load Dashboard Data
 
-Read the pre-collected PR data from `/home/yoh/proj/improveit-dashboard/data/repositories.json`.
+Read the pre-collected PR data from `$DASHBOARD_DIR/data/repositories.json`.
 
 Filter for PRs where:
-- `author == "yarikoptic"`
+- `author == "$GITHUB_USER"`
 - `response_status == "awaiting_submitter"` (maintainer has responded, waiting for you)
 - `status == "open"` (not merged or closed)
 
@@ -99,19 +110,19 @@ For each prioritized PR, examine `last_developer_comment_body` to categorize the
 For each actionable PR, check if repo exists locally:
 
 ```bash
-ls -d /home/yoh/proj/misc/<repo-name>/.git 2>/dev/null
+ls -d $REPOS_DIR/<repo-name>/.git 2>/dev/null
 ```
 
 Extract repo name from `repository` field (e.g., `readthedocs/readthedocs.org` → `readthedocs.org`).
 
 **If repo exists:**
-- Get current branch: `git -C /home/yoh/proj/misc/<repo-name> branch --show-current`
+- Get current branch: `git -C $REPOS_DIR/<repo-name> branch --show-current`
 - Check if it matches expected PR branch (infer from PR metadata or common pattern like `enh-codespell`)
-- Verify clean working tree: `git -C /home/yoh/proj/misc/<repo-name> status --porcelain`
+- Verify clean working tree: `git -C $REPOS_DIR/<repo-name> status --porcelain`
 
 **If repo missing:**
 - Extract clone URL from PR data or construct from repository full_name
-- Typically user's fork: `https://github.com/yarikoptic/<repo-name>`
+- Typically user's fork: `https://github.com/$GITHUB_USER/<repo-name>`
 - Generate clone command
 
 ### 5. Confidence Assessment
@@ -157,7 +168,7 @@ For codespell PRs (tool == "codespell") that need rebasing, perform the followin
 
 Before rebasing, identify commits in the PR branch:
 ```bash
-cd /home/yoh/proj/misc/<repo-name>
+cd $REPOS_DIR/<repo-name>
 git log --oneline origin/<base-branch>..HEAD
 ```
 
@@ -228,7 +239,7 @@ After successful rebase, check if the workflow file includes the redundant `code
 
 1. **Check if workflow file has the problem-matcher step:**
    ```bash
-   cd /home/yoh/proj/misc/<repo-name>
+   cd $REPOS_DIR/<repo-name>
 
    # Look for the workflow file (usually .github/workflows/codespell.yml)
    workflow_file=$(find .github/workflows -name "*codespell*" -o -name "*spell*" | head -1)
@@ -328,7 +339,7 @@ After successful rebase, check for typos and apply fixes BEFORE reporting to use
 Before rebase, the original branch may have already fixed ambiguous typos. Check the original typo fix commit:
 
 ```bash
-cd /home/yoh/proj/misc/<repo-name>
+cd $REPOS_DIR/<repo-name>
 
 # Find the original automated typo fix commit (usually has "DATALAD RUNCMD" or "codespell" in message)
 git log backup-before-rebase-<timestamp> --oneline --grep="codespell" --grep="DATALAD RUNCMD" | head -5
@@ -346,7 +357,7 @@ git show <original-typo-fix-commit-hash> | grep -E "^[-+]" | grep -v "^[-+][-+][
 **Step 2: Run codespell to identify all typos:**
 
 ```bash
-cd /home/yoh/proj/misc/<repo-name>
+cd $REPOS_DIR/<repo-name>
 uvx codespell . 2>&1 | tee codespell-output.txt
 ```
 
@@ -480,7 +491,7 @@ Apply non-ambiguous typo fixes using `datalad run` for reproducibility, then REV
 
    **Option A: If datalad is installed:**
    ```bash
-   cd /home/yoh/proj/misc/<repo-name>
+   cd $REPOS_DIR/<repo-name>
    datalad run -m "Fix typos found by codespell
 
 Automated fixes applied by codespell -w after rebase onto main.
@@ -490,7 +501,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>" 'codespell -w'
 
    **Option B: If datalad not installed (use uvx):**
    ```bash
-   cd /home/yoh/proj/misc/<repo-name>
+   cd $REPOS_DIR/<repo-name>
    uvx --from datalad datalad run -m "Fix typos found by codespell
 
 Automated fixes applied by codespell -w after rebase onto main.
@@ -669,7 +680,7 @@ Codespell can change identifiers (function names, variables, struct fields). The
 **Detection: Find identifier changes in the diff**
 
 ```bash
-cd /home/yoh/proj/misc/<repo-name>
+cd $REPOS_DIR/<repo-name>
 
 # Find changes to function/method names (with parentheses)
 git show HEAD | grep -E "^[-+].*\b[a-zA-Z_][a-zA-Z0-9_]*\s*\(" | head -30
@@ -865,7 +876,7 @@ The asymmetry (`account` vs `bcount`) is the key signal of a false positive.
 **Detection Strategy:**
 
 ```bash
-cd /home/yoh/proj/misc/<repo-name>
+cd $REPOS_DIR/<repo-name>
 
 # Step 1: Check for changes to variables with single-letter prefixes
 git show HEAD | grep -E "^[-+].*\b[a-z](count|idx|ptr|val|size|arg)\b" | head -30
@@ -938,7 +949,7 @@ datalad run -m "Fix typos with codespell (excluded paired patterns)" 'codespell 
 
 ```bash
 # Found: acount → account in src/storage/table/update_segment.cpp
-cd /home/yoh/proj/misc/duckdb
+cd $REPOS_DIR/duckdb
 
 # Check context
 git show HEAD -- src/storage/table/update_segment.cpp | grep -B10 -A10 "account"
@@ -997,7 +1008,7 @@ When codespell "fixes" these, it creates **duplicate test data** that breaks the
 **Detection: Find duplicate string literals created by codespell**
 
 ```bash
-cd /home/yoh/proj/misc/<repo-name>
+cd $REPOS_DIR/<repo-name>
 
 # Check if codespell created any duplicate string literals in test files
 git show HEAD --stat | grep "test.*\.\(cpp\|py\|jl\)$" > /tmp/test-files-changed.txt
@@ -1136,12 +1147,12 @@ After completing rebase and typo fixes:
    ```bash
    # DO NOT EXECUTE - provide this command to user:
    echo "Ready to push. User should run:"
-   echo "cd /home/yoh/proj/misc/<repo-name>"
+   echo "cd $REPOS_DIR/<repo-name>"
    echo "git push --force-with-lease <remote-name> <branch-name>"
    ```
 
 **For user's fork:**
-- Remote is typically `gh-yarikoptic` or `origin` (check `git remote -v`)
+- Remote is typically `$FORK_REMOTE` or `origin` (check `git remote -v`)
 - Branch name from PR metadata (e.g., `enh-codespell`)
 - User must review and approve before pushing
 
@@ -1156,7 +1167,7 @@ For each PR:
 ### <N>. <repo-owner/repo-name> #<PR-number> (<days> days waiting) [⚠️ CONFLICTS] [⚠️ CI FAILING]
 **Title:** <PR title>
 **Confidence:** <score>%
-**Repo Location:** /home/yoh/proj/misc/<repo-name> [or NEEDS SETUP if missing]
+**Repo Location:** $REPOS_DIR/<repo-name> [or NEEDS SETUP if missing]
 **Branch:** <branch-name>
 
 #### Maintainer Feedback
@@ -1173,7 +1184,7 @@ For each PR:
    - File locations if relevant
 
 #### Pre-flight Checks
-- [ ] Repo exists at `/home/yoh/proj/misc/<repo-name>`
+- [ ] Repo exists at `$REPOS_DIR/<repo-name>`
 - [ ] On correct branch
 - [ ] Working tree is clean
 - [ ] Upstream remote configured (if needed)
@@ -1190,8 +1201,8 @@ Before working on these PRs, clone and configure the following repos:
 
 ### <repo-owner/repo-name>
 ```bash
-cd /home/yoh/proj/misc
-git clone https://github.com/yarikoptic/<repo-name>
+cd $REPOS_DIR
+git clone https://github.com/$GITHUB_USER/<repo-name>
 cd <repo-name>
 git remote add upstream https://github.com/<owner>/<repo-name>
 git fetch --all
@@ -1283,7 +1294,7 @@ git push --force-with-lease <remote> <branch>
 For each prepared PR, check push status by comparing local and remote hashes:
 
 ```bash
-cd /home/yoh/proj/misc/<repo-name>
+cd $REPOS_DIR/<repo-name>
 git fetch <remote> <branch> 2>/dev/null
 
 local_hash=$(git rev-parse <branch> 2>/dev/null)
@@ -1302,7 +1313,7 @@ fi
 - ❌ **NOT FOUND** - Repository doesn't exist locally
 
 **Remote Name:**
-- Default remote for user's fork: `gh-yarikoptic`
+- Default remote for user's fork: `$FORK_REMOTE`
 - Fallback: `origin`
 - Check with: `git remote -v`
 
@@ -1313,25 +1324,25 @@ fi
 
 | Repository | PR | Local Path | Push Status | Notes |
 |------------|----|-----------| ------------|-------|
-| duckdb/duckdb | [#19817](https://github.com/duckdb/duckdb/pull/19817) | `/home/yoh/proj/misc/duckdb` | 🔄 **READY TO PUSH** | Rebased, fixed typos |
-| foo/bar | [#123](https://github.com/foo/bar/pull/123) | `/home/yoh/proj/misc/bar` | 🔄 **READY TO PUSH** | Removed problem-matcher |
+| duckdb/duckdb | [#19817](https://github.com/duckdb/duckdb/pull/19817) | `$REPOS_DIR/duckdb` | 🔄 **READY TO PUSH** | Rebased, fixed typos |
+| foo/bar | [#123](https://github.com/foo/bar/pull/123) | `$REPOS_DIR/bar` | 🔄 **READY TO PUSH** | Removed problem-matcher |
 
 ## 📦 Previously Prepared PRs (Awaiting Push)
 
 | Repository | PR | Local Path | Push Status | Notes |
 |------------|----|-----------| ------------|-------|
-| old/repo | [#456](https://github.com/old/repo/pull/456) | `/home/yoh/proj/misc/repo` | ✅ **PUSHED** | Already synced |
+| old/repo | [#456](https://github.com/old/repo/pull/456) | `$REPOS_DIR/repo` | ✅ **PUSHED** | Already synced |
 
 ## 🚀 Push Commands
 
 ```bash
 # NEW: duckdb
-cd /home/yoh/proj/misc/duckdb
-git push --force-with-lease gh-yarikoptic enh-codespell
+cd $REPOS_DIR/duckdb
+git push --force-with-lease $FORK_REMOTE enh-codespell
 
 # NEW: bar
-cd /home/yoh/proj/misc/bar
-git push --force-with-lease gh-yarikoptic enh-codespell
+cd $REPOS_DIR/bar
+git push --force-with-lease $FORK_REMOTE enh-codespell
 ```
 ```
 
