@@ -7,13 +7,13 @@ software project maintenance, triage, and automation.
 
 | Skill | Description |
 |-------|-------------|
-| [github-project-status](github-project-status/) | Check health and maintenance status of a GitHub project. Analyzes commit history, releases, issues, PRs, and searches for active forks or community discussions. |
-| [introduce-codespell](introduce-codespell/) | Introduce codespell spell-checking to a project. Creates branch, config file, GitHub Actions workflow, and pre-commit hook. |
-| [introduce-git-bug](introduce-git-bug/) | Introduce git-bug distributed issue tracking to a git project. Configures GitHub bridge, syncs issues, and documents workflow. |
-| [issue-triage](issue-triage/) | Triage open GitHub issues by cross-referencing against codebase and git history. Includes a web-based dashboard. |
-| [pr-review-update](pr-review-update/) | Review dashboard PRs needing your response and generate high-confidence update proposals. |
-| [scan-projects](scan-projects/) | Scan git repository subdirectories and create/update a `projects.tsv` with metadata and LLM-generated summaries. |
-| [tinuous-analyzer](tinuous-analyzer/) | Analyze [con/tinuous](https://github.com/con/tinuous/) CI log collections to identify test regressions and compare successful vs failing runs. |
+| [github-project-status](github-project-status/) | Assess whether a GitHub project is healthy, in maintenance mode, stagnant, or abandoned. Checks commits, releases, issues, PRs, forks, and package registries to produce a structured status report. |
+| [introduce-codespell](introduce-codespell/) | Add [codespell](https://github.com/codespell-project/codespell) spell-checking to a project end-to-end: config, GitHub Actions workflow, pre-commit hook, exclusion tuning, ambiguous-typo review, and automated fixes via `datalad run`. |
+| [introduce-git-bug](introduce-git-bug/) | Set up [git-bug](https://github.com/git-bug/git-bug) distributed issue tracking: configure GitHub bridge, sync issues, push `refs/bugs/*`, and document the workflow in DEVELOPMENT.md / CLAUDE.md. |
+| [issue-triage](issue-triage/) | Triage open GitHub issues by cross-referencing the codebase and git history. Detects duplicates, drafts proposed comments, and serves results in a local web dashboard. Includes Python helper scripts for gathering and serving data. |
+| [pr-review-update](pr-review-update/) | Scan an [improveit-dashboard](https://github.com/yarikoptic/improveit-dashboard) for PRs awaiting your response, assess confidence, auto-rebase codespell PRs, and produce copy-paste-ready push commands. |
+| [scan-projects](scan-projects/) | Walk subdirectories of git repos, collect metadata (language, license, commit dates, remote URL), and generate concise LLM-produced summaries into a `projects.tsv` file. Ships with helper scripts for batch updates. |
+| [tinuous-analyzer](tinuous-analyzer/) | Analyze CI log collections gathered by [con/tinuous](https://github.com/con/tinuous/) to pinpoint when a test started failing, diff environment/dependency changes between passing and failing runs, and recommend investigation steps. |
 
 ## Installation
 
