@@ -14,6 +14,7 @@ import mimetypes
 import os
 import signal
 import subprocess
+import threading
 import sys
 import tempfile
 import urllib.parse
@@ -396,7 +397,9 @@ def main() -> None:
 
     def shutdown(signum, frame):
         print("\nShutting down...")
-        server.shutdown()
+        # Call shutdown() in a thread to avoid deadlock — the signal handler
+        # runs on the main thread which is blocked in serve_forever().
+        threading.Thread(target=server.shutdown, daemon=True).start()
 
     signal.signal(signal.SIGINT, shutdown)
     signal.signal(signal.SIGTERM, shutdown)
