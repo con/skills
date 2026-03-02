@@ -17,8 +17,43 @@ software project maintenance, triage, and automation.
 
 ## Installation
 
-Copy or symlink the desired skill directories into `~/.claude/skills/`, or
-point your Claude Code configuration to this repository.
+Claude Code discovers skills from two locations: `~/.claude/skills/` makes a
+skill available across all your projects. `.claude/skills/` inside a project
+root makes a skill available only in that project.
+
+### Install all skills (available to all projects)
+
+Clone this repository and symlink every skill directory into `~/.claude/skills/`:
+
+```bash
+SKILLS_DIR=/path/to/clone  # set this to your preferred location
+git clone https://github.com/con/skills.git "$SKILLS_DIR"
+mkdir -p ~/.claude/skills
+for d in "$SKILLS_DIR"/*/; do
+  ln -s "$d" ~/.claude/skills/"$(basename "$d")"
+done
+```
+
+### Install a single skill (available to all projects)
+
+```bash
+SKILLS_DIR=/path/to/clone  # set this to your preferred location
+git clone https://github.com/con/skills.git "$SKILLS_DIR"
+mkdir -p ~/.claude/skills
+ln -s "$SKILLS_DIR"/issue-triage ~/.claude/skills/issue-triage
+```
+
+### Install to a specific project only
+
+```bash
+SKILLS_DIR=/path/to/clone  # set this to your preferred location
+git clone https://github.com/con/skills.git "$SKILLS_DIR"
+mkdir -p /your/project/.claude/skills
+ln -s "$SKILLS_DIR"/issue-triage /your/project/.claude/skills/issue-triage
+```
+
+Restart Claude Code after adding or removing skills for the changes to take
+effect.
 
 ## Configuration
 
