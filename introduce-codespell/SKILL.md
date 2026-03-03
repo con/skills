@@ -117,7 +117,7 @@ build artifacts. These won't show in `git ls-files` but will be scanned by codes
 For `.codespellrc`:
 ```ini
 [codespell]
-skip = .git*,*.pdf,*.svg,*.css,*.min.*,.npm,.cache,*/i18n/*,*/build/*
+skip = .git,.gitignore,.gitattributes,*.pdf,*.svg,*.css,*.min.*,.npm,.cache,*/i18n/*,*/build/*
 check-hidden = true
 # ignore-regex =
 # ignore-words-list =
@@ -126,7 +126,7 @@ check-hidden = true
 For `pyproject.toml`:
 ```toml
 [tool.codespell]
-skip = '.git*,*.pdf,*.svg,*.css,*.min.*,.npm,.cache,*/i18n/*,*/build/*'
+skip = '.git,.gitignore,.gitattributes,*.pdf,*.svg,*.css,*.min.*,.npm,.cache,*/i18n/*,*/build/*'
 check-hidden = true
 # ignore-regex = ''
 # ignore-words-list = ''
@@ -262,7 +262,7 @@ Matches: `OptIn`, `OptionA`
 For `.codespellrc` (INI format):
 ```ini
 [codespell]
-skip = .git*,*.svg,dist
+skip = .git,.gitignore,.gitattributes,*.svg,dist
 check-hidden = true
 # Ignore camelCase and PascalCase identifiers (common in code)
 ignore-regex = \b[a-z]+[A-Z]\w*\b|\b[A-Z][a-z]+[A-Z]\w*\b
@@ -272,7 +272,7 @@ ignore-words-list = inout,rouge,caf
 For `pyproject.toml`:
 ```toml
 [tool.codespell]
-skip = '.git*,*.svg,dist'
+skip = '.git,.gitignore,.gitattributes,*.svg,dist'
 check-hidden = true
 # Ignore camelCase and PascalCase identifiers (common in code)
 ignore-regex = '\b[a-z]+[A-Z]\w*\b|\b[A-Z][a-z]+[A-Z]\w*\b'
