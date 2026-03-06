@@ -92,12 +92,15 @@ issues set to `verdict: "pending"`, `confidence: "PENDING"`:
 
 Skip if `--no-server` is set.
 
+Use the Bash tool with `run_in_background: true` to launch the server and save the returned
+task ID (for later use with `TaskOutput`/`TaskStop`):
+
 ```bash
-python3 ~/.claude/skills/issue-triage/server.py --triage-dir .git/triage --repo OWNER/REPO --port PORT &
+python3 ~/.claude/skills/issue-triage/server.py --triage-dir .git/triage --repo OWNER/REPO --port PORT
 ```
 
-Run this in the background.  The server binds to `0.0.0.0` so it is
-accessible from outside containers.  Print the URL: `http://127.0.0.1:PORT`
+The server binds to `0.0.0.0` so it is accessible from outside containers.  Print the URL
+and task ID: `http://127.0.0.1:PORT` (task ID: `<id>`)
 
 **Container access (Podman/Docker):** If running inside a container, the
 user needs to have published the port when starting the container, e.g.:
@@ -209,5 +212,5 @@ Web UI: http://127.0.0.1:8765
 ```
 
 If the server is running, remind the user they can review issues in the
-browser.  When they're done, they can press Ctrl+C or kill the server
-process.
+browser.  When they're done, they can ask you to stop the server, and you
+should call `TaskStop` with the saved task ID.
