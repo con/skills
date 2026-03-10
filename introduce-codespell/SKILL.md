@@ -22,6 +22,23 @@ Set up codespell spell-checking infrastructure in a project, identify typos, con
 - `gh` CLI for PR creation (optional)
 - Git repository
 
+## Commit Co-Authorship
+
+All commits created during this workflow MUST include a `Co-Authored-By` trailer identifying
+both Claude Code version and the model used. Get the version via `claude --version` and
+use the model name from the environment. Format:
+
+```
+Co-Authored-By: Claude Code <VERSION> / Claude <MODEL> <noreply@anthropic.com>
+```
+
+Example:
+```
+Co-Authored-By: Claude Code 2.1.63 / Claude Opus 4.6 <noreply@anthropic.com>
+```
+
+This applies to ALL commits: config, workflow, ambiguous fixes, non-ambiguous fixes, formatting fixups.
+
 ## Workflow Overview
 
 1. **Check existing**: See if codespell is already configured
@@ -768,12 +785,12 @@ After verifying everything is ready, provide the user with the complete command 
 
 **Template:**
 ```bash
-git push <fork-remote> <branch-name> && gh pr create --repo <upstream-org>/<repo-name> --title "Add codespell support with configuration and fixes" --body-file .git/pr-description.md --web
+git push -u <fork-remote> <branch-name> && gh pr create --repo <upstream-org>/<repo-name> --title "Add codespell support with configuration and fixes" --body-file .git/pr-description.md --web
 ```
 
 **Example:**
 ```bash
-git push gh-<username> enh-codespell && gh pr create --repo grobidOrg/grobid --title "Add codespell support with configuration and fixes" --body-file .git/pr-description.md --web
+git push -u gh-<username> enh-codespell && gh pr create --repo grobidOrg/grobid --title "Add codespell support with configuration and fixes" --body-file .git/pr-description.md --web
 ```
 
 The `--web` flag opens the PR in browser for final review before submission.
@@ -835,7 +852,7 @@ After completing the skill:
 - Functional fixes identified and noted
 - **Codespell passes with zero errors**
 - PR description saved to `.git/pr-description.md` (without duplicate title)
-- **Ready-to-use command provided**: `git push <remote> <branch> && gh pr create --repo <upstream> --title "..." --body-file .git/pr-description.md --web`
+- **Ready-to-use command provided**: `git push -u <remote> <branch> && gh pr create --repo <upstream> --title "..." --body-file .git/pr-description.md --web`
 
 ## Tips
 
