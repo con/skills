@@ -1,6 +1,6 @@
 ---
 name: introduce-codespell
-description: Introduce codespell spell-checking to a project. Creates branch, config file, GitHub Actions workflow, pre-commit hook. Lists typos, helps identify paths/words to ignore, and fixes typos interactively. Use when setting up codespell in a new project.
+description: Introduce codespell spell-checking to a project. Creates branch, config file, CI workflow (GitHub Actions or Forgejo Actions for Codeberg), pre-commit hook. Lists typos, helps identify paths/words to ignore, and fixes typos interactively. Use when setting up codespell in a new project.
 allowed-tools: Bash, Read, Edit, Write, Glob, Grep, AskUserQuestion
 user-invocable: true
 ---
@@ -56,9 +56,28 @@ Before creating anything, check if codespell is already configured:
 ```bash
 # Check for existing config
 grep -l codespell pyproject.toml setup.cfg .codespellrc .pre-commit-config.yaml 2>/dev/null
-# Check for workflow
-ls .github/workflows/*codespell* 2>/dev/null
+# Check for workflow (GitHub Actions or Forgejo Actions)
+ls .github/workflows/*codespell* .forgejo/workflows/*codespell* 2>/dev/null
 ```
+
+### Detect CI Platform
+
+Determine whether the project uses GitHub, Codeberg/Forgejo, or another platform:
+
+```bash
+# Check remotes to determine platform
+git remote -v
+```
+
+| Remote URL contains | Platform | Workflow directory | Runner label |
+|---------------------|----------|--------------------|--------------|
+| `github.com` | GitHub | `.github/workflows/` | `ubuntu-latest` |
+| `codeberg.org` | Codeberg (Forgejo) | `.forgejo/workflows/` | `docker` |
+| Other Forgejo instance | Forgejo | `.forgejo/workflows/` | `docker` (check with admin) |
+
+**Note**: If the project is mirrored on multiple platforms, create workflows for each.
+Forgejo Actions are disabled by default on Codeberg — the repo owner must enable them
+in Settings > Units > Overview.
 
 ### If codespell is already configured:
 
@@ -156,7 +175,11 @@ If `*.ipynb` files exist, add ignore-regex for embedded images:
 ignore-regex = ^\s*"image/\S+": ".*
 ```
 
-## Step 2: Create GitHub Actions Workflow
+## Step 2: Create CI Workflow
+
+Create the workflow file for the appropriate platform (detected in Step 0).
+
+### GitHub Actions
 
 Create `.github/workflows/codespell.yml`:
 
@@ -183,12 +206,58 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Codespell
-        uses: codespell-project/actions-codespell@v2
+        uses: codespell-project/actions-codespell@8f01853be192eb0f849a5c7d721450e7a467c579  # v2.2
 ```
 
-**Note**: Problem matcher annotations are now built into `actions-codespell@v2` - no need for a separate `codespell-problem-matcher` step.
+**Note**: Problem matcher annotations are now built into `actions-codespell@v2` (and later versions) - no need for a separate `codespell-problem-matcher` step.
 
-Commit: "Add github action to codespell <BRANCH> on push and PRs"
+### Forgejo Actions (Codeberg and other Forgejo instances)
+
+Create `.forgejo/workflows/codespell.yml`:
+
+```yaml
+# Codespell configuration is within <CONFIG_FILE>
+---
+name: Codespell
+
+on:
+  push:
+    branches: [<MAIN_BRANCH>]
+  pull_request:
+    branches: [<MAIN_BRANCH>]
+
+jobs:
+  codespell:
+    name: Check for spelling errors
+    runs-on: docker
+    container:
+      image: ghcr.io/codespell-project/actions-codespell/master:latest
+    steps:
+      - name: Checkout
+        uses: https://code.forgejo.org/actions/checkout@v4
+      - name: Codespell
+        run: codespell .
+```
+
+**Key differences from GitHub Actions:**
+- **Directory**: `.forgejo/workflows/` (NOT `.github/workflows/`)
+- **Runner**: `runs-on: docker` — Codeberg's shared runners use Docker containers
+- **Container image**: Uses `ghcr.io/codespell-project/actions-codespell/master:latest`
+  which has codespell pre-installed (avoids pip install step)
+- **Checkout action**: Use fully qualified URL `https://code.forgejo.org/actions/checkout@v4`
+  (Forgejo mirrors of common actions). Checkout is NOT automatic — you MUST include it.
+- **No `permissions` block**: Forgejo Actions doesn't support the `permissions` key
+- **codespell invocation**: Run `codespell .` directly (the action wrapper
+  `codespell-project/actions-codespell@...` is GitHub-specific)
+- **Enabling**: Forgejo Actions are disabled by default on Codeberg repositories.
+  The repo owner must enable them in Settings > Units > Overview.
+
+### Both Platforms
+
+If the project is mirrored on both GitHub and Codeberg, create both workflow files.
+They can coexist — each platform only reads its own directory.
+
+Commit: "Add CI workflow to codespell <BRANCH> on push and PRs"
 
 ## Step 3: Commit Initial Config
 
@@ -727,7 +796,8 @@ Add codespell configuration and fix existing typos.
 
 More about codespell: https://github.com/codespell-project/codespell
 
-I personally introduced it to dozens if not hundreds of projects already and so far only positive feedback.
+I personally introduced it to over a hundred of projects already mostly with a positive feedback
+(see the ["improveit-dashboard"](https://github.com/yarikoptic/improveit-dashboard/blob/master/READMEs/yarikoptic.md)).
 
 CI workflow has 'permissions' set only to 'read' so also should be safe.
 
@@ -781,7 +851,9 @@ git branch --show-current
 
 ### Provide Final PR Creation Command
 
-After verifying everything is ready, provide the user with the complete command to push and create the PR:
+After verifying everything is ready, provide the user with the complete command to push and create the PR.
+
+#### GitHub Projects
 
 **Template:**
 ```bash
@@ -795,7 +867,31 @@ git push -u gh-<username> enh-codespell && gh pr create --repo grobidOrg/grobid 
 
 The `--web` flag opens the PR in browser for final review before submission.
 
-**This is the final deliverable** - always provide this exact command as the last step!
+#### Codeberg/Forgejo Projects
+
+For Codeberg repositories, the `gh` CLI doesn't work directly. Provide a push command
+and instruct the user to create the PR via the web interface:
+
+**Template:**
+```bash
+git push -u <remote> <branch-name>
+```
+
+Then tell the user:
+> After pushing, create a pull request at:
+> `https://codeberg.org/<org>/<repo>/compare/<main-branch>...<branch-name>`
+>
+> Copy the contents of `.git/pr-description.md` into the PR description.
+
+**Alternative**: If the user has [`tea`](https://gitea.com/gitea/tea) CLI installed
+(Gitea/Forgejo CLI tool), provide:
+
+```bash
+git push -u <remote> <branch-name> && tea pr create --repo <org>/<repo> --title "Add codespell support with configuration and fixes" --description "$(cat .git/pr-description.md)"
+```
+
+**This is the final deliverable** - always provide the push command and PR creation
+instructions as the last step!
 
 ## Interactive Decision Points
 
@@ -844,7 +940,7 @@ The LLM should make these decisions WITHOUT asking the user:
 After completing the skill:
 - Feature branch `enh-codespell` with all changes
 - Working codespell configuration
-- GitHub Actions workflow for CI
+- CI workflow (GitHub Actions and/or Forgejo Actions depending on platform)
 - Pre-commit hook (if requested)
 - All legitimate typos fixed via `datalad run` (reproducible commits)
 - **All false positives reviewed and fixed** (regex patterns, variable names protected)
@@ -852,7 +948,7 @@ After completing the skill:
 - Functional fixes identified and noted
 - **Codespell passes with zero errors**
 - PR description saved to `.git/pr-description.md` (without duplicate title)
-- **Ready-to-use command provided**: `git push -u <remote> <branch> && gh pr create --repo <upstream> --title "..." --body-file .git/pr-description.md --web`
+- **Ready-to-use command provided**: push + PR creation (via `gh` for GitHub, web UI or `tea` for Codeberg/Forgejo)
 
 ## Tips
 
