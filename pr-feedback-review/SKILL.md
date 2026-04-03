@@ -299,12 +299,57 @@ Let me know if anything else needs attention."
 >
 ```
 
+### Step 8b — Generate Per-Comment Reply Script
+
+After the report, generate a shell script that replies to each individual
+review comment thread using `gh api`. This lets the user review, edit, and
+selectively run replies.
+
+1. Determine the git directory for script storage:
+   - If `.git` is a file (worktree), read its `gitdir:` target
+   - Otherwise use `.git/`
+   - Store the script at `<gitdir>/PR-replies.sh`
+
+2. For each non-self comment (skipping comments already replied to by
+   `$GITHUB_USER`), generate a `gh api` call. **Important**: pipe all
+   `gh api` output through `> /dev/null` to suppress JSON responses, and
+   use `&&` to print a short status on success or catch errors:
+   ```bash
+   # <file>:<line> — <short description> [ADDRESSED|DISMISSED|DISCUSS]
+   # https://github.com/OWNER/REPO/pull/PR_NUMBER#discussion_rCOMMENT_ID
+   gh api "repos/OWNER/REPO/pulls/PR_NUMBER/comments/COMMENT_ID/replies" \
+     -f body="<reply text>" > /dev/null && echo "  replied to COMMENT_ID" \
+     || echo "  FAILED to reply to COMMENT_ID"
+   ```
+
+3. Script format requirements:
+   - Header with `#!/bin/bash`, `set -e`, and `REPO`/`PR` variables
+   - Each comment block has:
+     - A comment line with file, line number, short description, and
+       `[ADDRESSED]`, `[DISMISSED]`, or `[DISCUSS]` tag
+     - The full `html_url` of the comment as a clickable link in a comment
+     - The `gh api` command to post the reply, with output suppressed
+       (`> /dev/null`) and a short success/failure echo
+   - Group by status: ADDRESSED first, then DISMISSED, then DISCUSS
+   - Blank line between each comment block
+
+4. Get the `html_url` for each comment from the API response data collected
+   in Step 4.4 (inline review comments). The URL format is:
+   `https://github.com/OWNER/REPO/pull/PR_NUMBER#discussion_rCOMMENT_ID`
+
+5. Tell the user the script path and provide the run command:
+   ```
+   Review and run: bash <gitdir>/PR-replies.sh
+   ```
+   Remind them they can comment out lines they want to skip or edit replies
+   before running.
+
 ### Step 9 — Interactive Follow-up
 
 After presenting the report, ask the user:
 
 - "Should I apply the suggested code changes?" (if any actionable suggestions exist)
-- "Should I post the draft batch response?" (if a batch response was drafted)
+- "Should I post the reply script?" (if the script was generated)
 - "Any comments you want to re-classify or handle differently?"
 
 Wait for the user's response before taking any further action.
