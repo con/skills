@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Scan git repositories and generate projects.tsv summary."""
+"""Scan directories and files to generate projects.tsv summary."""
 
 import os
 import re
@@ -50,7 +50,7 @@ def get_remote_url(repo_path: Path) -> str:
     return output if output else "N/A"
 
 
-def get_primary_language(repo_path: Path) -> str:
+def get_primary_language(dir_path: Path) -> str:
     """Determine primary language by counting file extensions."""
     # Language mappings
     lang_map = {
@@ -80,6 +80,12 @@ def get_primary_language(repo_path: Path) -> str:
         ".html": "HTML",
         ".css": "CSS",
         ".tex": "TeX",
+        ".yml": "YAML",
+        ".yaml": "YAML",
+        ".md": "Markdown",
+        ".org": "Org",
+        ".rst": "reStructuredText",
+        ".nix": "Nix",
     }
 
     # Exclude directories
@@ -89,7 +95,7 @@ def get_primary_language(repo_path: Path) -> str:
     ext_counter = Counter()
 
     try:
-        for root, dirs, files in os.walk(repo_path):
+        for root, dirs, files in os.walk(dir_path):
             # Remove excluded directories from dirs in-place
             dirs[:] = [d for d in dirs if d not in exclude_dirs]
 
@@ -107,7 +113,28 @@ def get_primary_language(repo_path: Path) -> str:
     return "Unknown"
 
 
-def get_license(repo_path: Path) -> str:
+def get_file_language(file_path: Path) -> str:
+    """Determine language/type from file extension."""
+    ext_map = {
+        ".py": "Python", ".js": "JavaScript", ".ts": "TypeScript",
+        ".sh": "Shell", ".bash": "Shell",
+        ".md": "Markdown", ".org": "Org", ".rst": "reStructuredText",
+        ".txt": "Text", ".tex": "TeX",
+        ".yml": "YAML", ".yaml": "YAML", ".json": "JSON", ".toml": "TOML",
+        ".gpg": "GPG-encrypted", ".secrets": "Secrets",
+        ".env": "Environment", ".tar.gz": "Archive",
+        ".gz": "Archive", ".zip": "Archive",
+    }
+    name = file_path.name
+    # Check compound extensions first
+    for compound in [".tar.gz"]:
+        if name.endswith(compound):
+            return ext_map[compound]
+    ext = file_path.suffix.lower()
+    return ext_map.get(ext, "Unknown")
+
+
+def get_license(dir_path: Path) -> str:
     """Find and parse LICENSE file."""
     # Common license file patterns
     license_patterns = ["LICENSE", "LICENSE.txt", "LICENSE.md", "COPYING",
@@ -115,7 +142,7 @@ def get_license(repo_path: Path) -> str:
 
     for pattern in license_patterns:
         for case_variant in [pattern, pattern.lower(), pattern.upper()]:
-            license_file = repo_path / case_variant
+            license_file = dir_path / case_variant
             if license_file.exists():
                 try:
                     content = license_file.read_text(encoding="utf-8", errors="ignore")
@@ -152,27 +179,59 @@ def get_license(repo_path: Path) -> str:
                 except (OSError, UnicodeDecodeError):
                     pass
 
-    return "Unknown"
+    return "N/A"
 
 
-def get_summary(repo_path: Path) -> str:
-    """Mark summary for Claude analysis."""
-    # Mark all summaries as needing analysis by Claude
-    return "NEEDS_ANALYSIS"
+def get_entry_type(entry_path: Path) -> str:
+    """Determine the type of a filesystem entry."""
+    if entry_path.is_file():
+        return "file"
+    if entry_path.is_dir():
+        if (entry_path / ".git").exists():
+            return "git"
+        return "dir"
+    return "other"
 
 
-def scan_repository(repo_path: Path) -> dict:
-    """Scan a single repository and return metadata."""
-    folder = repo_path.name
-
+def scan_git_repository(repo_path: Path) -> dict:
+    """Scan a git repository and return metadata."""
     return {
-        "folder": folder,
-        "summary": get_summary(repo_path),
+        "folder": repo_path.name,
+        "type": "git",
+        "summary": "NEEDS_ANALYSIS",
         "language": get_primary_language(repo_path),
         "license": get_license(repo_path),
         "earliest_commit": get_earliest_commit(repo_path),
         "latest_commit": get_latest_commit(repo_path),
         "url": get_remote_url(repo_path),
+    }
+
+
+def scan_directory(dir_path: Path) -> dict:
+    """Scan a non-git directory and return metadata."""
+    return {
+        "folder": dir_path.name,
+        "type": "dir",
+        "summary": "NEEDS_ANALYSIS",
+        "language": get_primary_language(dir_path),
+        "license": get_license(dir_path),
+        "earliest_commit": "N/A",
+        "latest_commit": "N/A",
+        "url": "N/A",
+    }
+
+
+def scan_file(file_path: Path) -> dict:
+    """Scan a standalone file and return metadata."""
+    return {
+        "folder": file_path.name,
+        "type": "file",
+        "summary": "NEEDS_ANALYSIS",
+        "language": get_file_language(file_path),
+        "license": "N/A",
+        "earliest_commit": "N/A",
+        "latest_commit": "N/A",
+        "url": "N/A",
     }
 
 
@@ -198,7 +257,8 @@ def read_existing_tsv(tsv_path: Path) -> dict:
 
 def write_tsv(tsv_path: Path, projects: list):
     """Write projects data to TSV file."""
-    headers = ["folder", "summary", "language", "license", "earliest_commit", "latest_commit", "url"]
+    headers = ["folder", "type", "summary", "language", "license",
+               "earliest_commit", "latest_commit", "url"]
 
     with open(tsv_path, "w", encoding="utf-8") as f:
         f.write("\t".join(headers) + "\n")
@@ -209,6 +269,10 @@ def write_tsv(tsv_path: Path, projects: list):
             f.write("\t".join(row) + "\n")
 
 
+# Entries to skip (not useful to catalog)
+SKIP_PATTERNS = {".claude"}
+
+
 def main():
     """Main scanning function."""
     base_dir = Path.cwd()
@@ -217,50 +281,62 @@ def main():
     # Read existing data
     existing = read_existing_tsv(tsv_path)
 
-    # Scan directories
+    # Scan all entries (dirs and files)
     all_projects = []
     new_count = 0
     skip_count = 0
     error_count = 0
     errors = []
 
-    # Get all directories
-    subdirs = [d for d in base_dir.iterdir() if d.is_dir() and d.name != ".claude"]
-    total = len(subdirs)
+    # Get all entries (directories + files), excluding hidden and the TSV itself
+    entries = sorted(
+        [e for e in base_dir.iterdir()
+         if e.name not in SKIP_PATTERNS
+         and not e.name.startswith(".")
+         and e.name != "projects.tsv"],
+        key=lambda x: x.name.lower()
+    )
+    total = len(entries)
 
-    print(f"Scanning {total} directories...")
+    print(f"Scanning {total} entries...")
 
-    for i, subdir in enumerate(subdirs, 1):
-        folder_name = subdir.name
+    for i, entry in enumerate(entries, 1):
+        entry_name = entry.name
 
-        # Skip if not a git repo
-        if not (subdir / ".git").exists():
-            continue
+        print(f"[{i}/{total}] Processing {entry_name}...", end="")
 
-        print(f"[{i}/{total}] Processing {folder_name}...", end="")
-
-        # Skip if already exists (unless we want to force update)
-        if folder_name in existing:
-            all_projects.append(existing[folder_name])
+        # Skip if already exists
+        if entry_name in existing:
+            all_projects.append(existing[entry_name])
             skip_count += 1
             print(" (skipped)")
             continue
 
         try:
-            proj_data = scan_repository(subdir)
+            entry_type = get_entry_type(entry)
+            if entry_type == "git":
+                proj_data = scan_git_repository(entry)
+            elif entry_type == "dir":
+                proj_data = scan_directory(entry)
+            elif entry_type == "file":
+                proj_data = scan_file(entry)
+            else:
+                print(" (skipped - unknown type)")
+                continue
+
             all_projects.append(proj_data)
             new_count += 1
-            print(f" ✓ ({proj_data['language']})")
+            print(f" + ({entry_type}, {proj_data['language']})")
         except Exception as e:
             error_count += 1
-            errors.append((folder_name, str(e)))
-            print(f" ✗ Error: {e}")
-            # Add placeholder entry
+            errors.append((entry_name, str(e)))
+            print(f" x Error: {e}")
             all_projects.append({
-                "folder": folder_name,
-                "summary": "Error during scan",
+                "folder": entry_name,
+                "type": "error",
+                "summary": f"Error during scan: {e}",
                 "language": "Unknown",
-                "license": "Unknown",
+                "license": "N/A",
                 "earliest_commit": "N/A",
                 "latest_commit": "N/A",
                 "url": "N/A",
@@ -274,8 +350,8 @@ def main():
 
     # Print summary
     print("\n" + "=" * 60)
-    print(f"Scanned {total} directories")
-    print(f"- New projects: {new_count}")
+    print(f"Scanned {total} entries")
+    print(f"- New: {new_count}")
     print(f"- Skipped (existing): {skip_count}")
     print(f"- Errors: {error_count}")
 
@@ -283,6 +359,10 @@ def main():
         print("\nErrors:")
         for folder, error in errors:
             print(f"  - {folder}: {error}")
+
+    # Count types
+    type_counts = Counter(p.get("type", "unknown") for p in all_projects)
+    print(f"\nBy type: {dict(type_counts)}")
 
     print(f"\nUpdated projects.tsv with {len(all_projects)} entries")
     print(f"\nYou can view the results with: vd projects.tsv")
