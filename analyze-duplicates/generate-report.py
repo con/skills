@@ -63,6 +63,32 @@ def file_link(name, start, end, repo_url, branch):
     return label
 
 
+def build_file_lines_map(data):
+    """Build a {filepath: total_lines} map from jscpd statistics."""
+    file_lines = {}
+    for _fmt_name, fmt_data in data.get("statistics", {}).get("formats", {}).items():
+        for fpath, finfo in fmt_data.get("sources", {}).items():
+            file_lines[fpath] = finfo.get("lines", 0)
+    return file_lines
+
+
+def clone_file_percent(dup, file_lines):
+    """Compute what % of the smaller file is covered by the clone.
+
+    Returns an int 0-100. Uses the smaller of the two files as denominator
+    so that "95%" means the clone is nearly the entire file.
+    """
+    first_name = dup["firstFile"]["name"]
+    second_name = dup["secondFile"]["name"]
+    first_total = file_lines.get(first_name, 0)
+    second_total = file_lines.get(second_name, 0)
+    smaller = min(first_total, second_total) if first_total and second_total else 0
+    if smaller == 0:
+        return 0
+    clone_lines = dup.get("lines", 0)
+    return min(100, round(100 * clone_lines / smaller))
+
+
 def load_report(path):
     """Load a jscpd JSON report."""
     try:
@@ -273,9 +299,9 @@ DIFFICULTY_LABELS = {
 }
 
 
-def render_overview_table(all_dups):
+def render_overview_table(all_dups, file_lines):
     """Render a compact overview table of all clusters with mediation info."""
-    headers = ["C", "Lines", "Difficulty", "Strategy", "Files"]
+    headers = ["C", "Lines", "%file", "Difficulty", "Strategy", "Files"]
     rows = []
     for i, (_proj, dup) in enumerate(all_dups, 1):
         difficulty, strategy, _rationale = classify_cluster(dup)
@@ -286,16 +312,17 @@ def render_overview_table(all_dups):
         if first_name == second_name:
             files_str = first_short
         elif first_short == second_short:
-            # Same filename in different dirs — show parent/file
             first_ctx = "/".join(first_name.rsplit("/", 2)[-2:])
             second_ctx = "/".join(second_name.rsplit("/", 2)[-2:])
             files_str = f"{first_ctx} / {second_ctx}"
         else:
             files_str = f"{first_short} / {second_short}"
         label = DIFFICULTY_LABELS.get(difficulty, difficulty)
+        pct = clone_file_percent(dup, file_lines)
         rows.append([
             str(i),
             str(dup.get("lines", 0)),
+            f"{pct}%",
             label,
             strategy,
             files_str,
@@ -321,7 +348,8 @@ def render_overview_table(all_dups):
     return "\n".join(lines)
 
 
-def render_cluster(idx, dup, prefix="", repo_url=None, branch=None):
+def render_cluster(idx, dup, prefix="", repo_url=None, branch=None,
+                    file_lines=None):
     """Render a single duplicate cluster as a <details> block with mediation."""
     fmt = dup.get("format", "")
     lang = format_language(fmt)
@@ -339,14 +367,16 @@ def render_cluster(idx, dup, prefix="", repo_url=None, branch=None):
 
     difficulty, strategy, rationale = classify_cluster(dup)
     diff_label = DIFFICULTY_LABELS.get(difficulty, difficulty)
+    pct = clone_file_percent(dup, file_lines or {})
 
     label = f"{prefix}Cluster {idx}"
+    pct_str = f" {pct}% of file" if pct >= 50 else ""
     # Summary line uses plain text (no links — they don't work inside <summary>)
     summary = (
         f"[{diff_label}] "
         f"`{first_name}` lines {first['start']}-{first['end']} "
         f"&harr; `{second_name}` lines {second['start']}-{second['end']} "
-        f"({n_lines} lines)"
+        f"({n_lines} lines{pct_str})"
     )
 
     fragment = dup.get("fragment", "")
@@ -387,7 +417,7 @@ def render_cluster(idx, dup, prefix="", repo_url=None, branch=None):
 
 
 def render_report(projects, threshold, cross_project=None, jscpd_version=None,
-                   badge_path=None, repo_url=None, branch=None):
+                   badge_path=None, repo_url=None, branch=None, file_lines=None):
     """Render the full Markdown report."""
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     version_str = jscpd_version or "unknown"
@@ -451,7 +481,7 @@ def render_report(projects, threshold, cross_project=None, jscpd_version=None,
         return "\n".join(parts)
 
     # Overview table
-    parts.append(render_overview_table(all_dups))
+    parts.append(render_overview_table(all_dups, file_lines or {}))
     parts.append("")
 
     # Per-project cluster details
@@ -471,7 +501,8 @@ def render_report(projects, threshold, cross_project=None, jscpd_version=None,
 
         for dup in duplicates:
             parts.append(render_cluster(global_idx, dup,
-                                        repo_url=repo_url, branch=branch))
+                                        repo_url=repo_url, branch=branch,
+                                        file_lines=file_lines))
             global_idx += 1
 
     # Cross-project section
@@ -486,7 +517,8 @@ def render_report(projects, threshold, cross_project=None, jscpd_version=None,
             for i, dup in enumerate(cross_dups, 1):
                 parts.append(render_cluster(global_idx, dup,
                                             prefix="Cross-project ",
-                                            repo_url=repo_url, branch=branch))
+                                            repo_url=repo_url, branch=branch,
+                                            file_lines=file_lines))
                 global_idx += 1
 
     return "\n".join(parts)
@@ -554,9 +586,11 @@ def main():
             branch = auto_branch
 
     projects = []
+    file_lines = {}
     for rpath in args.reports:
         data = load_report(rpath)
         name = guess_project_name(rpath)
+        file_lines.update(build_file_lines_map(data))
         projects.append({
             "name": name,
             "stats": data.get("statistics", {}).get("total", {}),
@@ -575,6 +609,7 @@ def main():
         badge_path=args.badge_path,
         repo_url=repo_url,
         branch=branch,
+        file_lines=file_lines,
     )
 
     if args.output:
