@@ -83,12 +83,24 @@ npx --yes jscpd@latest \
     --min-tokens MIN_TOKENS \
     --reporters "json,html" \
     --output .tmp/jscpd-PROJECTNAME \
-    --ignore "**/.tox/**,**/venv*/**,**/.venv/**,**/node_modules/**,**/__pycache__/**,**/build/**,**/dist/**,**/.eggs/**,**/.git/**,**/.npm/**,**/.tmp/**" \
+    --ignore "IGNORE_PATTERNS" \
     PATH
 ```
 
 If `--no-html` is set, omit `html` from reporters. If `--badge` is set, add `badge` to reporters.
 If `--formats` is set, add `--format FORMATS`.
+
+**Building the ignore list** — start with these safe defaults:
+`**/.tox/**,**/venv*/**,**/.venv/**,**/node_modules/**,**/__pycache__/**,**/.eggs/**,**/.git/**,**/.npm/**,**/.tmp/**`
+
+Then for each of `build/`, `dist/`, `.eggs/`:
+- Check if the directory is **tracked by git** (`git ls-files --error-unmatch DIR/ 2>/dev/null`)
+- If tracked: do NOT ignore it (it's intentionally committed content)
+- If untracked: add it to the ignore list
+
+Additionally, find all **symlinks** in the scan path (`find PATH -type l`) and
+add ignore patterns for them (e.g., `**/symlinked-dir/**`). Symlinked content
+is intentionally shared — duplicates from symlinks are noise, not bugs.
 
 This produces:
 - `.tmp/jscpd-PROJECTNAME/jscpd-report.json` — structured data for the markdown report

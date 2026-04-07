@@ -178,6 +178,22 @@ def classify_cluster(dup):
         for t in ("test_", "tests/", "_test.", "conftest", "spec.", "spec/")
     )
 
+    # Detect generated / binary-like artifacts (SVG, images, configs)
+    is_asset = any(
+        n.endswith((".svg", ".png", ".jpg", ".ico", ".woff", ".woff2", ".eot", ".ttf"))
+        for n in (first_name, second_name)
+    )
+    if is_asset:
+        if same_file:
+            return ("trivial", "Internal duplication in asset file",
+                    "Repeated content within an asset file. Usually harmless.")
+        return (
+            "easy",
+            "Deduplicate asset — keep one copy and reference it",
+            "Same asset committed in multiple locations. "
+            "Keep a single canonical copy and reference/symlink from other locations.",
+        )
+
     # Detect documentation / markdown
     is_docs = fmt in ("markdown", "markup") or any(
         n.endswith((".md", ".rst", ".adoc")) for n in (first_name, second_name)
@@ -263,10 +279,17 @@ def render_overview_table(all_dups):
     rows = []
     for i, (_proj, dup) in enumerate(all_dups, 1):
         difficulty, strategy, _rationale = classify_cluster(dup)
-        first_short = dup["firstFile"]["name"].rsplit("/", 1)[-1]
-        second_short = dup["secondFile"]["name"].rsplit("/", 1)[-1]
-        if first_short == second_short:
+        first_name = dup["firstFile"]["name"]
+        second_name = dup["secondFile"]["name"]
+        first_short = first_name.rsplit("/", 1)[-1]
+        second_short = second_name.rsplit("/", 1)[-1]
+        if first_name == second_name:
             files_str = first_short
+        elif first_short == second_short:
+            # Same filename in different dirs — show parent/file
+            first_ctx = "/".join(first_name.rsplit("/", 2)[-2:])
+            second_ctx = "/".join(second_name.rsplit("/", 2)[-2:])
+            files_str = f"{first_ctx} / {second_ctx}"
         else:
             files_str = f"{first_short} / {second_short}"
         label = DIFFICULTY_LABELS.get(difficulty, difficulty)
