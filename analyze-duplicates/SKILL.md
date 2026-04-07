@@ -108,6 +108,7 @@ python3 SKILL_DIR/generate-report.py \
     --threshold THRESHOLD \
     --output REPORT_PATH \
     --jscpd-version "$(npx --yes jscpd@latest --version 2>/dev/null)" \
+    --scan-path PATH \
     [--cross-project .tmp/jscpd-combined/jscpd-report.json] \
     .tmp/jscpd-PROJECT1/jscpd-report.json \
     [.tmp/jscpd-PROJECT2/jscpd-report.json ...]
@@ -168,17 +169,17 @@ renders well when posted as a GitHub/Gitea issue. Structure:
 
 ## Duplicate Clusters
 
-| # | Lines | Difficulty        | Strategy                      | Files   |
-|---|-------|-------------------|-------------------------------|---------|
-| 1 | 8     | Trivial | Extract local helper function | file.py |
+| C | Lines | Difficulty | Strategy                      | Files   |
+|---|-------|------------|-------------------------------|---------|
+| 1 | 8     | Trivial    | Extract local helper function | file.py |
 
 <details>
 <summary><b>Cluster 1</b>: [Trivial] `file.py` lines 10-18
 &harr; `file.py` lines 30-38 (8 lines)</summary>
 
 **Files involved:**
-- `file.py` (lines 10-18)
-- `file.py` (lines 30-38)
+- [`file.py` (lines 10-18)](https://github.com/owner/repo/blob/main/file.py#L10-L18)
+- [`file.py` (lines 30-38)](https://github.com/owner/repo/blob/main/file.py#L30-L38)
 
 **Duplicated fragment:**
 ~~~python

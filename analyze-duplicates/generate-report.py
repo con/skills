@@ -15,9 +15,52 @@ Options:
 
 import argparse
 import json
+import re
+import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+
+
+def detect_git_info(scan_path):
+    """Try to detect the remote browse URL and branch for a git repo."""
+    try:
+        branch = subprocess.run(
+            ["git", "-C", scan_path, "rev-parse", "--abbrev-ref", "HEAD"],
+            capture_output=True, text=True, timeout=5,
+        ).stdout.strip()
+        # Find the remote that the branch tracks, fall back to origin
+        tracking_remote = subprocess.run(
+            ["git", "-C", scan_path, "config",
+             f"branch.{branch}.remote"],
+            capture_output=True, text=True, timeout=5,
+        ).stdout.strip() or "origin"
+        remote_url = subprocess.run(
+            ["git", "-C", scan_path, "remote", "get-url", tracking_remote],
+            capture_output=True, text=True, timeout=5,
+        ).stdout.strip()
+        if not remote_url or not branch:
+            return None, None
+        # Convert git@ or https:// URL to browse URL
+        browse_url = remote_url
+        browse_url = re.sub(r"\.git$", "", browse_url)
+        browse_url = re.sub(
+            r"^git@([^:]+):", r"https://\1/", browse_url
+        )
+        return browse_url, branch
+    except (subprocess.SubprocessError, OSError):
+        return None, None
+
+
+def file_link(name, start, end, repo_url, branch):
+    """Format a file reference, as a hyperlink if repo info is available."""
+    label = f"`{name}` (lines {start}-{end})"
+    if repo_url and branch:
+        # Strip leading ./ or ../ — jscpd paths are relative to scan dir
+        clean = re.sub(r"^(\.\./?)+" , "", name)
+        url = f"{repo_url}/blob/{branch}/{clean}#L{start}-L{end}"
+        return f"[{label}]({url})"
+    return label
 
 
 def load_report(path):
@@ -216,7 +259,7 @@ DIFFICULTY_LABELS = {
 
 def render_overview_table(all_dups):
     """Render a compact overview table of all clusters with mediation info."""
-    headers = ["#", "Lines", "Difficulty", "Strategy", "Files"]
+    headers = ["C", "Lines", "Difficulty", "Strategy", "Files"]
     rows = []
     for i, (_proj, dup) in enumerate(all_dups, 1):
         difficulty, strategy, _rationale = classify_cluster(dup)
@@ -255,7 +298,7 @@ def render_overview_table(all_dups):
     return "\n".join(lines)
 
 
-def render_cluster(idx, dup, prefix=""):
+def render_cluster(idx, dup, prefix="", repo_url=None, branch=None):
     """Render a single duplicate cluster as a <details> block with mediation."""
     fmt = dup.get("format", "")
     lang = format_language(fmt)
@@ -265,17 +308,21 @@ def render_cluster(idx, dup, prefix=""):
 
     first_name = first["name"]
     second_name = second["name"]
-    first_range = f"lines {first['start']}-{first['end']}"
-    second_range = f"lines {second['start']}-{second['end']}"
+
+    first_link = file_link(first_name, first["start"], first["end"],
+                           repo_url, branch)
+    second_link = file_link(second_name, second["start"], second["end"],
+                            repo_url, branch)
 
     difficulty, strategy, rationale = classify_cluster(dup)
     diff_label = DIFFICULTY_LABELS.get(difficulty, difficulty)
 
     label = f"{prefix}Cluster {idx}"
+    # Summary line uses plain text (no links — they don't work inside <summary>)
     summary = (
         f"[{diff_label}] "
-        f"`{first_name}` {first_range} "
-        f"&harr; `{second_name}` {second_range} "
+        f"`{first_name}` lines {first['start']}-{first['end']} "
+        f"&harr; `{second_name}` lines {second['start']}-{second['end']} "
         f"({n_lines} lines)"
     )
 
@@ -287,8 +334,8 @@ def render_cluster(idx, dup, prefix=""):
         f"<summary><b>{label}</b>: {summary}</summary>",
         "",
         "**Files involved:**",
-        f"- `{first_name}` ({first_range})",
-        f"- `{second_name}` ({second_range})",
+        f"- {first_link}",
+        f"- {second_link}",
         "",
     ]
 
@@ -317,7 +364,7 @@ def render_cluster(idx, dup, prefix=""):
 
 
 def render_report(projects, threshold, cross_project=None, jscpd_version=None,
-                   badge_path=None):
+                   badge_path=None, repo_url=None, branch=None):
     """Render the full Markdown report."""
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     version_str = jscpd_version or "unknown"
@@ -400,7 +447,8 @@ def render_report(projects, threshold, cross_project=None, jscpd_version=None,
         duplicates = sorted(duplicates, key=lambda d: d.get("lines", 0), reverse=True)
 
         for dup in duplicates:
-            parts.append(render_cluster(global_idx, dup))
+            parts.append(render_cluster(global_idx, dup,
+                                        repo_url=repo_url, branch=branch))
             global_idx += 1
 
     # Cross-project section
@@ -413,7 +461,9 @@ def render_report(projects, threshold, cross_project=None, jscpd_version=None,
                 cross_dups, key=lambda d: d.get("lines", 0), reverse=True
             )
             for i, dup in enumerate(cross_dups, 1):
-                parts.append(render_cluster(global_idx, dup, prefix="Cross-project "))
+                parts.append(render_cluster(global_idx, dup,
+                                            prefix="Cross-project ",
+                                            repo_url=repo_url, branch=branch))
                 global_idx += 1
 
     return "\n".join(parts)
@@ -452,7 +502,33 @@ def main():
         default=None,
         help="Relative path to the jscpd-badge.svg for embedding in report",
     )
+    parser.add_argument(
+        "--repo-url",
+        default=None,
+        help="Repository browse URL (e.g., https://github.com/owner/repo). "
+             "Auto-detected from git remote if not specified.",
+    )
+    parser.add_argument(
+        "--branch",
+        default=None,
+        help="Branch name for file links. Auto-detected from git if not specified.",
+    )
+    parser.add_argument(
+        "--scan-path",
+        default=".",
+        help="Path that was scanned (used for git auto-detection, default: .)",
+    )
     args = parser.parse_args()
+
+    # Auto-detect repo URL and branch if not provided
+    repo_url = args.repo_url
+    branch = args.branch
+    if not repo_url or not branch:
+        auto_url, auto_branch = detect_git_info(args.scan_path)
+        if not repo_url:
+            repo_url = auto_url
+        if not branch:
+            branch = auto_branch
 
     projects = []
     for rpath in args.reports:
@@ -474,6 +550,8 @@ def main():
         cross_project=cross_project_data,
         jscpd_version=args.jscpd_version,
         badge_path=args.badge_path,
+        repo_url=repo_url,
+        branch=branch,
     )
 
     if args.output:
