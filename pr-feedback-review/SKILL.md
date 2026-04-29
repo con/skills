@@ -19,6 +19,12 @@ This skill uses the following values. Adjust for your setup by editing this sect
 - **SCAN_DIRS**: `~/proj` — comma-separated parent directories to scan for git repos
 - **GITHUB_USER**: `yarikoptic` — your GitHub username
 - **MAX_SCAN_DEPTH**: `3` — how deep to recurse when scanning for repos
+- **AI_COMPANION_TOKEN_FILE**: `~/.claude/gh-token` — path to a shell-sourceable
+  file that exports `GH_TOKEN` for an AI companion GitHub account (e.g.
+  `yarikoptic-gitmate`). When present, reply scripts use this token so
+  responses are posted from the companion account rather than the user's
+  personal account. The file should contain `export GH_TOKEN=github_pat_...`.
+  Set to empty string to disable and post as yourself.
 
 Throughout this document, these names refer to the configured values above.
 
@@ -230,7 +236,17 @@ recommendation based on its type and actionability:
 - Show the comment text and the relevant code context
 - If a ` ```suggestion ` block exists, show exactly what it would change
   (before/after)
-- Propose a specific code edit to apply
+- **Fix the issue directly** using red/green TDD:
+  1. **Red**: Write or extend a test that exposes the bug/missing behavior.
+     Prefer extending an existing test over creating a new one. Run it to
+     confirm it fails.
+  2. **Green**: Apply the minimal code fix. Run the test to confirm it passes.
+  3. **Verify**: Run the broader test suite to ensure no regressions.
+  4. **Commit**: Create a commit with a message referencing the review comment
+     (e.g. "Spotted by Copilot review on PR #NNN").
+  5. Include the commit SHA in the reply so the reviewer can verify the fix.
+- If the fix is too complex or risky to apply immediately, propose the edit
+  and note it as a follow-up instead of committing.
 
 **Dismissible comments** (actionable=no):
 - Draft a concise response explaining why no change is needed
@@ -321,9 +337,30 @@ selectively run replies.
      -f body="<reply text>" > /dev/null && echo "  replied to COMMENT_ID" \
      || echo "  FAILED to reply to COMMENT_ID"
    ```
+   For `[ADDRESSED]` comments that were fixed via commit (Step 7), include
+   the short commit SHA and first line of the commit message in the reply
+   body, e.g.: "Fixed in abc1234 `BF: forward recursion_limit ...` — ..."
+   so the reviewer can click through to verify the fix.
 
 3. Script format requirements:
-   - Header with `#!/bin/bash`, `set -e`, and `REPO`/`PR` variables
+   - Header with `#!/bin/bash`, `set -e`, `REPO`/`PR` variables, and
+     companion token setup. When `$AI_COMPANION_TOKEN_FILE` is configured
+     and the file exists, source it at the top of the script so all `gh api`
+     calls authenticate as the companion account:
+     ```bash
+     #!/bin/bash
+     set -e
+     REPO="OWNER/REPO"
+     PR=NUMBER
+
+     # Authenticate as AI companion account
+     source ~/.claude/gh-token  # exports GH_TOKEN
+     export GH_TOKEN
+     ```
+     Also add a verification line that prints which account is posting:
+     ```bash
+     echo "Posting replies as: $(gh api user --jq .login)"
+     ```
    - Each comment block has:
      - A comment line with file, line number, short description, and
        `[ADDRESSED]`, `[DISMISSED]`, or `[DISCUSS]` tag
@@ -346,10 +383,10 @@ selectively run replies.
 
 ### Step 9 — Interactive Follow-up
 
+Actionable issues should already be fixed and committed in Step 7.
 After presenting the report, ask the user:
 
-- "Should I apply the suggested code changes?" (if any actionable suggestions exist)
-- "Should I post the reply script?" (if the script was generated)
+- "Should I push and post the reply script?" (if fixes were committed)
 - "Any comments you want to re-classify or handle differently?"
 
 Wait for the user's response before taking any further action.
