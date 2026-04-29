@@ -23,6 +23,12 @@ Accept GitHub project references in these formats:
 - Full URL: `https://github.com/owner/repo`
 - Short form: `owner/repo`
 - Organization URL: `https://github.com/org` (analyze main repos)
+- **No argument given**: Run `git remote -v` in the current directory and identify the upstream repository. Use the first match from this priority order:
+  1. Remote named `upstream`
+  2. Remote named `origin`
+  3. First remote with a GitHub URL
+  
+  Extract `owner/repo` from the remote URL (handles both `https://github.com/owner/repo` and `git@github.com:owner/repo` formats).
 
 ## Analysis Steps
 
