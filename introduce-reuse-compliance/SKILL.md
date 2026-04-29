@@ -1,11 +1,11 @@
 ---
-name: reuse-compliance
-description: Set up and validate REUSE specification compliance (LICENSES/ directory, REUSE.toml, SPDX headers) for software projects and BIDS datasets. Covers BIDS data-vs-code separation, DUO (Data Use Ontology) integration, DEP-3 patch tagging for vendoring repos, and integration with tox / pre-commit / Makefile / GitHub Actions. Use when adding licensing metadata to a project, fixing `reuse lint` failures, licensing a BIDS dataset, or annotating patches in a vendoring repo.
+name: introduce-reuse-compliance
+description: Introduce REUSE specification compliance (LICENSES/ directory, REUSE.toml, SPDX headers) to a software project or BIDS dataset, then validate it. Covers BIDS data-vs-code separation, DUO (Data Use Ontology) integration, DEP-3 patch tagging for vendoring repos, and integration with tox / pre-commit / Makefile / GitHub Actions. Use when adding licensing metadata to a project, fixing `reuse lint` failures, licensing a BIDS dataset, or annotating patches in a vendoring repo.
 allowed-tools: Bash, Read, Edit, Write, Glob, Grep, AskUserQuestion
 user-invocable: true
 ---
 
-# REUSE Compliance Skill
+# Introduce REUSE Compliance to a Project
 
 Implement the [REUSE specification](https://reuse.software/) for clear,
 machine-readable licensing and copyright information. Includes special
@@ -15,7 +15,7 @@ DEP-3 patch tagging for vendoring repositories.
 ## When to Use
 
 - User wants to add REUSE / SPDX licensing metadata to a project
-- User asks to "introduce REUSE" or runs `/reuse-compliance`
+- User asks to "introduce REUSE" or runs `/introduce-reuse-compliance`
 - `reuse lint` is failing and needs to be brought to 100% compliance
 - User is licensing a BIDS dataset (data + code + docs separately)
 - User is annotating `*.patch` files in a vendoring repo with DEP-3 headers
