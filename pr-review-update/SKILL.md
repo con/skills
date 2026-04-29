@@ -1385,6 +1385,71 @@ git push --force-with-lease $FORK_REMOTE enh-codespell
 - **Batch similar actions**: Group all rebases, all CI fixes, etc.
 - **Repo reuse**: If repo is already set up, skip setup steps
 
+## Review Body Formatting (when composing a PR review/comment body)
+
+When this skill is used to write a review body to be posted via
+`gh pr review --body-file` or `gh pr comment --body-file` (and not just
+internal action notes), apply the **collapsible-details pattern** so the
+review doesn't visually overwhelm the PR page:
+
+- Keep a short **TL;DR** section visible by default (~3–6 bullets at the
+  top — what's broken, what's missing, severity).
+- Wrap each subsequent section (design-doc compliance tables, per-issue
+  detail, suggested tests, line-by-line minor items, recommendations) in
+  HTML `<details>` blocks. GitHub renders these collapsed by default.
+
+Template:
+
+```markdown
+# PR #NNNN — <topic> review
+
+<one-sentence framing of what was reviewed and against what>
+
+## TL;DR
+
+- <key finding 1>
+- <key finding 2>
+- <verdict / requested actions>
+
+<details>
+<summary>1. Design doc requirements vs. implementation</summary>
+
+<the table or detailed body>
+
+</details>
+
+<details>
+<summary>2. Specific issues</summary>
+
+### 2.1 <issue title>
+
+<full detail>
+
+### 2.2 ...
+
+</details>
+
+<details>
+<summary>3. Recommendations (priority order)</summary>
+
+1. ...
+2. ...
+
+</details>
+```
+
+**Why**: GitHub PR review bodies render full markdown but lack any built-in
+collapsing. Long reviews push the conversation timeline down by screens and
+discourage maintainers from reading. Collapsible `<details>` keeps the
+summary scannable and signals which sections to drill into.
+
+**Reference example**: a review applying this pattern is at
+`https://github.com/dandi/dandi-archive/pull/2799#pullrequestreview-4197495045`.
+
+**When NOT to use**: short reviews (<~30 lines), single-issue comments, or
+inline review comments on specific lines — collapsing them adds clicks for
+no benefit.
+
 ## Error Handling
 
 - **Missing dashboard data**: If `repositories.json` not found, exit with clear error
