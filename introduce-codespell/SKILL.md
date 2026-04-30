@@ -268,7 +268,15 @@ git commit -m 'Add rudimentary codespell config'
 
 ## Step 4: Add Pre-commit Hook (if applicable)
 
-If `.pre-commit-config.yaml` exists:
+### 4.1 Detect Pre-commit Config
+
+```bash
+ls .pre-commit-config.yaml 2>/dev/null
+```
+
+If `.pre-commit-config.yaml` exists, you MUST take pre-commit into account for the rest of this workflow. **This is critical** — see Step 4.3 below for why.
+
+### 4.2 Add Codespell Hook to Pre-commit Config
 
 ```yaml
 - repo: https://github.com/codespell-project/codespell
@@ -285,6 +293,81 @@ For `pyproject.toml` config, add:
 ```
 
 Commit: "Add pre-commit definition for codespell"
+
+### 4.3 Install and Run Pre-commit (CRITICAL when formatters/linters are present)
+
+**Why this matters**: Pre-commit configs commonly include reformatters (`black`, `ruff-format`) and linters (`ruff`, `flake8`, `isort`). Inline edits made later in this workflow — especially:
+
+- Adding `codespell:ignore` comments to protect regex patterns or variable names (Step 7.6)
+- Manual edits to fix ambiguous typos via the Edit tool (Step 7.3)
+- Realigning tables / RST underlines (Step 8)
+
+— can trigger formatter/linter changes (line length, trailing whitespace, comment placement, import order). If we do **not** run pre-commit, those changes ride along in a *later* commit by the maintainer, fragmenting the history and forcing the user to amend our commits. **One past incident required rewriting commits because `codespell:ignore` comments tripped ruff-format and we never ran the formatter.**
+
+#### Inspect which hooks could reformat code
+
+Before installing, scan `.pre-commit-config.yaml` for hooks that **modify files** (so you know which steps below need a re-run):
+
+| Hook id | Modifies files? | Notes |
+|---------|-----------------|-------|
+| `black`, `ruff-format`, `autopep8`, `yapf` | yes | Python reformatters |
+| `ruff` (with `--fix`), `isort`, `autoflake` | yes | Linters with auto-fix |
+| `prettier`, `eslint --fix` | yes | JS/TS formatters |
+| `trailing-whitespace`, `end-of-file-fixer`, `mixed-line-ending` | yes | Whitespace fixers |
+| `nbstripout` | yes | Strips notebook outputs |
+| `flake8`, `mypy`, `check-yaml`, `check-added-large-files` | no | Pure linters/checkers |
+
+If **any** modifying hook is present, you MUST run pre-commit after every manual edit step (7.3, 7.6, 8) before committing. If only pure checkers are present, running pre-commit is still recommended but less critical.
+
+#### Install pre-commit (if not already available)
+
+```bash
+# Check if installed
+pre-commit --version || uvx pre-commit --version
+
+# Optionally install hooks into .git/hooks (so future commits auto-trigger)
+pre-commit install || uvx pre-commit install
+```
+
+`uvx pre-commit ...` is preferred when pre-commit is not on `$PATH` — it avoids polluting the project's environment.
+
+#### Run pre-commit after edits
+
+After **every** manual edit step in this workflow that touches source files (7.3 ambiguous fixes, 7.6 false-positive protections, 8 formatting fixups), run pre-commit on the touched files **before** committing:
+
+```bash
+# On staged files only (preferred — matches what hooks would see at commit time)
+pre-commit run --files <file1> <file2> ...
+
+# Or on all files (slower but thorough; useful before the final commit)
+pre-commit run --all-files
+```
+
+If pre-commit modifies files (exit code 1 with "files were modified by this hook"), `git add` the changes and re-run to confirm a clean pass, then commit. **Do not bypass with `--no-verify`** — that defeats the purpose.
+
+#### Order of operations within a fix step
+
+1. Make the manual edit (e.g., add `// codespell:ignore foo`)
+2. `git add <file>`
+3. `pre-commit run --files <file>` — apply any reformatting/linting
+4. `git add <file>` again if pre-commit modified it
+5. Re-run `pre-commit run --files <file>` until clean
+6. `git commit -F .git-meta/COMMIT_MSG`
+
+This keeps each logical change (typo fix + its required reformatting) in a single atomic commit.
+
+#### What about `codespell -w` runs (Step 9)?
+
+When using `datalad run 'codespell -w'`, codespell will modify files. After the `datalad run` completes, run pre-commit on the modified files and amend the commit if reformatting is needed:
+
+```bash
+datalad run -m "..." 'codespell -w'
+pre-commit run --all-files || pre-commit run --all-files  # second run confirms idempotence
+# If pre-commit modified files:
+git add -A && git commit --amend --no-edit  # or a follow-up "fixup: format after codespell -w" commit
+```
+
+Prefer a separate `fixup: ...` commit over `--amend` when the formatting changes are substantial or touch files outside what codespell modified — it keeps the `datalad run` provenance intact.
 
 ## Step 5: Analyze Typos
 
@@ -464,9 +547,12 @@ Example ambiguous cases:
 - `manger ==> manager, manger` - is it "manager" (person) or "manger" (feeding trough)?
 - `seach ==> search, each, reach, ...` - context determines which is correct
 
-**After fixing all ambiguous typos**, commit them:
+**After fixing all ambiguous typos**, run pre-commit (if `.pre-commit-config.yaml` exists — see Step 4.3) on the touched files, then commit:
 
 ```bash
+git add -A
+# If pre-commit is present: apply any formatter/linter changes BEFORE committing
+pre-commit run --all-files || true   # may modify files; that's OK
 git add -A
 git commit -m "Fix ambiguous typos requiring context review
 
@@ -561,7 +647,8 @@ ignore-words-list = serie,consol,countr,inpu,currenty,currentx
 3. **Revert incorrect fixes** using Edit or git revert
 4. **Add protection** via inline comments or ignore-words-list
 5. **Re-run codespell** to verify zero errors after protections
-6. **Commit the fixes** to false positive handling
+6. **If `.pre-commit-config.yaml` exists**: run `pre-commit run --all-files` — inline `codespell:ignore` comments often trip ruff/black/ruff-format (line length, comment spacing). Stage any reformatting changes before committing. (See Step 4.3.)
+7. **Commit the fixes** to false positive handling
 
 **Example of fixing a false positive:**
 ```bash
@@ -968,5 +1055,6 @@ After completing the skill:
 - **Regex patterns**: Use inline `// codespell:ignore <word>` comments to protect patterns
 - **Variable names**: Add to `ignore-words-list` with explanatory comments about what they represent
 - **Trust but verify**: codespell is good but not perfect - human review of diffs is mandatory!
+- **Pre-commit interplay**: If `.pre-commit-config.yaml` includes formatters (`black`, `ruff-format`, `prettier`) or linters with auto-fix (`ruff`, `isort`), run `pre-commit run --all-files` after every manual edit step (especially after adding `codespell:ignore` comments) — otherwise reformatting changes leak into a later commit. See Step 4.3.
 - **Contribute back**: When you find typos codespell misses (e.g., `sycalls` → `syscalls`), consider PRing them to https://github.com/codespell-project/codespell to improve the dictionary for everyone
 - **Hyphenated words**: codespell may miss typos inside hyphenated compounds (e.g., `log-liklihood`) - grep for known typo patterns after `codespell -w` to catch these
