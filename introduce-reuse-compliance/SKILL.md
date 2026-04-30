@@ -29,6 +29,39 @@ DEP-3 patch tagging for vendoring repositories.
 
 **Integration**: REUSE handles copyright/licensing (legal permissions), while DUO handles consent-based data use restrictions (ethical/regulatory constraints).
 
+## Guiding principles
+
+These override anything later in the skill that suggests otherwise:
+
+1. **Stay close to what the project already says.** Your job is to make
+   existing licensing *machine-readable*, not to relicense parts of the
+   project. If the project already ships a single `LICENSE` (e.g.
+   Apache-2.0), the default outcome is **one** annotation block covering
+   everything under that same license. Do **not** introduce additional
+   licenses (CC-BY-4.0 for docs, CC0-1.0 for configs, MIT for scripts,
+   etc.) on your own initiative — those are governance decisions for the
+   maintainers, not cleanup the linter requires.
+2. **Only introduce a second license when the repo already declares
+   one.** Triggers: `dataset_description.json` has its own `License`
+   field; `package.json`/`pyproject.toml` declares a different license
+   for a sub-package; a docs directory has its own `LICENSE`; in-file
+   SPDX headers in vendored code; an explicit user request. Absent
+   those, do not split.
+3. **Scope = git-tracked files.** `reuse lint` walks the working tree
+   and will surface untracked-but-not-gitignored paths (caches, tool
+   output, scratch dirs). Treat those as *out of scope*: add them to
+   `.gitignore` (REUSE honors it) rather than annotating them. If the
+   user explicitly wants a path linted, it should be tracked or covered
+   by an annotation block.
+4. **Prefer one block over many.** Multi-block `REUSE.toml` is only
+   warranted when the project genuinely has multi-license parts
+   (per principle 2). A single `path = ["**"]` block with
+   `precedence = "aggregate"` is the right default for most projects.
+5. **Ask before relicensing.** If you find yourself reaching for a
+   license the project does not currently use, stop and ask the
+   maintainer. Never silently add `CC-BY-4.0` / `CC0-1.0` / `MIT`
+   annotations to a project that has only ever stated one license.
+
 ## Key Concepts
 
 ### REUSE Core Components
@@ -63,6 +96,60 @@ with an `upstream/` branch tracking unmodified upstream alongside a
 each branch carry its own `REUSE.toml` (or none, deferring to upstream's
 own copyright file). This is uncommon — most projects only need one
 `REUSE.toml` on the default branch.
+
+### Existing root `LICENSE` / `COPYING` files
+
+**What REUSE requires:** the spec (3.x §2.2) mandates that license texts
+live under `LICENSES/<SPDX-ID>.<ext>`. It does **not** forbid additional
+copies elsewhere — a top-level `LICENSE` is allowed but redundant from
+REUSE's point of view.
+
+**What other ecosystems expect:**
+- **GitHub** (licensee gem): scans the root for `LICENSE`, `LICENCE`,
+  `COPYING`, etc. to populate the "License" badge on the repo page.
+  Modern licensee follows symlinks and also recognizes `LICENSES/<id>.txt`,
+  but root visibility is the most reliable trigger.
+- **Apache-2.0 §4(d)**: a derivative work must reproduce the LICENSE
+  and any NOTICE — convention is to ship them at the repo root.
+- **Python packaging** (`pyproject.toml`): `[project] license-files =
+  ["LICENSE", "NOTICE"]` declares which files end up in sdists/wheels.
+  Hatch/setuptools resolve these literally; if you delete `LICENSE`,
+  update this list (e.g. to `["LICENSES/Apache-2.0.txt", "NOTICE"]`).
+- **Other languages**: `package.json` has no equivalent file pinning
+  by default, but some npm tooling looks for `LICENSE` at root.
+
+**Three reconciliation options** — pick based on the project's
+ecosystem and pyproject/package metadata findings from Step 1:
+
+1. **Keep both files (duplicate text).** Simplest, zero portability
+   risk. Downside: 10–15 KB of duplicated text per license. Default
+   recommendation for projects that already ship a root `LICENSE`
+   referenced by `pyproject.toml` / `package.json` / similar manifests.
+
+2. **Symlink root → `LICENSES/<id>.txt`.** No duplication, REUSE-pure,
+   GitHub licensee follows symlinks (since ~2018). Downsides:
+   symlinks are awkward on Windows checkouts without
+   `core.symlinks=true`; hatch/setuptools follow them in most
+   versions, but verify with `python -m build --sdist` on a clean
+   checkout. Recommended when the project has no Windows contributors
+   and you want to avoid the duplication.
+
+3. **Delete root `LICENSE` entirely; only keep `LICENSES/<id>.txt`.**
+   Most REUSE-pure. Requires updating `pyproject.toml`
+   `license-files`, regenerating sdist tests, and possibly losing
+   GitHub's auto-detection on older licensee versions. Only do this
+   if you've verified all downstream consumers (packaging, GitHub UI,
+   any CI license-check tooling) cope with `LICENSES/`. Same applies
+   to `COPYING`/`NOTICE` if present.
+
+**Apache `NOTICE` files** stay at the root regardless — Apache-2.0
+§4(d) treats NOTICE as separate from the license text.
+
+**Default for skill runs:** propose option (1) and ask the user. Do
+**not** silently delete or symlink an existing root `LICENSE` —
+licensing files are governance artifacts, and downstream consumers
+(packaging metadata, CI gates, contributors' bookmarks) often depend
+on them.
 
 ### BIDS Dataset Considerations
 
@@ -101,76 +188,119 @@ When this skill is invoked, follow these steps:
 
 ### 1. Assess Current State
 
-**Check for existing REUSE infrastructure:**
-- Look for LICENSES/ directory
-- Check if REUSE.toml or .reuse/dep5 exists
-- Check `.gitignore` for build-artifact exclusions (REUSE 3.x honors it;
-  if a legacy `.reuseignore` exists, plan to migrate its entries to
-  `.gitignore` and remove it)
-- Scan for SPDX headers in files
+**Discover the project's existing licensing statements** (this is the
+input you must respect — see Guiding principles):
+- `LICENSE` / `LICENCE` / `COPYING` / `COPYING.*` at the repo root
+- `NOTICE` (Apache-2.0 conventional file)
+- License field in `pyproject.toml` (`[project] license = ...`),
+  `package.json` (`"license"`), `setup.cfg`, `Cargo.toml`, `Gemfile`,
+  `dataset_description.json` (`License`), `CITATION.cff`
+- Per-directory `LICENSE` / `COPYING` files (sub-packages, docs/, data/)
+- In-file SPDX-License-Identifier headers (`grep -r SPDX-License-Identifier`)
+- README / DEVELOPMENT.md sections explicitly stating a license
+- Copyright lines in headers / NOTICE / README (extract author + year)
 
-**Check for BIDS dataset:**
-- Look for dataset_description.json
-- Check if it contains License field
-- Identify data files vs. code files (scripts/, code/)
+The set of licenses you propose must be a **subset** of what these
+sources already declare. If they all say one thing (e.g. Apache-2.0),
+your `REUSE.toml` says one thing.
+
+**Check for existing REUSE infrastructure:**
+- Look for `LICENSES/` directory
+- Check if `REUSE.toml` or `.reuse/dep5` exists
+- Scan for existing SPDX headers in files
+- If a legacy `.reuseignore` exists, plan to migrate its entries to
+  `.gitignore` and remove it
+
+**Determine the working scope (git-tracked vs. untracked):**
+- Run `git ls-files | wc -l` to know the tracked file count
+- Run `git status --short` to enumerate untracked paths
+- Compare against `reuse lint` output: any untracked path that appears
+  in the lint output is a candidate for `.gitignore` (not annotation).
+  Common offenders: tool output dirs (`.duct/`, `.idea/` if not
+  ignored), local scratch dirs, generated logs, screenshots, exports.
+- If `git ls-files --error-unmatch <path>` fails for a path the linter
+  flagged, the path is untracked and out of scope by default.
+
+**Check for BIDS dataset (only relevant if applicable):**
+- Look for `dataset_description.json`
+- Check if it contains `License` field
+- Identify data files vs. code files (`scripts/`, `code/`)
 
 **Check for build system integration:**
-- Check if tox.ini exists → suggest adding [testenv:reuse]
-- Check if .pre-commit-config.yaml exists → suggest adding reuse hook
-- Check if Makefile exists → suggest adding reuse target
-- Check if .github/workflows/ exists → suggest adding reuse check
+- `tox.ini` exists → propose adding `[testenv:reuse]`
+- `.pre-commit-config.yaml` exists → propose adding the reuse hook
+- `Makefile` exists → propose adding a `reuse-lint` target
+- `.github/workflows/` exists → propose adding a reuse check step
 
 ### 2. Propose REUSE Structure
 
-**For general projects:**
+The shape of `LICENSES/` and `REUSE.toml` follows directly from what
+you found in Step 1. **Do not add license texts the project has not
+declared.**
+
+**Default — single declared license (most projects):**
 ```
 LICENSES/
-├── Apache-2.0.txt     # Main code license
-├── CC-BY-4.0.txt      # Documentation license
-└── CC0-1.0.txt        # Public domain data
+└── <existing-license>.txt   # e.g. Apache-2.0.txt, MIT.txt — only this
 
-REUSE.toml              # License annotations
+REUSE.toml                    # one [[annotations]] block, path = ["**"]
 ```
 
-**For BIDS datasets:**
+**Multi-license — only when the project already uses multiple
+licenses** (e.g. data under CC0 + code under MIT, or vendored sub-tree
+under a different SPDX ID):
 ```
 LICENSES/
-├── CC0-1.0.txt        # Data license (if public domain)
-├── CC-BY-4.0.txt      # Data license (if attribution required)
-└── MIT.txt            # Code/scripts license
+├── <code-license>.txt
+└── <other-license>.txt       # only those already declared
 
-REUSE.toml              # Separate annotations for data vs code
-dataset_description.json  # License field + optional DUO codes
+REUSE.toml                    # one block per license-bearing path set
 ```
+
+**For BIDS datasets:** likewise driven by what `dataset_description.json`
+and any in-tree code license declares — not by adding plausible
+defaults.
 
 ### 3. Create REUSE.toml
 
-Generate appropriate annotations:
+Generate annotations using the licenses surfaced in Step 1.
 
-**Standard Project Template:**
+**Default single-license template (recommended for most projects):**
 ```toml
 version = 1
 
 [[annotations]]
-path = [
-    "src/**",
-    "tests/**",
-    "*.py",
-    "*.md",
-    ".github/**",
-]
+path = "**"
 precedence = "aggregate"
-SPDX-FileCopyrightText = "YEAR AUTHOR <email>"
+SPDX-FileCopyrightText = "YEAR-RANGE AUTHORS"   # e.g. "2019-2026 Acme, Inc. and project contributors"
+SPDX-License-Identifier = "LICENSE-ID"           # the license already in LICENSE/COPYING
+```
+
+This single block covers the entire git-tracked tree. Use it whenever
+the project has one declared license. Resist adding more blocks unless
+Step 1 surfaced explicit per-area licenses.
+
+**Multi-block template — only when justified by Step 1 findings:**
+```toml
+version = 1
+
+[[annotations]]
+path = "**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "YEAR AUTHOR"
 SPDX-License-Identifier = "LICENSE-ID"
 
+# Add additional blocks ONLY for paths the project itself licenses
+# differently (e.g. dataset_description.json says License=CC0 for data,
+# or vendored/ ships its own LICENSE).
 [[annotations]]
 path = ["data/**"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "YEAR DATA-PROVIDER"
-SPDX-License-Identifier = "CC0-1.0"
+SPDX-License-Identifier = "CC0-1.0"   # because dataset_description.json says so
 ```
 
-**BIDS Dataset Template:**
+**BIDS Dataset Template (only when applicable):**
 ```toml
 version = 1
 
@@ -243,12 +373,29 @@ SPDX-License-Identifier = "CC-BY-4.0"
 - `DUO:0000021` - Ethics approval required
 - `DUO:0000043` - Clinical care use
 
-### 5. Exclude build artifacts via `.gitignore`
+### 5. Keep scope to git-tracked files via `.gitignore`
 
-REUSE 3.x honors `.gitignore` — anything matched there is automatically
-skipped by `reuse lint`. **Do not create a `.reuseignore` file** (it is
-deprecated). Add build artifacts and caches to `.gitignore` if not
-already there:
+`reuse lint` walks the working tree, but it honors `.gitignore` —
+anything matched there is automatically skipped. It does **not**
+auto-skip untracked-but-not-gitignored files; those will appear in the
+lint output as "missing licensing." The right fix is almost always to
+add such paths to `.gitignore`, **not** to add SPDX annotations for
+them. **Do not create a `.reuseignore` file** (deprecated).
+
+Workflow:
+
+1. Run `reuse lint`. Any flagged path that is not under git control
+   (`git ls-files --error-unmatch <path>` returns non-zero) is a
+   gitignore candidate.
+2. Add those paths to `.gitignore` (or to a project-appropriate ignore
+   file). Common offenders: tool output (`.duct/`, `.idea/`), local
+   caches, generated logs, dev scratch dirs, `staticfiles/`, test
+   artifacts, screenshots.
+3. Re-run `reuse lint` until the only remaining flagged files are
+   tracked. Those — and only those — are the ones your annotation
+   blocks need to cover.
+
+Standard build-artifact entries to ensure are present in `.gitignore`:
 
 ```gitignore
 # Build artifacts and caches
@@ -442,6 +589,14 @@ DEP-3 + SPDX template so new patches are compliant out of the gate.
 
 ### License Selection
 
+> **Default behaviour: do NOT pick a license here.** Use whatever the
+> project already declares (per Step 1 / Guiding principles). The list
+> below is reference material *only* for two cases: (a) the user is
+> bootstrapping a brand-new project that has no `LICENSE` yet and asks
+> you for guidance, or (b) the user explicitly asks to relicense or to
+> add a separate license for a sub-area. In every other case, skip
+> this section.
+
 **For code:**
 - Apache-2.0: Permissive, patent grant
 - MIT: Simple, permissive
@@ -500,8 +655,20 @@ For BIDS datasets, additionally provide:
 
 ## Notes
 
-- Always preserve existing licensing information when adding REUSE compliance
-- For BIDS: License field in dataset_description.json should match REUSE.toml data annotations
-- DUO codes are complementary to licenses, not replacements
-- REUSE handles "can you legally use this?", DUO handles "under what conditions?"
-- When in doubt about DUO codes, consult institutional review board or data governance team
+- **Never invent a license the project does not already use.** Adding
+  REUSE compliance is a *cleanup* operation, not a relicensing
+  operation. If you find yourself wanting to declare CC-BY-4.0 for
+  docs or CC0-1.0 for configs in a project that has only ever shipped
+  one license, stop and ask the maintainer first.
+- Default scope is git-tracked files. Anything else gets gitignored,
+  not annotated.
+- Prefer one `[[annotations]]` block with `path = "**"` over many.
+  Add more blocks only when the project itself already distinguishes
+  per-area licensing.
+- For BIDS: `License` field in `dataset_description.json` should match
+  the REUSE.toml data annotations.
+- DUO codes are complementary to licenses, not replacements.
+- REUSE handles "can you legally use this?", DUO handles "under what
+  conditions?".
+- When in doubt about DUO codes, consult the institutional review
+  board or data governance team.
