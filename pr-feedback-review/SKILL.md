@@ -1,6 +1,6 @@
 ---
 name: pr-feedback-review
-description: Load a PR's review feedback (human + bot), classify each comment, and recommend what to address vs dismiss with draft responses. Works from a local repo directory or a PR URL.
+description: Load a PR's review feedback (human + bot) **and CI status**, classify each comment, and recommend what to address vs dismiss with draft responses. CI failures (merge conflicts, lint, tests, workflow runs) are first-class — diagnose, propose a fix, and bundle into the same actionable report. Works from a local repo directory or a PR URL.
 allowed-tools: Bash, Read, Edit, Glob, Grep, WebFetch, WebSearch, AskUserQuestion
 user-invocable: true
 ---
@@ -148,6 +148,36 @@ Fetch all of these in parallel where possible via `gh` CLI:
    gh api repos/OWNER/REPO/issues/PR_NUMBER/comments --paginate
    ```
 
+6. **CI status — combined statuses + check-runs + workflow runs.**
+   GitHub exposes CI signal through three different surfaces; fetch all
+   three so nothing is missed:
+   ```bash
+   # Legacy commit statuses (pre-commit.ci, codecov, readthedocs, etc.)
+   gh api repos/OWNER/REPO/commits/HEAD_SHA/status \
+     --jq '{state, statuses: [.statuses[] | {context, state, target_url, description}]}'
+
+   # GitHub Apps' check-runs (Copilot, custom apps, some CI providers)
+   gh api repos/OWNER/REPO/commits/HEAD_SHA/check-runs \
+     --jq '.check_runs[] | {name, status, conclusion, html_url}'
+
+   # GitHub Actions workflow runs for this branch
+   gh run list --repo OWNER/REPO --branch HEAD_BRANCH --limit 20 \
+     --json name,conclusion,status,headSha,event,url
+   ```
+   `HEAD_SHA` is `headRefOid` from Step 4.1.  The three calls overlap but
+   each surfaces a different subset; collect the union.
+
+   For any failure (`state: failure`, `conclusion: failure|cancelled|action_required`),
+   fetch enough detail to diagnose — the failure URL is usually a status page
+   or workflow log:
+   ```bash
+   # Tail the most recent failed workflow log
+   gh run view RUN_ID --repo OWNER/REPO --log-failed | tail -100
+
+   # Or, for legacy statuses (pre-commit.ci, codecov), fetch the target_url
+   # via WebFetch and ask for the failure summary.
+   ```
+
 ### Step 5 — Load Local Code Context
 
 Skip this step if `LOCAL_PATH` is empty.
@@ -166,7 +196,7 @@ Skip this step if `LOCAL_PATH` is empty.
 Store any newer commits as `LOCAL_AHEAD_COMMITS` — these may already address
 some review feedback.
 
-### Step 6 — Classify Each Comment
+### Step 6 — Classify Each Comment and CI Failure
 
 Process every comment collected in Step 4 (from reviews, inline comments, and
 issue comments). For each comment, determine:
@@ -227,6 +257,24 @@ After classification, apply filters:
 - If `--bot-only`: keep only `bot-copilot`, `bot-coderabbit`, `bot-other`
 - If `--unresolved`: keep only comments not marked resolved and not already replied-to
 
+#### CI failures as action items
+
+For each failed status / check-run / workflow run from Step 4.6, classify
+into one of these CI-failure types:
+
+| Type | Indicators / typical cause |
+|------|---------------------------|
+| `ci-merge-conflict` | pre-commit.ci "error during mergeable check"; status with `description` mentioning conflict; `gh pr view` shows `mergeable: CONFLICTING` |
+| `ci-lint` | pre-commit hook id like `ruff`, `black`, `prettier`, `eslint`, `deno fmt`; non-zero diff in formatter output |
+| `ci-test` | workflow named `tests`, `pytest`, `deno test`, `validation`, etc., conclusion `failure` |
+| `ci-build` | workflow named `build`, `docker`, `wheels`, `web build`, etc. with `conclusion: failure` |
+| `ci-coverage` | codecov status with `state: failure`; threshold not met |
+| `ci-flake` | retry succeeded, or failure obviously transient (network, timeout in unrelated job) — propose a re-run, not a fix |
+| `ci-other` | anything else; treat as `maybe` actionable, ask the user |
+
+For each, set `actionable=yes` unless `ci-flake` or `ci-coverage`-with-tiny-delta;
+set `confidence` based on how clearly the failure log identifies the cause.
+
 ### Step 7 — Generate Recommendations
 
 For each remaining comment (after filtering and skipping `self`), generate a
@@ -266,6 +314,26 @@ recommendation based on its type and actionability:
 **Bot comments with low accuracy** (bot source + actionable=no, confidence ≥ 80%):
 - Flag known bot weaknesses and draft a brief dismissal
 
+**CI failures** (any item from Step 6 "CI failures as action items"):
+- For `ci-merge-conflict`: propose a rebase onto the PR's base branch.
+  Run `git fetch <base-remote> <base-branch>` then
+  `git merge-tree --write-tree <base> HEAD` to enumerate conflicts in
+  advance.  If conflicts are mechanical (formatting, docstrings), do the
+  rebase and resolve in-band; if logic-level, surface them and stop.
+- For `ci-lint`: run the formatter/linter locally (e.g. `deno fmt`,
+  `pre-commit run --all-files`), commit the auto-fix.
+- For `ci-test`: re-run the failing test locally; if reproduces, fix the
+  underlying issue with red/green TDD; if not, flag as `ci-flake`.
+- For `ci-build`: read the build log tail, identify the missing dep /
+  syntax / config, fix at the source.
+- For `ci-coverage`: only act if the user has a coverage policy
+  (project-level convention or CLAUDE.md note); otherwise, propose a
+  reply explaining why the coverage delta is acceptable.
+- For `ci-flake`: propose `gh run rerun <run_id>` rather than a code change.
+- After any fix, re-run the relevant tests/linters locally before
+  committing — the goal is to push once and have CI go green, not to
+  ping-pong.
+
 ### Step 8 — Output Structured Report
 
 Print the following report:
@@ -285,6 +353,12 @@ Print the following report:
 - **Skipped (self)**: N
 - **Unresolved**: N
 - **Actionable**: N | **Dismissible**: N | **Already addressed**: N
+
+### CI Status
+- **Combined state**: success | failure | pending
+- For each failed status / check-run / workflow run:
+  - **`<context_or_name>`** — type: `<ci-merge-conflict | ci-lint | ci-test | ci-build | ci-coverage | ci-flake | ci-other>` — `<short cause>` ([log](URL))
+- If everything passed, write a single line: `All CI checks passing.`
 
 ### Action Items
 
@@ -383,13 +457,17 @@ selectively run replies.
 
 ### Step 9 — Interactive Follow-up
 
-Actionable issues should already be fixed and committed in Step 7.
-After presenting the report, ask the user:
+Actionable issues should already be fixed and committed in Step 7. CI
+fixes (rebases, lint auto-fixes, test repairs) are also committed in
+Step 7 — call them out separately in the follow-up so the user sees
+both reviewer-driven and CI-driven changes:
 
 - "Should I push and post the reply script?" (if fixes were committed)
-- "Any comments you want to re-classify or handle differently?"
+- "CI fixes that landed: <commits / rebase summary>. OK to force-push?"
+- "Any comments or CI items you want to re-classify or handle differently?"
 
-Wait for the user's response before taking any further action.
+Wait for the user's response before taking any further action. Do not
+push, even if all CI items look mechanical — pushing is the user's call.
 
 ## Notes
 
