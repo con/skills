@@ -1,0 +1,64 @@
+# CRediT (Contributor Roles Taxonomy) overlay for .tributors
+#
+# Vocabulary: https://credit.niso.org/  (ANSI/NISO Z39.104-2022)
+# JATS4R XML guidance: https://jats4r.niso.org/credit-taxonomy/
+# Sibling identity cache: .tributors (con/tributors convention)
+#
+# Why a separate file?
+#   The .tributors JSON cache (https://github.com/con/tributors) does not
+#   yet encode CRediT roles or byline order. This YAML overlay supplies
+#   both, indexed by the same GitHub-username key as .tributors. When
+#   con/tributors gains native CRediT support, this overlay can be folded
+#   back into .tributors directly.
+#
+# Render the in-paper section and JATS XML from this file:
+#   ~/.claude/skills/credit-contributions/render_credit.py \
+#       --format latex   .tributors.credit.yaml -o author-contributions.tex
+#   ~/.claude/skills/credit-contributions/render_credit.py \
+#       --format jats    .tributors.credit.yaml -o author-contributions.jats.xml
+#
+# Roles MUST be one of the 14 official CRediT terms (see CREDIT_ROLES.md
+# in the skill directory). The renderer normalises common variants
+# (ASCII hyphen for the en-dash, " and " for " & ") but warns on misspellings.
+
+work:
+  title: ""                       # paper title
+  # doi: 10.5281/zenodo.XXXXX     # optional, when published
+
+# Byline order — list of GitHub usernames matching .tributors entries.
+# This is the order authors appear on the title page.
+byline:
+  - <github-username-1>
+  - <github-username-2>
+
+# Per-contributor CRediT assignments. Keys are GitHub usernames.
+# Each role is either:
+#   - a bare string from the 14 canonical role names, OR
+#   - a mapping  {role: <name>, degree: lead|equal|supporting}
+contributors:
+
+  <github-username-1>:
+    # initials: A.B.C.            # optional; auto-derived from name otherwise
+    # name: Author One            # optional override; usually pulled from .tributors
+    # orcid: 0000-0000-0000-0000  # optional override; usually pulled from .tributors
+    roles:
+      - Conceptualization
+      - Methodology
+      - {role: Supervision, degree: lead}
+      - Writing – original draft
+      - Writing – review & editing
+
+  <github-username-2>:
+    roles:
+      - Software
+      - Validation
+      - Writing – review & editing
+
+# Render-time style. The renderer reads these to format the prose section.
+style:
+  # 'initials' (Nature-style: A.B.C.) | 'fullname' (Author One)
+  authors_as: initials
+  # 'byauthor' (per-author sentence) | 'byrole' (per-role sentence)
+  group_by: byauthor
+  # 'endash' (Unicode '–', canonical CRediT) | 'hyphen' (ASCII '-')
+  dash: endash
