@@ -84,8 +84,47 @@ the byline (first-appearance order = id 1, 2, ...) and tags each author
 with `\textsuperscript{<ids>}`. Affiliation in `.tributors` may be a
 single string or a list of strings (multi-affiliation authors).
 
+The affiliation footer is wrapped in a width-limited (`0.85\textwidth`),
+small-font `minipage` so long affiliation strings wrap cleanly and don't
+drag `\maketitle`'s centring wide. Width and font size are configurable
+via `style.affiliations_width` (fraction in (0, 1]) and
+`style.affiliations_size` (LaTeX size keyword).
+
+**ORCID marker.** When `.tributors` carries an `orcid` for an author,
+render_authors.py adds a hyperlinked iD marker after the author name.
+Driven by `style.orcid_marker`:
+
+- `text-id` (default) — plain superscript `iD` link, packed into the
+  affiliation superscript (no preamble change required).
+- `orcidlink` — `\orcidlink{<id>}` from the [orcidlink][] package
+  (requires `\usepackage{orcidlink}` in the manuscript preamble);
+  draws the proper green ORCID iD icon.
+- `none` — no ORCID marker.
+
+The `orcid` value in `.tributors` may be either the bare 16-digit id
+(`0000-0002-1234-5678`) or the full `https://orcid.org/...` URL; both
+forms are normalised.
+
+**Affiliation hyperlinks.** A top-level `affiliation_links:` map in
+`.tributors.credit.yaml` lets you hyperlink institution names inside
+affiliation strings, e.g.:
+
+```yaml
+affiliation_links:
+  Center for Open Neuroscience: https://centerforopenneuroscience.org/
+  Department of Psychological and Brain Sciences: https://pbs.dartmouth.edu/
+  Dartmouth College: https://dartmouth.edu/
+```
+
+Each key is matched literally inside every affiliation string; the
+longest match wins when keys overlap (e.g. "Dartmouth College" before
+"Dartmouth"). The substring is wrapped in `\href{url}{substring}` —
+hyperref's existing `urlcolor` setting handles styling.
+
 Output is meant to be `\input{authors}`'d from `main.tex` in place of a
 hand-written `\author{...}` line.
+
+[orcidlink]: https://ctan.org/pkg/orcidlink
 
 ## Workflow
 
