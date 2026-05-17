@@ -371,7 +371,21 @@ If the commit fails with "files were modified", just re-run the commit.
 
 ## Step 9: Prepare and Create Pull Request
 
+### MANDATORY: Respect upstream PR template and CONTRIBUTING.md
+
+Before drafting the PR body, follow the repo-wide rule in this collection's
+top-level `AGENTS.md` ("Respect upstream PR conventions when preparing a
+pull request"): scan for `.github/PULL_REQUEST_TEMPLATE.md` (and the
+Codeberg / Forgejo / GitLab equivalents), use it as the skeleton if
+present, read `CONTRIBUTING.md` for branch-naming / commit-message /
+changelog conventions, fill out checkboxes truthfully, and surface to the
+user both what was found and any items the user still needs to handle
+manually (e.g. enabling "Allow edits from maintainers").
+
 ### Write PR description
+
+If a template was found, fold the content below into the template's
+sections rather than overwriting its headings.
 
 Save to `.git/PR_BODY.md`:
 

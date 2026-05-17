@@ -63,6 +63,13 @@ Edit the defaults in `pr-feedback-review/SKILL.md` to match your setup.
 The remaining skills use runtime discovery (e.g., `git remote -v`,
 `gh auth status`) and do not require pre-configuration.
 
+## Repo-wide conventions
+
+See [`AGENTS.md`](AGENTS.md) (alias `CLAUDE.md`) for cross-cutting rules
+that apply to every skill in this collection — most notably the rule
+that any skill preparing a pull request must respect the upstream
+project's `PULL_REQUEST_TEMPLATE.md` and `CONTRIBUTING.md`.
+
 ## License
 
 TBD
