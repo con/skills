@@ -526,6 +526,18 @@ For each detected typo, determine:
 
 - **Domain-specific terms**: `pres` (pressure), `ans` (answer), `hist` (histogram)
 - **Intentional spellings**: test fixtures, example data, legacy API compatibility
+- **Intentional creative / humorous typos**: meme phrasings, deliberate misspellings,
+  jokes, or stylistic word choices in prose. Examples seen in real PRs:
+  - `Teh Slowest Language Evah` — meme spelling of "the"
+  - `atomical caroller` — author preferred the less common "atomical" over "atomic"
+  - Easter eggs in error messages, docstrings, ASCII art, marketing prose
+
+  **Prefer** an inline pragma at the site of the typo (Step 7.6) over
+  `ignore-words-list` / `ignore-regex`. A project-wide whitelist hides
+  future *genuine* typos of the same word, so reach for it only when the
+  pragma approach is impractical (e.g. the same intentional misspelling
+  recurs in many files, or the host file format has no comment syntax).
+  Choose the narrowest scope that does the job.
 - **Code identifiers**: variable/function names that would break if changed
 - **External references**: API endpoints, third-party constants, protocol terms
 - **Abbreviations in comments**: `recv`, `addr`, `buf`, etc.
@@ -622,6 +634,23 @@ git diff master
 - API parameter names that must remain unchanged
 - Protocol-specific terminology
 
+**4. Intentional / Humorous Typos in Prose** (easy to miss — read prose carefully):
+- Meme phrasings: `Teh Slowest Language Evah` (don't "correct" to "The ... Ever")
+- Author's deliberate word choice: `atomical caroller` (the author wanted "atomical",
+  not "atomic"), `superbness`, archaic/poetic forms
+- Easter eggs in error messages, ASCII art, docstrings, marketing copy
+- Project-internal in-jokes, branded phrasings
+- These often live in `README.md`, `pyproject.toml` descriptions, `CHANGELOG`,
+  exception messages, log strings, and test fixtures.
+
+  **Real incident (beartype/beartype#645)**: codespell "fixed" `Teh → The` and
+  `atomical → atomic` in `pyproject.toml`. The maintainer had to manually
+  re-introduce both and add per-word pragmas after the merge.
+
+  **How to tell the difference**: if the surrounding tone is playful, archaic,
+  or quoted from a meme / song / poem, suspect intent. When unsure, ask the user
+  rather than silently "correcting" it.
+
 #### How to Fix False Positives:
 
 **For regex patterns** - Add inline `codespell:ignore` comments:
@@ -631,7 +660,49 @@ email = email.replaceAll("(A|a)ddress", "");  // codespell:ignore ddress
 Pattern.compile("Acknowledge?ment?");  // codespell:ignore ment
 ```
 
-**For variable names** - Add to `ignore-words-list` in config:
+**For intentional / humorous typos** - **Prefer** an inline
+`codespell:ignore <word>` pragma adjacent to the line containing the
+misspelled word. Reach for `ignore-words-list` / `ignore-regex` only when
+the inline pragma isn't a good fit — e.g. the misspelling recurs across
+many files (whitelist scales better than scattering pragmas), or the host
+file format has no comment syntax (see fallback below). The narrowest
+scope that works is the right choice; per-occurrence pragmas preserve
+spell-checking for the same word elsewhere in the project.
+
+Pragma syntax matches the host file's comment style:
+
+```python
+# pyproject.toml (TOML uses `#`)
+description = "Teh Slowest Language Evah"  # codespell:ignore teh,evah
+
+# Python source
+ERROR_TEMPLATE = "An atomical caroller"  # codespell:ignore atomical
+```
+
+```markdown
+<!-- Markdown / HTML -->
+Welcome to **Teh** Slowest Language Evah. <!-- codespell:ignore teh,evah -->
+```
+
+```rst
+.. RST: use a substitution or trailing comment on the same line
+The Bear roars: "Superbness!"  .. codespell:ignore superbness
+```
+
+```yaml
+# YAML
+motto: "Teh Slowest Language Evah"  # codespell:ignore teh,evah
+```
+
+For file formats without line comments (pure JSON, plain `.txt`), pragmas
+aren't possible — either move the string into a commentable file, or add
+the word to `ignore-words-list` (or a tight `ignore-regex` anchored to the
+specific phrase) **with a comment in the config naming the file and line**
+so a future reader knows why the project-wide whitelist exists.
+
+**For variable names** - Add to `ignore-words-list` in config (these are
+*identifiers* whose spelling is fixed by code, not prose where future typos
+of the same word would be a real concern):
 ```ini
 # consol - variable abbreviation for "consolidation" (not "console")
 # countr - variable for 2-character country code (not "counter")
@@ -639,6 +710,23 @@ Pattern.compile("Acknowledge?ment?");  // codespell:ignore ment
 # currenty, currentx - coordinate variables (currentY, currentX)
 ignore-words-list = serie,consol,countr,inpu,currenty,currentx
 ```
+
+**Choosing the right scope** (in increasing breadth — prefer the narrowest
+that actually fits the situation):
+
+| Situation | Suggested scope | Why |
+|-----------|-----------------|-----|
+| One-off intentional typo in *prose* (string, comment, doc, README) | Inline `codespell:ignore` | Keeps spell-check active for the same word elsewhere |
+| One-off humorous / meme spelling | Inline `codespell:ignore` | Protect only this occurrence |
+| Regex pattern intentionally matching a typo | Inline `codespell:ignore` | The typo is *part of the data*, not the project's vocabulary |
+| Same intentional phrase recurring across a handful of files | Inline pragmas at each site, *or* a tight `ignore-regex` anchored to the phrase | Pragmas if review value > churn; anchored regex if churn dominates |
+| Domain term recurring across many files | `ignore-words-list` | Pragma-per-site would be noisy and incomplete |
+| Identifier (variable, function, parameter name) used many places | `ignore-words-list` | Spelling is fixed by code; whitelisting is safe and avoids pragma churn |
+| Intentional typo in a comment-less format (pure JSON, plain `.txt`) | `ignore-words-list` or anchored `ignore-regex`, with a config comment pointing back to the file | Inline pragma not syntactically possible |
+
+When in doubt, start narrow (inline pragma). Widen to `ignore-regex`
+(phrase-anchored) or `ignore-words-list` only when the narrower option is
+genuinely worse — not just because it's easier to type.
 
 #### Process:
 
@@ -1089,6 +1177,7 @@ After completing the skill:
 - `codespell -w` is safe for non-ambiguous typos - it only fixes single-suggestion typos
 - The Edit tool is for ambiguous typos that need context-based decisions
 - **Regex patterns**: Use inline `// codespell:ignore <word>` comments to protect patterns
+- **Intentional / humorous typos in prose**: prefer an inline `codespell:ignore <word>` pragma at the site of the misspelling over `ignore-words-list` / `ignore-regex` — a project-wide whitelist silences future *genuine* typos of the same word. Widen the scope only when the inline pragma is impractical (recurs in many files, or the file format has no comments). See Step 7.6 category #4 and the decision table; cf. beartype/beartype#645 for a real incident.
 - **Variable names**: Add to `ignore-words-list` with explanatory comments about what they represent
 - **Trust but verify**: codespell is good but not perfect - human review of diffs is mandatory!
 - **Pre-commit interplay**: If `.pre-commit-config.yaml` includes formatters (`black`, `ruff-format`, `prettier`) or linters with auto-fix (`ruff`, `isort`), run `pre-commit run --all-files` after every manual edit step (especially after adding `codespell:ignore` comments) — otherwise reformatting changes leak into a later commit. See Step 4.3.
