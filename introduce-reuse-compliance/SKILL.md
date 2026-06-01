@@ -472,7 +472,7 @@ reuse-annotate:
 **D. GitHub Actions Integration:**
 ```yaml
 - name: Check REUSE compliance
-  uses: fsfe/reuse-action@v5
+  uses: fsfe/reuse-action@v6
 ```
 
 ### 7. Validate and Report

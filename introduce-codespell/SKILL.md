@@ -204,7 +204,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Codespell
         uses: codespell-project/actions-codespell@8f01853be192eb0f849a5c7d721450e7a467c579  # v2.2
 ```
@@ -234,7 +234,7 @@ jobs:
       image: ghcr.io/codespell-project/actions-codespell/master:latest
     steps:
       - name: Checkout
-        uses: https://code.forgejo.org/actions/checkout@v4
+        uses: https://code.forgejo.org/actions/checkout@v6
       - name: Codespell
         run: codespell .
 ```
@@ -244,7 +244,7 @@ jobs:
 - **Runner**: `runs-on: docker` — Codeberg's shared runners use Docker containers
 - **Container image**: Uses `ghcr.io/codespell-project/actions-codespell/master:latest`
   which has codespell pre-installed (avoids pip install step)
-- **Checkout action**: Use fully qualified URL `https://code.forgejo.org/actions/checkout@v4`
+- **Checkout action**: Use fully qualified URL `https://code.forgejo.org/actions/checkout@v6`
   (Forgejo mirrors of common actions). Checkout is NOT automatic — you MUST include it.
 - **No `permissions` block**: Forgejo Actions doesn't support the `permissions` key
 - **codespell invocation**: Run `codespell .` directly (the action wrapper
