@@ -490,6 +490,56 @@ Expected output sections:
 
 Goal: 100% compliance (all files have both copyright and license info)
 
+### 7a. Reconcile root `LICENSE`/`COPYING` files
+
+If the project ships a root `LICENSE`, `LICENCE`, or `COPYING` file
+(see "Existing root `LICENSE` / `COPYING` files" in Key Concepts):
+
+1. **Diff it against `LICENSES/<SPDX-ID>.txt`.** A pre-existing root
+   file may use slightly different formatting from the
+   `reuse download`-fetched canonical SPDX text. Both are valid
+   Apache-2.0 (or whichever license); the difference is cosmetic.
+2. **Decide on reconciliation** (keep both / symlink / delete) per the
+   options listed in Key Concepts. Default: keep both, propose to the
+   user.
+3. **If symlinking or deleting, also check:**
+   - `pyproject.toml` `[project] license-files = [...]` — update path
+     references
+   - `package.json` `"license"` and any `LICENSE`-bearing package
+     scripts
+   - `MANIFEST.in` / `setup.cfg` `[options.data_files]` references
+   - `.gitattributes` export-ignore rules
+   - Any contributor-facing docs (`CONTRIBUTING.md`, `DEVELOPMENT.md`,
+     wikis) linking to the file by path
+4. **Always preserve `NOTICE`** at the root for Apache-2.0 projects —
+   it is required by §4(d) regardless of where the license text lives.
+
+### 7b. Document REUSE compliance in README / DEVELOPMENT docs
+
+Add a brief Licensing section to the project README (or
+`DEVELOPMENT.md` / `CONTRIBUTING.md` — wherever contributor guidance
+lives) so future contributors understand the layout:
+
+```markdown
+## Licensing
+
+This project follows the [REUSE specification](https://reuse.software/)
+for machine-readable copyright and licensing information.
+
+- Full license texts: `LICENSES/`
+- Per-file declarations: `REUSE.toml` (single block — everything is
+  licensed under <SPDX-ID>)
+- Verification: `tox -e reuse` (or `pre-commit run reuse --all-files`)
+
+When adding new files, no per-file SPDX header is required — the
+catch-all block in `REUSE.toml` covers the entire tree. If a file
+needs a different license (rare), add a targeted block or an in-file
+`SPDX-License-Identifier:` header.
+```
+
+Tailor wording to match the project's actual setup (single-block vs
+multi-block `REUSE.toml`, presence/absence of pre-commit, etc.).
+
 ### 8. DUO Validation (BIDS Datasets)
 
 If DUO codes are present, validate them:
@@ -502,6 +552,101 @@ If DUO codes are present, validate them:
 - CC0 + DUO:0000042 → "Open data, general research use"
 - CC-BY-4.0 + DUO:0000028 → "Attribution required, no re-identification"
 - Custom + DUO:0000021 → "Restricted access, ethics approval required"
+
+### 9. Commit only files introduced or modified by this skill
+
+After `reuse lint` reports compliance, commit the work — but **scope
+the commit strictly to the files this skill produced or touched**. The
+working tree may already contain unrelated uncommitted changes
+(user-in-progress work, generated files, dev experiments); those are
+**not yours to commit**.
+
+**Rules:**
+
+1. **Track what you wrote.** Keep an explicit list of the paths this
+   skill created or edited during the run. Typical set:
+   - `LICENSES/` (whole directory — new license texts)
+   - `LICENSE` (root file or symlink, if option 1 or 3 from "Existing
+     root `LICENSE` / `COPYING` files" was chosen)
+   - `REUSE.toml`
+   - `.gitignore` (only if you added entries to scope-limit lint)
+   - `.pre-commit-config.yaml` (only if you added the reuse hook)
+   - `.github/workflows/reuse.yml` (or whichever CI file you added)
+   - `tox.ini` / `Makefile` (only if you added a reuse target)
+   - `README.md` / `DEVELOPMENT.md` / `CONTRIBUTING.md` (only the
+     Licensing section you added)
+   - `CHANGELOG.md` / `changelog.d/*` (only if the project's
+     conventions require an entry for infrastructure changes)
+   - For BIDS-style runs: `dataset_description.json` (only the
+     DUO/License keys you added or changed)
+   - For DEP-3 runs: `patches/**` (only patches you re-headered)
+
+2. **Inspect before staging.** Run `git status --short` and
+   `git diff` over each candidate path. If a file you touched also
+   has *pre-existing* unrelated modifications by the user, do **not**
+   stage the whole file with `git add <path>`. Either:
+   - Use `git add -p <path>` to stage only the hunks you authored
+     (preferred for mixed files), or
+   - Ask the user how they want the unrelated changes handled before
+     committing.
+
+   Do **not** use `git add -A`, `git add .`, or `git commit -a`. These
+   sweep in unrelated changes and untracked files outside this
+   skill's scope, which violates the rule.
+
+3. **Stage only the skill's paths, by name.** Pass each path
+   explicitly to `git add`:
+   ```bash
+   git add LICENSES/ LICENSE REUSE.toml .pre-commit-config.yaml \
+           .github/workflows/reuse.yml README.md CHANGELOG.md
+   ```
+   Adjust the list to match the actual files produced. New
+   directories like `LICENSES/` are fine — git only stages their
+   contents, and those contents are entirely yours.
+
+4. **Verify the staging.** Run `git status --short` and
+   `git diff --cached --stat` and confirm:
+   - Every staged path is in your skill-produced list.
+   - No file appears as both staged and unstaged with conflicting
+     intent (mixed-state files mean you need `git add -p`).
+   - Unrelated user modifications remain unstaged and untouched.
+
+5. **Write a focused commit message.** Use the project's
+   `.git-meta/COMMIT_MSG` convention if `CLAUDE.md` documents it
+   (most user setups do); otherwise inline `-m` is fine. The message
+   should describe the REUSE work only — not any unrelated state
+   present in the tree. Include the Co-Authored-By trailer from the
+   "Commit Co-Authorship" section.
+
+   Example body:
+   ```
+   Introduce REUSE specification compliance
+
+   - Add LICENSES/<SPDX-ID>.txt and root LICENSE (<keep/symlink>)
+   - Add REUSE.toml with single annotation block covering **
+   - Wire reuse-tool pre-commit hook
+   - Add GitHub Actions check via fsfe/reuse-action@v6
+   - Document Licensing layout in README
+
+   `reuse lint` reports 100% compliance over the tracked tree.
+
+   Co-Authored-By: Claude Code <VERSION> / Claude <MODEL> <noreply@anthropic.com>
+   ```
+
+6. **Do NOT push.** Stop after the commit. Pushing is a governance
+   decision for the user (PR vs. direct push, branch choice, CI
+   gating). Report the commit SHA and let the user decide.
+
+7. **Report what was left untouched.** In your final summary, list
+   any unrelated uncommitted changes you observed and explicitly
+   left out of the commit, so the user knows where they stand.
+
+**Why this is non-negotiable:** REUSE introduction is a discrete,
+auditable change. Bundling it with unrelated work makes the commit
+hard to review, hard to revert, and risks committing user secrets or
+half-finished work that was never meant to be staged. A clean,
+self-contained REUSE commit is also easier to cherry-pick into other
+branches or to drop into a dedicated PR.
 
 ## Optional: Patches against external upstream + DEP-3
 

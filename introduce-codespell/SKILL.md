@@ -472,6 +472,46 @@ ignore-regex = \b[a-z]+[A-Z]\w*\b|\b[A-Z][a-z]+[A-Z]\w*\b
 ignore-words-list = inout,rouge,statics,caf,afterall,nd,ot,fo
 ```
 
+#### Multi-line ignore-words-list with per-word inline comments (`.codespellrc` only)
+
+Once the list grows past a handful of entries, the comma-separated single
+line becomes opaque — future readers (and future-you) can't tell why each
+word is there, and PR reviewers can't sanity-check additions. **In a
+`.codespellrc` file**, codespell honors INI continuation lines and `#`
+comments inside the value, so you can split the list and document each
+entry inline:
+
+```ini
+[codespell]
+skip = .git,*.pdf,*.svg,go.sum,go.mod
+check-hidden = true
+ignore-regex = https?://\S+|\b[a-z]+[A-Z]\w*\b
+ignore-words-list =
+  # variable name short for "serialized", also matches [uU]ser glob pattern
+  ser,
+  # German word "ist" appearing in test data string
+  ist,
+  # intentional truncated test string in format truncation tests
+  fo,
+  # CLI flag name (--iinclude, case-insensitive include)
+  iinclude,
+  # intentional in fake test path /doesnt/exist
+  doesnt
+```
+
+Rules of thumb:
+
+- One word per line, trailing comma after each (the last entry's comma is optional).
+- Place the `#` comment on the line immediately **above** the word, not on the same line — codespell's INI parser treats `word, # comment` as part of the value in some versions; putting `#` at column 0 of the previous line is safer and is what restic and similar projects do.
+- Lead each comment with the *reason* the word is whitelisted (variable abbreviation, intentional test fixture, CLI flag, domain term, library name, etc.), not just a definition. The reason is what lets a future reviewer decide whether the entry is still needed.
+- Real example from restic: https://github.com/restic/restic/pull/21807 — see `.codespellrc` showing this exact pattern.
+- This format works in `.codespellrc` (INI) — but **NOT in `pyproject.toml`** where `ignore-words-list` is a single TOML string. For pyproject.toml, keep the single-line comma-separated form and document words with `#` comments on adjacent lines outside the value, or migrate to `.codespellrc` if per-word commentary matters.
+
+When to adopt this format:
+- The list has more than ~5 entries
+- Multiple contributors have added entries over time and you can no longer tell what each one is for
+- You're about to add an entry that isn't self-explanatory (e.g. a 2–3 letter abbreviation, an intentional-misspelling fixture, a vendor / package name)
+
 ### Using ignore-regex for Other Pattern Exclusions
 
 For more complex cases beyond camelCase/PascalCase, use regex:
