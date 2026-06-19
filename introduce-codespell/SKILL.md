@@ -101,6 +101,75 @@ in Settings > Units > Overview.
 
 4. **If partially configured** (e.g., config but no CI): Add missing pieces
 
+### Audit runner files for hardcoded codespell options (MANDATORY)
+
+**The central config (`pyproject.toml` / `.codespellrc` / `setup.cfg`) is only
+authoritative if every runner reads it.** A runner that invokes codespell with
+its own `--skip`, `--ignore-words-list`, or `--ignore-regex` flags will silently
+diverge from the central config — and worse, may *mask* errors that a
+parallel runner (e.g. a CI workflow that runs codespell directly) does see.
+
+**Real incident**: `tox.ini` had `codespell . --skip="*.svg,*.html,*.bib,*.ipynb"`.
+The tox-driven check passed because HTML test fixtures and a BibTeX file were
+inline-skipped. When a GitHub Actions workflow was added that runs codespell
+directly (not via tox), it surfaced 18 "errors" the skill spent time
+investigating before discovering tox.ini had been hiding them all along. The
+fix: remove the `--skip="..."` from tox.ini and migrate every pattern that
+actually mattered into the central config so *all* runners agree.
+
+Grep every runner-style file for codespell invocations and flag any that pass
+their own options:
+
+```bash
+# Cast a wide net for files that may invoke codespell with CLI options
+grep -nE 'codespell([^a-zA-Z_-]|$)' \
+  tox.ini Makefile noxfile.py \
+  .pre-commit-config.yaml \
+  .github/workflows/*.y*ml .forgejo/workflows/*.y*ml .gitlab-ci.y*ml \
+  package.json scripts/* bin/* \
+  2>/dev/null
+```
+
+For each hit, examine the line — anything beyond a bare `codespell` or
+`codespell .` is a candidate to migrate:
+
+| Pattern on the runner line | What to do |
+|----------------------------|------------|
+| `codespell --skip="..." ...` | Migrate paths into central `skip`; remove the flag |
+| `codespell -I words.txt` / `--ignore-words-list=...` | Migrate words into central `ignore-words-list`; remove the flag |
+| `codespell --ignore-regex='...'` | Migrate regex into central `ignore-regex` (combine with `\|` if needed); remove the flag |
+| `codespell <explicit-file-list>` | Usually fine for pre-commit hooks that pass changed files; **but note** that explicit file arguments bypass `skip` patterns — verify the central config's `ignore-*` still applies and that no skipped file can be passed in |
+| `codespell .` (bare) | Already correct — reads central config |
+
+When you migrate options, commit the runner-file change **before** running
+codespell to analyze typos (Step 5). Otherwise the analysis will reflect the
+runner's masking, not the project's real state. Suggested commit message:
+
+```
+Drop hardcoded codespell options from <runner-file>
+
+Migrated to central config in <pyproject.toml/.codespellrc/setup.cfg>
+so every runner (tox, pre-commit, CI) sees the same skip / ignore set.
+Previously the inline --skip masked issues that <other-runner> surfaced.
+```
+
+**Why this matters specifically for pre-commit:** the pre-commit hook for
+codespell (Step 4.2) passes file paths to codespell, which bypasses
+directory-traversal `skip` patterns. If a path is *only* excluded via
+central-config `skip`, pre-commit will still try to check it (codespell will
+error per the explicit args). Use pre-commit's own `exclude:` regex to align
+the hook with the central skip list:
+
+```yaml
+- repo: https://github.com/codespell-project/codespell
+  rev: v2.4.1
+  hooks:
+  - id: codespell
+    # Mirror central skip patterns: pre-commit passes files explicitly,
+    # which bypasses codespell's own skip handling.
+    exclude: '^(petprep/data/tests/|\.mailmap$)'
+```
+
 ### If no codespell configuration exists:
 
 Proceed with Step 1 to set up from scratch.
