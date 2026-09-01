@@ -28,17 +28,6 @@ GIT_DIR="$git_dir" GIT_WORK_TREE="$work_tree" \
   git annex <command> <arguments>
 ```
 
-Run all three Git commands through the repository's declared tool environment
-when it has one. For example, in a Pixi project:
-
-```bash
-git_dir=$(pixi run git -C "$repo" rev-parse --absolute-git-dir)
-work_tree=$(pixi run git -C "$repo" rev-parse --show-toplevel)
-
-GIT_DIR="$git_dir" GIT_WORK_TREE="$work_tree" \
-  pixi run git annex <command> <arguments>
-```
-
 Keep the override local to each affected command. Do not rewrite
 `core.worktree`, replace worktree or submodule Git metadata, or export these
 variables for the surrounding shell merely to make Annex work. Those changes
