@@ -112,12 +112,12 @@ Severity thresholds:
 ## Execution
 
 ```bash
-# Review a single skill (run from inside its directory):
-SKILL_DIR=. claude --dangerously-skip-permissions --plugin-dir /path/to/con/skills -p "/skill-security-review"
+# Review a single skill interactively (skill must be in ~/.claude/skills/):
+cd /path/to/skill && claude --dangerously-skip-permissions -p "/skill-security-review"
 
-# Via yolo (Podman wrapper):
-SKILL_DIR=/path/to/skill yolo -- --dangerously-skip-permissions --plugin-dir /path/to/con/skills -p "/skill-security-review"
-
-# Driven by ci/security_review.py (reviews all skills):
+# Driven by ci/security_review.py (embeds prompt inline — works with yolo too):
 tox -e security-llm
+
+# Override launcher for yolo/Podman:
+SECURITY_CMD="yolo --worktree=skip --" tox -e security-llm
 ```
