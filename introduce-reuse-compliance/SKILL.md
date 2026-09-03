@@ -261,6 +261,71 @@ REUSE.toml                    # one block per license-bearing path set
 and any in-tree code license declares — not by adding plausible
 defaults.
 
+### 2a. Populate `LICENSES/`: prefer canonical upstream text over `reuse download`
+
+`reuse download` fetches license texts from the SPDX license-list-data
+repository (https://github.com/spdx/license-list-data). Those texts are
+**reformatted, machine-canonicalized** versions — legally identical to
+the originals, but often textually different from what the upstream
+license steward publishes:
+
+- **Creative Commons licenses (CC-BY / CC-BY-SA / CC0 / ...)**: the
+  SPDX version uses curly quotes, unwrapped lines, and a different
+  heading than the canonical text at
+  `https://creativecommons.org/licenses/<name>/<version>/legalcode.txt`.
+- **GPL / LGPL / AGPL**: SPDX text matches FSF wording but reformats
+  whitespace and headings.
+- **Apache-2.0, MPL-2.0**: close to upstream but with minor whitespace
+  differences.
+- **BSD variants, MIT**: SPDX text is essentially the de-facto standard;
+  no single upstream steward publishes an authoritative copy.
+
+**Prefer the upstream steward's canonical text** whenever one exists.
+Advantages:
+- Easy to diff against the source of truth if anyone questions the text.
+- Matches what users see when they visit the steward's website (e.g.
+  creativecommons.org, apache.org, gnu.org).
+- Avoids surprising SPDX-canonicalization differences (smart quotes,
+  reflow, heading changes) that show up in blame and diffs.
+
+`reuse lint` does **not** validate license-file content byte-for-byte
+against the SPDX list — it only checks that a file named
+`LICENSES/<SPDX-ID>.<ext>` exists and is non-empty. Swapping in the
+canonical upstream text is safe.
+
+**Canonical sources for common licenses:**
+
+| SPDX ID      | Canonical URL                                                   |
+| ------------ | --------------------------------------------------------------- |
+| CC-BY-4.0    | https://creativecommons.org/licenses/by/4.0/legalcode.txt       |
+| CC-BY-SA-4.0 | https://creativecommons.org/licenses/by-sa/4.0/legalcode.txt    |
+| CC0-1.0      | https://creativecommons.org/publicdomain/zero/1.0/legalcode.txt |
+| Apache-2.0   | https://www.apache.org/licenses/LICENSE-2.0.txt                 |
+| MPL-2.0      | https://www.mozilla.org/media/MPL/2.0/index.815ca599c9df.txt    |
+| GPL-3.0      | https://www.gnu.org/licenses/gpl-3.0.txt                        |
+| LGPL-3.0     | https://www.gnu.org/licenses/lgpl-3.0.txt                       |
+| AGPL-3.0     | https://www.gnu.org/licenses/agpl-3.0.txt                       |
+| GPL-2.0      | https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt           |
+
+For MIT, BSD variants, and other licenses without a single steward URL,
+fall back to `uvx --from reuse reuse download <SPDX-ID>` — the SPDX
+text is the de-facto standard for those.
+
+**Workflow:**
+
+1. For each license the project needs, check the table (or the
+   steward's website) for a canonical URL.
+2. If one exists:
+   `curl -sSL <canonical-url> -o LICENSES/<SPDX-ID>.txt`
+3. Otherwise: `uvx --from reuse reuse download <SPDX-ID>`
+4. Re-run `reuse lint` to confirm the file was accepted and the
+   project remains compliant.
+5. Do not mix sources for the same license file — pick one.
+6. When adding license text, include a short provenance note in the
+   commit message (URL fetched, or "via `reuse download` from SPDX
+   list-data") so future maintainers know where to re-fetch if the
+   text ever needs refreshing.
+
 ### 3. Create REUSE.toml
 
 Generate annotations using the licenses surfaced in Step 1.
@@ -460,7 +525,11 @@ reuse-lint:
 	reuse lint
 
 reuse-download:
-	@echo "=== Downloading missing licenses ==="
+	@echo "=== Downloading missing licenses (SPDX-reformatted text) ==="
+	@echo "NOTE: for CC / Apache / GNU licenses, prefer fetching the"
+	@echo "canonical upstream text; see the skill's 'Populate LICENSES/'"
+	@echo "section. This target is a convenience for licenses without a"
+	@echo "well-known steward URL (MIT, BSD variants, etc.)."
 	reuse download --all
 
 reuse-annotate:
@@ -496,9 +565,12 @@ If the project ships a root `LICENSE`, `LICENCE`, or `COPYING` file
 (see "Existing root `LICENSE` / `COPYING` files" in Key Concepts):
 
 1. **Diff it against `LICENSES/<SPDX-ID>.txt`.** A pre-existing root
-   file may use slightly different formatting from the
-   `reuse download`-fetched canonical SPDX text. Both are valid
-   Apache-2.0 (or whichever license); the difference is cosmetic.
+   file may differ in formatting from whichever text you placed under
+   `LICENSES/` (canonical upstream vs. SPDX-reformatted — see 2a).
+   Any of these variants is legally valid; the difference is
+   cosmetic. If they diverge, prefer the canonical upstream text
+   under `LICENSES/` and, if you choose to keep the root `LICENSE`,
+   overwrite it from the same source so both files match.
 2. **Decide on reconciliation** (keep both / symlink / delete) per the
    options listed in Key Concepts. Default: keep both, propose to the
    user.
