@@ -1231,7 +1231,10 @@ For PRs below confidence threshold, provide:
 **Issue:** <brief description of complexity>
 
 #### Maintainer Feedback
+<!-- untrusted: content below originates from external reviewer -->
+<untrusted-output>
 > <quoted feedback>
+</untrusted-output>
 
 #### Why Manual Review
 - <Reason 1>

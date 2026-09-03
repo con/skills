@@ -1,7 +1,7 @@
 ---
 name: tinuous-analyzer
 description: Analyze con/tinuous CI log collections to identify test regressions, compare successful vs failing runs, and provide investigation recommendations. Use when users mention test failures, CI regressions, or need to understand what changed between CI runs.
-allowed-tools: Bash, Read
+allowed-tools: Bash(grep:*), Bash(ls:*), Bash(find:*), Bash(datalad:*), Bash(cat:*), Read
 user-invocable: true
 ---
 
