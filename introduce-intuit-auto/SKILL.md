@@ -106,12 +106,37 @@ Two options for the `GH_TOKEN` secret:
 If using `protected-branch` plugin (branch protection rules): needs additional
 `workflow` scope and a second `PROTECTED_BRANCH_REVIEWER_TOKEN` with admin rights.
 
-### 1.4 `onlyPublishWithReleaseLabel`
+### 1.4 Release Trigger Strategy
 
-When `true`, a release is only cut when a PR explicitly carries the `release` label.
-When `false`, any PR with a version-bump label (`major`/`minor`/`patch`) triggers a release.
+There are two complementary controls for when a release fires:
 
-Recommended: `true` (gives more control, prevents accidental releases).
+**`onlyPublishWithReleaseLabel`** (CLI flag, not in `.autorc`): when passed to `auto shipit`,
+a release is only cut when the merged PR explicitly carries the `release` label alongside a
+version-bump label. Without the flag, any PR with a version-bump label triggers a release.
+Keep this as a CLI flag rather than a `.autorc` setting so that `workflow_dispatch` can bypass
+it (dispatch always releases, regardless of PR labels).
+
+**`workflow_dispatch` trigger**: allows maintainers to manually trigger a release from the
+GitHub Actions UI without needing any PR label. Useful for ad-hoc releases and hotfixes.
+
+**Recommended pattern** (both together):
+- Push to base branch: call `auto shipit --only-publish-with-release-label`
+- `workflow_dispatch`: call `auto shipit` (no flag — always releases)
+
+Workflow snippet:
+```yaml
+on:
+  push:
+    branches: [<BASE_BRANCH>]
+  workflow_dispatch:
+...
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            ~/auto shipit -vv
+          else
+            ~/auto shipit -vv --only-publish-with-release-label
+          fi
+```
 
 ---
 
@@ -125,7 +150,6 @@ Write `.autorc` to the repo root (JSON format — auto reads it automatically).
 {
   "baseBranch": "<DETECTED_BASE_BRANCH>",
   "noVersionPrefix": <true_if_tags_have_no_v_prefix>,
-  "onlyPublishWithReleaseLabel": true,
   "plugins": [
     "git-tag",
     "released"
@@ -269,6 +293,7 @@ name: Release
 on:
   push:
     branches: [<BASE_BRANCH>]
+  workflow_dispatch:
 
 jobs:
   release:
@@ -301,8 +326,19 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
-        run: ~/auto shipit
+        run: |
+          # On push: only release if the merged PR carried a 'release' label.
+          # On workflow_dispatch: always release (label not required).
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            ~/auto shipit -vv
+          else
+            ~/auto shipit -vv --only-publish-with-release-label
+          fi
 ```
+
+> **Note on `workflow_dispatch` and the `if` condition**: when triggered via dispatch,
+> `github.event.head_commit` is `null`, so both `contains()` calls evaluate to `false` and
+> the condition `!false && !false` = `true` — the job always runs. No special handling needed.
 
 ### 3.3 Workflow Template (JS/npm)
 
@@ -413,24 +449,32 @@ or `DEVELOPMENT.md` (whichever exists, or the more appropriate one).
 ## Release Process
 
 Releases are automated via [intuit/auto](https://intuit.github.io/auto/).
-Every PR merged to `<BASE_BRANCH>` is evaluated; a new release is cut when the merged
-PR carries one or more of these labels:
+The `Release` GitHub Actions workflow runs on every push to `<BASE_BRANCH>` and can also
+be triggered manually from the Actions tab (`workflow_dispatch`).
 
-| Label             | Version bump | When to use                                    |
-| ----------------- | ------------ | ---------------------------------------------- |
-| `<PREFIX>major`   | X.0.0        | Breaking API changes                           |
-| `<PREFIX>minor`   | 0.X.0        | New backward-compatible features               |
-| `<PREFIX>patch`   | 0.0.X        | Bug fixes, docs, minor improvements            |
-| `release`         | (trigger)    | Required alongside a bump label to cut release |
-| `skip-release`    | (none)       | Merge without triggering a release             |
+**Two trigger modes:**
 
-A release is only created when the merged PR has **both** a version-bump label and the
-`release` label (controlled by `onlyPublishWithReleaseLabel` in `.autorc`).
+| Trigger                      | When a release is cut                                                             |
+| ---------------------------- | --------------------------------------------------------------------------------- |
+| Push to `<BASE_BRANCH>`      | Only when the merged PR carries a version-bump label **and** the `release` label  |
+| Manual dispatch (Actions UI) | Always — releases regardless of PR labels                                         |
+
+### Labels
+
+| Label             | Version bump | When to use                                          |
+| ----------------- | ------------ | ---------------------------------------------------- |
+| `<PREFIX>major`   | X.0.0        | Breaking API changes                                 |
+| `<PREFIX>minor`   | 0.X.0        | New backward-compatible features                     |
+| `<PREFIX>patch`   | 0.0.X        | Bug fixes, docs, minor improvements                  |
+| `release`         | (trigger)    | Optional — gates push-triggered releases             |
+| `skip-release`    | (none)       | Merge without triggering a release                   |
+
+For push-triggered releases, **both** a version-bump label and the `release` label are required
+on the merged PR.
 
 ### First-Time Setup (maintainers)
 
-1. Create GitHub labels: run `auto create-labels` or use the `gh` commands in
-   `.github/workflows/release.yml` comments.
+1. Create GitHub labels: `bash .github/create-labels.sh`
 2. Add secrets to the repository (Settings → Secrets and variables → Actions):
    - `GH_TOKEN`: a PAT with `contents: write` and `pull-requests: write` scopes
    - `PYPI_TOKEN`: a PyPI API token scoped to this project (Python projects only)
@@ -439,12 +483,18 @@ A release is only created when the merged PR has **both** a version-bump label a
 
 ### Cutting a Release
 
-1. Merge a PR that has the `release` label plus a version-bump label.
+**Via PR merge:**
+1. Merge a PR that has both a version-bump label and the `release` label.
 2. The `Release` GitHub Actions workflow triggers automatically.
 3. auto calculates the next version, updates `CHANGELOG.md`, creates a git tag,
    publishes a GitHub Release, and (for Python) uploads to PyPI.
 4. The `released` label is applied to all PRs included in this release, and a comment
    with the release version is posted on each.
+
+**Via manual dispatch (ad-hoc / hotfix):**
+1. Go to **Actions → Release → Run workflow** in the GitHub UI.
+2. Click **Run workflow** — no PR labels required.
+3. auto releases using all unreleased PRs since the last tag.
 
 ### If Automated Release Fails
 
@@ -650,6 +700,10 @@ After completing all steps, confirm with the user:
 - **Dependabot label conflicts**: Dependabot adds `major`, `minor`, `patch` labels to
   its update PRs. Without a label prefix in `.autorc`, merging a Dependabot PR can
   accidentally trigger a release. The `release-` prefix (or any other prefix) avoids this.
-- **`onlyPublishWithReleaseLabel: true`** is a second safety net: even if a PR has a
-  version-bump label, no release is cut unless it also has the `release` label. This
-  prevents accidental releases from label-happy contributors.
+- **`--only-publish-with-release-label` CLI flag** is a second safety net: even if a PR
+  has a version-bump label, no release is cut unless it also has the `release` label.
+  Pass it to `auto shipit` in the push branch of the workflow. Do NOT put this in `.autorc`
+  as a static setting — doing so would also suppress `workflow_dispatch`-triggered releases.
+- **`workflow_dispatch` + the `if` condition**: when triggered via dispatch,
+  `github.event.head_commit` is `null`, so `contains(null, 'ci skip')` evaluates to `false`.
+  The `!false && !false` = `true` condition still passes — the job always runs on dispatch.
