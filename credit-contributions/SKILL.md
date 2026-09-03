@@ -205,7 +205,29 @@ the human authors can confirm. Do not silently fabricate attribution.
 
 If the user explicitly stated a role for someone, mark it without `DRAFT`.
 
-### Step 4 — Generate the in-paper section
+### Step 4 — Vendor the renderers (Built pattern)
+
+When wiring the renderers into the project's `Makefile` (preferred for
+projects that already have one), copy both scripts under `code/` and add
+a **vendored-file header** so the copy records exactly where it came from:
+
+```python
+# Vendored from the credit-contributions skill (https://github.com/con/skills):
+#   ~/.claude/skills/credit-contributions/render_authors.py @ <version>
+# Vendored so the <project> build is self-contained.
+# To refresh from upstream:  make fetch-authors-renderer
+# License is kept as MIT (matches upstream) so refresh is a clean copy.
+```
+
+Replace `<version>` with `git -C ~/.claude/skills/credit-contributions describe --always`
+(the short SHA or tag from the skills repo). This ties the vendored copy to
+an exact upstream commit so drift is visible in diffs.
+
+The `make fetch-*-renderer` targets handle this automatically: they copy the
+skill file and `sed`-stamp the `@ <version>` suffix onto the path line.
+When writing those targets by hand, follow the same pattern.
+
+### Step 5 — Generate the in-paper section
 
 Identify the section anchor in the manuscript (typically an empty
 `Author Contributions` heading or a placeholder). Render with the format
@@ -227,7 +249,7 @@ Two integration patterns are acceptable:
   the render call into `Makefile` so it stays in sync. Prefer this
   pattern when the project already has a `Makefile`.
 
-### Step 5 — Emit JATS XML (when relevant)
+### Step 6 — Emit JATS XML (when relevant)
 
 If the venue accepts JATS XML submission (most Nature, eLife, PLOS,
 Frontiers do), also emit the machine-readable form:
@@ -244,7 +266,7 @@ carries `vocab="credit"`, `vocab-identifier`, `vocab-term`, and
 The renderer also emits ORCID as a `<contrib-id contrib-id-type="orcid">`
 element when present in `.tributors`.
 
-### Step 6 — Validate and integrate
+### Step 7 — Validate and integrate
 
 ```bash
 python3 ~/.claude/skills/credit-contributions/render_credit.py \
