@@ -41,8 +41,9 @@ def detect_git_info(scan_path):
         ).stdout.strip()
         if not remote_url or not branch:
             return None, None
-        # Convert git@ or https:// URL to browse URL
+        # Convert git@ or https:// URL to browse URL; strip embedded credentials.
         browse_url = remote_url
+        browse_url = re.sub(r"https?://[^@]+@", "https://", browse_url)
         browse_url = re.sub(r"\.git$", "", browse_url)
         browse_url = re.sub(
             r"^git@([^:]+):", r"https://\1/", browse_url

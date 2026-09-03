@@ -1,7 +1,7 @@
 ---
 name: introduce-intuit-auto
 description: Introduce automated releases using intuit/auto to a project. Creates .autorc, GitHub Actions release workflow, GitHub labels (with optional prefix to avoid dependabot conflicts), CHANGELOG transition, and release documentation. Use when setting up auto-release for GitHub projects (Python/PyPI, JS/npm, or pure GitHub releases).
-allowed-tools: Bash, Read, Edit, Write, Glob, Grep, AskUserQuestion, WebFetch
+allowed-tools: Bash, Read, Edit, Write, Glob, Grep, AskUserQuestion
 user-invocable: true
 ---
 

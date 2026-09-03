@@ -1,7 +1,7 @@
 ---
 name: issue-triage
 description: Triage open GitHub issues by cross-referencing against codebase and git history
-allowed-tools: Bash, Read, Write, Edit, Glob, Grep, WebFetch, WebSearch, Task, AskUserQuestion
+allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Task, AskUserQuestion
 user-invocable: true
 ---
 

@@ -25,7 +25,7 @@ user in the loop.
 This skill uses the following values. Adjust for your setup by editing this section:
 
 - **SCAN_DIRS**: `~/proj` — comma-separated parent directories to scan for git repos
-- **GITHUB_USER**: `yarikoptic` — your GitHub username
+- **GITHUB_USER**: `$(git config github.user || git config user.email | cut -d@ -f1)` — your GitHub username; edit this section to hardcode if auto-detection is wrong
 - **MAX_SCAN_DEPTH**: `3` — how deep to recurse when scanning for repos
 - **AI_COMPANION_TOKEN_FILE**: `~/.claude/gh-token` — path to a shell-sourceable
   file that exports `GH_TOKEN` for an AI companion GitHub account (e.g.
@@ -411,13 +411,28 @@ selectively run replies.
 2. For each non-self comment (skipping comments already replied to by
    `$GITHUB_USER`), generate a `gh api` call. **Important**: pipe all
    `gh api` output through `> /dev/null` to suppress JSON responses, and
-   use `&&` to print a short status on success or catch errors:
+   use `&&` to print a short status on success or catch errors.
+
+   **Shell-injection safety**: reply bodies often contain backticks and
+   `$(...)` sequences (code references, commit SHAs in backtick format).
+   Do **not** embed the body in a double-quoted string (`-f body="..."`);
+   instead, use `jq` or Python to produce a safe JSON payload and pipe it
+   via `--input -`:
    ```bash
    # <file>:<line> — <short description> [ADDRESSED|DISMISSED|DISCUSS]
    # https://github.com/OWNER/REPO/pull/PR_NUMBER#discussion_rCOMMENT_ID
-   gh api "repos/OWNER/REPO/pulls/PR_NUMBER/comments/COMMENT_ID/replies" \
-     -f body="<reply text>" > /dev/null && echo "  replied to COMMENT_ID" \
+   jq -n --arg body '<reply text>' '{"body": $body}' \
+     | gh api "repos/OWNER/REPO/pulls/PR_NUMBER/comments/COMMENT_ID/replies" \
+       --input - > /dev/null \
+     && echo "  replied to COMMENT_ID" \
      || echo "  FAILED to reply to COMMENT_ID"
+   ```
+   If `jq` is unavailable, use Python instead:
+   ```bash
+   python3 -c "import json,sys; print(json.dumps({'body':sys.argv[1]}))" \
+     '<reply text>' \
+     | gh api "repos/OWNER/REPO/pulls/PR_NUMBER/comments/COMMENT_ID/replies" \
+       --input - > /dev/null
    ```
    For `[ADDRESSED]` comments that were fixed via commit (Step 7), include
    the short commit SHA and first line of the commit message in the reply
