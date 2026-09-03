@@ -84,6 +84,27 @@ the byline (first-appearance order = id 1, 2, ...) and tags each author
 with `\textsuperscript{<ids>}`. Affiliation in `.tributors` may be a
 single string or a list of strings (multi-affiliation authors).
 
+**Corresponding authors.** Mark one or more contributors with
+`corresponding: true` in `.tributors.credit.yaml` (under `contributors:`):
+
+```yaml
+contributors:
+  asmacdo:
+    corresponding: true
+    roles: [...]
+  yarikoptic:
+    corresponding: true
+    roles: [...]
+```
+
+Each flagged author gets `*` added to their superscript markers, and a
+`Corresponding author(s): <names>` line (in byline order) is appended below
+the affiliations. When no contributor carries the flag, the first byline
+author is used as the corresponding author (historical default). `render_credit.py
+--format jats` emits `corresp="yes"` on their `<contrib>` element and, when
+`.tributors` carries an `email`, an `<email>` child; the JATS renderer never
+guesses a corresponding author when none is explicitly flagged.
+
 The affiliation footer is wrapped in a width-limited (`0.85\textwidth`),
 small-font `minipage` so long affiliation strings wrap cleanly and don't
 drag `\maketitle`'s centring wide. Width and font size are configurable

@@ -21,6 +21,19 @@ Per-author ``.tributors`` schema for affiliation:
 
 Authors without an ``affiliation`` field are rendered without a superscript;
 no affiliation footer is emitted if no author has one.
+
+Corresponding authors are declared in ``.tributors.credit.yaml`` with a
+per-contributor ``corresponding: true`` flag:
+
+  contributors:
+    asmacdo:
+      corresponding: true
+      roles: [...]
+
+Every flagged author gets ``*`` appended to their superscript markers, and a
+``Corresponding author(s): <names>`` line, listing them in byline order, is
+appended below the affiliations. When no author carries the flag, the first
+byline author is treated as corresponding (the historical behaviour).
 """
 
 from __future__ import annotations
@@ -90,6 +103,31 @@ def _linkify(text: str, links: dict[str, str]) -> str:
     return pattern.sub(_sub, text)
 
 
+def _corresponding_handles(credit: dict, byline: list[str]) -> list[str]:
+    """Return the handles flagged ``corresponding: true``, in byline order.
+
+    The flag lives in the ``contributors:`` map of the credit overlay, next
+    to the CRediT roles, because being a corresponding author is a property
+    of this manuscript rather than of the person's identity (``.tributors``).
+    With no flag anywhere, the first byline author is returned so that
+    projects predating the flag keep their previous rendering.
+    """
+    contributors = credit.get("contributors") or {}
+    flagged = {
+        handle
+        for handle, entry in contributors.items()
+        if (entry or {}).get("corresponding")
+    }
+    unknown = flagged - set(byline)
+    if unknown:
+        raise ValueError(
+            "corresponding author(s) not in the byline: "
+            + ", ".join(sorted(unknown))
+        )
+    ordered = [handle for handle in byline if handle in flagged]
+    return ordered or byline[:1]
+
+
 def _orcid_url(orcid: str) -> str:
     return orcid if orcid.startswith("http") else f"https://orcid.org/{orcid}"
 
@@ -137,8 +175,11 @@ def render(credit: dict, tributors: dict[str, dict]) -> str:
     # via render_authors._linkify (longest-key-first).
     aff_links: dict[str, str] = dict(credit.get("affiliation_links") or {})
 
+    corresponding = set(_corresponding_handles(credit, byline))
+
     aff_id: dict[str, int] = {}
     rendered_authors: list[str] = []
+    corresponding_names: list[str] = []
 
     for handle in byline:
         entry = tributors.get(handle, {})
@@ -158,6 +199,11 @@ def render(credit: dict, tributors: dict[str, dict]) -> str:
         #   none      — no ORCID marker rendered.
         orcid = entry.get("orcid")
         sup_parts: list[str] = [",".join(str(i) for i in ids)] if ids else []
+        # Corresponding authors get "*" in the superscript; their names are
+        # collected for the footer line below the affiliations.
+        if handle in corresponding:
+            sup_parts.append("*")
+            corresponding_names.append(name)
         trailing = ""
         if orcid and orcid_marker == "text-id":
             sup_parts.append(f"\\href{{{_orcid_url(orcid)}}}{{iD}}")
@@ -165,6 +211,14 @@ def render(credit: dict, tributors: dict[str, dict]) -> str:
             trailing = f"~\\orcidlink{{{_orcid_id(orcid)}}}"
         sup = f"\\textsuperscript{{{','.join(sup_parts)}}}" if sup_parts else ""
         rendered_authors.append(f"{name}{sup}{trailing}")
+
+    corresponding_line: str | None = None
+    if corresponding_names:
+        label = "Corresponding author"
+        if len(corresponding_names) > 1:
+            label += "s"
+        joined = ", ".join(corresponding_names)
+        corresponding_line = f"\\textsuperscript{{*}}{label}: {joined}"
 
     lines: list[str] = [
         "% AUTO-GENERATED from .tributors{,.credit.yaml} by render_authors.py — do not hand-edit.",
@@ -175,16 +229,21 @@ def render(credit: dict, tributors: dict[str, dict]) -> str:
         sep = "," if i < len(rendered_authors) - 1 else ""
         lines.append(f"  {author}{sep}")
 
-    if aff_id:
+    if aff_id or corresponding_line:
         lines.append("  \\\\[0.5ex]")
         lines.append(
             f"  \\begin{{minipage}}{{{aff_width}\\textwidth}}\\centering\\{aff_size}"
         )
         sorted_affs = sorted(aff_id.items(), key=lambda kv: kv[1])
-        for aff, idx in sorted_affs:
-            sep = " \\\\" if idx < len(sorted_affs) else ""
-            aff_rendered = _linkify(aff, aff_links)
-            lines.append(f"    \\textsuperscript{{{idx}}}{aff_rendered}{sep}")
+        rows = [
+            f"    \\textsuperscript{{{idx}}}{_linkify(aff, aff_links)}"
+            for aff, idx in sorted_affs
+        ]
+        if corresponding_line:
+            rows.append(f"    {corresponding_line}")
+        for i, row in enumerate(rows):
+            sep = " \\\\" if i < len(rows) - 1 else ""
+            lines.append(f"{row}{sep}")
         lines.append("  \\end{minipage}")
 
     lines.append("}")
