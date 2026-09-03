@@ -81,6 +81,36 @@ _VALID_SIZES = {
 
 _VALID_ORCID_MARKERS = {"text-id", "orcidlink", "none"}
 
+_VALID_SEPARATORS = {"comma", "and"}
+
+
+def _compress_ids(ids: list[int]) -> str:
+    """Format integers, compressing consecutive runs of 3+ into 'n--m'."""
+    if not ids:
+        return ""
+    parts: list[str] = []
+    run_start = ids[0]
+    run_end = ids[0]
+    for n in ids[1:]:
+        if n == run_end + 1:
+            run_end = n
+        else:
+            parts.append(
+                f"{run_start}--{run_end}" if run_end >= run_start + 2
+                else ",".join(str(x) for x in range(run_start, run_end + 1))
+            )
+            run_start = run_end = n
+    parts.append(
+        f"{run_start}--{run_end}" if run_end >= run_start + 2
+        else ",".join(str(x) for x in range(run_start, run_end + 1))
+    )
+    return ",".join(parts)
+
+
+def _latex_escape_text(text: str) -> str:
+    """Escape LaTeX special characters in plain-text affiliation strings."""
+    return text.replace("&", r"\&")
+
 
 def _linkify(text: str, links: dict[str, str]) -> str:
     """Wrap each ``links`` key found in ``text`` with ``\\href{url}{key}``.
@@ -170,6 +200,14 @@ def render(credit: dict, tributors: dict[str, dict]) -> str:
             f"style.orcid_marker must be one of {sorted(_VALID_ORCID_MARKERS)}; "
             f"got {orcid_marker!r}"
         )
+    # author_separator: "comma" → ", " between names (default);
+    # "and" → LaTeX \and between names (arxiv.sty renders it as "·").
+    author_separator = str(style.get("author_separator", "comma"))
+    if author_separator not in _VALID_SEPARATORS:
+        raise ValueError(
+            f"style.author_separator must be one of {sorted(_VALID_SEPARATORS)}; "
+            f"got {author_separator!r}"
+        )
 
     # Top-level: substring → URL replacements applied to every affiliation
     # via render_authors._linkify (longest-key-first).
@@ -198,7 +236,7 @@ def render(credit: dict, tributors: dict[str, dict]) -> str:
         #               after the superscript (needs \usepackage{orcidlink}).
         #   none      — no ORCID marker rendered.
         orcid = entry.get("orcid")
-        sup_parts: list[str] = [",".join(str(i) for i in ids)] if ids else []
+        sup_parts: list[str] = [_compress_ids(ids)] if ids else []
         # Corresponding authors get "*" in the superscript; their names are
         # collected for the footer line below the affiliations.
         if handle in corresponding:
@@ -224,19 +262,22 @@ def render(credit: dict, tributors: dict[str, dict]) -> str:
         "% AUTO-GENERATED from .tributors{,.credit.yaml} by render_authors.py — do not hand-edit.",
         "\\author{%",
     ]
-    # Comma-separate authors; one per line for readable source diff.
+    # Separate authors with comma or \and; one per line for readable source diff.
     for i, author in enumerate(rendered_authors):
-        sep = "," if i < len(rendered_authors) - 1 else ""
+        if i < len(rendered_authors) - 1:
+            sep = " \\and" if author_separator == "and" else ","
+        else:
+            sep = ""
         lines.append(f"  {author}{sep}")
 
     if aff_id or corresponding_line:
         lines.append("  \\\\[0.5ex]")
         lines.append(
-            f"  \\begin{{minipage}}{{{aff_width}\\textwidth}}\\centering\\{aff_size}"
+            f"  \\begin{{minipage}}{{{aff_width}\\textwidth}}\\normalfont\\centering\\{aff_size}"
         )
         sorted_affs = sorted(aff_id.items(), key=lambda kv: kv[1])
         rows = [
-            f"    \\textsuperscript{{{idx}}}{_linkify(aff, aff_links)}"
+            f"    \\textsuperscript{{{idx}}}{_linkify(_latex_escape_text(aff), aff_links)}"
             for aff, idx in sorted_affs
         ]
         if corresponding_line:

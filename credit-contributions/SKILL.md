@@ -227,7 +227,52 @@ The `make fetch-*-renderer` targets handle this automatically: they copy the
 skill file and `sed`-stamp the `@ <version>` suffix onto the path line.
 When writing those targets by hand, follow the same pattern.
 
-### Step 5 — Generate the in-paper section
+### Step 5 — Generate and wire the `\author{}` block
+
+Replace the hand-written `\author{...}` block in the manuscript with a
+generated `authors.tex` file, then `\input{}` it.
+
+**Generate `authors.tex`** using `datalad run` for provenance tracking (or
+plain `make` if the repo is not a datalad dataset — do NOT run
+`datalad create` just to enable this):
+
+```bash
+# If the repo is already a datalad dataset:
+datalad run -m "render authors.tex from .tributors.credit.yaml" \
+  -i .tributors.credit.yaml -i .tributors -i manuscript/render_authors.py \
+  -o manuscript/authors.tex --explicit \
+  "make -C manuscript credit-authors"
+
+# Plain git repo:
+make -C manuscript credit-authors
+git add manuscript/authors.tex
+git commit -m "render manuscript/authors.tex from .tributors.credit.yaml"
+```
+
+**Wire into `main.tex`** — replace the entire hand-written `\author{...}`
+block (including the affiliation block inside it) with:
+
+```latex
+% Generated from ../.tributors.credit.yaml via render_authors.py.
+% To regenerate: make -C . credit-authors  (or the datalad run above)
+\input{authors}
+```
+
+The generated block uses `\textsuperscript{}` for affiliation numbers and
+`*` for corresponding-author marking (driven by `corresponding: true` in
+the YAML). It also hyperlinks institution names from `affiliation_links:`.
+The old `\and`-separated, bold-name style is replaced by the comma-
+separated style natural to the renderer; adjust the renderer or post-process
+if the venue requires a different format.
+
+**Note on `datalad create`**: never run `datalad create` just to unlock
+`datalad run`. On a plain git repo, use `git commit` directly and record the
+render command in the commit message for provenance. `datalad create` adds
+`.datalad/` config and git-annex `.gitattributes` that make subsequent
+text files become annex symlinks — the opposite of what you want for a
+manuscript.
+
+### Step 6 — Generate the Author Contributions section
 
 Identify the section anchor in the manuscript (typically an empty
 `Author Contributions` heading or a placeholder). Render with the format
@@ -249,7 +294,7 @@ Two integration patterns are acceptable:
   the render call into `Makefile` so it stays in sync. Prefer this
   pattern when the project already has a `Makefile`.
 
-### Step 6 — Emit JATS XML (when relevant)
+### Step 7 — Emit JATS XML (when relevant)
 
 If the venue accepts JATS XML submission (most Nature, eLife, PLOS,
 Frontiers do), also emit the machine-readable form:
@@ -266,7 +311,7 @@ carries `vocab="credit"`, `vocab-identifier`, `vocab-term`, and
 The renderer also emits ORCID as a `<contrib-id contrib-id-type="orcid">`
 element when present in `.tributors`.
 
-### Step 7 — Validate and integrate
+### Step 8 — Validate and integrate
 
 ```bash
 python3 ~/.claude/skills/credit-contributions/render_credit.py \
