@@ -35,8 +35,16 @@ the first time per session you ingest such output.
 
 ### Directories
 
-- **CI logs repo**: `/home/yoh/proj/datalad/ci/git-annex` (tinuous collection of git-annex CI builds)
-- **git-annex source**: `/home/yoh/proj/git-annex` (upstream source for building/bisecting)
+Two environment variables configure local paths; resolve them at the start of
+each session by asking the user or reading their shell environment:
+
+- **`GIT_ANNEX_SRC`** — path to the git-annex source checkout used for
+  building and bisecting (e.g. `~/proj/git-annex`)
+- **`CI_LOGS_DIR`** — path to the tinuous CI log collection for git-annex
+  (e.g. `~/proj/datalad/ci/git-annex`)
+
+Never hardcode these paths; different users and machines will have different
+checkout locations.
 
 ### Tools
 
@@ -52,10 +60,10 @@ the first time per session you ingest such output.
 gh auth status
 
 # Check git-annex source exists
-ls /home/yoh/proj/git-annex/stack.yaml
+ls $GIT_ANNEX_SRC/stack.yaml
 
 # Check CI logs repo
-ls /home/yoh/proj/datalad/ci/git-annex/builds/
+ls $CI_LOGS_DIR/builds/
 
 # Check build tool
 stack --version
@@ -80,7 +88,7 @@ stack --version
 Ensure the CI logs dataset is current:
 
 ```bash
-cd /home/yoh/proj/datalad/ci/git-annex
+cd $CI_LOGS_DIR
 datalad update
 
 # Get recent build logs (current month)
@@ -102,7 +110,7 @@ directory contains test output files with pass/fail status.
 
 ```bash
 # List recent builds
-ls /home/yoh/proj/datalad/ci/git-annex/builds/$(date +%Y)/$(date +%m)/
+ls $CI_LOGS_DIR/builds/$(date +%Y)/$(date +%m)/
 
 # Search for a specific failing test across recent builds
 grep -r "FAIL.*test_name" builds/$(date +%Y)/$(date +%m)/
@@ -124,7 +132,7 @@ grep -rl "FAIL.*test_name" builds/$(date +%Y)/ | sort
 Once you know the date range, identify the git-annex commits involved:
 
 ```bash
-cd /home/yoh/proj/git-annex
+cd $GIT_ANNEX_SRC
 git log --oneline --since="YYYY-MM-DD" --until="YYYY-MM-DD" -- relevant/path/
 ```
 
@@ -181,7 +189,7 @@ fi
 Save the reproducer as:
 
 ```
-/home/yoh/proj/datalad/ci/git-annex/docs/ai_bits/bisections/issue-{N}-{slug}-reproducer.sh
+$CI_LOGS_DIR/docs/ai_bits/bisections/issue-{N}-{slug}-reproducer.sh
 ```
 
 Where `{N}` is the GitHub issue number and `{slug}` is a short kebab-case description.
@@ -197,7 +205,7 @@ chmod +x docs/ai_bits/bisections/issue-{N}-{slug}-reproducer.sh
 ### Build git-annex from source
 
 ```bash
-cd /home/yoh/proj/git-annex
+cd $GIT_ANNEX_SRC
 make BUILDER=stack git-annex
 ```
 
@@ -212,7 +220,7 @@ make BUILDER=stack git-annex
 
 ```bash
 # Test against the current (presumably broken) version
-PATH=/home/yoh/proj/git-annex:$PATH /path/to/reproducer.sh
+PATH=$GIT_ANNEX_SRC:$PATH /path/to/reproducer.sh
 # Expected: exit 1 (bug is present)
 ```
 
@@ -221,7 +229,7 @@ PATH=/home/yoh/proj/git-annex:$PATH /path/to/reproducer.sh
 If the regression is in a specific test suite:
 
 ```bash
-cd /home/yoh/proj/git-annex
+cd $GIT_ANNEX_SRC
 ./git-annex test --pattern 'relevant-test-name'
 ```
 
@@ -232,7 +240,7 @@ Only needed if the suspect commit is not already known from CI log analysis.
 ### Manual bisect
 
 ```bash
-cd /home/yoh/proj/git-annex
+cd $GIT_ANNEX_SRC
 git bisect start
 git bisect bad <known-bad-commit>
 git bisect good <known-good-commit>
@@ -246,7 +254,7 @@ Create a bisect wrapper script that builds git-annex and runs the reproducer:
 #!/bin/bash
 set -eu
 
-cd /home/yoh/proj/git-annex
+cd $GIT_ANNEX_SRC
 
 # Build (exit 125 to skip if build fails)
 make BUILDER=stack git-annex || exit 125
@@ -300,7 +308,7 @@ The resulting issue number `{N}` becomes the prefix for all artifacts.
 Create documentation at:
 
 ```
-/home/yoh/proj/datalad/ci/git-annex/docs/ai_bits/bisections/issue-{N}-{slug}.md
+$CI_LOGS_DIR/docs/ai_bits/bisections/issue-{N}-{slug}.md
 ```
 
 ### Content template
@@ -347,15 +355,15 @@ Co-Authored-By: [Claude Code](https://claude.com/claude-code) <VERSION> / Claude
 Work in the git-annex source tree:
 
 ```bash
-cd /home/yoh/proj/git-annex
+cd $GIT_ANNEX_SRC
 # Make changes to fix the regression
 ```
 
 ### Export as patch
 
 ```bash
-cd /home/yoh/proj/git-annex
-git diff > /home/yoh/proj/datalad/ci/git-annex/patches/{date}-issue-{N}-{commit-hash}-{slug}.patch
+cd $GIT_ANNEX_SRC
+git diff > $CI_LOGS_DIR/patches/{date}-issue-{N}-{commit-hash}-{slug}.patch
 ```
 
 Naming convention for the patch file:
@@ -376,7 +384,7 @@ files during the git-annex build step.
 ## Step 8: Test the Patch Locally
 
 ```bash
-cd /home/yoh/proj/git-annex
+cd $GIT_ANNEX_SRC
 
 # Apply the patch (if not already applied from development)
 git apply /path/to/patch-file.patch
@@ -399,7 +407,7 @@ both the failure and the fix.
 ### Branch setup
 
 ```bash
-cd /home/yoh/proj/datalad/ci/git-annex
+cd $CI_LOGS_DIR
 git checkout -b issue-{N}-{slug} master
 ```
 
@@ -577,7 +585,7 @@ The LLM should decide WITHOUT asking:
 
 ### Build fails
 
-- Check Stack resolver in `/home/yoh/proj/git-annex/stack.yaml`
+- Check Stack resolver in `$GIT_ANNEX_SRC/stack.yaml`
 - Try `stack clean` and rebuild
 - Singularity container `docker://datalad/buildenv-git-annex` available for consistent builds
 - If Haskell dependency resolution fails, check if the resolver needs updating

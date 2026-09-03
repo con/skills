@@ -1,0 +1,43 @@
+---
+name: Validate skills
+
+on:
+  pull_request:
+    paths:
+      - '*/SKILL.md'
+      - '*/**.py'
+      - 'ci/validate_skills.py'
+      - 'tox.ini'
+      - '.github/workflows/validate.yml'
+  push:
+    branches: [main]
+    paths:
+      - '*/SKILL.md'
+      - '*/**.py'
+      - 'ci/validate_skills.py'
+  workflow_dispatch:
+
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install tox
+        run: pip install tox tox-uv
+
+      - name: Validate all skills
+        run: tox -e validate
