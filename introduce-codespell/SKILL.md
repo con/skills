@@ -213,16 +213,38 @@ Scan for common file types that should be skipped:
 - Data files: `*.niml`, `*.gii`, `*.pgm`
 - CSS: `*.css` (often has vendor prefixes flagged as typos)
 - Generated: `versioneer.py`
+- **Author-workflow scratch: `.git-meta`** (see below — MANDATORY)
 
 **Important**: Check for untracked local directories (like `docs/build/`) that may contain
 build artifacts. These won't show in `git ls-files` but will be scanned by codespell.
+
+#### MANDATORY: skip `.git-meta`
+
+`.git-meta/` is a per-repo working folder for commit and PR message drafts (see
+the "Git Workflow" section of `~/.claude/CLAUDE.md`). It is git-excluded and
+never committed, so it lives on disk only during a working session — but
+codespell walks the filesystem, so it will still lint files there.
+
+That's a problem specifically for the codespell workflow: commit and PR
+messages routinely quote the very typos being fixed (e.g. `ancestory ->
+ancestry`, `Sandwhich -> Sandwich`), and having codespell "re-flag" those
+would either force noisy pragmas into every message file or cause `codespell
+-w` to rewrite the message you just wrote. **Always add `.git-meta` to the
+central `skip` list**, regardless of whether the folder currently exists in
+this checkout — future sessions of this same skill (and any other message-
+drafting workflow) will create it. This is a one-line insertion that costs
+nothing and prevents a recurring papercut.
+
+The pattern goes in the same `skip` list as the other author-workflow
+excludes. Add `.git-meta` (matches the directory) — codespell's directory
+traversal handles pruning without needing a trailing `/*`.
 
 ### Initial Config Template
 
 For `.codespellrc`:
 ```ini
 [codespell]
-skip = .git,.gitignore,.gitattributes,*.pdf,*.svg,*.css,*.min.*,.npm,.cache,*/i18n/*,*/build/*
+skip = .git,.git-meta,.gitignore,.gitattributes,*.pdf,*.svg,*.css,*.min.*,.npm,.cache,*/i18n/*,*/build/*
 check-hidden = true
 # ignore-regex =
 # ignore-words-list =
@@ -231,7 +253,7 @@ check-hidden = true
 For `pyproject.toml`:
 ```toml
 [tool.codespell]
-skip = '.git,.gitignore,.gitattributes,*.pdf,*.svg,*.css,*.min.*,.npm,.cache,*/i18n/*,*/build/*'
+skip = '.git,.git-meta,.gitignore,.gitattributes,*.pdf,*.svg,*.css,*.min.*,.npm,.cache,*/i18n/*,*/build/*'
 check-hidden = true
 # ignore-regex = ''
 # ignore-words-list = ''
@@ -248,12 +270,52 @@ ignore-regex = ^\s*"image/\S+": ".*
 
 Create the workflow file for the appropriate platform (detected in Step 0).
 
+### 2.0 Inspect existing workflows for conventions (MANDATORY)
+
+Before writing any workflow file, read the project's existing workflow files to detect two conventions. **Follow them if present.**
+
+```bash
+ls .github/workflows/*.yml .forgejo/workflows/*.yml 2>/dev/null
+```
+
+#### Convention 1: Copyright/license header
+
+Check whether existing workflow files have a copyright/license comment block at the top:
+
+```bash
+head -5 .github/workflows/*.yml 2>/dev/null
+```
+
+If every existing workflow starts with a block like:
+```yaml
+# Copyright (C) 2020 Sebastian Pipping <sebastian@pipping.org>
+# Licensed under GPL v3 or later
+```
+then **add an equivalent header to the new codespell workflow**, attributing it to the current contributor (you/the user) and the current year. Do NOT copy someone else's copyright — create a new line for the actual author of the new file.
+
+If no existing workflow has such a header, omit it from the codespell workflow too.
+
+#### Convention 2: Action version pinning to checksums
+
+Check whether existing workflows pin action versions to full commit SHAs:
+
+```bash
+grep 'uses:' .github/workflows/*.yml 2>/dev/null | head -20
+```
+
+If every `uses:` line looks like `uses: actions/checkout@<40-char-sha>  # v...`, then **pin every action in the new codespell workflow to its checksum** too.
+
+To find the current SHA for `actions/checkout`, look at what the project already uses (copy from another workflow — they all pin to the same commit). For `codespell-project/actions-codespell`, the checksum is already pinned in the template below; verify it is still current by checking the action's releases if needed.
+
+If no existing workflow pins to checksums, use tagged versions instead (e.g., `actions/checkout@v4`).
+
 ### GitHub Actions
 
 Create `.github/workflows/codespell.yml`:
 
 ```yaml
 # Codespell configuration is within <CONFIG_FILE>
+# <COPYRIGHT_HEADER_IF_PROJECT_CONVENTION — see §2.0>
 ---
 name: Codespell
 
@@ -273,19 +335,24 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@<SHA_FROM_PROJECT_OR_CURRENT_RELEASE>  # vX.Y.Z
       - name: Codespell
         uses: codespell-project/actions-codespell@8f01853be192eb0f849a5c7d721450e7a467c579  # v2.2
 ```
+
+**When filling in `actions/checkout`**: copy the pinned SHA from another workflow in the project (they all use the same pin). If the project does not pin to checksums, use a tagged version like `actions/checkout@v4`.
 
 **Note**: Problem matcher annotations are now built into `actions-codespell@v2` (and later versions) - no need for a separate `codespell-problem-matcher` step.
 
 ### Forgejo Actions (Codeberg and other Forgejo instances)
 
+Apply the same §2.0 convention checks to `.forgejo/workflows/` before creating the file.
+
 Create `.forgejo/workflows/codespell.yml`:
 
 ```yaml
 # Codespell configuration is within <CONFIG_FILE>
+# <COPYRIGHT_HEADER_IF_PROJECT_CONVENTION — see §2.0>
 ---
 name: Codespell
 
@@ -445,6 +512,13 @@ Run codespell to list all detected issues:
 ```bash
 uvx codespell 2>&1 | head -200
 ```
+
+This uses codespell's default `--builtin clear,rare` dictionaries,
+which are curated to be safe for a `-w` auto-fix pass. That's what
+this initial analysis + Steps 6-9 target. A second, **broader** pass
+that surfaces context-dependent candidates (words that need
+human/LLM judgment rather than blind `-w`) is deferred to Step 9.5
+after the mechanical `-w` commit has landed — see there for details.
 
 ### Categorize Results
 
@@ -1037,6 +1111,157 @@ Note: Formatting fixups are manual edits, so use regular git commit (not datalad
 
 This separation makes review easier and keeps the typo fixes atomic.
 
+## Step 9.5: Extended-dictionary pass for context-dependent words
+
+The default `codespell` invocation uses `--builtin clear,rare` — two
+curated dictionaries tuned so that the vast majority of hits are
+genuine, unambiguous typos safe for `-w` to auto-fix. Codespell ships
+several *additional* dictionaries that intentionally surface
+**context-dependent candidates** — words that ARE real words but are
+frequently typos in another sense. They're excluded from the default
+because they need a human (or LLM) to look at the surrounding text
+before deciding what to do. Now that the default `-w` pass has already
+landed and the tree is clean under `clear,rare`, this is the moment to
+run the extended pass.
+
+### The extra dictionaries
+
+Run `codespell --help` and find the `--builtin` section for the
+authoritative, version-specific list. As of codespell 2.4.x the
+options are:
+
+| Dictionary       | What it catches                                              |
+|------------------|--------------------------------------------------------------|
+| `clear`          | Unambiguous errors. **Default.**                             |
+| `rare`           | Rare but valid words that are likely typos. **Default.**     |
+| `informal`       | Informal writing (`gonna`, `wanna`, `dunno`, …).             |
+| `usage`          | Recommended-term replacements (`utilize` → `use`, etc.).     |
+| `code`           | Words that are typos in prose but ordinary in code (`uint`, `nd`, `fo`, …). |
+| `names`          | Valid proper names that are frequently typos in prose.       |
+| `en-GB_to_en-US` | British → American spelling.                                 |
+| `en_to_en-OX`    | Oxford English variants.                                     |
+
+### When to run this pass
+
+Only after Step 9's `codespell -w` commit has landed and the tree is
+clean under the default dictionaries. This pass produces **candidates
+for human review**, not `-w` fodder — most of the hits will end up
+either whitelisted (with an inline pragma or an ignore-words-list
+entry, or ignored entirely). Fixing them belongs in a **separate
+commit** from the `codespell -w` commit so the review of "here is what
+the machine did" stays separable from "here is what I decided about
+domain terminology."
+
+### Codespell version drift is a real thing
+
+The extended dictionaries move between codespell releases as
+maintainers refine what counts as ambiguous. Example: `liens ==>
+lines` was in `rare` in codespell 2.4.1 and dropped from all default
+dictionaries by 2.4.2 (upstream accepted `liens` — a legal term for
+property claims — as too common a real word to auto-flag). Similar
+churn happens in every release. Two implications:
+
+- Different collaborators on the same repo can see different codespell
+  output depending on their installed version. If a contributor
+  reports hits you don't see, ask their version (`codespell
+  --version`) before assuming the config is broken.
+- A future codespell upgrade in CI can start emitting new hits.
+  Re-running this Step 9.5 pass after a codespell version bump is a
+  cheap sanity check.
+
+### Running the extended pass
+
+Two useful modes — pick per what you're looking for:
+
+```bash
+# Broad review pass: everything except the very-informal writing bucket.
+# Best for a follow-up review commit on an established config.
+uvx codespell --builtin clear,rare,usage,code,names
+
+# Narrow "code words" pass: catches short identifiers that are typos in
+# prose (nd, fo, ans, iterm, etc.). Often the words you'll want to add
+# to ignore-words-list en masse for a JS/TS-heavy repo.
+uvx codespell --builtin clear,rare,code
+```
+
+Both commands respect the same `[tool.codespell]` config you built in
+Steps 3 & 6, so your existing skip patterns, ignore-regex, and
+ignore-words-list already apply.
+
+### Categorizing extended-pass hits
+
+For each hit, decide from context (same taxonomy as Step 7.2):
+
+1. **Real typo the default pass missed** — fix inline; if it's a
+   recurring pattern, consider a follow-up PR to codespell to move
+   the entry into `clear`. (See Step 7.4.1.)
+2. **Domain term / proper name / legitimate rare word** — inline
+   `codespell:ignore <word>` pragma at the site is the preferred
+   default (see Step 7.6 decision table). Reach for
+   `ignore-words-list` only when the word recurs across many files
+   AND is intrinsic to the project's vocabulary; the pragma keeps
+   spell-checking active for the same word elsewhere.
+3. **False positive from a comment-less file format** (pure JSON,
+   plain `.txt` where a pragma won't parse) — narrowest
+   `ignore-regex` or `ignore-words-list` entry with a config comment
+   naming the file and reason.
+4. **"Not sure, leave alone"** — don't touch. This pass exists to
+   surface candidates, not to force a decision on every one.
+
+### Watch-list: context-dependent words seen in the wild
+
+Concrete examples that have caused problems on real repos and are
+worth a targeted grep even before the extended pass runs:
+
+- `liens` — real legal term (property/tax liens). Ambiguous vs
+  `lines`. See codespell-project/codespell#XXXX (dropped upstream in
+  2.4.2). Common in OSINT / finance / legal skills.
+- `retuned` — real word ("re-tuned", adjusted). Codespell suggests
+  `returned`. Common in audio / control-loop / tuning-parameter
+  comments.
+- `appy` — informal slang ("app-like"). Codespell suggests `apply`.
+- `metics` — appears in the wild as a brand name (e.g. "Metics
+  Media"). Codespell suggests `Metrics`.
+- `couldn` — false hit on `Couldn't` when the apostrophe is
+  HTML-entity-escaped (`Couldn&rsquo;t`) or backslash-escaped in a
+  Python f-string (`f"Couldn\'t ..."`).
+- Possessive `X's` where X is a short package name — e.g.
+  `@electron/get's` (possessive of the package `@electron/get`).
+  Codespell reads `get's` as `gets`.
+- `unparseable` — long-standing debate. Common in error-handling
+  code. Both spellings are in dictionaries.
+- `pres` / `datas` / `statics` — legitimate short variable names
+  (`presentation`, `static_facts`, list-of-`data`) that codespell's
+  `code` dictionary flags. Add to ignore-words-list per project
+  convention.
+
+Grep for these before the extended pass to know what to expect:
+
+```bash
+for w in liens retuned appy metics couldn unparseable pres datas statics; do
+  echo "=== $w ==="
+  grep -rn "\\b$w\\b" . --include='*.md' --include='*.py' --include='*.ts' --include='*.tsx' 2>/dev/null | head -3
+done
+```
+
+### Committing the extended-pass changes
+
+**Do NOT** use `datalad run 'codespell -w --builtin ...'` for this.
+The extended pass is a human/LLM judgment step — `-w` would apply
+first-suggestion fixes blindly, which is exactly what the default
+pass was designed to be safe for and this pass explicitly is not.
+
+Instead:
+
+1. Make each edit by hand (Edit tool for inline pragmas,
+   Edit + config change for ignore-words-list additions).
+2. Verify `codespell --builtin <same-list>` is clean after each fix
+   (or that the remaining hits are ones you deliberately chose to
+   leave alone — document that choice in the commit message).
+3. Commit as a **separate follow-up** from the `datalad run`
+   `codespell -w` commit. Suggested subject:
+   `Address context-dependent codespell hits (extended-dictionary pass)`.
+
 ## Step 10: Review for Functional Fixes
 
 After fixing typos, review the diff to identify any that might be **functional bug fixes**
@@ -1272,6 +1497,7 @@ After completing the skill:
 
 ## Tips
 
+- **Workflow file conventions** (Step 2.0): always inspect existing `.github/workflows/` files first — if they carry copyright/license headers, add one to the codespell workflow too (current contributor, current year); if they pin action `uses:` lines to full commit SHAs, do the same (copy the `actions/checkout` SHA from another workflow file rather than resolving it from scratch).
 - Start with a minimal skip list and add paths as false positives are identified
 - Use `ignore-words-list` sparingly - prefer fixing actual typos
 - Review typos before running `codespell -w` to ensure they're genuine (not domain terms)
@@ -1292,3 +1518,5 @@ After completing the skill:
 - **Pre-commit interplay**: If `.pre-commit-config.yaml` includes formatters (`black`, `ruff-format`, `prettier`) or linters with auto-fix (`ruff`, `isort`), run `pre-commit run --all-files` after every manual edit step (especially after adding `codespell:ignore` comments) — otherwise reformatting changes leak into a later commit. See Step 4.3.
 - **Contribute back**: When you find typos codespell misses (e.g., `sycalls` → `syscalls`), consider PRing them to https://github.com/codespell-project/codespell to improve the dictionary for everyone
 - **Hyphenated words**: codespell may miss typos inside hyphenated compounds (e.g., `log-liklihood`) - grep for known typo patterns after `codespell -w` to catch these
+- **Extended dictionaries** (`--builtin clear,rare,usage,code,names`): run this as a separate follow-up pass after the default `codespell -w` commit has landed — it surfaces context-dependent candidates (real words that are ambiguous vs typos) that need human judgment, not `-w`. See Step 9.5. Watch-list of words that recur across projects: `liens`, `retuned`, `appy`, `couldn`, `metics`, package-name possessives (`get's`), and short variable-name abbreviations (`pres`, `datas`, `statics`).
+- **Codespell version drift**: what codespell 2.4.1 flags is not what 2.4.2 flags — the extended-dictionary buckets churn each release as upstream refines them. Always ask a reporter for `codespell --version` before assuming their hits mean your config is wrong; consider re-running Step 9.5 after CI bumps codespell.
