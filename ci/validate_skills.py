@@ -30,7 +30,7 @@ Usage:
     python3 ci/validate_skills.py [<skill-dir> ...]
 
     If no directories are given, scans every immediate subdirectory of the
-    repo root that contains a SKILL.md.
+    skills/ directory that contains a SKILL.md.
 """
 
 from __future__ import annotations
@@ -211,7 +211,7 @@ def check_python_file(py_path: Path, result: Result) -> None:
 
 def find_skill_dirs(repo_root: Path) -> list[Path]:
     return sorted(
-        p.parent for p in repo_root.glob("*/SKILL.md")
+        p.parent for p in (repo_root / "skills").glob("*/SKILL.md")
         if p.parent.name not in {"ci"}
     )
 

@@ -25,7 +25,7 @@ Usage
 -----
     python3 ci/security_review.py [<skill-dir> ...]
 
-If no directories are given, every immediate subdirectory of the repo root
+If no directories are given, every immediate subdirectory of skills/
 that contains a SKILL.md is reviewed (same discovery logic as validate_skills.py,
 excluding the skill-security-review skill itself to avoid recursion).
 
@@ -174,7 +174,7 @@ def _security_cmd() -> list[str]:
 def find_skill_dirs(repo_root: Path) -> list[Path]:
     return sorted(
         p.parent
-        for p in repo_root.glob("*/SKILL.md")
+        for p in (repo_root / "skills").glob("*/SKILL.md")
         if p.parent.name not in {"ci", "skill-security-review"}
     )
 

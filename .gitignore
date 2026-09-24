@@ -10,3 +10,8 @@ venvs/
 
 # Local validation environments
 .tox/
+
+# APM-generated dependency content
+/apm_modules/
+/.agents/skills/
+/.claude/skills/
