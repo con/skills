@@ -7,6 +7,10 @@ user-invocable: true
 
 # CRediT Contributor Roles for a Work
 
+Resolve `<installed-skill-dir>` to the directory containing this SKILL.md before running examples.
+APM may deploy it to `.agents/skills/` or a client-specific directory; a global Claude installation is not required.
+
+
 Implement the [CRediT taxonomy](https://credit.niso.org/) (ANSI/NISO Z39.104-2022) for a paper, dataset, or software release.
 Maintains one machine-readable source of truth and renders all formats (in-paper section, JATS XML, contribution matrix) from it.
 
@@ -45,14 +49,14 @@ Two single-file Python tools (PyYAML-only):
 `render_credit.py` — Author Contributions section / JATS XML / matrix:
 
 ```bash
-python3 ~/.claude/skills/credit-contributions/render_credit.py \
+python3 "<installed-skill-dir>/render_credit.py" \
     --format latex .tributors.credit.yaml -o author-contributions.tex
 
-python3 ~/.claude/skills/credit-contributions/render_credit.py \
+python3 "<installed-skill-dir>/render_credit.py" \
     --format jats .tributors.credit.yaml -o author-contributions.jats.xml
 
 # Validation only — no output, non-zero on bad role name / malformed entry:
-python3 ~/.claude/skills/credit-contributions/render_credit.py \
+python3 "<installed-skill-dir>/render_credit.py" \
     --validate-only .tributors.credit.yaml
 ```
 
@@ -63,7 +67,7 @@ The canonical 14 roles + URIs are listed in `CREDIT_ROLES.md` next to this file.
 `render_authors.py` — LaTeX `\author{}` block with affiliation references:
 
 ```bash
-python3 ~/.claude/skills/credit-contributions/render_authors.py \
+python3 "<installed-skill-dir>/render_authors.py" \
     .tributors.credit.yaml --tributors .tributors -o authors.tex
 ```
 
@@ -241,7 +245,7 @@ Two integration patterns are acceptable:
 If the venue accepts JATS XML submission (most Nature, eLife, PLOS, Frontiers do), also emit the machine-readable form:
 
 ```bash
-python3 ~/.claude/skills/credit-contributions/render_credit.py \
+python3 "<installed-skill-dir>/render_credit.py" \
     --format jats .tributors.credit.yaml \
     -o submission/author-contributions.jats.xml
 ```
@@ -252,7 +256,7 @@ The renderer also emits ORCID as a `<contrib-id contrib-id-type="orcid">` elemen
 ### Step 8 — Validate and integrate
 
 ```bash
-python3 ~/.claude/skills/credit-contributions/render_credit.py \
+python3 "<installed-skill-dir>/render_credit.py" \
     --validate-only .tributors.credit.yaml
 ```
 
