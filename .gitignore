@@ -7,3 +7,9 @@ node_modules/
 .env.*
 .venv/
 venvs/
+
+# Local validation environments and APM-generated content
+.tox/
+/apm_modules/
+/.agents/skills/
+/.claude/skills/

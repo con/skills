@@ -7,9 +7,7 @@ user-invocable: true
 
 # Analyze Duplicates
 
-Detect code and documentation duplication in one or more paths, produce a
-Markdown report with `<details>` sections for posting as a GitHub/Gitea issue,
-and propose a concrete mediation plan.
+Detect code and documentation duplication in one or more paths, produce a Markdown report with `<details>` sections for posting as a GitHub/Gitea issue, and propose a concrete mediation plan.
 
 ## When to Use
 
@@ -29,8 +27,8 @@ and propose a concrete mediation plan.
 
 ## Arguments
 
-The skill accepts one or more paths to scan. If none are provided, scan the
-current working directory.
+The skill accepts one or more paths to scan.
+If none are provided, scan the current working directory.
 
 Optional flags (passed as part of the argument string):
 - `--formats python,markdown` — override auto-detected formats
@@ -46,13 +44,14 @@ Optional flags (passed as part of the argument string):
 
 ### Step 0: Parse Arguments
 
-Parse the argument string. Extract paths (any arg not starting with `--`),
-and optional flags. Apply defaults from Configuration for anything not specified.
+Parse the argument string.
+Extract paths (any arg not starting with `--`), and optional flags.
+Apply defaults from Configuration for anything not specified.
 
 If no paths provided, use the current working directory.
 
-Create the `.tmp/` directory in the current working directory for intermediate
-output. If `.tmp` is not already in `.gitignore`, add it (or warn the user).
+Create the `.tmp/` directory in the current working directory for intermediate output.
+If `.tmp` is not already in `.gitignore`, add it (or warn the user).
 
 ### Step 1: Ensure jscpd is Available
 
@@ -63,7 +62,8 @@ command -v jscpd || npx --yes jscpd@latest --version
 ```
 
 If neither works, report the error and stop:
-> jscpd not found. Install via `npm install -g jscpd` or ensure `npx` is available.
+> jscpd not found.
+> Install via `npm install -g jscpd` or ensure `npx` is available.
 
 ### Step 2: Detect Project Context
 
@@ -87,33 +87,30 @@ npx --yes jscpd@latest \
     PATH
 ```
 
-If `--no-html` is set, omit `html` from reporters. If `--badge` is set, add `badge` to reporters.
+If `--no-html` is set, omit `html` from reporters.
+If `--badge` is set, add `badge` to reporters.
 If `--formats` is set, add `--format FORMATS`.
 
-**Building the ignore list** — start with these safe defaults:
-`**/.tox/**,**/venv*/**,**/.venv/**,**/node_modules/**,**/__pycache__/**,**/.eggs/**,**/.git/**,**/.npm/**,**/.tmp/**`
+**Building the ignore list** — start with these safe defaults: `**/.tox/**,**/venv*/**,**/.venv/**,**/node_modules/**,**/__pycache__/**,**/.eggs/**,**/.git/**,**/.npm/**,**/.tmp/**`
 
 Then for each of `build/`, `dist/`, `.eggs/`:
 - Check if the directory is **tracked by git** (`git ls-files --error-unmatch DIR/ 2>/dev/null`)
 - If tracked: do NOT ignore it (it's intentionally committed content)
 - If untracked: add it to the ignore list
 
-Additionally, find all **symlinks** in the scan path (`find PATH -type l`) and
-add ignore patterns for them (e.g., `**/symlinked-dir/**`). Symlinked content
-is intentionally shared — duplicates from symlinks are noise, not bugs.
+Additionally, find all **symlinks** in the scan path (`find PATH -type l`) and add ignore patterns for them (e.g., `**/symlinked-dir/**`).
+Symlinked content is intentionally shared — duplicates from symlinks are noise, not bugs.
 
 This produces:
 - `.tmp/jscpd-PROJECTNAME/jscpd-report.json` — structured data for the markdown report
 - `.tmp/jscpd-PROJECTNAME/html/index.html` — interactive HTML report with syntax highlighting
 - `.tmp/jscpd-PROJECTNAME/jscpd-badge.svg` — shields.io-style badge showing duplication % (only with `--badge`)
 
-If `--cross-project` and multiple paths: after individual scans, create a
-temporary parent directory with symlinks to all paths and run one combined scan.
+If `--cross-project` and multiple paths: after individual scans, create a temporary parent directory with symlinks to all paths and run one combined scan.
 
 ### Step 4: Parse Results and Generate Report
 
-Read each `.tmp/jscpd-PROJECTNAME/jscpd-report.json` and generate the report
-using the helper script:
+Read each `.tmp/jscpd-PROJECTNAME/jscpd-report.json` and generate the report using the helper script:
 
 ```bash
 python3 SKILL_DIR/generate-report.py \
@@ -126,28 +123,22 @@ python3 SKILL_DIR/generate-report.py \
     [.tmp/jscpd-PROJECT2/jscpd-report.json ...]
 ```
 
-Where `SKILL_DIR` is the directory containing this SKILL.md file. Resolve it
-by searching for `generate-report.py` in `~/.claude/skills/analyze-duplicates/`.
+Where `SKILL_DIR` is the directory containing this SKILL.md file.
+Resolve it as `generate-report.py` beside this installed SKILL.md, regardless of which agent-specific directory APM deployed it to.
 
-If `--badge` was requested and a badge was generated, pass `--badge-path` with
-a relative path to the SVG. Copy the badge SVG to the output directory so both
-files are co-located.
+If `--badge` was requested and a badge was generated, pass `--badge-path` with a relative path to the SVG.
+Copy the badge SVG to the output directory so both files are co-located.
 
 ### Step 5: Review and Enhance Mediation Plan
 
-The `generate-report.py` script already produces a `## Mediation Plan` section
-with heuristic classifications (trivial/easy/moderate/hard) and strategies
-for each cluster. After the report is generated:
+The `generate-report.py` script already produces a `## Mediation Plan` section with heuristic classifications (trivial/easy/moderate/hard) and strategies for each cluster.
+After the report is generated:
 
 1. Read the generated report and the duplicated fragments
-2. For each cluster, **verify** the heuristic recommendation makes sense in
-   context — read the actual source files around the duplicated lines if needed
-3. For **easy/trivial** clusters: add a concrete diff or pseudo-diff showing
-   the proposed refactoring (extract function, parametrize test, etc.)
-4. For **moderate/hard** clusters: enhance the description with specifics
-   about what the shared abstraction should look like
-5. Adjust difficulty ratings if the heuristic got it wrong (e.g., what looks
-   like a simple extract may actually involve different signatures)
+2. For each cluster, **verify** the heuristic recommendation makes sense in context — read the actual source files around the duplicated lines if needed
+3. For **easy/trivial** clusters: add a concrete diff or pseudo-diff showing the proposed refactoring (extract function, parametrize test, etc.)
+4. For **moderate/hard** clusters: enhance the description with specifics about what the shared abstraction should look like
+5. Adjust difficulty ratings if the heuristic got it wrong (e.g., what looks like a simple extract may actually involve different signatures)
 
 ### Step 6: Present Results
 
@@ -163,8 +154,8 @@ for each cluster. After the report is generated:
 
 ## Report Format
 
-The report MUST be a Markdown file using `<details><summary>` blocks so it
-renders well when posted as a GitHub/Gitea issue. Structure:
+The report MUST be a Markdown file using `<details><summary>` blocks so it renders well when posted as a GitHub/Gitea issue.
+Structure:
 
 ```markdown
 # Duplication Analysis Report
@@ -209,7 +200,8 @@ renders well when posted as a GitHub/Gitea issue. Structure:
 ## Commit Co-Authorship
 
 All commits created during this workflow MUST include a `Co-Authored-By` trailer.
-Get the version via `claude --version`. Format:
+Get the version via `claude --version`.
+Format:
 
 ```
 Co-Authored-By: Claude Code <VERSION> / Claude <MODEL> <noreply@anthropic.com>

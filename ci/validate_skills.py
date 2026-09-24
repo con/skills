@@ -30,7 +30,7 @@ Usage:
     python3 ci/validate_skills.py [<skill-dir> ...]
 
     If no directories are given, scans every immediate subdirectory of the
-    repo root that contains a SKILL.md.
+    skills/ directory that contains a SKILL.md.
 """
 
 from __future__ import annotations
@@ -122,7 +122,7 @@ def check_skill_md(skill_md: Path, result: Result) -> None:
 
     # E001 — frontmatter
     fm, body = _parse_frontmatter(text)
-    if fm is None:
+    if not isinstance(fm, dict):
         result.error("E001", skill_md, "missing or unparseable YAML frontmatter")
         return  # remaining checks need the frontmatter
 
@@ -211,7 +211,7 @@ def check_python_file(py_path: Path, result: Result) -> None:
 
 def find_skill_dirs(repo_root: Path) -> list[Path]:
     return sorted(
-        p.parent for p in repo_root.glob("*/SKILL.md")
+        p.parent for p in (repo_root / "skills").glob("*/SKILL.md")
         if p.parent.name not in {"ci"}
     )
 
@@ -225,7 +225,7 @@ def validate_skill(skill_dir: Path) -> Result:
 
     check_skill_md(skill_md, result)
 
-    for py_path in sorted(skill_dir.glob("*.py")):
+    for py_path in sorted(skill_dir.rglob("*.py")):
         check_python_file(py_path, result)
 
     return result

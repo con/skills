@@ -5,6 +5,10 @@ description: Scan subdirectories and files to create/update projects.tsv with me
 
 # Scan Projects Skill
 
+Resolve `<installed-skill-dir>` to the directory containing this SKILL.md before running the examples.
+APM may deploy it under `.agents/skills/` or another client-specific directory; no global Claude installation is required.
+
+
 Scans all entries (git repos, plain directories, and standalone files) in the current folder and creates/updates a `projects.tsv` file with metadata and summaries.
 
 ## Output Format
@@ -23,10 +27,14 @@ The `projects.tsv` file contains tab-separated columns:
 
 ### Phase 1: Scan Metadata
 ```bash
-python3 ~/.claude/skills/scan-projects/scan.py
+python3 "<installed-skill-dir>/scan.py"
 ```
 
-Collects metadata for all entries. Git repos get full metadata (language, license, commits, URL). Plain directories get language detection and license scanning. Files get type classification. All summaries start as "NEEDS_ANALYSIS".
+Collects metadata for all entries.
+Git repos get full metadata (language, license, commits, URL).
+Plain directories get language detection and license scanning.
+Files get type classification.
+All summaries start as "NEEDS_ANALYSIS".
 
 ### Phase 2: Generate Summaries with Claude Analysis
 

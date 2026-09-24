@@ -7,9 +7,8 @@ user-invocable: true
 
 # Introduce git-bug to a Project
 
-Set up [git-bug](https://github.com/git-bug/git-bug) distributed, offline-first issue tracking
-in a git project. Configures a GitHub bridge to sync issues, stores them as native git objects
-under `refs/bugs/*`, and documents the workflow for developers and AI assistants.
+Set up [git-bug](https://github.com/git-bug/git-bug) distributed, offline-first issue tracking in a git project.
+Configures a GitHub bridge to sync issues, stores them as native git objects under `refs/bugs/*`, and documents the workflow for developers and AI assistants.
 
 ## When to Use
 
@@ -55,8 +54,7 @@ If not installed, guide the user through installation (pick one):
    go install github.com/git-bug/git-bug@latest
    ```
 
-5. **Custom path** (e.g., `~/.claude/bin/git-bug`):
-   Ensure the directory is in PATH before proceeding.
+5. **Custom path** (e.g., `~/.claude/bin/git-bug`): Ensure the directory is in PATH before proceeding.
 
 ### Other prerequisites
 
@@ -203,12 +201,10 @@ git bug ls status:open 2>&1 | head -5
 
 ### Known limitation: Images/Media
 
-git-bug's bridge importers **do not** fetch embedded images. The feature matrix
-confirms media support is not available across all importers (GitHub, GitLab, Jira, Launchpad).
+git-bug's bridge importers **do not** fetch embedded images.
+The feature matrix confirms media support is not available across all importers (GitHub, GitLab, Jira, Launchpad).
 
-Image URLs from GitHub issues (e.g., `user-images.githubusercontent.com`,
-`github.com/user-attachments`) are preserved as markdown text in issue bodies,
-but the actual image blobs are not stored in git objects.
+Image URLs from GitHub issues (e.g., `user-images.githubusercontent.com`, `github.com/user-attachments`) are preserved as markdown text in issue bodies, but the actual image blobs are not stored in git objects.
 
 **Potential workaround** (future enhancement): A post-processing script could:
 1. Parse issue bodies from `git bug show` output
@@ -220,8 +216,8 @@ but the actual image blobs are not stored in git objects.
 
 ### Ask user about pushing
 
-This pushes `refs/bugs/*` to the remote, making issues available to all collaborators
-who clone/fetch the repo. Ask the user:
+This pushes `refs/bugs/*` to the remote, making issues available to all collaborators who clone/fetch the repo.
+Ask the user:
 
 ```
 Should I push git-bug refs to the remote?
@@ -235,8 +231,8 @@ Should I push git-bug refs to the remote?
 git bug push <remote>
 ```
 
-**Note:** This requires write access to the remote. If the user only has fork access,
-push to their fork remote instead.
+**Note:** This requires write access to the remote.
+If the user only has fork access, push to their fork remote instead.
 
 ### Verify push
 
@@ -276,8 +272,7 @@ brew install git-bug
 nix profile install nixpkgs#git-bug
 
 # Binary download
-curl -L -o git-bug https://github.com/git-bug/git-bug/releases/latest/download/git-bug_linux_amd64
-chmod +x git-bug && mv git-bug ~/.local/bin/
+curl -L -o git-bug https://github.com/git-bug/git-bug/releases/latest/download/git-bug_linux_amd64 chmod +x git-bug && mv git-bug ~/.local/bin/
 ```
 
 ### Quick Start
@@ -293,8 +288,7 @@ git bug ls status:open
 git bug show <id-prefix>
 
 # Search issues
-git bug ls "label:bug"
-git bug ls "author:username"
+git bug ls "label:bug" git bug ls "author:username"
 ```
 
 ### Query Language
@@ -302,10 +296,7 @@ git bug ls "author:username"
 git-bug supports a rich query language for filtering:
 
 ```bash
-git bug ls status:open label:enhancement      # Open enhancements
-git bug ls status:open "title:upload"          # Issues mentioning upload
-git bug ls "author:username"                   # Issues by author
-git bug ls status:open sort:creation-desc      # Newest first
+git bug ls status:open label:enhancement      # Open enhancements git bug ls status:open "title:upload"          # Issues mentioning upload git bug ls "author:username"                   # Issues by author git bug ls status:open sort:creation-desc      # Newest first
 ```
 
 ### Syncing with GitHub
@@ -373,19 +364,11 @@ If the commit fails with "files were modified", just re-run the commit.
 
 ### MANDATORY: Respect upstream PR template and CONTRIBUTING.md
 
-Before drafting the PR body, follow the repo-wide rule in this collection's
-top-level `AGENTS.md` ("Respect upstream PR conventions when preparing a
-pull request"): scan for `.github/PULL_REQUEST_TEMPLATE.md` (and the
-Codeberg / Forgejo / GitLab equivalents), use it as the skeleton if
-present, read `CONTRIBUTING.md` for branch-naming / commit-message /
-changelog conventions, fill out checkboxes truthfully, and surface to the
-user both what was found and any items the user still needs to handle
-manually (e.g. enabling "Allow edits from maintainers").
+Before drafting the PR body, scan for `.github/PULL_REQUEST_TEMPLATE.md` (and the Codeberg / Forgejo / GitLab equivalents), use it as the skeleton if present, read `CONTRIBUTING.md` for branch-naming / commit-message / changelog conventions, fill out checkboxes truthfully, and surface to the user both what was found and any items the user still needs to handle manually (e.g. enabling "Allow edits from maintainers").
 
 ### Write PR description
 
-If a template was found, fold the content below into the template's
-sections rather than overwriting its headings.
+If a template was found, fold the content below into the template's sections rather than overwriting its headings.
 
 Save to `.git/PR_BODY.md`:
 
@@ -455,7 +438,8 @@ The LLM should decide WITHOUT asking:
 ## Troubleshooting
 
 ### "token is not valid"
-- Token may lack required scopes. Need at least `public_repo` for public repos.
+- Token may lack required scopes.
+  Need at least `public_repo` for public repos.
 - Try: `gh auth token` for a fresh token
 
 ### "git bug: command not found"

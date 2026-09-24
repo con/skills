@@ -1296,9 +1296,7 @@ uvx codespell 2>&1
 
 ### MANDATORY: Respect upstream PR template and CONTRIBUTING.md
 
-Before drafting the PR body, follow the repo-wide rule in this collection's
-top-level `AGENTS.md` ("Respect upstream PR conventions when preparing a
-pull request"). In short:
+Before drafting the PR body, respect the target repository's conventions:
 
 1. **Look for a PR template** — check `.github/PULL_REQUEST_TEMPLATE.md`,
    `.github/pull_request_template.md`, `.github/PULL_REQUEST_TEMPLATE/*.md`,
