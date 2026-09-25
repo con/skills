@@ -170,16 +170,17 @@ Per [bids-specification#2078](https://github.com/bids-standard/bids-specificatio
 ## Commit Co-Authorship
 
 All commits created during this workflow MUST include a `Co-Authored-By` trailer identifying
-both Claude Code version and the model used. Get the version via `claude --version` and
-use the model name from the environment. Format:
+the actual tool/runtime and model versions. Resolve them from the active
+agent runtime; do not guess or copy attribution from these examples. Follow
+the target repository's required format and attribution identity. Generic form:
 
 ```
-Co-Authored-By: Claude Code <VERSION> / Claude <MODEL> <noreply@anthropic.com>
+Co-Authored-By: <tool and version> / <model and version> <agent-email>
 ```
 
 Example:
 ```
-Co-Authored-By: Claude Code 2.1.123 / Claude Opus 4.7 <noreply@anthropic.com>
+Co-Authored-By: <tool and version> / <model and version> <agent-email>
 ```
 
 ## Execution Steps
@@ -691,8 +692,7 @@ working tree may already contain unrelated uncommitted changes
    - Unrelated user modifications remain unstaged and untouched.
 
 5. **Write a focused commit message.** Use the project's
-   `.git-meta/COMMIT_MSG` convention if `CLAUDE.md` documents it
-   (most user setups do); otherwise inline `-m` is fine. The message
+   `.git-meta/COMMIT_MSG` convention if the project's agent guidance documents it; otherwise inline `-m` is fine. The message
    should describe the REUSE work only — not any unrelated state
    present in the tree. Include the Co-Authored-By trailer from the
    "Commit Co-Authorship" section.
@@ -709,7 +709,7 @@ working tree may already contain unrelated uncommitted changes
 
    `reuse lint` reports 100% compliance over the tracked tree.
 
-   Co-Authored-By: Claude Code <VERSION> / Claude <MODEL> <noreply@anthropic.com>
+   Co-Authored-By: <tool and version> / <model and version> <agent-email>
    ```
 
 6. **Do NOT push.** Stop after the commit. Pushing is a governance

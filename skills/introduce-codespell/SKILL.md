@@ -25,16 +25,17 @@ Set up codespell spell-checking infrastructure in a project, identify typos, con
 ## Commit Co-Authorship
 
 All commits created during this workflow MUST include a `Co-Authored-By` trailer identifying
-both Claude Code version and the model used. Get the version via `claude --version` and
-use the model name from the environment. Format:
+the actual tool/runtime and model versions. Resolve them from the active
+agent runtime; do not guess or copy attribution from these examples. Follow
+the target repository's required format and attribution identity. Generic form:
 
 ```
-Co-Authored-By: Claude Code <VERSION> / Claude <MODEL> <noreply@anthropic.com>
+Co-Authored-By: <tool and version> / <model and version> <agent-email>
 ```
 
 Example:
 ```
-Co-Authored-By: Claude Code 2.1.63 / Claude Opus 4.6 <noreply@anthropic.com>
+Co-Authored-By: <tool and version> / <model and version> <agent-email>
 ```
 
 This applies to ALL commits: config, workflow, ambiguous fixes, non-ambiguous fixes, formatting fixups.
@@ -220,8 +221,7 @@ build artifacts. These won't show in `git ls-files` but will be scanned by codes
 
 #### MANDATORY: skip `.git-meta`
 
-`.git-meta/` is a per-repo working folder for commit and PR message drafts (see
-the "Git Workflow" section of `~/.claude/CLAUDE.md`). It is git-excluded and
+`.git-meta/` is a per-repo working folder for commit and PR message drafts. It is git-excluded and
 never committed, so it lives on disk only during a working session — but
 codespell walks the filesystem, so it will still lint files there.
 
@@ -1308,9 +1308,7 @@ uvx codespell 2>&1
 
 ### MANDATORY: Respect upstream PR template and CONTRIBUTING.md
 
-Before drafting the PR body, follow the repo-wide rule in this collection's
-top-level `AGENTS.md` ("Respect upstream PR conventions when preparing a
-pull request"). In short:
+Before drafting the PR body, respect the target repository's conventions:
 
 1. **Look for a PR template** — check `.github/PULL_REQUEST_TEMPLATE.md`,
    `.github/pull_request_template.md`, `.github/PULL_REQUEST_TEMPLATE/*.md`,
@@ -1391,7 +1389,7 @@ This project has had X prior commits fixing typos manually, demonstrating the va
 
 ---
 
-🤖 Generated with [Claude Code](https://claude.com/claude-code) and love to typos free code
+🤖 Generated with <actual tool and version> / <actual model and version> and love to typos free code
 ```
 
 ### Determine Remote and Branch Names

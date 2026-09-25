@@ -26,8 +26,9 @@ transition, and release-process documentation.
 
 ## Commit Co-Authorship
 
-All commits MUST include a `Co-Authored-By` trailer. Get the version via `claude --version`.
-Format: `Co-Authored-By: Claude Code <VERSION> / Claude <MODEL> <noreply@anthropic.com>`
+All commits MUST include a `Co-Authored-By` trailer identifying the actual active tool/runtime and model versions.
+Follow the target repository's format and identity; resolve actual metadata instead of guessing.
+Format: `Co-Authored-By: <tool and version> / <model and version> <agent-email>`
 
 Write all commit messages to `.git-meta/COMMIT_MSG` and use `git commit -F .git-meta/COMMIT_MSG`.
 
@@ -338,7 +339,8 @@ jobs:
 
 > **Note on `workflow_dispatch` and the `if` condition**: when triggered via dispatch,
 > `github.event.head_commit` is `null`, so both `contains()` calls evaluate to `false` and
-> the condition `!false && !false` = `true` — the job always runs. No special handling needed.
+> the condition `!false && !false` = `true` — the job always runs.
+> No special handling needed.
 
 ### 3.3 Workflow Template (JS/npm)
 
@@ -563,8 +565,8 @@ python -m build && twine upload dist/*
 
 ## Step 6: Create GitHub Labels
 
-Create the labels defined in `.autorc` using `gh`. This requires the user's own GitHub
-authentication (do NOT use Claude's read-only token in any scripts).
+Create the labels defined in `.autorc` using `gh`.
+This requires the user's own GitHub authentication (do NOT use an agent's read-only token in any scripts).
 
 ### 6.1 Label Creation Script
 

@@ -1,19 +1,18 @@
-# /issue-triage — Claude Code Skill
+# /issue-triage — Agent Skill
 
-Triage open GitHub issues by cross-referencing them against your codebase and
-git history.  Claude analyzes each issue to determine whether it's likely
-resolved, still open, stale, or needs investigation, then presents the results
-in a local web UI where you can review, comment, close, or skip each issue.
+Triage open GitHub issues by cross-referencing them against your codebase and git history.
+The agent analyzes each issue to determine whether it's likely resolved, still open, stale, or needs investigation, then presents the results in a local web UI where you can review, comment, close, or skip each issue.
 
 ## Prerequisites
 
 - **Python 3.10+** (stdlib only — no pip install needed)
 - **gh CLI** authenticated (`gh auth login`)
-- **Claude Code** with skill support
+- **An agent client** with skill support
 
 ## Quick Start
 
-Inside any git repository with a GitHub remote:
+Inside any git repository with a GitHub remote, invoke the skill using your client's skill syntax.
+For clients supporting slash commands:
 
 ```
 /issue-triage

@@ -1,14 +1,15 @@
 ---
 name: skill-security-review
-description: Security audit of a Claude Code skill directory. Reads SKILL.md and any bundled scripts, checks for prompt injection vectors, capability mismatch, dangerous permissions, exfiltration patterns, and unsafe subprocess use. Emits a structured report. Use when reviewing a skill before merging or publishing.
+description: Security audit of an agent skill directory. Reads SKILL.md and any bundled scripts, checks for prompt injection vectors, capability mismatch, dangerous permissions, exfiltration patterns, and unsafe subprocess use. Emits a structured report. Use when reviewing a skill before merging or publishing.
 allowed-tools: Read, Glob, Grep, Bash(find:*), Bash(head:*), Bash(wc:*)
 user-invocable: true
 ---
 
 # Skill Security Review
 
-Audit a Claude Code skill for security issues.
-Designed to be invoked headlessly (`claude -p "/skill-security-review"`) from within a skill directory, or driven by `ci/security_review.py`.
+Audit an agent skill for security issues.
+Invoke it through the current agent client's skill mechanism and provide the directory to inspect.
+The source collection also offers an optional Claude-compatible CLI adapter in `ci/security_review.py`; it is not required for interactive use of this installed skill.
 
 ## Input
 
@@ -34,7 +35,8 @@ Patterns in SKILL.md that could cause an LLM running this skill to deviate from 
 
 ### 2. Capability mismatch (HIGH)
 
-The `allowed-tools` frontmatter field lists what tools the skill may use.
+The `allowed-tools` frontmatter field declares intended tools for clients that support it.
+Compare this with the actual client's permission model; the field alone does not enforce permissions in every client.
 Check whether:
 
 - Bundled scripts perform operations not declared in `allowed-tools` (e.g. `allowed-tools: Read` but script does `requests.get(...)`)
@@ -101,13 +103,8 @@ Severity thresholds:
 
 ## Execution
 
-```bash
-# Review a single skill interactively (skill must be in ~/.claude/skills/):
-cd /path/to/skill && claude --dangerously-skip-permissions -p "/skill-security-review"
-
-# Driven by ci/security_review.py (embeds prompt inline — works with yolo too):
-tox -e security-llm
-
-# Override launcher for yolo/Podman:
-SECURITY_CMD="yolo --worktree=skip --" tox -e security-llm
-```
+Ask the current agent to use this skill on the target directory.
+No global Claude skill path is required.
+In a checkout of the source collection, the optional CLI adapter can be run with `tox -e security-llm`; it currently expects a Claude-compatible launcher.
+Configure `SECURITY_CMD` explicitly for a supported wrapper.
+This adapter-specific requirement does not apply to the review checklist or to the static CI scanner.
