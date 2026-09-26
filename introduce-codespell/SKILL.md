@@ -205,8 +205,7 @@ Choose based on existing project structure (in order of preference):
 Scan for common file types that should be skipped:
 - Binary/generated: `*.pdf`, `*.svg`, `*.ai`, `*.min.*`, `*-min.*`, `*.pack.js`
 - Dependencies: `go.sum`, `package-lock.json`, `*.lock`, `*-lock.yaml`, `vendor/`
-- Virtual envs: `venv/`, `.venv/`, `venvs/`, `.tox/`
-- Cache directories: `.npm/`, `.cache/` (npm/uv caches - should NEVER be committed to git)
+- **Cache directories: `.*cache` (MANDATORY, generic — see below)**
 - Localization/i18n: `*/i18n/*` (use wildcards - foreign language translations)
 - Build artifacts: `*/build/*` (Sphinx docs, compiled output - may be untracked)
 - External/samples: `samples/`, `third_party/`, `vendor/` (external content)
@@ -217,6 +216,55 @@ Scan for common file types that should be skipped:
 
 **Important**: Check for untracked local directories (like `docs/build/`) that may contain
 build artifacts. These won't show in `git ls-files` but will be scanned by codespell.
+
+#### MANDATORY: skip `.*cache` (all projects)
+
+Codespell walks the entire working tree, not just tracked files. Any tool
+that drops a `.something_cache/` directory next to the source — and there
+are many of them — will get scanned. Concrete examples encountered in the
+wild: `.mypy_cache/`, `.pytest_cache/`, `.ruff_cache/`, `.pytype/`,
+`.hypothesis/`, `.parcel-cache/`, `.terraform.d/plugin-cache/`, `.cache/`.
+Left un-skipped, these routinely produce **hundreds or thousands** of
+spurious hits (mypy in particular writes JSON blobs containing English
+identifiers from dependency ASTs, which codespell then flags).
+
+Instead of chasing each new cache-directory convention individually, add
+the glob `.*cache` to the central `skip` list unconditionally, on every
+project — Python, JS, Go, Rust, mixed. It matches the common
+`.<tool>_cache` / `.<tool>-cache` pattern without collateral damage on
+real source paths. Costs nothing, prevents a recurring papercut, and
+matches what reviewers now routinely ask for in codespell PRs.
+
+Real incident (2026-09-18, INCATools/odkcore#21): reviewer's very first
+comment on the introductory PR was *"Add `.venv` and `.*cache`, so that
+codespell does not report hundreds or even thousands of issues from UV's
+`.venv` directory or MyPy's `.mypy_cache` directory."* — an entirely
+avoidable round-trip if the initial config had shipped with the glob.
+
+#### For Python projects: also skip `.venv` and friends
+
+Codespell will walk into any virtualenv that lives inside the checkout
+(`.venv/`, `venv/`, `.tox/`, `.eggs/`, `*.egg-info/`, `__pycache__/`)
+and flag typos in every third-party package's docstrings. That is both
+noisy and wrong to fix — the source isn't ours. On a Python project
+(`pyproject.toml`, `setup.py`, `setup.cfg`, or a `.venv/` already on
+disk), add these to the `skip` list up front:
+
+```
+.venv,.tox,.eggs,*.egg-info,__pycache__
+```
+
+`.venv` covers `uv venv` / `python -m venv` — the canonical location.
+Some projects also use `venv/` (no leading dot) or `venvs/dev3.11/`; add
+those explicitly only if the project actually uses them.
+
+`.*cache` (from the previous section) already covers `.pytest_cache`,
+`.mypy_cache`, `.ruff_cache`, etc. — no need to list them individually.
+
+Detection heuristic: if `pyproject.toml` / `setup.py` / `setup.cfg` /
+`.venv/` is present, treat this as a Python project and include the
+above. In a mixed-language repo, err on the inclusive side — a spurious
+skip pattern that never matches anything is harmless.
 
 #### MANDATORY: skip `.git-meta`
 
@@ -241,10 +289,23 @@ traversal handles pruning without needing a trailing `/*`.
 
 ### Initial Config Template
 
-For `.codespellrc`:
+Base skip (applies to any project — cache glob is universal):
+
+```
+.git,.git-meta,.gitignore,.gitattributes,.*cache,*.pdf,*.svg,*.css,*.min.*,.npm,*/i18n/*,*/build/*
+```
+
+Python-project addition (append when `pyproject.toml` / `setup.py` /
+`setup.cfg` / `.venv/` is present):
+
+```
+.venv,.tox,.eggs,*.egg-info,__pycache__
+```
+
+For `.codespellrc` (Python project shown; drop the Python-specific entries otherwise):
 ```ini
 [codespell]
-skip = .git,.git-meta,.gitignore,.gitattributes,*.pdf,*.svg,*.css,*.min.*,.npm,.cache,*/i18n/*,*/build/*
+skip = .git,.git-meta,.gitignore,.gitattributes,.*cache,.venv,.tox,.eggs,*.egg-info,__pycache__,*.pdf,*.svg,*.css,*.min.*,.npm,*/i18n/*,*/build/*
 check-hidden = true
 # ignore-regex =
 # ignore-words-list =
@@ -253,7 +314,7 @@ check-hidden = true
 For `pyproject.toml`:
 ```toml
 [tool.codespell]
-skip = '.git,.git-meta,.gitignore,.gitattributes,*.pdf,*.svg,*.css,*.min.*,.npm,.cache,*/i18n/*,*/build/*'
+skip = '.git,.git-meta,.gitignore,.gitattributes,.*cache,.venv,.tox,.eggs,*.egg-info,__pycache__,*.pdf,*.svg,*.css,*.min.*,.npm,*/i18n/*,*/build/*'
 check-hidden = true
 # ignore-regex = ''
 # ignore-words-list = ''
