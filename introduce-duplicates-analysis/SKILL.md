@@ -39,16 +39,31 @@ issue), this skill:
    committing as it goes (mirroring `/introduce-codespell`'s "set up, analyze,
    fix, verify, PR" arc rather than `/analyze-duplicates`'s "just report" arc).
 
-Resolve the report generator at:
+Resolve the report generator defensively — `$HOME` is not reliable here.
+Some sandboxed environments report a `$HOME` (e.g. `/home/node`) that
+differs from the actual user account whose `~/.claude/skills/` you need
+(e.g. `/home/yoh`). Try `$HOME` first, then fall back to a search:
 
 ```bash
 GEN_REPORT="$HOME/.claude/skills/analyze-duplicates/generate-report.py"
+if [ ! -f "$GEN_REPORT" ]; then
+    GEN_REPORT=$(find /home -maxdepth 5 \
+        -path '*/.claude/skills/analyze-duplicates/generate-report.py' \
+        2>/dev/null | head -1)
+fi
 ```
 
-If it is not present (e.g. `/analyze-duplicates` isn't installed in this
+If it is still not found (e.g. `/analyze-duplicates` isn't installed in this
 environment), fall back to jscpd's own `console` + `json` reporters for a
 simpler pass/fail read — you lose the per-cluster mediation-plan table but
 the wiring, CI integration, and mitigation loop below still apply.
+
+`generate-report.py`'s JSON parsing is version-sensitive to jscpd's report
+shape (it has been exercised against jscpd 5.3.x). If it errors out against
+a newer/older jscpd, prefer fixing it in place (it's shared with
+`/analyze-duplicates`, so the fix benefits both skills) over maintaining a
+private patched copy — verify the fix with a small fixture before trusting
+its output for this run.
 
 ## Prerequisites
 
@@ -59,18 +74,20 @@ the wiring, CI integration, and mitigation loop below still apply.
 ## Commit Co-Authorship
 
 All commits created during this workflow MUST include a `Co-Authored-By`
-trailer identifying both the Claude Code version and the model used. Get the
-version via `claude --version`. Write every commit message to
-`.git-meta/COMMIT_MSG` and commit with `git commit -F .git-meta/COMMIT_MSG`
-(see "Git Workflow" / "Commit Message Method" in `~/.claude/CLAUDE.md`).
-Format:
+trailer. **Follow this session's own attribution instructions if it has
+given you a specific format or model name** (those take precedence — they
+reflect the actual session, e.g. the actual model/version currently
+running, which this skill cannot know in advance). Otherwise, get the
+Claude Code version via `claude --version` and use:
 
 ```
 Co-Authored-By: Claude Code <VERSION> / Claude <MODEL> <noreply@anthropic.com>
 ```
 
-This applies to ALL commits in this workflow: config, wiring, CI, mitigation
-refactors, threshold tightening.
+Write every commit message to `.git-meta/COMMIT_MSG` and commit with
+`git commit -F .git-meta/COMMIT_MSG` (see "Git Workflow" / "Commit Message
+Method" in `~/.claude/CLAUDE.md`). This applies to ALL commits in this
+workflow: config, wiring, CI, mitigation refactors, threshold tightening.
 
 ## Workflow Overview
 
@@ -105,14 +122,21 @@ ls .jscpd.json .jscpd.yaml .jscpd.yml 2>/dev/null
 grep -l '"jscpd"' package.json 2>/dev/null
 
 # Build-tool wiring
-grep -niE 'jscpd|duplicat' tox.ini Makefile noxfile.py pixi.toml pyproject.toml package.json 2>/dev/null
+grep -niE 'jscpd|duplicat' tox.ini Makefile noxfile.py pixi.toml pyproject.toml package.json .pre-commit-config.yaml 2>/dev/null
 
 # Helper scripts
 grep -rliE 'jscpd' tools/ scripts/ bin/ 2>/dev/null
 
-# CI wiring
-grep -rliE 'jscpd|duplicat' .github/workflows/*.y*ml .forgejo/workflows/*.y*ml .gitlab-ci.y*ml 2>/dev/null
+# CI wiring — check every CI system present, not just one
+grep -rliE 'jscpd|duplicat' .github/workflows/*.y*ml .forgejo/workflows/*.y*ml \
+  .gitlab-ci.y*ml .circleci/config.yml .travis.yml .appveyor.yml 2>/dev/null
 ```
+
+Projects sometimes run more than one CI system at once (e.g. GitHub Actions
+*and* a legacy `.travis.yml` or `.circleci/config.yml` still present from
+before a migration). List what's actually active — check which ones the
+project's badges/README reference, or which have run recently — rather
+than assuming only one applies.
 
 ### 0.2 Detect CI Platform
 
@@ -120,11 +144,11 @@ grep -rliE 'jscpd|duplicat' .github/workflows/*.y*ml .forgejo/workflows/*.y*ml .
 git remote -v
 ```
 
-| Remote URL contains     | Platform            | Workflow directory     | Runner label   |
-|--------------------------|----------------------|--------------------------|----------------|
-| `github.com`             | GitHub               | `.github/workflows/`    | `ubuntu-latest`|
-| `codeberg.org`           | Codeberg (Forgejo)   | `.forgejo/workflows/`   | `docker`       |
-| Other Forgejo instance   | Forgejo              | `.forgejo/workflows/`   | `docker`       |
+| Remote URL contains    | Platform           | Workflow directory    | Runner label    |
+| ---------------------- | ------------------ | ---------------------- | --------------- |
+| `github.com`           | GitHub             | `.github/workflows/`   | `ubuntu-latest` |
+| `codeberg.org`         | Codeberg (Forgejo) | `.forgejo/workflows/`  | `docker`        |
+| Other Forgejo instance | Forgejo            | `.forgejo/workflows/`  | `docker`        |
 
 If mirrored on multiple platforms, wire in each.
 
@@ -173,13 +197,13 @@ git checkout -b enh-duplication-analysis
 
 ### Detect Build Tooling (in priority order)
 
-| Detected file(s)                                    | Tooling  | Where the check goes |
-|-------------------------------------------------------|----------|-------------------------|
-| `tox.ini`                                              | tox      | new `[testenv:duplication]`, added to `envlist` |
-| `pixi.toml` or `[tool.pixi]` in `pyproject.toml`        | pixi     | new entry under `[tasks]` |
-| `Makefile` (no tox/pixi)                                | make     | new `check-duplication` target |
-| `package.json` (no tox/pixi/Makefile, JS/TS project)    | npm      | new `"check:duplication"` script |
-| None of the above                                       | bare     | a standalone script + direct CI step (no wrapper target) |
+| Detected file(s)                                     | Tooling | Where the check goes                                     |
+| ----------------------------------------------------- | ------- | --------------------------------------------------------- |
+| `tox.ini`                                             | tox     | new `[testenv:duplication]`, added to `envlist`            |
+| `pixi.toml` or `[tool.pixi]` in `pyproject.toml`      | pixi    | new entry under `[tasks]`                                  |
+| `Makefile` (no tox/pixi)                              | make    | new `check-duplication` target                             |
+| `package.json` (no tox/pixi/Makefile, JS/TS project)  | npm     | new `"check:duplication"` script                           |
+| None of the above                                     | bare    | a standalone script + direct CI step (no wrapper target)   |
 
 If multiple are present (e.g. both `tox.ini` and `package.json` in a
 mixed-language repo like this one), prefer whichever tool CI already invokes
@@ -196,7 +220,10 @@ Reuse the same logic `/analyze-duplicates` uses:
    `.md`, `.svelte`, etc.) to decide whether `--format` needs to be
    constrained, or whether jscpd's auto-detection is fine.
 2. **Ignore list** — start from these safe defaults:
-   `**/.tox/**,**/venv*/**,**/.venv/**,**/node_modules/**,**/__pycache__/**,**/.eggs/**,**/.git/**,**/.npm/**,**/.tmp/**,**/dist/**,**/build/**`
+   `**/.tox/**,**/venv*/**,**/.venv/**,**/node_modules/**,**/__pycache__/**,**/.eggs/**,**/*.egg-info/**,**/.git/**,**/.npm/**,**/.tmp/**,**/dist/**,**/build/**`
+   (`**/.tmp/**` matters doubly here: Step 7 writes its own JSON report into
+   `.tmp/` — without this ignore, a re-run of the check will find the
+   previous run's report and scan *that* for duplication too.)
 3. For each of `build/`, `dist/`, `.eggs/`: check whether it's **tracked by
    git** (`git ls-files --error-unmatch DIR/ 2>/dev/null`) — if tracked, do
    NOT ignore it (intentionally committed content); if untracked, keep the
@@ -208,6 +235,17 @@ Reuse the same logic `/analyze-duplicates` uses:
    for *code* duplication (e.g. `specs/`, `.specify/`, `docs/adr/`) — these
    often contain intentionally repeated boilerplate across historical
    feature docs. Ask the user if unsure whether to include them.
+6. **Test directories often contain *intrinsic*, acceptable duplication** —
+   `@pytest.mark.parametrize` tables, fixture-shaped setup/teardown blocks,
+   near-identical test cases that only differ in the assertion. These are
+   not bugs to refactor away; forcing an abstraction onto them usually hurts
+   readability more than the duplication did. Prefer, in this order: (a) a
+   higher `minTokens`/`minLines` scoped to the test path (jscpd's `ignore`
+   supports per-glob rules — check current jscpd docs for the syntax) if
+   the project's test style leans this way generally; (b) excluding the
+   specific file/block via `ignore` if it's a one-off; (c) refactoring, only
+   when the shared logic is genuinely non-trivial. Don't default straight to
+   (c) just because the mitigation loop (Step 9) is refactor-shaped.
 
 ## Step 3: Create or Update the jscpd Config
 
@@ -232,6 +270,16 @@ build tool) over embedding config in `package.json`:
 }
 ```
 
+### Which percentage does `threshold` actually gate on?
+
+jscpd's console/JSON output reports **two different percentages**:
+"duplicated lines %" and "duplicated tokens %" — they usually differ (e.g.
+1.74% vs 1.98% on the same scan). The config's `threshold` field compares
+against the **duplicated lines** percentage. Read the whole percentage,
+not just whichever number is more prominent in the console table, or you
+can ship a CI job that fails on day one for the wrong reason (exactly what
+this section is trying to prevent).
+
 ### Choosing the initial threshold (important — do not default to 0 blindly)
 
 A `threshold: 0` config (zero-tolerance) only makes sense **once the tree is
@@ -239,13 +287,21 @@ already clean** — that's the end state, not the starting point. Setting it
 before running Step 7's analysis will make the newly-added CI job fail
 immediately on pre-existing duplication that nobody has reviewed yet.
 
-1. Run a first, throwaway jscpd pass to measure current duplication:
+1. Write `.jscpd.json` first (Step 2's ignore list, `minTokens`/`minLines`,
+   any `threshold` placeholder), **then** measure against it — do not
+   measure with one ignore list and configure another. Using two different
+   ignore sets for "baseline measurement" vs. "the config CI will enforce"
+   is exactly the masking hazard Step 0.3 warns about, just self-inflicted:
+   a baseline run with a narrower ignore list than the final config will
+   report a higher percentage than what CI actually sees, or vice versa.
    ```bash
    npx --yes jscpd@latest --reporters json --output .tmp/jscpd-baseline <SCAN_PATHS>
    ```
-2. Set the initial `threshold` a little above the measured percentage
-   (round up, e.g. measured 2.3% → threshold `3`), so the CI job you're
-   about to add doesn't fail on day one.
+   (jscpd auto-reads `.jscpd.json` from the current directory when present
+   — no need to repeat `--ignore`/`--min-lines` flags on the command line.)
+2. Set the initial `threshold` a little above the measured **lines**
+   percentage (round up, e.g. measured 2.3% → threshold `3`), so the CI job
+   you're about to add doesn't fail on day one.
 3. After the Step 9 mitigation loop reduces real duplication, **tighten the
    threshold down to match** (Step 10) — ideally down to `0` if the project
    wants zero-tolerance going forward (this is what annextube's own
@@ -256,19 +312,43 @@ immediately on pre-existing duplication that nobody has reviewed yet.
    session (e.g. a hard/structural cluster the user defers), set the
    threshold to that residual level — do not leave a CI job you know will
    fail, and do not silently pick 0 and hope.
+5. **Verify the check can actually fail** before considering the wiring
+   done: temporarily set `threshold` to a value below the measured
+   percentage (or `0` against a tree with any duplication) and confirm the
+   build-tool command exits non-zero, then restore the intended threshold.
+   A duplication check that always exits 0 regardless of content is worse
+   than no check — it's a false sense of coverage. This is the single most
+   valuable verification in this skill; don't skip it.
 
 Ask the user for their preferred end-state ambition (zero-tolerance vs. a
 looser percentage) if the measured baseline is non-trivial — see Interactive
-Decision Points.
+Decision Points. If `AskUserQuestion` isn't available in this context (e.g.
+running as a subagent without it), pick zero-tolerance as the default
+ambition, state that assumption explicitly in your final report, and move
+on rather than blocking.
 
 ## Step 4: Wire into the Build Tool
 
 Always back the check with a small wrapper script — do not inline
 multi-line logic directly into `tox.ini`/`Makefile`/`pixi.toml` (keep those
 files as thin `commands = ...` calls; see "tox.ini and Shell Scripts" in
-`~/.claude/CLAUDE.md`). Put the script under `tools/` (or wherever the
-project already keeps such helpers — check for an existing `scripts/` dir
-first).
+`~/.claude/CLAUDE.md`). Put the script under `tools/` or `scripts/` —
+whichever the project already uses for this kind of helper.
+
+**If neither `tools/` nor `scripts/` exists yet**, creating one is a
+structural decision an upstream maintainer may not want made unilaterally
+(some projects deliberately keep everything at the repo root, or expect
+CI-only logic to live inline in the workflow file). Treat this as an
+Interactive Decision Point rather than a silent default — ask the user, or
+if unavailable, note the choice explicitly in your final report so it's
+easy to challenge in review.
+
+If the project enforces file-level licensing metadata (a `reuse` pre-commit
+hook, `REUSE.toml`, per-file SPDX headers — see `/introduce-reuse-compliance`),
+check that the new files you're about to create are covered: either by a
+catch-all `REUSE.toml` annotation, or by adding an SPDX header matching the
+project's own convention. Otherwise the very first commit fails the
+project's own pre-commit/CI.
 
 ```bash
 #!/bin/bash
@@ -370,9 +450,11 @@ grep 'uses:' .github/workflows/*.yml 2>/dev/null | head -20   # SHA-pinned actio
 
 ### 5.1 Determine how to add the check
 
-Two shapes, depending on how the project already runs its non-test checks:
+Three shapes, depending on how the project already runs its non-test checks
+— all at least as common as each other, check which one actually applies
+before picking a default:
 
-**A. Matrix-style "checks" job already exists** (like annextube's
+**A. Flat matrix-style "checks" job already exists** (like annextube's
 `checks:` job with `matrix: env: [lint, type, ...]`) — just add the new env
 name to that matrix; no new job needed:
 
@@ -381,6 +463,22 @@ name to that matrix; no new job needed:
     strategy:
       matrix:
         env: [lint, type, frontend, e2e, duplication]   # <- add this
+```
+
+**A2. `include:`-style matrix** (a Python-version/OS matrix where each
+non-test check is an extra `include:` entry carrying its own `toxenv`,
+rather than a separate flat list) — add a new `include:` entry the same
+way the existing ones are shaped:
+
+```yaml
+  strategy:
+    matrix:
+      python-version: ["3.11"]
+      include:
+        - python-version: "3.11"
+          toxenv: lint
+        - python-version: "3.11"
+          toxenv: duplication   # <- add this, matching the existing entries' shape
 ```
 
 **B. No aggregate checks job** — add a new dedicated job/step that runs the
@@ -405,6 +503,18 @@ the Forgejo mirror of `actions/checkout`
 (`https://code.forgejo.org/actions/checkout@vN`) — see `/introduce-codespell`
 Step 2 for the full platform-difference table if unsure.
 
+### 5.1a Confirm the runner actually has Node available
+
+jscpd needs `npx`/Node.js regardless of which shape above you used. On
+GitHub-hosted `ubuntu-latest` runners this is preinstalled, so shape A/A2
+(riding along on an existing Python-only job) works without extra setup —
+but don't assume this holds everywhere. On a self-hosted runner, a
+minimal/slim container image, or Forgejo/Codeberg's Docker-based runners,
+Node may not be present. Check what the existing jobs' runner/image
+provides; if Node isn't guaranteed, add an explicit `actions/setup-node`
+(or platform equivalent) step even when folding into shape A/A2's existing
+job.
+
 ### 5.2 Verify the CI job actually invokes the new check
 
 If CI runs `tox` bare (no explicit envlist matrix), adding the env to
@@ -418,11 +528,15 @@ get from tox.ini into CI before assuming the new one will ride along.
 ## Step 6: Commit Infrastructure
 
 ```bash
-git add .jscpd.json tools/check-duplication.sh tox.ini  # (or pixi.toml/Makefile/package.json)
+git add .jscpd.json tools/check-duplication.sh tox.ini .gitignore  # (or pixi.toml/Makefile/package.json)
 git commit -F .git-meta/COMMIT_MSG   # "Add code duplication analysis to the dev workflow"
 git add .github/workflows/*.yml .forgejo/workflows/*.yml
 git commit -F .git-meta/COMMIT_MSG   # "Run duplication check in CI"
 ```
+
+Include `.gitignore` in the first commit if Step 7's `.tmp/` output
+directory (or wherever jscpd's JSON/HTML reporters write) isn't already
+covered by an existing ignore pattern.
 
 Keep these as separate commits (config+build-tool wiring vs. CI wiring) —
 easier to review, and if CI wiring needs a follow-up fix it won't require
@@ -431,7 +545,8 @@ touching the first commit.
 ## Step 7: Run the Analysis and Generate the Rich Report
 
 ```bash
-GEN_REPORT="$HOME/.claude/skills/analyze-duplicates/generate-report.py"
+# Resolve $GEN_REPORT as in "Relationship to /analyze-duplicates" above
+# (don't rely on $HOME alone).
 npx --yes jscpd@latest --reporters json --output .tmp/jscpd-report <SCAN_PATHS>
 python3 "$GEN_REPORT" \
     --threshold <THRESHOLD> \
@@ -483,6 +598,15 @@ classification):
 4. Run the project's existing test suite for the touched area — a
    duplication-driven refactor is a correctness-risk change like any other;
    don't skip verification just because the motivation was "just DRY".
+4a. If the project has a formatter/linter with auto-fix in
+   `.pre-commit-config.yaml` (`black`, `ruff-format`, `isort`, `prettier`,
+   `eslint --fix`, ...), run it on **only the files you just touched**,
+   using the version **pinned in `.pre-commit-config.yaml`** — not
+   whatever version happens to be on `$PATH` or installed globally. A
+   newer/different formatter version can reformat unrelated style in files
+   you didn't otherwise touch (e.g. rewriting `...` stub formatting), which
+   then looks like unrelated noise in your diff and has to be reverted.
+   Stage only the files this refactor actually changed.
 5. Commit the refactor on its own (one logical change per commit, per this
    project's own git-hygiene convention):
    ```bash
@@ -586,6 +710,13 @@ Ask the user (via `AskUserQuestion` or plain text) about:
    abstraction isn't obvious
 4. **Whether to push / open a PR** — always confirm before doing this
    against any repo the user didn't explicitly say to push to
+
+If `AskUserQuestion` isn't available in this context (e.g. you're a
+subagent invoked without it), don't block on these — pick the reasonable
+default noted for each item above, state the assumption explicitly in your
+final report, and move on. Pushing/opening a PR is the one exception: never
+substitute a default for that — if you can't ask, default to **not**
+pushing (Step 11) and say so.
 
 ### Decide without asking
 
