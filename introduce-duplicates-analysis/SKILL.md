@@ -63,23 +63,17 @@ fixture before trusting its output for this run.
 - Git repository (Introduce mode; report-only mode works on any path)
 - `gh` CLI for PR creation (optional — GitHub only)
 
-## Commit Co-Authorship
+## Commits
 
-All commits created during this workflow MUST include a `Co-Authored-By`
-trailer. **Follow this session's own attribution instructions if it has
-given you a specific format or model name** (those take precedence — they
-reflect the actual session, e.g. the actual model/version currently
-running, which this skill cannot know in advance). Otherwise, get the
-Claude Code version via `claude --version` and use:
-
-```
-Co-Authored-By: Claude Code <VERSION> / Claude <MODEL> <noreply@anthropic.com>
-```
-
-Write every commit message to `.git-meta/COMMIT_MSG` and commit with
-`git commit -F .git-meta/COMMIT_MSG` (see "Git Workflow" / "Commit Message
-Method" in `~/.claude/CLAUDE.md`). This applies to ALL commits in this
-workflow: config, wiring, CI, mitigation refactors, threshold tightening.
+The commit commands below take the message from a file —
+`git commit -F <GIT_TMP>/COMMIT_MSG` — where `<GIT_TMP>` is whatever
+untracked scratch location the user or project has adopted for commit and
+PR message drafts. Substitute it; if none is established, ask the user (or
+fall back to `git commit -m`). Annotate commits — message style, sign-off,
+AI-attribution trailers such as `Co-Authored-By` — as the user's or
+project's agreed conventions specify; do not invent a format. This applies
+to ALL commits in this workflow: config, wiring, CI, mitigation refactors,
+threshold tightening.
 
 ## Workflow Overview
 
@@ -137,21 +131,27 @@ git remote -v
 ```
 
 | Remote URL contains    | Platform           | Workflow directory    | Runner label    |
-| ---------------------- | ------------------ | ---------------------- | --------------- |
-| `github.com`           | GitHub             | `.github/workflows/`   | `ubuntu-latest` |
-| `codeberg.org`         | Codeberg (Forgejo) | `.forgejo/workflows/`  | `docker`        |
-| Other Forgejo instance | Forgejo            | `.forgejo/workflows/`  | `docker`        |
+| ---------------------- | ------------------ | --------------------- | --------------- |
+| `github.com`           | GitHub             | `.github/workflows/`  | `ubuntu-latest` |
+| `codeberg.org`         | Codeberg (Forgejo) | `.forgejo/workflows/` | `docker`        |
+| Other Forgejo instance | Forgejo            | `.forgejo/workflows/` | `docker`        |
 
 If mirrored on multiple platforms, wire in each.
 
 ### 0.3 Branch on what you found
 
-| State found                                                                 | Action |
-|-------------------------------------------------------------------------------|--------|
-| **Fully wired** (config + build-tool target + CI job present) **and it currently passes** | Run the existing check once to confirm (Step 0.3a), report to the user that duplication analysis is already part of the workflow and clean, and **stop** — there is nothing to introduce. Optionally offer a report-only run (`report-mode.md`) if the user wants visibility into what's *near* the threshold. |
-| **Fully wired but currently failing** (duplication present, or threshold exceeded) | Skip Steps 1–6 (infrastructure already exists); jump straight to Step 7 (run analysis) using the existing config, then Step 9 (mitigation loop). |
-| **Partially wired** (e.g. config exists but no CI job, or CI job exists but doesn't actually run it — see the codespell-skill's masking-hazard pattern below) | Fill in only the missing pieces (Steps 1–6, skipping what already exists), then continue. |
-| **Not present at all** | Proceed with the full Steps 1–6. |
+| State found              | Action                                                    |
+| ------------------------ | --------------------------------------------------------- |
+| **Fully wired**, passing | Confirm once (0.3a), report it is already clean, **stop** |
+| **Fully wired**, failing | Skip Steps 1–6; run Step 7 on the existing config, then 9 |
+| **Partially wired**      | Do only the missing parts of Steps 1–6, then continue     |
+| **Not present**          | Full Steps 1–6                                            |
+
+"Fully wired" means config + build-tool target + a CI job that actually
+runs it; a CI job that never invokes the check (see the masking-hazard
+audit below) counts as partially wired. For an already-clean setup,
+optionally offer a report-only run (`report-mode.md`) to show what is
+*near* the threshold.
 
 #### 0.3a Confirm a "fully wired" setup actually passes
 
@@ -190,12 +190,12 @@ git checkout -b enh-duplication-analysis
 ### Detect Build Tooling (in priority order)
 
 | Detected file(s)                                     | Tooling | Where the check goes                                     |
-| ----------------------------------------------------- | ------- | --------------------------------------------------------- |
-| `tox.ini`                                             | tox     | new `[testenv:duplication]`, added to `envlist`            |
-| `pixi.toml` or `[tool.pixi]` in `pyproject.toml`      | pixi    | new entry under `[tasks]`                                  |
-| `Makefile` (no tox/pixi)                              | make    | new `check-duplication` target                             |
-| `package.json` (no tox/pixi/Makefile, JS/TS project)  | npm     | new `"check:duplication"` script                           |
-| None of the above                                     | bare    | a standalone script + direct CI step (no wrapper target)   |
+| ---------------------------------------------------- | ------- | -------------------------------------------------------- |
+| `tox.ini`                                            | tox     | new `[testenv:duplication]`, added to `envlist`          |
+| `pixi.toml` or `[tool.pixi]` in `pyproject.toml`     | pixi    | new entry under `[tasks]`                                |
+| `Makefile` (no tox/pixi)                             | make    | new `check-duplication` target                           |
+| `package.json` (no tox/pixi/Makefile, JS/TS project) | npm     | new `"check:duplication"` script                         |
+| None of the above                                    | bare    | a standalone script + direct CI step (no wrapper target) |
 
 If multiple are present (e.g. both `tox.ini` and `package.json` in a
 mixed-language repo), prefer whichever tool CI already invokes
@@ -221,6 +221,8 @@ This is the one ignore list for both modes (report-only mode reuses it):
    nothing about duplication in the source. If a real source package is
    itself named `build`/`dist` (e.g. pip's `operations/build/`), anchor
    that pattern to the top level (`build/**`) instead of `**/build/**`.
+   If `<GIT_TMP>` (see "Commits") lies inside the scanned tree, ignore it
+   too, so commit/PR message drafts are not scanned.
 3. Find all **symlinks** in each scan path (`find <SCAN_PATH> -type l`)
    and add ignore patterns for each (e.g. `**/symlinked-dir/**`) —
    duplicated content reached only via a symlink is noise, not a real
@@ -329,18 +331,17 @@ immediately on pre-existing duplication that nobody has reviewed yet.
 
 Ask the user for their preferred end-state ambition (zero-tolerance vs. a
 looser percentage) if the measured baseline is non-trivial — see Interactive
-Decision Points. If `AskUserQuestion` isn't available in this context (e.g.
-running as a subagent without it), pick zero-tolerance as the default
-ambition, state that assumption explicitly in your final report, and move
-on rather than blocking.
+Decision Points. If you can't ask the user in this context (e.g. running
+as a subagent without an interactive question tool), pick zero-tolerance
+as the default ambition, state that assumption explicitly in your final
+report, and move on rather than blocking.
 
 ## Step 4: Wire into the Build Tool
 
 Always back the check with a small wrapper script — do not inline
 multi-line logic directly into `tox.ini`/`Makefile`/`pixi.toml` (keep those
-files as thin `commands = ...` calls; see "tox.ini and Shell Scripts" in
-`~/.claude/CLAUDE.md`). Put the script under `tools/` or `scripts/` —
-whichever the project already uses for this kind of helper.
+files as thin `commands = ...` calls). Put the script under `tools/` or
+`scripts/` — whichever the project already uses for this kind of helper.
 
 **If neither `tools/` nor `scripts/` exists yet**, creating one is a
 structural decision an upstream maintainer may not want made unilaterally
@@ -349,13 +350,6 @@ CI-only logic to live inline in the workflow file). Treat this as an
 Interactive Decision Point rather than a silent default — ask the user, or
 if unavailable, note the choice explicitly in your final report so it's
 easy to challenge in review.
-
-If the project enforces file-level licensing metadata (a `reuse` pre-commit
-hook, `REUSE.toml`, per-file SPDX headers — see `/introduce-reuse-compliance`),
-check that the new files you're about to create are covered: either by a
-catch-all `REUSE.toml` annotation, or by adding an SPDX header matching the
-project's own convention. Otherwise the very first commit fails the
-project's own pre-commit/CI.
 
 ```bash
 #!/bin/bash
@@ -377,9 +371,12 @@ echo
 npx --yes jscpd@latest <SCAN_PATHS>
 ```
 
-If the project requires scripts to pass `shellcheck` (check `~/.claude/CLAUDE.md`
-or the project's own CI for a shellcheck job), run `shellcheck tools/check-duplication.sh`
-before committing and fix any findings.
+Files you add must not break the project's established QA norms (linters
+such as `shellcheck`, formatters, pre-commit hooks, license/SPDX header
+checks): run those checks on the new files and match their conventions
+before committing. If the checks run over an explicit file list (a lint
+env in `tox.ini` or alike, a pre-commit `files:` pattern), add the new
+script there so it stays covered.
 
 ### tox
 
@@ -536,9 +533,9 @@ get from tox.ini into CI before assuming the new one will ride along.
 
 ```bash
 git add .jscpd.json tools/check-duplication.sh tox.ini .gitignore  # (or pixi.toml/Makefile/package.json)
-git commit -F .git-meta/COMMIT_MSG   # "Add code duplication analysis to the dev workflow"
+git commit -F <GIT_TMP>/COMMIT_MSG   # "Add code duplication analysis to the dev workflow"
 git add .github/workflows/*.yml .forgejo/workflows/*.yml
-git commit -F .git-meta/COMMIT_MSG   # "Run duplication check in CI"
+git commit -F <GIT_TMP>/COMMIT_MSG   # "Run duplication check in CI"
 ```
 
 Include `.gitignore` in the first commit if Step 7's `.tmp/` output
@@ -615,14 +612,14 @@ classification):
 5. Commit the refactor on its own (one logical change per commit, per this
    project's own git-hygiene convention):
    ```bash
-   git commit -F .git-meta/COMMIT_MSG   # "Deduplicate <X> by extracting <Y>"
+   git commit -F <GIT_TMP>/COMMIT_MSG   # "Deduplicate <X> by extracting <Y>"
    ```
 6. Repeat for the next cluster.
 
 For **moderate/hard** clusters where the right abstraction is genuinely
 ambiguous (different call signatures, subtly different behavior that *looks*
 identical), do not force a merge — flag it to the user with the specific
-ambiguity, and either use `AskUserQuestion` or leave it for a follow-up and
+ambiguity, and either ask the user or leave it for a follow-up and
 raise the threshold to cover only that residual amount (see Step 10).
 
 Stop the loop once duplication is at or below the target the user confirmed
@@ -637,7 +634,7 @@ in Step 3 (ideally `0`, i.e. fully clean).
    deliberately-residual) state reached in Step 9. Commit this alongside
    any last mitigation commit, or as its own small commit:
    ```bash
-   git commit -F .git-meta/COMMIT_MSG   # "Tighten duplication threshold to 0% after cleanup"
+   git commit -F <GIT_TMP>/COMMIT_MSG   # "Tighten duplication threshold to 0% after cleanup"
    ```
 3. Confirm the check still passes after the threshold change.
 
@@ -661,8 +658,7 @@ told you (for this run) to go ahead and open it.
 
 ### Write the PR body
 
-Write to `.git-meta/PR_BODY.md` (never `.git/pr-description.md` — see
-"Creating pull requests" in `~/.claude/CLAUDE.github.md`):
+Write it to `<GIT_TMP>/PR_BODY.md` (see "Commits" above):
 
 ```markdown
 Add code duplication analysis (jscpd) to the development workflow.
@@ -681,18 +677,13 @@ Add code duplication analysis (jscpd) to the development workflow.
 ✅ `<the exact command>` passes with duplication at <FINAL_PERCENT>%
 ✅ Existing test suite passes after refactors
 
----
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
+<attribution footer, if the user's or project's conventions call for one>
 ```
-
-(Adjust the attribution footer to match this session's actual attribution
-instructions if they differ.)
 
 ### Hand the user the command — do not run it
 
 ```bash
-git push -u <remote> <branch-name> && gh pr create --repo <org>/<repo> --title "Add code duplication analysis to the dev workflow" --body-file .git-meta/PR_BODY.md --web
+git push -u <remote> <branch-name> && gh pr create --repo <org>/<repo> --title "Add code duplication analysis to the dev workflow" --body-file <GIT_TMP>/PR_BODY.md --web
 ```
 
 For Codeberg/Forgejo (no `gh`), give the push command and the compare-view
@@ -705,7 +696,8 @@ and report the branch name plus a summary of what would be pushed.
 
 ## Interactive Decision Points
 
-Ask the user (via `AskUserQuestion` or plain text) about:
+Ask the user (via an interactive question tool if available, or plain
+text) about:
 
 1. **Target threshold ambition** — zero-tolerance (like annextube) vs. a
    looser percentage, when the measured baseline is non-trivial
@@ -716,12 +708,12 @@ Ask the user (via `AskUserQuestion` or plain text) about:
 4. **Whether to push / open a PR** — always confirm before doing this
    against any repo the user didn't explicitly say to push to
 
-If `AskUserQuestion` isn't available in this context (e.g. you're a
-subagent invoked without it), don't block on these — pick the reasonable
-default noted for each item above, state the assumption explicitly in your
-final report, and move on. Pushing/opening a PR is the one exception: never
-substitute a default for that — if you can't ask, default to **not**
-pushing (Step 11) and say so.
+If you can't ask the user in this context (e.g. you're a subagent
+without an interactive question tool), don't block on these — pick the
+reasonable default noted for each item above, state the assumption
+explicitly in your final report, and move on. Pushing/opening a PR is the
+one exception: never substitute a default for that — if you can't ask,
+default to **not** pushing (Step 11) and say so.
 
 ### Decide without asking
 
@@ -740,7 +732,7 @@ After completing the skill:
 - The duplication check passes when invoked the same way CI invokes it
 - A Markdown report (via the bundled `generate-report.py`) showing the
   before/after state
-- `.git-meta/PR_BODY.md` ready, with the push+PR command given to the user
+- `<GIT_TMP>/PR_BODY.md` ready, with the push+PR command given to the user
   (not executed, unless explicitly authorized)
 - If the project already had this wired and clean: a short report saying
   so, with no branch created

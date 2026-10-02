@@ -12,12 +12,12 @@ project, refactoring, or committing. This is what the former
 
 ## Configuration
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `MIN_LINES` | `6` | Minimum duplicate block size in lines |
-| `MIN_TOKENS` | `50` | Minimum duplicate block size in tokens |
-| `THRESHOLD` | `5` | Duplication percentage that flags a warning |
-| `FORMATS` | (auto-detect) | Comma-separated jscpd format list (e.g., `python,markdown`) |
+| Variable     | Default       | Description                                                 |
+| ------------ | ------------- | ----------------------------------------------------------- |
+| `MIN_LINES`  | `6`           | Minimum duplicate block size in lines                       |
+| `MIN_TOKENS` | `50`          | Minimum duplicate block size in tokens                      |
+| `THRESHOLD`  | `5`           | Duplication percentage that flags a warning                 |
+| `FORMATS`    | (auto-detect) | Comma-separated jscpd format list (e.g., `python,markdown`) |
 
 ## Arguments
 
