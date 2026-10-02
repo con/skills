@@ -82,24 +82,14 @@ Score each finding: **Impact** (blast radius via graph) × **Likelihood** (evide
 
 ## Where to write the report
 
-Write the report to a dated Markdown file in the repository, not just to the chat,
-so reviews pile up into a history you can compare over time:
-
-```
-docs/health-reviews/YYYY-MM-DD-health-review.md
-```
-
-- `YYYY-MM-DD` is today's date (`date +%F`). If a file with that name already exists,
-  append a suffix (`YYYY-MM-DD-health-review-2.md`) rather than overwriting it.
-- Create `docs/health-reviews/` if it does not exist.
-- For a multi-repo audit, write it into the repo the audit was launched from (usually the
-  template / shared-lib repo, or an org-level `.github` repo). If that's unclear, ask.
-- **Before starting Phase 0, read the most recent earlier report in that directory, if any.**
-  Use it as a baseline: note which prior findings were fixed, which persist, and which are new,
-  and add a short "Since last review" subsection to the executive summary that links the previous file.
-- Record the commit SHA(s) the review was run against near the top, so cited line numbers stay
-  meaningful after the code moves on.
-- Do not commit or push the report unless the user asks; tell them the path when done.
+Write the report to a file, not just to chat: `docs/health-reviews/YYYY-MM-DD-health-review.md`
+(`date +%F`), or a path the user gives. Never overwrite an existing report (use `-2`, `-3`, …
+before `.md`). For a multi-repo audit, ask where if unclear, and never place findings in a
+public repo without asking. If an earlier report exists there, read it once Phase 0 has
+established the reference pattern, re-verify each of its findings against the current code
+(a prior report alone can't show something is fixed), and fill in "Since last review".
+Record the commit SHA(s) reviewed so cited lines stay meaningful. Do not commit or push
+unless asked; tell the user the path.
 
 ## Output template
 
@@ -107,13 +97,13 @@ docs/health-reviews/YYYY-MM-DD-health-review.md
 # Pipeline Ecosystem Health Audit — {org/domain} — {YYYY-MM-DD}
 
 Reviewed at: {repo}@{short SHA}[, ...]
-Previous review: {link to prior docs/health-reviews/ file, or "none"}
+Previous review: {link to prior report, or "none"}
 
 ## 1. Executive summary (≤ 10 lines)
 Overall health grade, top 3 systemic risks, top 3 quick wins, what was out of scope.
 
-### Since last review
-Fixed / still open / new, relative to the previous report (omit if this is the first review).
+## 1b. Since last review
+Fixed / still open / new vs. the previous report, re-verified at the current SHA (omit if first review).
 
 ## 2. Reference pattern
 What "good" looks like here, and its known gaps.
