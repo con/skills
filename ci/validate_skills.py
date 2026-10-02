@@ -42,6 +42,8 @@ import sys
 import tempfile
 from pathlib import Path
 
+from skill_common import find_skill_dirs
+
 try:
     import yaml
 except ImportError:
@@ -122,7 +124,7 @@ def check_skill_md(skill_md: Path, result: Result) -> None:
 
     # E001 — frontmatter
     fm, body = _parse_frontmatter(text)
-    if fm is None:
+    if not isinstance(fm, dict):
         result.error("E001", skill_md, "missing or unparseable YAML frontmatter")
         return  # remaining checks need the frontmatter
 
@@ -209,11 +211,6 @@ def check_python_file(py_path: Path, result: Result) -> None:
 # Main
 # ---------------------------------------------------------------------------
 
-def find_skill_dirs(repo_root: Path) -> list[Path]:
-    return sorted(
-        p.parent for p in repo_root.glob("*/SKILL.md")
-        if p.parent.name not in {"ci"}
-    )
 
 
 def validate_skill(skill_dir: Path) -> Result:
@@ -225,7 +222,7 @@ def validate_skill(skill_dir: Path) -> Result:
 
     check_skill_md(skill_md, result)
 
-    for py_path in sorted(skill_dir.glob("*.py")):
+    for py_path in sorted(skill_dir.rglob("*.py")):
         check_python_file(py_path, result)
 
     return result
