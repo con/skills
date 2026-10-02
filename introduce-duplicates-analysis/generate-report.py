@@ -64,12 +64,36 @@ def file_link(name, start, end, repo_url, branch):
 
 
 def build_file_lines_map(data):
-    """Build a {filepath: total_lines} map from jscpd statistics."""
+    """Build a {filepath: total_lines} map from jscpd statistics.
+
+    jscpd's per-format `statistics.formats.<fmt>.sources` field is a dict of
+    per-file stats in some versions and a plain file count (int) in others
+    (observed with jscpd 5.3.x) -- guard against the latter so this degrades
+    to an empty map instead of crashing. Callers should fall back to
+    `count_file_lines()` for files missing from the returned map.
+    """
     file_lines = {}
     for _fmt_name, fmt_data in data.get("statistics", {}).get("formats", {}).items():
-        for fpath, finfo in fmt_data.get("sources", {}).items():
-            file_lines[fpath] = finfo.get("lines", 0)
+        sources = fmt_data.get("sources", {})
+        if not isinstance(sources, dict):
+            continue
+        for fpath, finfo in sources.items():
+            if isinstance(finfo, dict):
+                file_lines[fpath] = finfo.get("lines", 0)
     return file_lines
+
+
+def count_file_lines(fpath, scan_path):
+    """Count lines in fpath (resolved relative to scan_path) by reading it.
+
+    Fallback for when jscpd's JSON report doesn't carry per-file line counts
+    (see `build_file_lines_map`).
+    """
+    try:
+        with open(Path(scan_path) / fpath, "rb") as f:
+            return sum(1 for _ in f)
+    except OSError:
+        return 0
 
 
 def clone_file_percent(dup, file_lines):
@@ -587,15 +611,26 @@ def main():
 
     projects = []
     file_lines = {}
+    all_duplicates = []
     for rpath in args.reports:
         data = load_report(rpath)
         name = guess_project_name(rpath)
         file_lines.update(build_file_lines_map(data))
+        dups = data.get("duplicates", [])
+        all_duplicates.extend(dups)
         projects.append({
             "name": name,
             "stats": data.get("statistics", {}).get("total", {}),
-            "duplicates": data.get("duplicates", []),
+            "duplicates": dups,
         })
+
+    # Fill in any files jscpd's JSON didn't give us a line count for (see
+    # build_file_lines_map) by reading them from disk instead.
+    for dup in all_duplicates:
+        for key in ("firstFile", "secondFile"):
+            fname = dup.get(key, {}).get("name")
+            if fname and fname not in file_lines:
+                file_lines[fname] = count_file_lines(fname, args.scan_path)
 
     cross_project_data = None
     if args.cross_project:
