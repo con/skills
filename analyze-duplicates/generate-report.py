@@ -30,9 +30,9 @@ def detect_git_info(scan_path):
             capture_output=True, text=True, timeout=5,
         ).stdout.strip()
         # Find the remote that the branch tracks, fall back to origin
+        branch_remote_key = f"branch.{branch}.remote"
         tracking_remote = subprocess.run(
-            ["git", "-C", scan_path, "config",
-             f"branch.{branch}.remote"],
+            ["git", "-C", scan_path, "config", branch_remote_key],
             capture_output=True, text=True, timeout=5,
         ).stdout.strip() or "origin"
         remote_url = subprocess.run(

@@ -1,7 +1,6 @@
 # CON Skills
 
-A collection of [Claude Code Agent Skills](https://agentskills.io/) for
-software project maintenance, triage, and automation.
+A collection of [Claude Code Agent Skills](https://agentskills.io/) for software project maintenance, triage, and automation.
 
 ## Included Skills
 
@@ -20,21 +19,32 @@ software project maintenance, triage, and automation.
 
 ## Installation
 
-Copy or symlink the desired skill directories into `~/.claude/skills/`, or
-point your Claude Code configuration to this repository.
+Copy or symlink the desired skill directories into `~/.claude/skills/`, or point your Claude Code configuration to this repository.
+
+## Automated checks
+
+With Python 3.12 and `tox==4.64.1` installed, run:
+
+```console
+tox -e validate,security-static,security-deps
+```
+
+CI runs these checks on pull requests, pushes to `master`, and weekly, using read-only permissions and pinned tools/actions. No model credentials are needed. The structural validator checks skill metadata and bundled Python recursively. Cisco's static skill scanner fails on HIGH/CRITICAL findings.
+`pip-audit` checks the installed validation/scanner dependency environment for known Python vulnerabilities; it does not cover every external command a skill can invoke.
+Review lower-severity findings too; passing scans do not prove a skill is safe.
+
+Optional local review: `tox -e security-llm` requires Claude Code 2.1.248+ and authentication.
+The runner restricts tools to Read/Glob/Grep and file access to the reviewed directory, disables discovered customizations and MCP, and is excluded from CI.
+Use a trusted driver, CLI installation, and `SECURITY_CMD` launcher that honors these restrictions; model verdicts remain advisory.
 
 ## Configuration
 
-Some skills require user-specific configuration. Following the
-[Agent Skills specification](https://agentskills.io/specification),
-configuration is handled via documented variables in each skill's
-`SKILL.md` rather than environment variables or config files — the
-Claude agent reads these values and substitutes them at runtime.
+Some skills require user-specific configuration.
+Following the [Agent Skills specification](https://agentskills.io/specification), configuration is handled via documented variables in each skill's `SKILL.md` rather than environment variables or config files — the Claude agent reads these values and substitutes them at runtime.
 
 ### pr-review-update
 
-This skill has a `## Configuration` section at the top of its `SKILL.md`
-with the following variables:
+This skill has a `## Configuration` section at the top of its `SKILL.md` with the following variables:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -47,8 +57,7 @@ Edit the defaults in `pr-review-update/SKILL.md` to match your setup.
 
 ### pr-feedback-review
 
-This skill has a `## Configuration` section at the top of its `SKILL.md`
-with the following variables:
+This skill has a `## Configuration` section at the top of its `SKILL.md` with the following variables:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -60,15 +69,11 @@ Edit the defaults in `pr-feedback-review/SKILL.md` to match your setup.
 
 ### Other skills
 
-The remaining skills use runtime discovery (e.g., `git remote -v`,
-`gh auth status`) and do not require pre-configuration.
+The remaining skills use runtime discovery (e.g., `git remote -v`, `gh auth status`) and do not require pre-configuration.
 
 ## Repo-wide conventions
 
-See [`AGENTS.md`](AGENTS.md) (alias `CLAUDE.md`) for cross-cutting rules
-that apply to every skill in this collection — most notably the rule
-that any skill preparing a pull request must respect the upstream
-project's `PULL_REQUEST_TEMPLATE.md` and `CONTRIBUTING.md`.
+See [`AGENTS.md`](AGENTS.md) (alias `CLAUDE.md`) for cross-cutting rules that apply to every skill in this collection — most notably the rule that any skill preparing a pull request must respect the upstream project's `PULL_REQUEST_TEMPLATE.md` and `CONTRIBUTING.md`.
 
 ## License
 
