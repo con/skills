@@ -17,8 +17,9 @@ export default defineConfig({
   // the Chromatic action looks for them. Setting it means also setting CHROMATIC_ARCHIVE_LOCATION.
   use: { baseURL, trace: "on-first-retry" },
   // One Desktop Chrome project, deliberately. Chromatic names a Playwright archive by the test's
-  // file, describe and title, not its project, so projects write over each other's story files;
-  // viewports are set per test instead (tests/chromatic/viewports.ts), never as projects.
+  // file, describe and title, never its project, so several projects write over one story file
+  // (viewport-only projects are recovered as modes on upload; anything else that differs is lost).
+  // Viewports are set per test instead (tests/chromatic/viewports.ts), never as projects.
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: {
     // The built app, served by vite preview; --strictPort so a preview of another app holding the

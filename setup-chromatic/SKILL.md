@@ -100,7 +100,7 @@ If the app themes through a class or a stored key instead of `data-theme`, the d
 
 Storybook's Vite builder loads the app's own `vite.config.*` from the parent of its config directory (`configs/` with `--config-dir configs/storybook`), so `define` and plugins are picked up as is.
 It drops the config's `build` block, so a multi-page entry list does no harm there, and a `define` must sit at the top level to reach the stories.
-If the Vite config lives elsewhere, point at it with `framework.options.builder.viteConfigPath`, or the stories build without it.
+If the Vite config lives elsewhere, point at it with `framework.options.builder.viteConfigPath` (resolved from the working directory, so build it from `import.meta.url`), or the stories build without it.
 
 ## Step 3. Stories (`stories/`)
 
@@ -119,7 +119,9 @@ Two configs that differ only in `testDir` (and a reporter folder, if one is set)
 If the repo already has a Playwright config, copy it as `configs/playwright.chromatic.config.ts` and change only those; identical settings matter more than the template's particular choices.
 Otherwise copy `templates/configs/playwright.chromatic.config.ts` and write `configs/playwright.config.ts` from it with `testDir: "../tests/integration"`.
 The template serves the built app with `vite preview --strictPort`; switch the `webServer` command to the dev server if the user chose that in step 0.
-It keeps one Chromium project on purpose: Chromatic names a Playwright archive by the test's file, describe and title, not its project (`writeTestResult` in [chromatic-e2e](https://github.com/chromaui/chromatic-e2e/blob/main/packages/shared/src/write-archive/index.ts) builds it from `testInfo.titlePath`), so projects write over each other's story files, and viewports are set per test instead (step 5).
+It keeps one Chromium project on purpose.
+Chromatic names a Playwright archive by the test's file, describe and title ([why tests show as new](https://www.chromatic.com/docs/faq/why-tests-show-as-new); `writeTestResult` in [chromatic-e2e](https://github.com/chromaui/chromatic-e2e/blob/main/packages/shared/src/write-archive/index.ts) builds it from `testInfo.titlePath`), never by its Playwright project, so several projects write over one story file.
+Since `@chromatic-com/playwright` 1.0.0 the upload step recovers viewport-only projects as modes, but anything else that differs between projects is lost; one project with viewports set per test (step 5) sidesteps all of it.
 
 ## Step 5. Snapshot tests (`tests/chromatic/`)
 

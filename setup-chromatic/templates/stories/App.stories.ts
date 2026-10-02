@@ -4,7 +4,9 @@
 import indexHtml from "../index.html?raw";
 import { buildPage } from "./utils";
 
-export default { title: "App" };
+// fullscreen: the page fills the canvas edge to edge, as it does in the browser, instead of sitting
+// inside Storybook's default padding.
+export default { title: "App", parameters: { layout: "fullscreen" } };
 
 export const Default = { name: "Default (nothing loaded)", render: () => buildPage(indexHtml) };
 

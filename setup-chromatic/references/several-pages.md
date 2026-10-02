@@ -69,7 +69,7 @@ Two things a nested page needs that the index page does not:
 ## Snapshot tests, shared and per page
 
 `pages.chromatic.test.ts` registers the states every page has (default, dark theme) once per page from `PAGES`; `<page>.chromatic.test.ts` holds that page's own states.
-Chromatic names each archive by the test file's path (relative to `testDir`, extension and `.test` dropped), its `describe` titles and its title, so the Chromatic UI groups captures by file; leading every title with the page's name (`About - default [desktop]`) keeps the shared file readable by page, and Playwright itself rejects two identical titles in one file.
+Chromatic names each archive by the test file's path (relative to `testDir`, extension and `.test` dropped), its `describe` titles and its title, never by the URL visited, so the Chromatic UI groups captures by file; leading every title with the page's name (`About - default [desktop]`) keeps the shared file readable by page, and Playwright itself rejects two identical titles in one file.
 A test may navigate between pages, since the fixture archives assets from every page it visits, but only the DOM at the end (or at `takeSnapshot`) is kept, so a page state is one test, not one step of a longer flow.
 Relative URLs inside the archived pages are fine: the archive absolutizes them and rewrites same-origin ones to root-relative paths.
 

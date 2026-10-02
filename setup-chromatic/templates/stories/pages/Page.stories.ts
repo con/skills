@@ -8,8 +8,10 @@ import { buildPage } from "../utils";
 // configs/storybook/preview.ts does not cover) imports it here:
 // import "../../src/about.css";
 
-// Titles nest under "Pages/" so the page stories sit together, apart from the components.
-export default { title: "Pages/About" };
+// Titles nest under "Pages/" so the page stories sit together, apart from the components; each
+// file's title must differ (Storybook indexes stories by title and export name). fullscreen: the
+// page fills the canvas edge to edge, as in the browser, instead of sitting inside the default padding.
+export default { title: "Pages/About", parameters: { layout: "fullscreen" } };
 
 export const Default = { name: "Default", render: () => buildPage(aboutHtml) };
 
