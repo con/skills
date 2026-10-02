@@ -206,7 +206,7 @@ git checkout -b enh-duplication-analysis
 | None of the above                                     | bare    | a standalone script + direct CI step (no wrapper target)   |
 
 If multiple are present (e.g. both `tox.ini` and `package.json` in a
-mixed-language repo like this one), prefer whichever tool CI already invokes
+mixed-language repo), prefer whichever tool CI already invokes
 as its primary driver — check `.github/workflows/*.yml` for `tox` vs `npm`
 vs `make` invocations. Wire in that one; a secondary tool can get a thin
 pass-through if the project's convention already does that for other checks
@@ -223,19 +223,18 @@ Reuse the same logic `/analyze-duplicates` uses:
    `**/.tox/**,**/venv*/**,**/.venv/**,**/node_modules/**,**/__pycache__/**,**/.eggs/**,**/*.egg-info/**,**/.git/**,**/.npm/**,**/.tmp/**,**/dist/**,**/build/**`
    (`**/.tmp/**` matters doubly here: Step 7 writes its own JSON report into
    `.tmp/` — without this ignore, a re-run of the check will find the
-   previous run's report and scan *that* for duplication too.)
-3. For each of `build/`, `dist/`, `.eggs/`: check whether it's **tracked by
-   git** (`git ls-files --error-unmatch DIR/ 2>/dev/null`) — if tracked, do
-   NOT ignore it (intentionally committed content); if untracked, keep the
-   ignore.
-4. Find all **symlinks** in the scan path (`find . -type l`) and add ignore
+   previous run's report and scan *that* for duplication too.) Build
+   products (`build/`, `dist/`, `.eggs/`, `*.egg-info/`) stay ignored even
+   if a project happens to commit them — machine-generated output says
+   nothing about duplication in the source.
+3. Find all **symlinks** in the scan path (`find . -type l`) and add ignore
    patterns for each — duplicated content reached only via a symlink is
    noise, not a real clone.
-5. Look for existing spec/planning directories that shouldn't be scanned
+4. Look for existing spec/planning directories that shouldn't be scanned
    for *code* duplication (e.g. `specs/`, `.specify/`, `docs/adr/`) — these
    often contain intentionally repeated boilerplate across historical
    feature docs. Ask the user if unsure whether to include them.
-6. **Test directories often contain *intrinsic*, acceptable duplication** —
+5. **Test directories often contain *intrinsic*, acceptable duplication** —
    `@pytest.mark.parametrize` tables, fixture-shaped setup/teardown blocks,
    near-identical test cases that only differ in the assertion. These are
    not bugs to refactor away; forcing an abstraction onto them usually hurts
@@ -257,11 +256,16 @@ build tool) over embedding config in `package.json`:
   "threshold": <THRESHOLD>,
   "reporters": ["console"],
   "ignore": [
-    "**/node_modules/**",
-    "**/.git/**",
     "**/.tox/**",
+    "**/venv*/**",
     "**/.venv/**",
+    "**/node_modules/**",
     "**/__pycache__/**",
+    "**/.eggs/**",
+    "**/*.egg-info/**",
+    "**/.git/**",
+    "**/.npm/**",
+    "**/.tmp/**",
     "**/dist/**",
     "**/build/**"
   ],
@@ -270,12 +274,20 @@ build tool) over embedding config in `package.json`:
 }
 ```
 
+The `ignore` array is Step 2's full safe-defaults list — keep it in sync,
+then append that step's symlink/spec/test entries.
+
 ### Which percentage does `threshold` actually gate on?
 
 jscpd's console/JSON output reports **two different percentages**:
 "duplicated lines %" and "duplicated tokens %" — they usually differ (e.g.
 1.74% vs 1.98% on the same scan). The config's `threshold` field compares
-against the **duplicated lines** percentage. Read the whole percentage,
+against the **duplicated lines** percentage (`statistics.total.percentage`
+in the JSON report, not `percentageTokens`). Verified against jscpd 5.4.0:
+a scan at 9.3% duplicated lines / 27.4% duplicated tokens fails
+`threshold: 9` (exit 1, `ERROR: jscpd found too many duplicates (9.3%) over
+threshold (9.0%)`) but passes `threshold: 10` and even `threshold: 20`, via
+`.jscpd.json` and `--threshold` alike. Read the lines percentage,
 not just whichever number is more prominent in the console table, or you
 can ship a CI job that fails on day one for the wrong reason (exactly what
 this section is trying to prevent).
@@ -304,10 +316,10 @@ immediately on pre-existing duplication that nobody has reviewed yet.
    you're about to add doesn't fail on day one.
 3. After the Step 9 mitigation loop reduces real duplication, **tighten the
    threshold down to match** (Step 10) — ideally down to `0` if the project
-   wants zero-tolerance going forward (this is what annextube's own
-   `.jscpd.json` does, see `~/proj/annextube/.jscpd.json` for a worked
-   example: `"threshold": 0` after `379e10dd Eliminate all code duplication,
-   enforce zero-tolerance jscpd threshold`).
+   wants zero-tolerance going forward (this is what
+   [annextube](https://github.com/con/annextube)'s own `.jscpd.json` does —
+   a worked example: `"threshold": 0` after `379e10dd Eliminate all code
+   duplication, enforce zero-tolerance jscpd threshold`).
 4. If duplication cannot reasonably be brought below some level within this
    session (e.g. a hard/structural cluster the user defers), set the
    threshold to that residual level — do not leave a CI job you know will
@@ -723,7 +735,7 @@ pushing (Step 11) and say so.
 - Trivial/easy clusters with an obvious extract-function/parametrize fix
 - Which build tool to wire into (follow Step 1's detection table)
 - Ignore-list additions for `.git`, `node_modules`, `.venv`, `.tox`,
-  build/dist directories that are untracked, and symlinked paths
+  build products (`build/`, `dist/`, `.eggs/`, `*.egg-info/`), and symlinked paths
 
 ## Output
 
