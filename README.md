@@ -35,6 +35,19 @@ Review lower-severity findings too; passing scans do not prove a skill is safe.
 
 The existing `tox -e security-llm` command remains available for explicitly configured local LLM review.
 It is not run on untrusted PR content with CI credentials, and these static checks do not replace it.
+The driver requires a Claude CLI supporting `--bare`, `--tools`, and `--setting-sources` (older CLIs fail closed).
+It sends UTF-8 snapshots to the model with no built-in or MCP tools, no discovered hooks/skills/configuration, and a temporary working directory outside the candidate tree.
+Use a trusted CLI installation and managed policy; these controls do not isolate a compromised launcher or host.
+Only the model API credential and basic process environment are forwarded; unrelated credentials are omitted.
+`SECURITY_CMD` is a trusted launcher override that must forward stdin and honor every appended security flag; wrappers that ignore them are unsupported.
+Use a trusted checkout of the driver and its canonical review skill, passing candidate directories as arguments.
+Do not execute the candidate checkout's own driver to audit it.
+Snapshots reject symlinks, special files, binary content, more than 256 files, or more than 512,000 bytes, rather than silently reviewing a subset.
+Keep candidate trees unchanged during capture.
+Failed processes and malformed, unknown, or duplicate verdicts return status 2.
+Findings at `FAIL_ON` levels return 1; a completed review below the threshold returns 0.
+A tool-free model can still be fooled into an inaccurate verdict; reviews are advisory and are not a sandbox or proof of safety.
+See the [Claude CLI reference](https://code.claude.com/docs/en/cli-reference) for the tool and bare-mode controls.
 
 ## Configuration
 

@@ -42,6 +42,8 @@ import sys
 import tempfile
 from pathlib import Path
 
+from skill_common import find_skill_dirs
+
 try:
     import yaml
 except ImportError:
@@ -209,11 +211,6 @@ def check_python_file(py_path: Path, result: Result) -> None:
 # Main
 # ---------------------------------------------------------------------------
 
-def find_skill_dirs(repo_root: Path) -> list[Path]:
-    return sorted(
-        p.parent for p in repo_root.glob("*/SKILL.md")
-        if p.parent.name not in {"ci"}
-    )
 
 
 def validate_skill(skill_dir: Path) -> Result:

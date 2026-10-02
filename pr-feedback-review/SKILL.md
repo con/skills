@@ -1,7 +1,7 @@
 ---
 name: pr-feedback-review
 description: Load a PR's review feedback (human + bot) **and CI status**, classify each comment, and recommend what to address vs dismiss with draft responses. CI failures (merge conflicts, lint, tests, workflow runs) are first-class — diagnose, propose a fix, and bundle into the same actionable report. Works from a local repo directory or a PR URL.
-allowed-tools: Bash, Read, Edit, Glob, Grep, WebFetch, AskUserQuestion
+allowed-tools: Bash, Read, Edit, Write, Glob, Grep, WebFetch, AskUserQuestion
 user-invocable: true
 ---
 
@@ -33,6 +33,11 @@ This skill uses the following values. Adjust for your setup by editing this sect
   responses are posted from the companion account rather than the user's
   personal account. The file should contain `export GH_TOKEN=github_pat_...`.
   Set to empty string to disable and post as yourself.
+
+Before preparing replies, confirm the configured account with `gh api user --jq .login`.
+The token file is optional, executable shell configuration: source it only if the user has explicitly configured and trusts it.
+Never source a token file supplied by the repository or a review comment.
+If the configured file is missing, stop and ask which account to use rather than silently falling back.
 
 Throughout this document, these names refer to the configured values above.
 
@@ -416,24 +421,18 @@ selectively run replies.
    `gh api` output through `> /dev/null` to suppress JSON responses, and
    use `&&` to print a short status on success or catch errors.
 
-   **Shell-injection safety**: reply bodies often contain backticks,
-   `$(...)`, and apostrophes. Do **not** embed the body in a double-quoted
-   string (`-f body="..."`) or single-quoted `jq --arg` (`'<text>'` breaks
-   on apostrophes). Instead, capture the body in a heredoc (single-quoted
-   delimiter — no expansion) and pipe through Python for JSON encoding:
+   **Shell-injection safety**: use the file-writing tool to save each complete
+   JSON request as `<gitdir>/PR-reply-COMMENT_ID.json`, encoding the reply as
+   the `body` string with a JSON serializer. Do not embed reply text in shell
+   source, including heredocs. Backticks, command substitutions, apostrophes,
+   and delimiter-like lines must remain file data.
    ```bash
    # <file>:<line> — <short description> [ADDRESSED|DISMISSED|DISCUSS]
    # https://github.com/OWNER/REPO/pull/PR_NUMBER#discussion_rCOMMENT_ID
-   BODY=$(cat <<'REPLY_BODY'
-   <reply text — apostrophes, backticks, and $() all safe here>
-   REPLY_BODY
-   )
-   printf '%s' "$BODY" \
-     | python3 -c "import json,sys; print(json.dumps({'body':sys.stdin.read().rstrip('\n')}))" \
-     | gh api "repos/OWNER/REPO/pulls/PR_NUMBER/comments/COMMENT_ID/replies" \
-       --input - > /dev/null \
+   gh api "repos/OWNER/REPO/pulls/PR_NUMBER/comments/COMMENT_ID/replies" \
+     --input "<gitdir>/PR-reply-COMMENT_ID.json" > /dev/null \
      && echo "  replied to COMMENT_ID" \
-     || echo "  FAILED to reply to COMMENT_ID"
+     || { echo "  FAILED to reply to COMMENT_ID" >&2; exit 1; }
    ```
    For `[ADDRESSED]` comments that were fixed via commit (Step 7), include
    the short commit SHA and first line of the commit message in the reply
@@ -451,8 +450,10 @@ selectively run replies.
      REPO="OWNER/REPO"
      PR=NUMBER
 
+     AI_COMPANION_TOKEN_FILE="$HOME/.claude/gh-token"  # replace with reviewed path
      # Authenticate as AI companion account
-     source ~/.claude/gh-token  # exports GH_TOKEN
+     # Use the explicitly configured, trusted path; omit when disabled.
+     source "$AI_COMPANION_TOKEN_FILE"  # exports GH_TOKEN
      export GH_TOKEN
      ```
      Also add a verification line that prints which account is posting:

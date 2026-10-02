@@ -99,6 +99,11 @@ issues set to `verdict: "pending"`, `confidence: "PENDING"`:
 
 Skip if `--no-server` is set.
 
+> **Warning**: the server has no authentication. Any host that can reach the
+> port can trigger GitHub mutations (close issues, post comments) using the
+> user's `gh` credentials. Keep the port unpublished or firewall-restricted;
+> use `--no-server` if the environment is untrusted.
+
 Use the Bash tool with `run_in_background: true` to launch the server and save the returned
 task ID (for later use with `TaskOutput`/`TaskStop`):
 
@@ -108,11 +113,6 @@ python3 ~/.claude/skills/issue-triage/server.py --triage-dir .git/triage --repo 
 
 The server binds to `0.0.0.0` so it is accessible from outside containers.  Print the URL
 and task ID: `http://127.0.0.1:PORT` (task ID: `<id>`)
-
-> **Warning**: the server has no authentication. Any host that can reach the
-> port can trigger GitHub mutations (close issues, post comments) using the
-> user's `gh` credentials. Keep the port unpublished or firewall-restricted;
-> use `--no-server` if the environment is untrusted.
 
 **Container access (Podman/Docker):** If running inside a container, the
 user needs to have published the port when starting the container, e.g.:
