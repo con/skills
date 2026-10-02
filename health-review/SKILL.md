@@ -1,6 +1,8 @@
 ---
-name: pipeline-ecosystem-health-audit
-description: Audit code health across an org-wide ecosystem of similarly styled, interconnected pipelines. Focuses on systemic risk (drift, contract fragility, duplication, blast radius) rather than single-repo code smells.
+name: health-review
+description: Audit code health across an org-wide ecosystem of similarly styled, interconnected data/ML/ETL pipelines. Focuses on systemic risk (drift, contract fragility, duplication, blast radius) rather than single-repo code smells. Use when asked to review, audit or assess the health of a set of related pipelines.
+allowed-tools: Bash, Read, Write, Glob, Grep, AskUserQuestion, Agent
+user-invocable: true
 ---
 
 # Skill: Pipeline Ecosystem Health Audit
@@ -41,10 +43,10 @@ Before judging anything, define what "correct" looks like in this ecosystem.
 - Build an inventory: pipeline name, owner/team, orchestrator, last meaningful commit, shared-lib version, upstream inputs, downstream consumers, SLA/criticality if known.
 - Derive edges from: orchestrator dependencies, table/topic/bucket reads and writes, import graphs, cross-repo API calls.
 - Compute for each node: **fan-in, fan-out, depth**, and whether it's on the path to anything business-critical.
-- Flag: orphaned pipelines (no consumers, still running), hub nodes (high fan-out), long chains (depth > 4), cycles.
+- Flag: orphaned pipelines (no consumers, still running), hub nodes (high fan-out), long chains (depth well above the ecosystem median; state the threshold you used), cycles.
 
 ## Phase 2 — Per-pipeline scan (breadth)
-Run the same checklist on every pipeline and record results in a matrix. Score each dimension 0–3 (0 = absent/broken, 3 = matches reference pattern and works).
+Run the same checklist on every pipeline and record results in a matrix. Score each dimension 0–3 (0 = absent/broken, 3 = works and is covered by tests or gates). Record template conformance separately from correctness, so a pipeline that faithfully copies a flawed template is not scored 3 on everything.
 
 | Dimension | What to check |
 |---|---|
@@ -73,7 +75,7 @@ Look across the matrix for **systemic** issues:
 7. **Bus factor.** Overlay ownership on the graph: critical paths owned by one person or an orphaned team.
 
 ## Phase 4 — Prioritize and report
-Score each finding: **Impact** (blast radius via graph) × **Likelihood** (evidence of recurrence, test coverage, change frequency) × **Effort to fix**. Separate into:
+Score each finding: **Impact** (blast radius via graph) × **Likelihood** (evidence of recurrence, test coverage, change frequency), then rank by that score relative to **Effort to fix**. Separate into:
 
 - **Fix now** — critical path + silent failure mode + no test.
 - **Fix systemically** — push into the template/shared lib so it lands everywhere.
@@ -139,7 +141,7 @@ What was scanned, what was sampled, what couldn't be verified, confidence level.
 ## Suggested mechanical helpers
 - **Dependency/version matrix:** parse every `requirements*.txt` / `pyproject.toml` / `package.json` and pivot by shared-lib version.
 - **Drift diff:** `diff -r` each pipeline against the template, filtered to structural files.
-- **Duplicate detection:** token-based clone detection (e.g. `jscpd`, `pmd cpd`) across repos.
+- **Duplicate detection:** run the `analyze-duplicates` skill (jscpd-based) over the repos and fold the clusters into Phase 3 item 3.
 - **Edge extraction:** grep for table/topic/bucket identifiers in read/write calls; join with orchestrator DAG definitions.
 - **Staleness:** `git log -1 --format=%cd` per repo, plus PR count in last 90 days.
 
