@@ -1,6 +1,6 @@
 ---
 name: introduce-duplicates-analysis
-description: Introduce code/text duplication analysis (jscpd) as a permanent part of a project's development workflow — a tox env, pixi task, Makefile target, or npm script, wired into whatever CI the project uses. Detects whether it's already set up (and if so, whether it's already clean), runs the analysis, proposes and applies mitigation refactors, and iterates until checks come out clean, committing along the way. Use when setting up jscpd duplication analysis in a new project, or when asked to "introduce duplicate analysis" / "add a DRY check" / "wire up jscpd in CI".
+description: Introduce code/text duplication analysis (jscpd) as a permanent part of a project's development workflow — a tox env, pixi task, Makefile target, or npm script, wired into whatever CI the project uses. Detects whether it's already set up (and if so, whether it's already clean), runs the analysis, proposes and applies mitigation refactors, and iterates until checks come out clean, committing along the way. Also has a report-only mode (formerly /analyze-duplicates) producing a one-shot Markdown report with collapsible sections and a mediation plan, suitable for GitHub/Gitea issues. Use when setting up jscpd duplication analysis in a new project, when asked to "introduce duplicate analysis" / "add a DRY check" / "wire up jscpd in CI", or (report-only) to "check for duplicates" / "find copy-paste code" / run a "DRY audit" / "duplicate detection" / find "code clones".
 allowed-tools: Bash, Read, Edit, Write, Glob, Grep, AskUserQuestion
 user-invocable: true
 ---
@@ -21,54 +21,46 @@ the checks pass cleanly.
 - User asks to "introduce duplicate analysis", "add a DRY check", "wire up
   jscpd", or runs `/introduce-duplicates-analysis`
 - User wants CI to fail on new duplication going forward
+- User only wants a one-shot duplication report (e.g. to paste into an
+  issue), "check for duplicates", "find copy-paste code", "DRY audit" —
+  use report-only mode (below)
 
-## Relationship to `/analyze-duplicates`
+## Modes
 
-This skill **generalizes** `/analyze-duplicates`. Where `/analyze-duplicates`
-produces a one-shot Markdown report for a path (suitable for pasting into an
-issue), this skill:
+1. **Introduce** (default) — the full workflow in this file: make the check
+   a standing part of the project (tox env / pixi task / Makefile target /
+   npm script), wire it into CI so future PRs are gated on it, then propose
+   and apply mitigations and iterate until the newly-wired check passes,
+   committing as it goes (mirroring `/introduce-codespell`'s "set up,
+   analyze, fix, verify, PR" arc).
+2. **Report-only** — follow `report-mode.md` (next to this file) instead
+   when the user asks only for a report, passes `--report-only` or any
+   report-only flag (`--cross-project`, `--badge`, `--no-html`,
+   `--output`; these are how `/analyze-duplicates` used to be invoked), or
+   the target is not a repository you should modify. It produces the same
+   Markdown report used in Step 7 below, for one or more paths, without
+   wiring, refactoring or committing. If unsure which mode the user wants,
+   ask.
 
-1. Makes the check a standing part of the project (tox env / pixi task /
-   Makefile target / npm script) instead of an ad-hoc run.
-2. Wires that check into the project's actual CI so future PRs are gated on
-   it.
-3. Uses `/analyze-duplicates`'s report generator (`generate-report.py`) as
-   its analysis engine — do not reimplement the JSON→Markdown logic here.
-4. Goes further than reporting: proposes mitigations, applies the
-   straightforward ones, and iterates until the newly-wired check passes,
-   committing as it goes (mirroring `/introduce-codespell`'s "set up, analyze,
-   fix, verify, PR" arc rather than `/analyze-duplicates`'s "just report" arc).
-
-Resolve the report generator defensively — `$HOME` is not reliable here.
-Some sandboxed environments report a `$HOME` (e.g. `/home/node`) that
-differs from the actual user account whose `~/.claude/skills/` you need
-(e.g. `/home/yoh`). Try `$HOME` first, then fall back to a search:
-
-```bash
-GEN_REPORT="$HOME/.claude/skills/analyze-duplicates/generate-report.py"
-if [ ! -f "$GEN_REPORT" ]; then
-    GEN_REPORT=$(find /home -maxdepth 5 \
-        -path '*/.claude/skills/analyze-duplicates/generate-report.py' \
-        2>/dev/null | head -1)
-fi
-```
-
-If it is still not found (e.g. `/analyze-duplicates` isn't installed in this
-environment), fall back to jscpd's own `console` + `json` reporters for a
-simpler pass/fail read — you lose the per-cluster mediation-plan table but
-the wiring, CI integration, and mitigation loop below still apply.
+Both modes use the bundled report generator,
+`<installed-skill-dir>/generate-report.py`, where `<installed-skill-dir>` is
+the directory containing this SKILL.md — do not reimplement the
+JSON→Markdown logic. If it is missing (e.g. only SKILL.md was copied), fall
+back to jscpd's own `console` + `json` reporters for a simpler pass/fail
+read — you lose the per-cluster mediation-plan table but the wiring, CI
+integration, and mitigation loop below still apply. In report-only mode,
+write the report by hand following `report-mode.md`'s Report Format.
 
 `generate-report.py`'s JSON parsing is version-sensitive to jscpd's report
-shape (it has been exercised against jscpd 5.3.x). If it errors out against
-a newer/older jscpd, prefer fixing it in place (it's shared with
-`/analyze-duplicates`, so the fix benefits both skills) over maintaining a
-private patched copy — verify the fix with a small fixture before trusting
-its output for this run.
+shape (it has been exercised against jscpd 5.3.x and 5.4.0). If it errors
+out against a newer/older jscpd, prefer fixing it in place in this skill
+over maintaining a private patched copy — verify the fix with a small
+fixture before trusting its output for this run.
 
 ## Prerequisites
 
 - `jscpd` reachable via `npx --yes jscpd@latest` (or globally installed)
-- Git repository
+- Git repository (Introduce mode; report-only mode works on any path)
 - `gh` CLI for PR creation (optional — GitHub only)
 
 ## Commit Co-Authorship
@@ -99,7 +91,7 @@ workflow: config, wiring, CI, mitigation refactors, threshold tightening.
    script, backed by a small wrapper script
 5. **Wire into CI** — add the check to whatever CI platform the project uses
 6. **Commit infrastructure**
-7. **Run analysis** — generate the rich Markdown report via `/analyze-duplicates`'s engine
+7. **Run analysis** — generate the rich Markdown report via the bundled `generate-report.py`
 8. **Stop early if clean** — nothing further to do
 9. **Mitigation loop** — refactor, re-verify, commit, repeat until clean
 10. **Final verification** — the newly-wired check passes standalone
@@ -156,7 +148,7 @@ If mirrored on multiple platforms, wire in each.
 
 | State found                                                                 | Action |
 |-------------------------------------------------------------------------------|--------|
-| **Fully wired** (config + build-tool target + CI job present) **and it currently passes** | Run the existing check once to confirm (Step 0.3a), report to the user that duplication analysis is already part of the workflow and clean, and **stop** — there is nothing to introduce. Optionally offer the deeper `/analyze-duplicates` report if the user wants visibility into what's *near* the threshold. |
+| **Fully wired** (config + build-tool target + CI job present) **and it currently passes** | Run the existing check once to confirm (Step 0.3a), report to the user that duplication analysis is already part of the workflow and clean, and **stop** — there is nothing to introduce. Optionally offer a report-only run (`report-mode.md`) if the user wants visibility into what's *near* the threshold. |
 | **Fully wired but currently failing** (duplication present, or threshold exceeded) | Skip Steps 1–6 (infrastructure already exists); jump straight to Step 7 (run analysis) using the existing config, then Step 9 (mitigation loop). |
 | **Partially wired** (e.g. config exists but no CI job, or CI job exists but doesn't actually run it — see the codespell-skill's masking-hazard pattern below) | Fill in only the missing pieces (Steps 1–6, skipping what already exists), then continue. |
 | **Not present at all** | Proceed with the full Steps 1–6. |
@@ -214,7 +206,7 @@ pass-through if the project's convention already does that for other checks
 
 ## Step 2: Detect Languages and Build the Ignore List
 
-Reuse the same logic `/analyze-duplicates` uses:
+This is the one ignore list for both modes (report-only mode reuses it):
 
 1. Detect primary languages by file extension counts (`.py`, `.js/.ts`,
    `.md`, `.svelte`, etc.) to decide whether `--format` needs to be
@@ -226,10 +218,13 @@ Reuse the same logic `/analyze-duplicates` uses:
    previous run's report and scan *that* for duplication too.) Build
    products (`build/`, `dist/`, `.eggs/`, `*.egg-info/`) stay ignored even
    if a project happens to commit them — machine-generated output says
-   nothing about duplication in the source.
-3. Find all **symlinks** in the scan path (`find . -type l`) and add ignore
-   patterns for each — duplicated content reached only via a symlink is
-   noise, not a real clone.
+   nothing about duplication in the source. If a real source package is
+   itself named `build`/`dist` (e.g. pip's `operations/build/`), anchor
+   that pattern to the top level (`build/**`) instead of `**/build/**`.
+3. Find all **symlinks** in each scan path (`find <SCAN_PATH> -type l`)
+   and add ignore patterns for each (e.g. `**/symlinked-dir/**`) —
+   duplicated content reached only via a symlink is noise, not a real
+   clone.
 4. Look for existing spec/planning directories that shouldn't be scanned
    for *code* duplication (e.g. `specs/`, `.specify/`, `docs/adr/`) — these
    often contain intentionally repeated boilerplate across historical
@@ -557,10 +552,8 @@ touching the first commit.
 ## Step 7: Run the Analysis and Generate the Rich Report
 
 ```bash
-# Resolve $GEN_REPORT as in "Relationship to /analyze-duplicates" above
-# (don't rely on $HOME alone).
 npx --yes jscpd@latest --reporters json --output .tmp/jscpd-report <SCAN_PATHS>
-python3 "$GEN_REPORT" \
+python3 "<installed-skill-dir>/generate-report.py" \
     --threshold <THRESHOLD> \
     --output .tmp/duplication-report.md \
     --jscpd-version "$(npx --yes jscpd@latest --version 2>/dev/null)" \
@@ -745,7 +738,7 @@ After completing the skill:
   wiring (tox env / pixi task / Makefile target / npm script), the wrapper
   script under `tools/`, the CI wiring, and any mitigation-refactor commits
 - The duplication check passes when invoked the same way CI invokes it
-- A Markdown report (via `/analyze-duplicates`'s generator) showing the
+- A Markdown report (via the bundled `generate-report.py`) showing the
   before/after state
 - `.git-meta/PR_BODY.md` ready, with the push+PR command given to the user
   (not executed, unless explicitly authorized)
