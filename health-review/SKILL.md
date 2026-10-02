@@ -80,13 +80,30 @@ Score each finding: **Impact** (blast radius via graph) × **Likelihood** (evide
 - **Accept & document** — intentional divergence, low criticality.
 - **Retire** — orphaned pipelines, dead DAG branches.
 
+## Where to write the report
+
+Write the report to a file, not just to chat: `docs/health-reviews/YYYY-MM-DD-health-review.md`
+(`date +%F`), or a path the user gives. Never overwrite an existing report (use `-2`, `-3`, …
+before `.md`). For a multi-repo audit, ask where if unclear, and never place findings in a
+public repo without asking. If an earlier report exists there, read it once Phase 0 has
+established the reference pattern, re-verify each of its findings against the current code
+(a prior report alone can't show something is fixed), and fill in "Since last review".
+Record the commit SHA(s) reviewed so cited lines stay meaningful. Do not commit or push
+unless asked; tell the user the path.
+
 ## Output template
 
 ```markdown
-# Pipeline Ecosystem Health Audit — {org/domain} — {date}
+# Pipeline Ecosystem Health Audit — {org/domain} — {YYYY-MM-DD}
+
+Reviewed at: {repo}@{short SHA}[, ...]
+Previous review: {link to prior report, or "none"}
 
 ## 1. Executive summary (≤ 10 lines)
 Overall health grade, top 3 systemic risks, top 3 quick wins, what was out of scope.
+
+## 1b. Since last review
+Fixed / still open / new vs. the previous report, re-verified at the current SHA (omit if first review).
 
 ## 2. Reference pattern
 What "good" looks like here, and its known gaps.
