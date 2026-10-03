@@ -23,7 +23,8 @@ export function buildPage(rawHtml: string, apply?: (page: HTMLElement) => void):
   const page = document.createElement("div");
   page.innerHTML = doc.body.innerHTML;
   // The one thing the app's script renders before anything is loaded; an empty version anchor is
-  // invisible in a snapshot.
+  // invisible in a snapshot. The selector and text are the app's own footer (the template's are
+  // the BBQS apps'); adapt them, or remove these lines when the app has no stamp.
   const version = page.querySelector("#version-indicator");
   if (version) version.textContent = `v${__APP_VERSION__}`;
   apply?.(page);

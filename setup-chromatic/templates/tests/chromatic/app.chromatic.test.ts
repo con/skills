@@ -15,8 +15,9 @@ forEachViewport(test, "Main page - default", async ({ page }) => {
 });
 
 forEachViewport(test, "Main page - dark theme", async ({ page }) => {
-  // Seeded before the page's own script reads it, the way a returning visitor's choice would be;
-  // the key and value are whatever the app itself stores ("theme", "<app>.theme", ...).
+  // The theme the app does not default to (rename and reseed when the default is dark), seeded
+  // before the page's own script reads it, the way a returning visitor's choice would be; the key
+  // and value are whatever the app itself stores ("theme", "<app>.theme", ...).
   await page.addInitScript(() => localStorage.setItem("theme", "dark"));
   await page.goto("/");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");

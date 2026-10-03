@@ -5,8 +5,9 @@ Two shapes count as several pages, and they differ in one place.
 - **Several HTML entries**, a Vite multi-page app: `index.html`, `about.html`, `help/index.html`, each with its own `<script type="module">`.
   Every entry is a page here: a line in `configs/pages.ts`, a story file under `stories/pages/`, and its states in `tests/chromatic/`.
 - **Routes inside one `index.html`**, a hash or history router.
-  One HTML entry, so one page story file (`stories/App.stories.ts`), with each route's markup applied by hand as a state; the Playwright suite still gets one set of titles per route (`About - default`), reached with `page.goto("/#/about")` or the history path.
-  A history router also needs `vite preview` and the host to answer every route with `index.html`; Vite's default `appType: "spa"` does, and the deployed host already does if the app works there.
+  One HTML entry, so the Vite config is untouched, but the suite keeps the same list: `configs/pages.ts` with `path` as the route (`/#/about`, or `/about` for a history router) and no `file` column, looped by `pages.chromatic.test.ts` for the states every route has, plus a `<route>.chromatic.test.ts` for a route with states of its own; titles lead with the route's name.
+  On the story side, `stories/App.stories.ts` applies a route's markup by hand only when `index.html` already carries it; a router that renders into an empty mount point gets one `stories/pages/<Route>.stories.ts` per route whose markup is built by hand, as `Component.stories.ts` does, since `buildPage` strips the script that would have rendered it.
+  Keep Vite's default `appType: "spa"` for this shape (a history router needs every route answered with `index.html`, and the deployed host already does that if the app works there); the `mpa` setting below is for HTML entries only.
 
 Everything below is about the first shape.
 The sibling repos are all one-page apps, so the templates are the reference here, not a sibling.
@@ -15,12 +16,14 @@ The sibling repos are all one-page apps, so the templates are the reference here
 
 `configs/pages.ts` (template under `templates/configs/`) names every page once: the HTML file Vite builds, the URL the suite visits, the heading it expects.
 The Vite config builds its entry list from it and `pages.chromatic.test.ts` loops over it, so adding a page is one line plus a story file; the story files cannot read the list, because Storybook indexes stories from static exports, so they are the one place a page is listed again.
+The config of a several-page app already lists its entries; replace that list with the one built from `PAGES`, so a page is named once, and keep whatever else the `build` block holds (`outDir`, `emptyOutDir`).
 
 ```ts
 // configs/vite.config.ts
 import { fileURLToPath } from "node:url";
-// With the extension: Vite's native config loader refuses extensionless imports between config files.
-import { PAGES } from "./pages.ts";
+// Extensionless, as Vite's default bundling loader and the tests' import both resolve; "./pages.ts"
+// also works, but tsc then needs allowImportingTsExtensions in the tsconfig that covers configs/.
+import { PAGES } from "./pages";
 
 export default defineConfig({
   // The dev server serves any HTML file under root; the build contains only these entries, so a
@@ -33,7 +36,8 @@ export default defineConfig({
     },
   },
   // Without this, Vite's default "spa" answers a URL it cannot match with index.html, and a snapshot
-  // of a missing page would silently capture the index page instead of failing.
+  // of a missing page would silently capture the index page instead of failing. It changes
+  // `npm run dev` the same way (an unmatched URL now 404s); say so in the hand-over.
   appType: "mpa",
   // ...
 });
@@ -52,8 +56,11 @@ Vite's dev and preview servers resolve page URLs the same way, with no redirects
 | `about.html`       | `/about.html`, `/about`       | `/about/`                                                |
 | `help/index.html`  | `/help/`, `/help/index.html`  | `/help` (404 under `mpa`; `index.html` under `spa`)      |
 
-Static hosts differ on the extensionless and slash-less forms, so `path` in `configs/pages.ts` is the form that works everywhere, `/about.html` and `/help/`, and it is the form the app's own `<a href>` links should use, since Vite does not rewrite link targets (only asset references) at build time.
-If the app deploys under a sub-path (`base: "/<repo>/"` for a GitHub Pages project site), root-absolute links break there; write them relative or from `import.meta.env.BASE_URL`, and give the Playwright `baseURL` the same sub-path so `page.goto` lands under it.
+Static hosts differ on the other forms: GitHub Pages serves `about.html` at `/about` and redirects `/help` to `/help/`, Cloudflare Pages redirects `/about.html` to `/about`, Vercel's defaults answer `/about` with a 404, and Vite's default `spa` fallback answers every miss with the index page.
+So `path` in `configs/pages.ts` is `/help/` for a `help/index.html` entry (the one form every host serves without a redirect) and `/about.html` for a root-level file, never `/about` or `/help`; when the layout is yours to choose, `help/index.html` entries with `/help/` URLs are the form every host agrees on.
+The app's own `<a href>` links use the same forms, since Vite rewrites asset references at build time but never link targets.
+If the app deploys under a sub-path (`base: "/<repo>/"` for a GitHub Pages project site), root-absolute links break there: write them relative or from `import.meta.env.BASE_URL`.
+The suite then needs the same care, because Playwright resolves `page.goto` with `new URL(path, baseURL)` and a root-absolute path drops the sub-path: make `path` relative (`about.html`, `help/`) and end the Playwright `baseURL` with the sub-path and a slash (`http://localhost:4173/<repo>/`).
 The sibling apps avoid all of this with `base: "./"` or a custom domain.
 
 ## Stories, one file per page
@@ -63,7 +70,7 @@ Each imports its own HTML raw and renders it through `buildPage` from `stories/u
 
 Two things a nested page needs that the index page does not:
 
-- **Root-absolute asset URLs.** The story injects the markup into Storybook's iframe, so a relative `../src/assets/logo.svg` resolves against the iframe's URL, not the page's folder, and breaks; `/src/assets/logo.svg` is served by the `staticDirs` mount in `main.ts`. Vite rewrites either form correctly in the real build, so root-absolute costs nothing there.
+- **Asset URLs.** The story injects the markup into Storybook's `/iframe.html`, so relative URLs resolve from the site root, not the page's folder: `../src/assets/logo.svg` and `/src/assets/logo.svg` both land on the `staticDirs` mount and work, while a page-local URL (`./img/x.png` inside `help/`) does not. Do not rewrite the app's markup for this; add a second `staticDirs` entry for that folder (`{ from: "../../help/img", to: "/help/img" }`) instead.
 - **Its own stylesheet.** `preview.ts` imports the shared stylesheet; a page that links one of its own imports it at the top of its story file, and it stays loaded in the local Storybook until the preview reloads, which does not matter to Chromatic, which renders each story on its own.
 
 ## Snapshot tests, shared and per page
