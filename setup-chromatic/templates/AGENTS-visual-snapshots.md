@@ -1,7 +1,8 @@
 <!--
 For the target repository's AGENTS.md / CLAUDE.md, or as a `visual-snapshots` skill under
-.claude/skills/ (the BBQS apps keep it that way). The README is for people using the repo and does
-not carry these rules.
+.claude/skills/. The README is for people using the repo and does not carry these rules.
+In a one-page app, drop the last sentence of the "Growing the suite" bullet (the one about a new
+page). Remove this comment block when pasting.
 -->
 ## Visual snapshots
 
@@ -13,4 +14,4 @@ Rules for the stories under `stories/` and the Chromatic tests under `tests/chro
 - **Reach states honestly.** A `?test` injection substitutes a fixed, obviously fake value at the one point the real code reads a file or the network, so the capture is the real rendering; `?test` alone is a no-op, nothing writes to storage, and a state that races gets a `freeze_...` flag. Prefer an injection to `page.route` stubbing when both reach the same state.
 - **Merge main before reading a diff.** The baseline is the branch's own last build.
 - **A canvas is not in the archive.** The DOM carries a canvas element's size, not its pixels: inline a screenshot of it before the test ends, or keep a Playwright `toHaveScreenshot` suite with committed PNGs for that one section.
-- **Growing the suite.** A new component state gets a story (both themes come from the modes). A new page state gets a `forEachViewport` test and a deterministic way to reach it. <!-- several pages only; drop the next sentence in a one-page app --> A new page gets a line in `configs/pages.ts`, a story file under `stories/pages/`, and its own `<page>.chromatic.test.ts`; titles lead with the page's name.
+- **Growing the suite.** A new component state gets a story (both themes come from the modes). A new page state gets a `forEachViewport` test and a deterministic way to reach it. A new page gets a line in `configs/pages.ts`, a story file under `stories/pages/`, and, only when it has states of its own, a `<page>.chromatic.test.ts` (the shared states come from `pages.chromatic.test.ts`); titles lead with the page's name.

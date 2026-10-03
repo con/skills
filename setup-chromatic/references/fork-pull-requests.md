@@ -1,10 +1,12 @@
 # When pull requests come from forks
 
-The template workflows run `on: push`, which fires for every branch pushed to the repository itself, where the two project tokens are available as secrets.
-That is the right trigger for a repository whose contributors all push branches to it, and it is what Chromatic needs: a build for every commit on a branch, or there is no baseline to compare the next one with.
+The template workflows run `on: push` (step 7 says why), which fires for every branch pushed to the repository itself, where the two project tokens are available as secrets.
+That is the right trigger for a repository whose contributors all push branches to it.
 
 A pull request from a fork is different.
-Its commits are pushed to the fork, so the `on: push` run happens there, without this repository's secrets; in this repository nothing runs, since the templates do not listen to `pull_request`, and adding that trigger would not help on its own, because GitHub withholds secrets from the runs it starts for a fork's pull request.
+Its commits are pushed to the fork, so the `on: push` run happens there, without this repository's secrets.
+In this repository nothing runs, since the templates do not listen to `pull_request`.
+Adding that trigger would not help on its own: GitHub withholds secrets from the runs it starts for a fork's pull request.
 That is why a repository that takes outside contributions splits each workflow in two, as [dandi/usage-page](https://github.com/dandi/usage-page) does:
 
 - `chromatic.yml` and `chromatic-playwright.yml` run on `push` and `pull_request`, build with no token (Storybook via `build-storybook`; the Playwright archives via `build-archive-storybook --output-dir=storybook-static`), and upload `storybook-static/` as a one-day artifact.
@@ -14,7 +16,7 @@ That is why a repository that takes outside contributions splits each workflow i
 Use those three files (`.github/workflows/` on that repository's default branch) as the model when the user said forks contribute, and review each before adopting it, since they predate parts of this skill:
 
 - The publish workflow runs with the tokens in scope, so it must never check out or execute the fork's code: it checks out this repository at the built commit's hash only for the git history Chromatic reads, and takes the built Storybook from the artifact. Keep `--auto-accept-changes` limited to pushes to the repository's own `main`.
-- Save the Storybook one as `chromatic-storybook.yml`, the name the README badges and step 11 use, and keep the two `name:` values exactly as `chromatic-publish.yml` lists them under `workflow_run.workflows`.
+- Save the Storybook one as `chromatic-storybook.yml`, the name the layout in SKILL.md and the README badges use, and keep the two `name:` values exactly as `chromatic-publish.yml` lists them under `workflow_run.workflows`.
 - Replace `dandi/usage-page` in the publish workflow's `if:` guard with the repository's own `<org>/<repo>`.
 - Pin `runs-on` to `ubuntu-24.04` and `node-version` to 22, and add the two report steps from the templates, for the reasons the templates give.
 - Add `CHROMATIC_STATIC_VERSION: "true"` to the `env` of the Storybook build step and the Playwright test step, or the version pin from step 8 never applies in CI.

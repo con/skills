@@ -7,7 +7,7 @@ import { expectNoHorizontalOverflow, forEachViewport } from "./viewports";
 
 forEachViewport(test, "Index - file loaded", async ({ page }) => {
   // The ?test&mock_file injection stands a fixed fake in for a dropped file (see the `?test`
-  // injections in the app's entry script).
+  // injections in the module the pages' entry scripts share).
   await page.goto("/?test&mock_file");
   await expect(page.locator("#file-card")).toBeVisible();
   await expectNoHorizontalOverflow(page);

@@ -1,6 +1,6 @@
 // The page itself. Loaded through Vite's ?raw import so this story always mirrors the real markup
-// in index.html. An app with several pages has one of these per page under stories/pages/
-// (see stories/pages/Page.stories.ts) instead of this file.
+// in index.html. An app with several HTML entries has one of these per page under stories/pages/
+// (see stories/pages/Page.stories.ts) instead of this file; a routed app keeps this one.
 import indexHtml from "../index.html?raw";
 import { buildPage } from "./utils";
 

@@ -5,6 +5,8 @@ const config: StorybookConfig = {
   stories: ["../../stories/**/*.stories.@(js|ts)"],
   // No addons: the stories exist to be snapshotted and looked at, nothing more.
   addons: [],
+  // The Vite builder also loads the app's own vite.config.* from the parent of this directory
+  // (configs/), so its define (__APP_VERSION__) and plugins apply to the stories as is.
   framework: { name: "@storybook/html-vite", options: {} },
   // Only needed when a page story injects its HTML raw: the markup's /src/assets/... URLs bypass
   // Vite's asset pipeline, so the folder is served at that same path in dev and in the built

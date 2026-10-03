@@ -2,8 +2,10 @@
 Three pieces for the target repository's README, in the README's own voice: short declarative
 sentences, the why beside the what, one sentence per line where the repo does that, few em-dashes.
 Replace <org>/<repo>, the component and page names, and the script names with the app's own.
+Drop these HTML comments when copying; in a one-page app also drop the clauses they mark as
+several-pages only.
 
-1. Two badges in the centered header block, after the codecov/license/prettier row, each on its own
+1. Two badges in the header block, after the existing badge row if there is one, each on its own
    line, linking to the workflow (or to the project's Chromatic library page,
    https://www.chromatic.com/library?appId=<appId>, when it is public).
 -->
@@ -21,8 +23,8 @@ Replace <org>/<repo>, the component and page names, and the script names with th
 </p>
 
 <!--
-2. The commands, in the `## Development` / `### Tests` block the README already has (one command
-   per line, an aligned `#` comment saying what each is).
+2. The commands, where the README lists its development commands (a `### Tests` block, say; one
+   command per line, an aligned `#` comment saying what each is), or a new block when there is none.
 -->
 ```bash
 npm run storybook          # the component and page stories, live
@@ -64,7 +66,7 @@ Neither keeps pixels in this repository: Chromatic renders both in its own brows
 1. `npm run storybook` to look at the stories; `npm run test:chromatic` to run the page captures locally. Nothing is uploaded from a local run.
 2. Push a branch. Each workflow uploads its captures, and Chromatic posts one status check per project.
 3. Open the check and review each diff: accept what was intended, otherwise fix and push again. Chromatic diffs a branch against that branch's own last build, so merge `main` in first when the branch is behind, or `main`'s changes show up as yours.
-4. A new component state gets a story; a new page state gets a `forEachViewport` test in `tests/chromatic/`, plus a way to reach it deterministically<!-- several pages only; drop the rest of this sentence in a one-page app -->; a new page gets a story file under `stories/pages/`, a line in `configs/pages.ts`, and its own states in `tests/chromatic/<page>.chromatic.test.ts`.
+4. A new component state gets a story; a new page state gets a `forEachViewport` test in `tests/chromatic/`, plus a way to reach it deterministically<!-- several pages only; drop the rest of this sentence in a one-page app -->; a new page gets a story file under `stories/pages/`, a line in `configs/pages.ts`, and a `tests/chromatic/<page>.chromatic.test.ts` when it has states of its own.
 
 <!--
 Where the repo also compares pixels with Playwright's own `toHaveScreenshot` (dandi/usage-page

@@ -22,7 +22,7 @@ Whatever the package does not export, the app takes from the templates, and the 
 
 ## What the app's files become
 
-The BBQS form, which any such package will resemble:
+The BBQS form, as an example:
 
 ```ts
 // configs/storybook/main.ts
@@ -51,5 +51,6 @@ Things to check against the package rather than assume:
 - **The Vite config.** A factory such as `createViteConfig` may own `build`; a multi-page app's entry list (`build.rollupOptions.input` from `configs/pages.ts`, see `several-pages.md`) goes through the factory's override mechanism, not beside it.
 - **Modes.** If the package's preview object predates Chromatic modes (the BBQS one themes through a global and decorator but declares no `chromatic.modes`), add the `parameters.chromatic.modes` block from the template to the package, or spread it over the import in the app's `preview.ts` until the package has it.
 - **A static asset mount.** Page stories that inject HTML raw still need the `staticDirs` entry; pass it through the factory's option for it, as the BBQS apps do.
+- **`testInfo` in `forEachViewport`.** A mid-test `takeSnapshot(page, name, testInfo)` needs the helper to hand `testInfo` to its body, as the template's third argument does; the BBQS helper does not yet, so add that one-line pass-through to the package before a test relies on it.
 
-A repository generated from a project template that already depends on the package (the BBQS apps come from [bbqs-web-app-template](https://github.com/brain-bbqs/bbqs-web-app-template)) has the configs, helpers and both workflows in place; what it still needs is the Chromatic projects and secrets (step 6) and the README section (step 9).
+A repository generated from a project template that already depends on the package (the BBQS apps come from [bbqs-web-app-template](https://github.com/brain-bbqs/bbqs-web-app-template)) may already have the configs, helpers and workflows; check which of steps 1 to 8 it covers, then do the rest, which is at least the Chromatic projects and secrets (step 6) and the README section (step 9).
