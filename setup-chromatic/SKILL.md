@@ -1,6 +1,6 @@
 ---
 name: setup-chromatic
-description: Set up Chromatic visual regression testing for a web app with one page or several, fed two ways, Storybook stories (component and page states, in each theme) and Playwright snapshots (whole-page states at several viewports), including the two GitHub workflows and a README section explaining both. Use when asked to add Chromatic, Storybook, visual snapshots, visual regression or Playwright UI snapshot testing to a repo, or to explain stories versus Playwright snapshots.
+description: Set up Chromatic visual regression testing for a one- or multi-page web app, with Storybook stories for component and page states, Playwright snapshots of whole pages at several viewports, the two GitHub workflows and a README section. Use when asked to add Chromatic, Storybook, visual snapshots or visual regression testing to a repo, or to explain stories versus Playwright snapshots.
 allowed-tools: Bash, Read, Edit, Write, Glob, Grep, AskUserQuestion, Skill
 user-invocable: true
 ---
@@ -16,8 +16,8 @@ It is fed two ways here, and both are set up, because they catch different thing
   A diff there points at the page as a whole: layout between components, overflow at phone widths, whatever the real boot path rendered.
 
 Each feed gets its own Chromatic project, workflow, token and badge.
-The result is the layout below, shared by [dandi/usage-page](https://github.com/dandi/usage-page), [brain-bbqs/bbqs-uploader](https://github.com/brain-bbqs/bbqs-uploader), [clip-extractor](https://github.com/brain-bbqs/clip-extractor), [encoding-helper](https://github.com/brain-bbqs/encoding-helper), [stamped-principles/stamped-checklist](https://github.com/stamped-principles/stamped-checklist) and [bbqs-web-app-template](https://github.com/brain-bbqs/bbqs-web-app-template).
-All of those are one-page apps; the several-page form (`stories/pages/`, `configs/pages.ts`, a shared `pages.chromatic.test.ts` plus a file per page with states of its own) comes from this skill's templates, with [references/several-pages.md](references/several-pages.md) for what differs.
+The result is the layout below, which [dandi/usage-page](https://github.com/dandi/usage-page) and the apps generated from [bbqs-web-app-template](https://github.com/brain-bbqs/bbqs-web-app-template) share.
+Those are one-page apps; the several-page form (`stories/pages/`, `configs/pages.ts`, a shared `pages.chromatic.test.ts` plus a file per page with states of its own) comes from this skill's templates, with [references/several-pages.md](references/several-pages.md) for what differs.
 
 ```
 .github/workflows/chromatic-storybook.yml   # builds Storybook, uploads it to the Storybook project
@@ -37,7 +37,7 @@ tests/chromatic/pages.chromatic.test.ts     # several pages: the states every pa
 tests/chromatic/<page>.chromatic.test.ts    # several pages: that page's own states
 ```
 
-Every file above except `configs/playwright.config.ts` (written from the Chromatic config in step 4) has a complete template under [templates/](templates/) at the same relative path; copy, then adapt names rather than retyping.
+Every file above except `configs/playwright.config.ts` (written from the Chromatic config in step 4) has a complete template under [templates/](templates/) at the same relative path, with `Component.stories.ts`, `pages/Page.stories.ts` and `page.chromatic.test.ts` standing in for the `<Component>`, `<Page>` and `<page>` files; copy, then adapt names rather than retyping.
 The templates are `.ts`; a JS repo uses `.js` for every file here and points the scripts in step 1 at the `.js` configs (the stories glob and Playwright's default `testMatch` accept both).
 Sections too long for this file live under [references/](references/): several pages, a shared config package, pull requests from forks, troubleshooting.
 When in doubt about a detail the templates do not settle, open one of the sibling repos and copy what it does rather than inventing a variant.
@@ -53,7 +53,7 @@ When in doubt about a detail the templates do not settle, open one of the siblin
 
 Read `AGENTS.md` or `CLAUDE.md`, `README.md`, `package.json`, the Vite config and the folder the tool configs live in (`configs/` in the siblings), and settle what the repository already answers:
 
-- **JS or TS**: what `configs/` and `tests/` use. For JS, strip every TypeScript-only construct from the templates: `import type` lines and `type` specifiers inside imports, `: Type` annotations and return types, `interface` and `type` declarations, `declare const` lines, `as` casts and `as const`. `__APP_VERSION__` is then used bare (Vite's `define` replaces the identifier), `el.ownerSVGElement` needs no cast, and `PAGES` loses its `as const` and `PageName`. Nothing else changes.
+- **JS or TS**: what `configs/` and `tests/` use. For JS, strip every TypeScript-only construct from the templates: `import type` lines and `type` specifiers inside imports, `: Type` annotations and return types, `interface` and `type` declarations, `declare const` lines, `as` casts and `as const`. `__APP_VERSION__` is then used bare (Vite's `define` replaces the identifier), `el.ownerSVGElement` needs no cast, and `PAGES` loses its `as const`. Nothing else changes.
 - **Formatting**: the repo's Prettier config. Run its formatter over everything added rather than guessing.
 - **Script names**: keep the existing ones for the dev server, build, preview, formatter, linter and the ordinary Playwright suite.
 - **An existing Playwright config**: its `webServer` (dev server or `vite preview`, and the port) and its projects settle question 1 below and step 4, since the Chromatic config is copied from it.
@@ -67,7 +67,7 @@ Read `AGENTS.md` or `CLAUDE.md`, `README.md`, `package.json`, the Vite config an
 
 Then ask, in one `AskUserQuestion` call, what the repository cannot answer:
 
-1. **Web server for the snapshot suite**, only when the repo has no Playwright config yet: the built app under `vite preview` (closer to what is deployed; the default) or the dev server (what dandi and STAMPED run).
+1. **Web server for the snapshot suite**, only when the repo has no Playwright config yet: the built app under `vite preview` (closer to what is deployed; the default) or the dev server.
 2. **Where pull requests come from**: only branches pushed to this repository (the two workflows as templated) or outside forks too (the split in [references/fork-pull-requests.md](references/fork-pull-requests.md)).
 3. **Production code**: the page states a person would recognize (nothing loaded, something loaded, signed out, an error card) are reached through `?test&...` URL injections, which means editing the app's own entry script, or one shared module when there are several pages (step 5). List the states proposed and the files that would change, and ask whether that edit is welcome; if not, reach the states without touching the app (drive the UI with `setInputFiles` and clicks, seed stored state with `addInitScript`, stub network-fed states with `page.route`) and say in each test which it does.
 4. **JS or TS**, only when the repo has neither yet.
@@ -141,7 +141,7 @@ The templates' second state seeds the theme the app does not default to; step 0 
 Each state must be reachable deterministically.
 The siblings reach them through `?test&...` URL injections rather than `page.route` stubs, because a URL is documented, reusable by a person on the deployed site, and exercised by the boot smoke test.
 This edits production code, which is why step 0 asked first.
-The pattern goes in the app's entry script, or with several pages in one module that each page's entry imports (`src/lib/testInjection.ts` in the BBQS apps, which list every flag in `docs/README.md`), so the flags are parsed once:
+The pattern goes in the app's entry script, or with several pages in one module that each page's entry imports (a `src/lib/testInjection.ts`, with every flag listed in the developer docs), so the flags are parsed once:
 
 ```ts
 // `?test` alone is a no-op: every flag defaults to off, so nothing branches away from the ordinary
@@ -173,13 +173,13 @@ Copy both files from `templates/.github/workflows/`.
 They run `on: push`, deliberately: Chromatic needs every commit on a branch to have a build, or it has no baseline to compare the next one with.
 Both pin the runner image and print it, warn when the branch is behind `main`, skip Dependabot runs (no secrets there), and set `CHROMATIC_STATIC_VERSION` before anything is built.
 The Storybook one turns on TurboSnap (`onlyChanged`); the Playwright one installs Chromium, runs `test:chromatic`, and uploads with `playwright: true`, which builds a Storybook from the archives under `test-results/`; TurboSnap cannot apply to a black-box archive of the running app.
-Pin `chromaui/action` to its newest release tag (`git ls-remote --tags https://github.com/chromaui/action`), never `@latest`: a floating dependency is one more thing that can move a snapshot with no code change behind it, and Dependabot proposes the bumps.
+Pin every action (`actions/checkout`, `actions/setup-node`, `chromaui/action`) to its newest release tag (`git ls-remote --tags https://github.com/<owner>/<action>`), never `@latest`: a floating dependency is one more thing that can move a snapshot with no code change behind it, and Dependabot proposes the bumps.
 The behind-main step names `main`; use the repo's default branch if it differs.
 If the user said pull requests come from forks, use [references/fork-pull-requests.md](references/fork-pull-requests.md) instead (three workflows, then).
 
 ## Step 8. Housekeeping
 
-- `.gitignore`: `storybook-static/`, `test-results/`, `playwright-report/` (and `playwright-report-chromatic/` if the html reporter is used).
+- `.gitignore`: `storybook-static/`, `test-results/`, `playwright-report/` (and `playwright-report-chromatic/` if the html reporter is used), and `.tmp/` for step 10.
 - **The version stamp.** `CHROMATIC_STATIC_VERSION` is this layout's own convention, not a Chromatic setting: the Vite config reads it and pins the version it defines, which both workflows set before anything is built (in the Playwright workflow the build, or the dev server, runs inside `webServer.command`, under the step's `env`):
 
   ```ts
@@ -194,13 +194,13 @@ If the user said pull requests come from forks, use [references/fork-pull-reques
   Only when it does not (the Vite config is somewhere it does not look) repeat the define in `main.ts` through `viteFinal` with `mergeConfig`.
   Anything else that changes on its own needs the same treatment or a mocked route, or it diffs on every build: a git-hash define such as `__GIT_HASH__` (pinned to `"00000000"` under the same variable, since it changes every commit), today's date, a random id, a live fetch.
 
-- **Agent guidance.** If the repo keeps any (`AGENTS.md`, `CLAUDE.md`, skills under `.claude/skills/`), add `templates/AGENTS-visual-snapshots.md` to it, so the next change to a story or test follows the same rules; the BBQS repos keep them as a `visual-snapshots` skill.
+- **Agent guidance.** If the repo keeps any (`AGENTS.md`, `CLAUDE.md`, skills under `.claude/skills/`), add `templates/AGENTS-visual-snapshots.md` to it, so the next change to a story or test follows the same rules.
 - **The conventions file.** Do what it asks for a change like this: the version bump, the changelog entry in its format, `pre-commit` before committing.
 
 ## Step 9. README
 
 Follow `templates/README-visual-snapshots.md`: two badges in the header block, the two commands in the existing tests block, and a `## Visual snapshots` section (stories versus Playwright snapshots, setup once, day to day), in the README's own voice, with the app's own names and states.
-A repo that keeps its README short puts the section in the developer docs it already keeps (`docs/README.md` in the BBQS apps, beside their list of `?test` flags) and only the badges in the README.
+A repo that keeps its README short puts the section in the developer docs it already keeps (a `docs/README.md`, beside the list of `?test` flags) and only the badges in the README.
 In a one-page app drop the clauses the README and agent-guidance templates mark as several-pages only.
 
 ## Step 10. Consistency check

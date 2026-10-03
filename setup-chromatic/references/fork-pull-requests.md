@@ -11,8 +11,9 @@ That is why a repository that takes outside contributions splits each workflow i
 - `chromatic-publish.yml` runs on `workflow_run`, from `main` and therefore with the tokens.
   It checks out the built commit by hash (for the git history Chromatic reads baselines from), downloads the artifact, and runs the CLI with `--storybook-build-dir`, `--exit-zero-on-changes`, `CHROMATIC_SHA`/`CHROMATIC_BRANCH`/`CHROMATIC_SLUG` set from the triggering run, and `--auto-accept-changes` only for a push to the repository's own `main`.
 
-Copy those three files from that repository (`.github/workflows/` on its default branch) when the user said forks contribute, and adapt them, since they predate parts of this skill:
+Use those three files (`.github/workflows/` on that repository's default branch) as the model when the user said forks contribute, and review each before adopting it, since they predate parts of this skill:
 
+- The publish workflow runs with the tokens in scope, so it must never check out or execute the fork's code: it checks out this repository at the built commit's hash only for the git history Chromatic reads, and takes the built Storybook from the artifact. Keep `--auto-accept-changes` limited to pushes to the repository's own `main`.
 - Save the Storybook one as `chromatic-storybook.yml`, the name the README badges and step 11 use, and keep the two `name:` values exactly as `chromatic-publish.yml` lists them under `workflow_run.workflows`.
 - Replace `dandi/usage-page` in the publish workflow's `if:` guard with the repository's own `<org>/<repo>`.
 - Pin `runs-on` to `ubuntu-24.04` and `node-version` to 22, and add the two report steps from the templates, for the reasons the templates give.

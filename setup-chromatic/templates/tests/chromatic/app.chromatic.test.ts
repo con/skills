@@ -25,7 +25,8 @@ forEachViewport(test, "Main page - dark theme", async ({ page }) => {
 });
 
 forEachViewport(test, "Main page - file loaded", async ({ page }) => {
-  // The ?test&mock_file injection stands a fixed fake in for a dropped file (SKILL.md, step 5).
+  // The ?test&mock_file injection stands a fixed fake in for a dropped file (see the `?test`
+  // injections in the app's entry script).
   await page.goto("/?test&mock_file");
   await expect(page.locator("#file-card")).toBeVisible();
   await expectNoHorizontalOverflow(page);

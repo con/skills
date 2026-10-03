@@ -9,5 +9,3 @@ export const PAGES = [
   { name: "About", file: "about.html", path: "/about.html", heading: "About" },
   { name: "Help", file: "help/index.html", path: "/help/", heading: "Help" },
 ] as const;
-
-export type PageName = (typeof PAGES)[number]["name"];
