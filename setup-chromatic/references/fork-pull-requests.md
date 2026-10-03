@@ -15,13 +15,13 @@ That is why a repository that takes outside contributions splits each workflow i
 
 Use those three files (`.github/workflows/` on that repository's default branch) as the model when the user said forks contribute, and review each before adopting it, since they predate parts of this skill.
 
-The publish workflow holds the tokens while handling a commit from a fork, so these are the properties to keep, all present in dandi's file except the first:
+The publish workflow holds the tokens while handling a commit from a fork, so these are the properties to keep; check each against the file you copy:
 
-- Add `persist-credentials: false` to the checkout of `main`, so the job's token is not left in that checkout's `.git/config`.
-- Nothing from the built commit executes: the Chromatic CLI is installed from the `main` checkout with `npm ci --ignore-scripts` and run from there; the built commit is fetched by hash into a separate directory, read only for its git history; the Storybook comes from the artifact. No `npm`, `npx` or workspace script runs against the commit.
-- The CLI gets `--config-file` pointing at an explicit empty file, so a `chromatic.config.json` in the commit is not read.
+- `persist-credentials: false` on the checkout of `main`, so the job's token is not left in that checkout's `.git/config`.
+- Nothing from the built commit executes: the Chromatic CLI is installed in the `main` checkout with `npm ci --ignore-scripts`, the built commit is fetched by hash into a separate directory, and the CLI is run inside that directory (so it reads the commit's git history) through `main`'s `node_modules/.bin/chromatic`; the Storybook comes from the artifact. No `npm`, `npx` or workspace script runs against the commit.
+- Because the CLI runs inside the commit's directory, it would read a `chromatic.config.json` there; `--config-file` points it at an explicit empty file written outside it (`$RUNNER_TEMP`) instead.
 - The head SHA, branch and repository from the triggering run reach the shell only through `env:`, never inline in `run:`.
-- `--auto-accept-changes` is added only when `workflow_run.event == 'push'`, `workflow_run.head_branch == 'main'` and `workflow_run.head_repository.full_name == github.repository`, since a fork's branch may be named `main` too.
+- `--auto-accept-changes` is added only when `workflow_run.event == 'push'` (no pull request, from a fork or not), `workflow_run.head_branch` is the default branch (`github.event.repository.default_branch` rather than a literal `main`, so no other branch becomes the baseline), and `workflow_run.head_repository.full_name == github.repository` as a second guard.
 
 Adaptations the files need:
 
