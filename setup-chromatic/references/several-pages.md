@@ -12,7 +12,7 @@ Two shapes count as several pages, and they differ in one place.
   Keep Vite's default `appType: "spa"` for this shape (a history router needs every route answered with `index.html`, and the deployed host already does that if the app works there); the `mpa` setting below is for HTML entries only.
 
 Everything below is about the first shape.
-The sibling repos are all one-page apps, so the templates are the reference here, not a sibling.
+The reference repos are all one-page apps, so the templates are the reference here.
 
 ## The list of pages
 
@@ -24,11 +24,8 @@ The config of a several-page app already lists its entries; replace that list wi
 // configs/vite.config.ts
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
-// With the extension: Vite 8 warns on every build, dev and preview start (so inside Playwright's
-// webServer too) that an extensionless import is unsupported by `configLoader: 'native'`, its planned
-// default. tsc accepts the `.ts` with `allowImportingTsExtensions: true` in the tsconfig that covers
-// configs/, which that option requires to be noEmit (a Vite app's is; Vite does the emitting). The
-// tests' `../../configs/pages` import may stay extensionless: Playwright compiles tests itself.
+// With the extension: Vite's `configLoader: 'native'`, its planned default, needs it, and Vite 8
+// already warns on every start without it. tsc accepts it with allowImportingTsExtensions (below).
 import { PAGES } from "./pages.ts";
 
 export default defineConfig({
@@ -49,7 +46,7 @@ export default defineConfig({
 });
 ```
 
-Add `allowImportingTsExtensions: true` to that tsconfig if it is not there; the BBQS apps' `configs/tsconfig.json` has it for the same import.
+Add `allowImportingTsExtensions: true` to the tsconfig that covers `configs/` (legal there, since it is `noEmit`); the tests' `../../configs/pages` import may stay extensionless, since Playwright compiles tests itself.
 Absolute entry paths work on Vite 7 (`build.rollupOptions.input`) and Vite 8.
 On Vite 8 `build.rollupOptions` is a deprecated alias of `build.rolldownOptions`, and a top-level `input` of root-relative paths is the new form.
 The Vite docs' own example uses `resolve(import.meta.dirname, "nested/index.html")`.
@@ -65,16 +62,13 @@ Vite's dev and preview servers resolve page URLs the same way, with no redirects
 | `about.html`       | `/about.html`, `/about`       | `/about/`                                                |
 | `help/index.html`  | `/help/`, `/help/index.html`  | `/help` (404 under `mpa`; `index.html` under `spa`)      |
 
-Static hosts differ on the other forms.
-GitHub Pages serves `about.html` at `/about` and redirects `/help` to `/help/`; Cloudflare Pages redirects `/about.html` to `/about`; Vercel's defaults answer `/about` with a 404; Vite's default `spa` fallback answers every miss with the index page.
-So `path` in `configs/pages.ts` is `/help/` for a `help/index.html` entry, the one form every host and both Vite servers serve without a redirect.
-For a root-level `about.html` it is `/about.html`: Vite and every host serve it (Cloudflare with a redirect, which still lands on the page), whereas `/about` 404s on Vercel's defaults.
-Never `/help`: Vite 404s it under `mpa` and answers it with the index page under `spa`.
-When the layout is yours to choose, use `help/index.html` entries with `/help/` URLs, the one form every host agrees on.
+Static hosts differ on the other forms (GitHub Pages serves `about.html` at `/about` but redirects `/help` to `/help/`; Cloudflare Pages redirects `/about.html` to `/about`; Vercel's defaults 404 `/about`).
+So `path` in `configs/pages.ts` is `/help/` for a `help/index.html` entry and `/about.html` for a root-level file, the forms Vite and every host serve (at most through a redirect that still lands on the page), and never `/about` or `/help`.
+When the layout is yours to choose, use `help/index.html` entries with `/help/` URLs, the one form nothing redirects.
 The app's own `<a href>` links use the same forms, since Vite rewrites asset references at build time but never link targets.
 If the app deploys under a sub-path (`base: "/<repo>/"` for a GitHub Pages project site), root-absolute links break there: write them relative or from `import.meta.env.BASE_URL`.
 The suite then needs the same care, because Playwright resolves `page.goto` with `new URL(path, baseURL)` and a root-absolute path drops the sub-path: make `path` relative (`about.html`, `help/`) and end the Playwright `baseURL` with the sub-path and a slash (`http://localhost:4173/<repo>/`).
-The sibling apps avoid all of this with `base: "./"` or a custom domain.
+The reference repos avoid all of this with `base: "./"` or a custom domain.
 
 ## Stories, one file per page
 
@@ -83,7 +77,7 @@ Each imports its own HTML raw and renders it through `buildPage` from `stories/u
 
 Two things a nested page needs that the index page does not:
 
-- **Asset URLs.** The story injects the markup into Storybook's `/iframe.html`, so relative URLs resolve from the site root, not the page's folder: `../src/assets/logo.svg` and `/src/assets/logo.svg` both land on the `staticDirs` mount and work, while a page-local URL (`./img/x.png` inside `help/index.html`) resolves to `/img/x.png` and misses. Do not rewrite the app's markup for this; mount the folder at the URL the markup resolves to inside the iframe, which is the page-relative path hoisted to the site root: `{ from: "../../help/img", to: "/img" }`. Only when two pages' local folders share a name (`help/img/` and `about/img/` would both want `/img`) make that page's asset URLs root-absolute (`/help/img/x.png`) and mount `{ from: "../../help/img", to: "/help/img" }`.
+- **Asset URLs.** The story injects the markup into Storybook's `/iframe.html`, so relative URLs resolve from the site root, not the page's folder: `../src/assets/logo.svg` and `/src/assets/logo.svg` both land on the `staticDirs` mount and work, while a page-local URL (`./img/x.png` inside `help/index.html`) resolves to `/img/x.png` and misses. Do not rewrite the app's markup for this; mount the folder at the URL the markup resolves to inside the iframe, which is the page-relative path hoisted to the site root: `{ from: "../../help/img", to: "/img" }` (`from` is relative to `configs/storybook/`, so under `root: "src"` it is `../../src/help/img`). Only when two pages' local folders share a name (`help/img/` and `about/img/` would both want `/img`) make that page's asset URLs root-absolute (`/help/img/x.png`) and mount `{ from: "../../help/img", to: "/help/img" }`.
 - **Its own stylesheet.** A page that links one of its own imports it at the top of its story file.
 
 ## Snapshot tests, shared and per page

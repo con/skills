@@ -11,11 +11,20 @@ That is why a repository that takes outside contributions splits each workflow i
 
 - `chromatic.yml` and `chromatic-playwright.yml` run on `push` and `pull_request`, build with no token (Storybook via `build-storybook`; the Playwright archives via `build-archive-storybook --output-dir=storybook-static`), and upload `storybook-static/` as a one-day artifact.
 - `chromatic-publish.yml` runs on `workflow_run`, from `main` and therefore with the tokens.
-  It checks out the built commit by hash (for the git history Chromatic reads baselines from), downloads the artifact, and runs the CLI with `--storybook-build-dir`, `--exit-zero-on-changes`, `CHROMATIC_SHA`/`CHROMATIC_BRANCH`/`CHROMATIC_SLUG` set from the triggering run, and `--auto-accept-changes` only for a push to the repository's own `main`.
+  It downloads the artifact, fetches the built commit by hash (for the git history Chromatic reads baselines from), and runs the CLI with `--storybook-build-dir`, `--exit-zero-on-changes`, `CHROMATIC_SHA`/`CHROMATIC_BRANCH`/`CHROMATIC_SLUG` set from the triggering run, and `--auto-accept-changes` only for a push to the repository's own `main`.
 
-Use those three files (`.github/workflows/` on that repository's default branch) as the model when the user said forks contribute, and review each before adopting it, since they predate parts of this skill:
+Use those three files (`.github/workflows/` on that repository's default branch) as the model when the user said forks contribute, and review each before adopting it, since they predate parts of this skill.
 
-- The publish workflow runs with the tokens in scope, so it must never check out or execute the fork's code: it checks out this repository at the built commit's hash only for the git history Chromatic reads, and takes the built Storybook from the artifact. Keep `--auto-accept-changes` limited to pushes to the repository's own `main`.
+The publish workflow holds the tokens while handling a commit from a fork, so these are the properties to keep, all present in dandi's file except the first:
+
+- Add `persist-credentials: false` to the checkout of `main`, so the job's token is not left in that checkout's `.git/config`.
+- Nothing from the built commit executes: the Chromatic CLI is installed from the `main` checkout with `npm ci --ignore-scripts` and run from there; the built commit is fetched by hash into a separate directory, read only for its git history; the Storybook comes from the artifact. No `npm`, `npx` or workspace script runs against the commit.
+- The CLI gets `--config-file` pointing at an explicit empty file, so a `chromatic.config.json` in the commit is not read.
+- The head SHA, branch and repository from the triggering run reach the shell only through `env:`, never inline in `run:`.
+- `--auto-accept-changes` is added only when `workflow_run.event == 'push'`, `workflow_run.head_branch == 'main'` and `workflow_run.head_repository.full_name == github.repository`, since a fork's branch may be named `main` too.
+
+Adaptations the files need:
+
 - Save the Storybook one as `chromatic-storybook.yml`, the name the layout in SKILL.md and the README badges use, and keep the two `name:` values exactly as `chromatic-publish.yml` lists them under `workflow_run.workflows`.
 - Replace `dandi/usage-page` in the publish workflow's `if:` guard with the repository's own `<org>/<repo>`.
 - Pin `runs-on` to `ubuntu-24.04` and `node-version` to 22, and add the two report steps from the templates, for the reasons the templates give.

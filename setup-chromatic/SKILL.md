@@ -42,9 +42,10 @@ Comments in the templates that speak to this skill rather than to the repo (whic
 In a one-page app drop the clauses the README and agent-guidance templates mark as several-pages only, and the marker comments in either case.
 The templates are `.ts`; a JS repo uses `.js` for every file here and points the scripts in step 1 at the `.js` configs (the stories glob and Playwright's default `testMatch` accept both).
 For JS, strip every TypeScript-only construct: `import type` lines and `type` specifiers inside imports, `: Type` annotations and return types, `interface` and `type` declarations, `declare const` lines, `as` casts and `as const`.
-`__APP_VERSION__` is then used bare (Vite's `define` replaces the identifier), `el.ownerSVGElement` needs no cast, and `PAGES` loses its `as const`; nothing else changes.
+`__APP_VERSION__` is then used bare (Vite's `define` replaces the identifier), `el.ownerSVGElement` needs no cast, `PAGES` loses its `as const`, and the Vite config's `./pages.ts` import becomes `./pages.js`; nothing else changes.
+ESM `.js` configs also need `"type": "module"` in `package.json`, or `.mjs` names.
 Sections too long for this file live under [references/](references/): several pages, a shared config package, pull requests from forks, troubleshooting.
-When in doubt about a detail the templates do not settle, open one of the sibling repos and copy what it does rather than inventing a variant.
+When in doubt about a detail the templates do not settle, open one of the reference repos named above and copy what it does rather than inventing a variant.
 
 ## When to Use
 
@@ -55,7 +56,7 @@ When in doubt about a detail the templates do not settle, open one of the siblin
 
 ## Step 0. Read the repository, then ask
 
-Read `AGENTS.md` or `CLAUDE.md`, `README.md`, `package.json`, the Vite config and the folder the tool configs live in (`configs/` in the siblings), and settle what the repository already answers:
+Read `AGENTS.md` or `CLAUDE.md`, `README.md`, `package.json`, the Vite config and the folder the tool configs live in (`configs/` in the reference repos), and settle what the repository already answers:
 
 - **JS or TS**: what `configs/` and `tests/` use (the conversion is above).
 - **Formatting**: the repo's Prettier config. Run its formatter over everything added rather than guessing.
@@ -71,7 +72,7 @@ Read `AGENTS.md` or `CLAUDE.md`, `README.md`, `package.json`, the Vite config an
 
 Then ask, in one `AskUserQuestion` call, what the repository cannot answer:
 
-1. **Web server for the snapshot suite**, only when the repo has no Playwright config yet: the built app under `vite preview` (closer to what is deployed; the default) or the dev server.
+1. **Web server for the snapshot suite**, only when the repo has no Playwright config yet: the built app under `vite preview` (the default: closer to what is deployed, and without the dev server's on-the-fly dependency optimization, which can shift a first capture) or the dev server.
 2. **Where pull requests come from**: only branches pushed to this repository (the two workflows as templated) or outside forks too (the split in [references/fork-pull-requests.md](references/fork-pull-requests.md)).
 3. **Production code**: the page states a person would recognize (nothing loaded, something loaded, signed out, an error card) are reached through `?test&...` URL injections, which means editing the app's entry script, or one shared module when there are several pages. Name the states proposed and the files that would change, and ask whether that edit is welcome; step 5 says how to reach the states either way.
 4. **JS or TS**, only when the repo has neither yet.
@@ -106,8 +107,7 @@ Its `to` is the URL those references resolve to inside Storybook's iframe: `/src
 It also declares two Chromatic modes, `light` and `dark`, that set that global: Chromatic renders every story once per mode, each with its own baseline, so stories export one story per state and never a second set for the other theme.
 If the app themes through a class or a stored key instead of `data-theme`, the decorator sets that instead; the point is that something explicit pins it.
 
-Storybook's Vite builder loads the app's own `vite.config.*` from the parent of its config directory (`configs/` with `--config-dir configs/storybook`), so `define` and plugins are picked up as is.
-It drops the config's `build` block, so a multi-page entry list does no harm there.
+Storybook's Vite builder loads the app's own `vite.config.*` from `configs/`, the parent of its config directory (the template's comment says so), and drops its `build` block, so a multi-page entry list does no harm there.
 If the Vite config lives elsewhere, point at it with `framework.options.builder.viteConfigPath` (resolved from the working directory, so pass an absolute path built from `import.meta.url`); otherwise Storybook builds the stories without it.
 
 ## Step 3. Stories (`stories/`)
@@ -146,9 +146,8 @@ The templates' second state seeds the theme the app does not default to; step 0 
 When the app follows the OS preference by default, seed the default state too, so the test pins the theme rather than Playwright's `colorScheme` default (light) or, where the app leaves the OS choice to CSS instead of writing it into the DOM, whichever browser renders the archive, which carries only the DOM.
 
 Each state must be reachable deterministically.
-The siblings reach them through `?test&...` URL injections rather than `page.route` stubs, because a URL is documented, reusable by a person on the deployed site, and covered by the app's own boot test where it has one.
-This edits production code, which is why step 0 asked first.
-If the user declined, reach each state from the test instead: drive the UI (`setInputFiles`, clicks), seed stored state with `addInitScript`, stub network-fed states with `page.route`; say in the test's comment which of the two the state uses (the templates' `?test&mock_file` comments change accordingly).
+If the user approved the edit in step 0 (question 3), reach them through `?test&...` URL injections rather than `page.route` stubs, as the reference repos do: a URL is documented, reusable by a person on the deployed site, and covered by the app's own boot test where it has one.
+If not, reach each state from the test instead: drive the UI (`setInputFiles`, clicks), seed stored state with `addInitScript`, stub network-fed states with `page.route`; say in the test's comment which of the two the state uses (the templates' `?test&mock_file` comments change accordingly).
 The pattern goes in the app's entry script, or with several pages in one module that each page's entry imports (a `src/lib/testInjection.ts`, with every flag listed in the developer docs), so the flags are parsed once:
 
 ```ts
@@ -239,14 +238,14 @@ Nothing else is restructured on the report's account.
 
 ```bash
 npm run build-storybook                 # the Storybook the action will upload
-npm run storybook                       # every story, in both themes from the toolbar, by eye
 npm run test:chromatic                  # the archives land in test-results/chromatic-archives/
 ./node_modules/.bin/build-archive-storybook --output-dir=storybook-static   # what the action does with them
 npm run format && npm run lint    # whichever of format, lint, typecheck the repo has (step 0), and pre-commit run --all-files where it uses it
 ```
 
 Call `build-archive-storybook` through its path, not `npm exec`, which takes `--output-dir` as one of its own options and drops it.
-Before the hand-over, when the push will open a pull request, follow this collection's `AGENTS.md`: look for a PR template and `CONTRIBUTING.md`, apply their branch, commit and changelog rules, and say what was found.
-Then stop and report: what was added, what step 0's answers decided, what step 6 still needs, and the commit and push the user should make (this skill does not push).
+`npm run storybook` is a dev server that never exits, so do not run it; looking at every story in both themes by eye is the user's, in the hand-over.
+Before the hand-over, when the push will open a pull request, check the target repository for a PR template (`.github/PULL_REQUEST_TEMPLATE.md` or its variants) and a `CONTRIBUTING.md`, follow their branch, commit and changelog rules, and say what was found.
+Then stop and report: what was added, what step 0's answers decided, what step 6 still needs, the commit and push the user should make (this skill does not push), and what only they can do afterwards: enable "allow edits from maintainers" on the pull request, and link the PR number into the changelog entry once GitHub assigns it.
 Once pushed, both workflows (three, with forks) should go green, the first build of each project becomes its baseline (look it over in Chromatic once), and the two badges render.
 Symptoms after that are in [references/troubleshooting.md](references/troubleshooting.md).

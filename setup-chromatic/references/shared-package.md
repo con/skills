@@ -2,7 +2,7 @@
 
 Some organizations keep the Storybook and Playwright configuration, and the test helpers, in a node package of their own that every app depends on: a workspace package in a monorepo, a package vendored into the repo, or one installed from npm or a git URL.
 The BBQS apps do this with `@brain-bbqs/config` and `@brain-bbqs/test-utils` from [bbqs-web-components](https://github.com/brain-bbqs/bbqs-web-components).
-When the repo has such a package, use what it exports instead of the vanilla templates, so the app does not carry a copy that drifts from the package and from its siblings.
+When the repo has such a package, use what it exports instead of the vanilla templates, so the app does not carry a copy that drifts from the package and from the other apps that use it.
 
 ## How to tell
 
