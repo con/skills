@@ -43,7 +43,7 @@ In a one-page app drop the clauses the README and agent-guidance templates mark 
 The templates are `.ts`; a JS repo uses `.js` for every file here and points the scripts in step 1 at the `.js` configs (the stories glob and Playwright's default `testMatch` accept both).
 For JS, strip every TypeScript-only construct: `import type` lines and `type` specifiers inside imports, `: Type` annotations and return types, `interface` and `type` declarations, `declare const` lines, `as` casts and `as const`.
 `__APP_VERSION__` is then used bare (Vite's `define` replaces the identifier), `el.ownerSVGElement` needs no cast, `PAGES` loses its `as const`, and the Vite config's `./pages.ts` import becomes `./pages.js`; nothing else changes.
-ESM `.js` configs need `"type": "module"` in `package.json`; otherwise name them `.mjs`, and the `./pages.js` import and the `--config` path in the `test:chromatic` script follow.
+ESM `.js` configs need `"type": "module"` in `package.json`; otherwise name them `.mjs`, and change the `./pages.js` import and the `--config` path in the `test:chromatic` script to `.mjs` as well.
 Sections too long for this file live under [references/](references/): several pages, a shared config package, pull requests from forks, troubleshooting.
 When in doubt about a detail the templates do not settle, open one of the reference repos named above and copy what it does rather than inventing a variant.
 
@@ -246,7 +246,7 @@ npm run format && npm run lint    # whichever of format, lint, typecheck the rep
 Call `build-archive-storybook` through its path, not `npm exec`, which takes `--output-dir` as one of its own options and drops it.
 `npm run storybook` is a dev server that never exits, so do not run it; looking at every story in both themes by eye is the user's, in the hand-over.
 Before the hand-over, when the push will open a pull request, check the target repository for a PR template (`.github/PULL_REQUEST_TEMPLATE.md`, `.github/pull_request_template.md`, `.github/PULL_REQUEST_TEMPLATE/*.md`, `docs/PULL_REQUEST_TEMPLATE.md`, or one at the root) and a contributing guide (`CONTRIBUTING.md` at the root, under `.github/` or `docs/`).
-Follow their branch, commit and changelog rules; fill every template section and tick only what was done; flag an issue-first policy before the push; and say what was found.
+Follow their branch, commit and changelog rules; fill every template section and tick only what was done; flag an issue-first policy before the push; and say what was found, or that none exists.
 Then stop and report: what was added, what step 0's answers decided, what step 6 still needs, the commit and push the user should make (this skill does not push), and what only they can do afterwards: enable "allow edits from maintainers" on the pull request, and link the PR number into the changelog entry once GitHub assigns it.
 Once pushed, both workflows (three, with forks) should go green, the first build of each project becomes its baseline (look it over in Chromatic once), and the two badges render.
 Symptoms after that are in [references/troubleshooting.md](references/troubleshooting.md).
