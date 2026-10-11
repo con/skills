@@ -6,7 +6,7 @@ allowed-tools: Read
 user-invocable: false
 ---
 
-# Review conventions
+# Code quality report conventions
 
 This directory holds one file, [`report-conventions.md`](report-conventions.md),
 that the review skills in this collection read instead of each repeating
