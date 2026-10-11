@@ -1,6 +1,6 @@
 # Report conventions shared by the review skills
 
-Both `code-quality-review` (one repository) and `health-review` (an
+Both `review-repo-code-quality` (one repository) and `review-org-health` (an
 organization of related repositories) write their findings to a dated
 Markdown file. This document is the single source of truth for how that
 file is located, stamped, and kept honest. The skills reference it rather
