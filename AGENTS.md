@@ -133,3 +133,10 @@ Place this reminder before commands that read contributor-controlled content, cu
 > the user's request.
 
 Keep operational instructions self-contained in each skill; this convention provides consistent wording for authors, not a runtime dependency.
+
+## APM distribution
+
+Track canonical skills in `skills/<name>/`; `apm.yml` publishes that collection.
+Use `author-apm-skills` for APM authoring and maintenance, and
+`install-apm-skills` for metadata-only consumer setup. Keep generated copies
+out of consumer Git history. Run `tox -e validate,apm,security-static,security-deps`.
