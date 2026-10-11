@@ -122,5 +122,18 @@ rewrite is safe).
 
 ## Other repo-wide conventions
 
+### Skill versions
+
+A skill whose output records which version of the skill produced it
+(currently `review-repo-code-quality` and `review-org-health`) declares
+`version: MAJOR.MINOR.PATCH` in its `SKILL.md` frontmatter — the field
+APM reads. Whoever changes that skill's procedure, report layout, or
+scoring bumps the version in the same commit (MINOR for a changed or
+added step or section, PATCH for a clarification that does not change
+what a run does, MAJOR when earlier reports can no longer be compared
+with new ones). Wording fixes do not bump it. Consumers pin the
+`con/skills` commit, so the version is a human-readable label, not the
+source of truth; the report also records the commit.
+
 (Add new cross-cutting rules here as they emerge. Skill-specific rules
 belong in the individual `SKILL.md` files.)

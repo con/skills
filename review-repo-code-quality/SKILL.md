@@ -8,11 +8,11 @@ user-invocable: true
 
 # Skill: Single-repository code quality review
 
-Produces a review like
-[dandi/s3-log-extraction `docs/annual-reviews/2026-09-14-code-quality-review.md`](https://github.com/dandi/s3-log-extraction/blob/main/docs/annual-reviews/2026-09-14-code-quality-review.md):
-a report a maintainer can work through top to bottom, applying each
-change with a stated verification step, without the review having touched
-the code.
+Modelled on
+[dandi/s3-log-extraction `docs/annual-reviews/2026-09-14-code-quality-review.md`](https://github.com/dandi/s3-log-extraction/blob/main/docs/annual-reviews/2026-09-14-code-quality-review.md)
+(example only): a report a maintainer can work through top to bottom,
+applying each change with a stated verification step, without the review
+having touched the code.
 
 Shared rules — where the report goes, the provenance stamp that records
 which version of this skill produced it, evidence standards, re-review,
@@ -50,7 +50,10 @@ about itself. Findings are measured against these first; generic best
 practice second.
 
 Run the project's own linter and test suite once to get a **baseline**
-(count of tests passing, lint clean or not). Record the exact command.
+(count of tests passing, lint clean or not). Record the exact command. If
+the suite cannot run here (needs credentials, network, or services),
+record `baseline not run: <reason>` and rate any finding whose safety
+depends on it **Low** confidence.
 
 ### Step 2 — Mechanical sweep
 
@@ -62,7 +65,10 @@ Breadth first, with tools, over the whole scope:
   entries for rules the selected rule set never reaches, configuration
   that is never consulted.
 - **Duplication:** run the `analyze-duplicates` skill (jscpd) if
-  available; otherwise search for repeated multi-line idioms by hand.
+  available — from a scratch directory, with `--output <scratch>/jscpd.md`,
+  so nothing (`.tmp/`, `.gitignore`, `.jscpd-report.md`) is written into
+  the reviewed repository. If jscpd cannot be installed, search for
+  repeated multi-line idioms by hand and say so in Method & limits.
   Note where copies have **drifted**, since drifted copies are the
   expensive ones.
 - **Idiom drift:** assign-then-return, unnecessary comprehensions,
@@ -111,11 +117,19 @@ Each finding under `DC` / `DUP` / `CON` / `CL`:
 - **Issue**: what is wrong, why it costs something, and the evidence (quote enough to show it)
 - **Proposed change**: the concrete edit, with the alternative if there is a reasonable one
 - **Confidence it's safe**: **High** / **Medium** / **Low**, followed by the trace that justifies it
-- **Verification**: the exact command(s) whose output proves the change preserved behavior
+- **Verification**: the exact command(s) whose output would reveal a behavior change
 ```
 
 Each `NV` item: Location, Observation, Why it is not a quality change (what
 behavior would shift), and what a maintainer would need to decide.
+
+#### Where to write the report
+
+Follow `references/report-conventions.md` §2 with `{reviews dir}` =
+`code-reviews` and `{kind}` = `code-quality-review`, i.e.
+`docs/code-reviews/YYYY-MM-DD-code-quality-review.md` unless the
+repository already has a reviews directory. Security-sensitive findings
+go only where §2 says.
 
 Report layout (fill every section; say "none" rather than deleting one):
 
@@ -174,12 +188,23 @@ under the finding, and offer to record the preference in `AGENTS.md`.
 Never bump a version or write a changelog entry for a tests-only change
 unless the project's rules say to.
 
+## Breadth mode (used by `review-org-health`)
+
+When invoked per repository by `review-org-health`: do not ask the Inputs
+questions (the caller supplies scope), do not write a report, do not apply
+changes. Run Step 1 reading only (run the test suite only if it needs no
+credentials, network, or services; otherwise record `baseline not run:
+<reason>`), Step 2 for Dead code, Duplication, and Project-rule drift
+only, and Step 3 for the top candidates. Return `DC` / `DUP` / `NV`
+findings with locations and the baseline status to the caller, which owns
+the matrix and the evidence appendix.
+
 ## Operating rules
 
 - Follow `references/report-conventions.md` for evidence, location,
-  provenance, and re-review. In particular: never overwrite an earlier
-  report, never commit unless asked, never put findings in a public
-  repository without asking.
+  provenance, security-sensitive findings, and re-review. In particular:
+  never overwrite an earlier report, never commit unless asked, never
+  quote a secret value.
 - **Quality, not correctness.** A bug you notice goes under Needs
   Verification with the behavior change spelled out; it is not silently
   fixed under a `CL` heading.

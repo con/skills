@@ -8,9 +8,9 @@ user-invocable: true
 
 # Skill: Pipeline ecosystem health audit
 
-Produces a review like
-[dandi-cache/dandi-cache-utils `docs/healthstatus-review/2026-09-19.md`](https://github.com/dandi-cache/dandi-cache-utils/blob/main/docs/healthstatus-review/2026-09-19.md):
-a point-in-time picture of an organization of related repositories, where
+Modelled on
+[dandi-cache/dandi-cache-utils `docs/healthstatus-review/2026-09-19.md`](https://github.com/dandi-cache/dandi-cache-utils/blob/main/docs/healthstatus-review/2026-09-19.md)
+(example only): a point-in-time picture of an organization of related repositories, where
 the findings are about the *system* — what one mistake in a shared layer
 reaches, which contracts nobody checks, where the template itself is the
 root cause.
@@ -23,24 +23,26 @@ expects it to be installed alongside (in APM, select both skills; in a
 delegated to it rather than repeated here:
 
 - **Per-repository scanning (Phase 2)** runs `review-repo-code-quality` on each
-  repository in *breadth mode* (Steps 1–3 of that skill, mechanical sweep
-  plus tracing, no per-repo report) and feeds the results into this
-  skill's health matrix.
+  repository in its **Breadth mode** (defined in that skill: no inputs
+  prompt, no per-repo report, no changes; returns `DC` / `DUP` / `NV`
+  findings and baseline status) and feeds the results into this skill's
+  health matrix.
 - **Report conventions** — where the report goes for a multi-repository
   review, the provenance stamp recording which version of the skill
-  produced it, evidence rules, re-review of a prior report, and
-  confidence/status labels — are defined once in
+  produced it, evidence rules, security-sensitive findings, re-review of
+  a prior report, and confidence/status labels — are defined once in
   `review-repo-code-quality/references/report-conventions.md`. Read it first;
   it is part of this skill's contract. If that file is not installed,
-  fetch it from `con/skills` at the commit recorded in the consumer's
-  `apm.lock.yaml` (or the latest `master`) before continuing.
+  stop and ask the user to install `review-repo-code-quality`; do not
+  proceed from memory.
 
 ## When to use
 
 A set of repositories that (a) follow a common template or style and
 (b) are connected via shared data, schemas, libraries, or orchestration.
-Works for 5 pipelines or 150. For a single repository, use
-`review-repo-code-quality` directly.
+Works for a handful of pipelines or a few dozen; beyond that, sample the
+per-repository scan and say so in Method & limits. For a single
+repository, use `review-repo-code-quality` directly.
 
 ## Core prompt
 
@@ -82,12 +84,18 @@ Before judging anything, define what "correct" looks like in this ecosystem.
 
 ## Phase 2 — Per-pipeline scan (breadth)
 
-Run `review-repo-code-quality` Steps 1–3 on every repository (use `Agent` to
-parallelize when there are many), then score each repository 0–3 per
-dimension below (0 = absent/broken, 3 = works and is covered by tests or
-gates). Record **template conformance separately from correctness**, so a
-pipeline that faithfully copies a flawed template is not scored 3 on
-everything. Keep the per-repository evidence; the matrix cells link to it.
+Run `review-repo-code-quality` in Breadth mode on every repository (use
+`Agent` to parallelize when there are many), then score each repository
+0–3 per dimension below (0 = absent/broken, 3 = works and is covered by
+tests or gates). Breadth mode feeds the **Dead code**, **Testing**
+(baseline status), and duplication inputs; the other dimensions are
+**scored from configuration and workflows directly** (orchestrator
+definitions, schema declarations, CI, IAM/secrets wiring), not from the
+repo skill. Record **template conformance separately from correctness**,
+so a pipeline that faithfully copies a flawed template is not scored 3 on
+everything. Keep the per-repository evidence in an **evidence appendix**
+of the report (or a sibling `…-evidence/<repo>.md` per repository when it
+is long); each matrix cell links to it.
 
 | Dimension | What to check |
 |---|---|
@@ -110,7 +118,7 @@ Look across the matrix for **systemic** issues:
 
 1. **Drift clusters.** Which pipelines have diverged from the template, in what direction, and did divergences propagate by copy-paste? Group by "generation" — pipelines forked from the same ancestor often share the same bug.
 2. **Contract fragility.** For every edge in the graph: is the schema enforced on both sides, one side, or neither? Rank edges by (criticality × lack of enforcement).
-3. **Copy-paste logic across repos.** Fold the `DUP` findings from Phase 2 and, where available, an `analyze-duplicates` run across all repositories, into clusters. Each duplicate is a place a fix won't land; the recommendation is a shared-library helper plus a migration, not N tickets.
+3. **Copy-paste logic across repos.** Fold the `DUP` findings from Phase 2 and, where available, one `analyze-duplicates` run over all repositories with `--cross-project` (from a scratch directory, `--output <scratch>/jscpd.md`, so nothing is written into the reviewed repos) into clusters. Each duplicate is a place a fix won't land; the recommendation is a shared-library helper plus a migration, not N tickets.
 4. **Shared library blast radius.** What breaks if the shared lib ships a breaking change? Which pipelines are N versions behind and why? Does the shared layer itself have CI?
 5. **Failure propagation.** Trace a failure from a hub node downstream: does it cascade, stall, or silently produce stale data? Where are the circuit breakers?
 6. **Convention gaps.** Things the template *doesn't* specify that everyone solved differently (e.g. timezone handling, null semantics, late-arriving data, what a `limit` parameter means).
@@ -160,8 +168,8 @@ What "good" looks like here (a table of concern → house pattern), and the temp
 Graph or table: nodes, edges, criticality, owners. Call out hubs, orphans, products, long chains.
 
 ## Health matrix
-Repositories × dimensions, scored 0–3, with column means. Link each cell to evidence.
-Say in one sentence what the shape of the matrix means.
+Repositories × dimensions, scored 0–3, with column means. Link each cell to the
+evidence appendix. Say in one sentence what the shape of the matrix means.
 
 ## Findings
 One section per cross-cutting issue: evidence (quoted, cited), affected repositories,
@@ -177,6 +185,10 @@ Fix now / Fix systemically / Accept / Retire — each with owner suggestion and 
 ## Method & limits
 What was scanned, what was sampled, what was verified empirically vs. inferred,
 confidence level, where this report lives for the next run.
+
+## Evidence appendix
+Per repository: the Breadth-mode findings (locations, baseline status) and the
+config/workflow facts each matrix cell was scored from.
 ```
 
 ## Operating rules
@@ -193,7 +205,6 @@ confidence level, where this report lives for the next run.
 
 - **Dependency/version matrix:** parse every `requirements*.txt` / `pyproject.toml` / `package.json` and pivot by shared-lib version.
 - **Drift diff:** `diff -r` each pipeline against the template, filtered to structural files.
-- **Duplicate detection:** run the `analyze-duplicates` skill (jscpd-based) over the repos and fold the clusters into Phase 3 item 3.
 - **Edge extraction:** grep for table/topic/bucket identifiers in read/write calls; join with orchestrator DAG definitions.
 - **Staleness:** `git log -1 --format=%cd` per repo, plus PR count in last 90 days.
 

@@ -26,23 +26,23 @@ Fill the fields like this:
 - **`{skill name}` / `{skill version}`** — the `name:` and `version:`
   fields of the running skill's own `SKILL.md` frontmatter. Read the file
   you were loaded from; do not guess the version from memory.
-- **`{skill source}`** — where that copy of the skill came from, tried in
-  this order:
-  1. The consumer repository carries an `apm.lock.yaml` whose
-     `dependencies` list has an entry for `con/skills`: cite its
-     `resolved_commit` as `con/skills@{full SHA}`.
-  2. The skill directory sits inside a git checkout of `con/skills`:
-     cite `git -C {skill dir} rev-parse --short HEAD`.
-  3. Otherwise write `source commit unknown`.
+- **`{skill source}`** — where that copy of the skill came from. If the
+  skill directory sits inside a git checkout, cite
+  `git -C {skill dir} rev-parse --short HEAD`. If instead the consumer
+  repository carries an `apm.lock.yaml` with a `con/skills` entry, cite
+  its `resolved_commit` as `con/skills@{SHA}`. Otherwise write
+  `source commit unknown`.
 - **`Previous review`** — see §4.
 
-Optionally add a fourth line, `Reviewed with: {agent and model}`, when
-the runtime makes that information available; omit it rather than guess.
+`version:` is bumped by whoever changes a skill's procedure or report
+layout, in the same commit (see `AGENTS.md`, "Skill versions"); it is
+not changed for wording fixes. If the stamp and the behaviour you observe
+disagree, trust the source commit.
 
 ## 2. Where the file goes
 
-- **Default path:** `docs/{reviews dir}/YYYY-MM-DD-{kind}.md` inside the
-  reviewed repository, where `{reviews dir}` and `{kind}` are set by the
+- **Single-repository default:** `docs/{reviews dir}/YYYY-MM-DD-{kind}.md`
+  inside the reviewed repository, where `{reviews dir}` and `{kind}` are set by the
   calling skill (for example `docs/code-reviews/2026-10-11-code-quality-review.md`
   or `docs/health-reviews/2026-10-11-health-review.md`). Use `date +%F`
   for the date. If the repository already has a reviews directory under
@@ -55,9 +55,13 @@ the runtime makes that information available; omit it rather than guess.
   section so the next run finds it.
 - **Never overwrite** an existing report. If the dated path exists,
   append `-2`, `-3`, … before `.md`.
-- **Never place findings in a public repository without asking.** A
-  review of a private repository may name credentials paths, internal
-  hosts, or unreleased work.
+- **Security-sensitive findings** — hardcoded credentials, over-broad
+  access, unpatched CVEs, internal hosts, secrets in logs — go only to a
+  private location the user names, never into the default path of a
+  public repository. Check visibility first
+  (`gh repo view --json visibility`, or the remote URL and the hosting
+  site). Never quote a secret value; cite `file:line` only. Everything
+  else may go in the default path.
 - **Do not commit or push** unless asked. Tell the user the path.
 
 ## 3. Evidence rules
