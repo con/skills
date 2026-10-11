@@ -17,10 +17,10 @@ root cause.
 
 ## Relationship to `review-repo-code-quality`
 
-This skill builds on the single-repository `review-repo-code-quality` skill and
-expects it to be installed alongside (in APM, select both skills; in a
-`con/skills` checkout it is the sibling directory). Two things are
-delegated to it rather than repeated here:
+This skill builds on the single-repository `review-repo-code-quality` skill
+and the shared `review-conventions` skill, and expects both installed
+alongside (in APM, select all three; in a `con/skills` checkout they are
+sibling directories). Two things are delegated rather than repeated here:
 
 - **Per-repository scanning (Phase 2)** runs `review-repo-code-quality` on each
   repository in its **Breadth mode** (defined in that skill: no inputs
@@ -30,11 +30,12 @@ delegated to it rather than repeated here:
 - **Report conventions** — where the report goes for a multi-repository
   review, the provenance stamp recording which version of the skill
   produced it, evidence rules, security-sensitive findings, re-review of
-  a prior report, and confidence/status labels — are defined once in
-  `review-repo-code-quality/references/report-conventions.md`. Read it first;
-  it is part of this skill's contract. If that file is not installed,
-  stop and ask the user to install `review-repo-code-quality`; do not
-  proceed from memory.
+  a prior report, and confidence/status labels — are defined once in the
+  sibling `review-conventions` skill
+  (`../review-conventions/report-conventions.md`). Read it first; it is
+  part of this skill's contract. If that file is not installed, stop and
+  ask the user to install `review-conventions`; do not proceed from
+  memory.
 
 ## When to use
 
@@ -193,7 +194,7 @@ config/workflow facts each matrix cell was scored from.
 
 ## Operating rules
 
-- Follow `review-repo-code-quality/references/report-conventions.md` for
+- Follow `../review-conventions/report-conventions.md` for
   evidence, location, provenance, and re-review.
 - **Judge against the house pattern first, generic best practice second.** "Doesn't use X framework" isn't a finding if the template doesn't either — but "the template lacks any DQ gate" is.
 - **Prefer fixes that land in one place.** If the same issue appears in 5+ pipelines, the recommendation is a template/shared-lib change plus a migration, not 5 tickets.

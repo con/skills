@@ -125,7 +125,8 @@ rewrite is safe).
 ### Skill versions
 
 A skill whose output records which version of the skill produced it
-(currently `review-repo-code-quality` and `review-org-health`) declares
+(currently `review-repo-code-quality`, `review-org-health`, and the
+`review-conventions` they share) declares
 `version: MAJOR.MINOR.PATCH` in its `SKILL.md` frontmatter — the field
 APM reads. Whoever changes that skill's procedure, report layout, or
 scoring bumps the version in the same commit (MINOR for a changed or

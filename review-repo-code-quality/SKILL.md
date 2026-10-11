@@ -17,8 +17,10 @@ having touched the code.
 Shared rules — where the report goes, the provenance stamp that records
 which version of this skill produced it, evidence standards, re-review,
 and confidence/status labels — live in
-[`references/report-conventions.md`](references/report-conventions.md).
-Read that file first; it is part of this skill's contract.
+[`../review-conventions/report-conventions.md`](../review-conventions/report-conventions.md),
+a sibling skill installed alongside this one. Read that file first; it is
+part of this skill's contract. If it is not installed, stop and ask the
+user to install `review-conventions`; do not proceed from memory.
 
 ## When to use
 
@@ -125,7 +127,7 @@ behavior would shift), and what a maintainer would need to decide.
 
 #### Where to write the report
 
-Follow `references/report-conventions.md` §2 with `{reviews dir}` =
+Follow `report-conventions.md` §2 with `{reviews dir}` =
 `code-reviews` and `{kind}` = `code-quality-review`, i.e.
 `docs/code-reviews/YYYY-MM-DD-code-quality-review.md` unless the
 repository already has a reviews directory. Security-sensitive findings
@@ -201,7 +203,7 @@ the matrix and the evidence appendix.
 
 ## Operating rules
 
-- Follow `references/report-conventions.md` for evidence, location,
+- Follow `../review-conventions/report-conventions.md` for evidence, location,
   provenance, security-sensitive findings, and re-review. In particular:
   never overwrite an earlier report, never commit unless asked, never
   quote a secret value.

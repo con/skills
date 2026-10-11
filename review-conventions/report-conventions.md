@@ -1,10 +1,10 @@
 # Report conventions shared by the review skills
 
-Both `review-repo-code-quality` (one repository) and `review-org-health` (an
+`review-repo-code-quality` (one repository) and `review-org-health` (an
 organization of related repositories) write their findings to a dated
 Markdown file. This document is the single source of truth for how that
 file is located, stamped, and kept honest. The skills reference it rather
-than repeating it; if the two ever disagree, this file wins.
+than repeating it; if a skill and this file ever disagree, this file wins.
 
 ## 1. Provenance stamp
 
