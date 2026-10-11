@@ -25,6 +25,19 @@ def snapshot(root: Path) -> dict[str, bytes]:
             for p in root.rglob('*') if p.is_file()}
 
 
+def check_pin(lock: object, source: str) -> None:
+    repository, commit = source.split('#')
+    dependencies = lock.get('dependencies') if isinstance(lock, dict) else None
+    if not isinstance(dependencies, list) or not any(
+        isinstance(dep, dict)
+        and dep.get('resolved_commit') == commit
+        and dep.get('repo_url') == repository.lower()
+        and dep.get('host', 'github.com') == 'github.com'
+        for dep in dependencies
+    ):
+        raise RuntimeError('lock does not contain the requested repository and commit')
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source', help='Published owner/repository#full-SHA')
@@ -35,7 +48,7 @@ def main() -> None:
     if not names:
         raise RuntimeError('empty skill collection')
     # Local CI checks the complete collection; Git CI checks selective deployment.
-    selection = ['install-apm-skills', 'author-apm-skills'] if args.source else names
+    selection = names[:2] if args.source else names
     with tempfile.TemporaryDirectory(prefix='con-skills-apm-') as directory:
         base = Path(directory)
         package = base / 'package'
@@ -47,6 +60,7 @@ def main() -> None:
         consumer = base / 'consumer'
         consumer.mkdir()
         run('git', 'init', '--quiet', cwd=consumer)
+        # --no-policy is only for these disposable fixtures.
         if args.source:
             # Exercise the same public CLI route documented for consumers.
             run('apm', 'install', args.source, '--target', 'agent-skills',
@@ -60,7 +74,9 @@ def main() -> None:
             }))
             # Disposable fixtures have no organization policy or credentials.
             run('apm', 'install', '--no-policy', cwd=consumer)
-        (consumer / '.gitignore').write_text((consumer / '.gitignore').read_text() + ''.join(
+        ignore = consumer / '.gitignore'
+        existing = ignore.read_text() if ignore.exists() else ''
+        ignore.write_text(existing.rstrip('\n') + '\n/apm_modules/\n' + ''.join(
             f'/.agents/skills/{name}/\n' for name in selection))
         metadata = {name: (consumer / name).read_bytes()
                     for name in ('apm.yml', 'apm.lock.yaml', '.gitignore')}
@@ -68,9 +84,10 @@ def main() -> None:
         actual_names = {p.parts[0] for p in map(Path, installed)}
         if actual_names != set(selection):
             raise RuntimeError(f'unexpected deployed skills: {actual_names}')
-        for relative, content in snapshot(package / 'skills').items():
-            if relative not in installed:
-                raise RuntimeError(f'missing deployed resource: {relative}')
+        expected = snapshot(package / 'skills')
+        if installed.keys() != expected.keys():
+            raise RuntimeError('deployed resource paths differ from package')
+        for relative, content in expected.items():
             # APM rewrites Markdown links; other bundled resources must be exact.
             if not relative.endswith('.md') and installed[relative] != content:
                 raise RuntimeError(f'changed deployed resource: {relative}')
@@ -91,9 +108,12 @@ def main() -> None:
             raise RuntimeError(f'unexpected untracked files: {untracked}')
         if args.source:
             lock = yaml.safe_load((fresh / 'apm.lock.yaml').read_text())
-            if not any(d.get('resolved_commit') == args.source.split('#')[1]
-                       for d in lock['dependencies']):
-                raise RuntimeError('lock does not contain the requested commit')
+            check_pin(lock, args.source)
+        tampered = fresh / '.agents/skills' / selection[0] / 'SKILL.md'
+        tampered.write_text(tampered.read_text() + '\nUnexpected modification.\n')
+        audit = subprocess.run(['apm', 'audit', '--ci', '--no-policy'], cwd=fresh)
+        if audit.returncode == 0:
+            raise RuntimeError('audit accepted tampered skill content')
     print('Package resources and metadata-only restoration verified.')
 
 

@@ -23,7 +23,11 @@ A collection of [Claude Code Agent Skills](https://agentskills.io/) for software
 
 Use APM for reproducible installation. Pin the tested `apm-cli` version from
 `[testenv:apm]` in `tox.ini` through your existing environment manager.
-Replace FULL_COMMIT_SHA with a reviewed, published 40-hex commit:
+Replace FULL_COMMIT_SHA with a reviewed, published 40-hex commit reachable from the intended upstream branch or tag.
+A fork commit resolving through GitHub's parent repository is not evidence that upstream accepted it.
+Review the dry-run file list and the selected skills and scripts before use; after installation, verify the lock's repository URL and `resolved_commit` match the requested repository and SHA.
+Audit checks integrity, not safety.
+See [installation guidance](skills/install-apm-skills/SKILL.md).
 
 ```console
 apm install con/skills#FULL_COMMIT_SHA --skill install-apm-skills --target agent-skills --dry-run
@@ -36,12 +40,9 @@ Track the manifest, lock, environment/setup files and concise agent guidance.
 Ignore `apm_modules/` and the specific deployed skill directories; keep native
 project skills tracked. See [consumer setup](skills/install-apm-skills/references/consumer-setup.md).
 
-The collection uses `skills/` so the tested APM version can install selected
-skills through one package manifest. A root `includes` list of the former
-arbitrary top-level directories did not deploy them in our installation test.
-Individual per-skill packages worked, but require separate manifests and package
-coordinates. The directory moves keep one collection package and leave existing
-skill content unchanged; they are isolated in a separate commit for review.
+For installation without APM, copy or symlink `skills/<name>/` into your client's skills directory.
+
+The root `apm.yml` publishes the canonical `skills/<name>/` collection.
 
 ## Automated checks
 

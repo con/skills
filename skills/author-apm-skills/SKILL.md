@@ -68,3 +68,14 @@ Do not claim a branch is available from `con/skills` until it exists there; an u
 After publication, downstream adoption changes the requested APM source/ref and generated lock.
 Use the consumer's pinned APM environment, explicit target and skill selection, ignored deployment paths, setup task, AGENTS.md note, and fresh-checkout validation.
 Do not copy source into downstream Git history.
+
+## Before preparing a pull request
+
+Before drafting/updating a PR body or presenting push/create commands:
+
+- Find the first template in `.github/PULL_REQUEST_TEMPLATE.md`, `.github/pull_request_template.md`, `.github/PULL_REQUEST_TEMPLATE/*.md`, `docs/PULL_REQUEST_TEMPLATE.md`, or root `PULL_REQUEST_TEMPLATE.md`; also check `.gitea/`, `.forgejo/`, or GitLab's `.gitlab/merge_request_templates/` as applicable.
+  Choose a matching template or ask if ambiguous.
+- Preserve template headings and prose, replace instructional comments, fill every section (use explicit N/A where needed), and tick only completed checklist items.
+- Read root/docs `CONTRIBUTING.md`, `.rst`, or extensionless variants, `.github/CONTRIBUTING.md`, `DEVELOPMENT.md`, `HACKING.md`, `docs/development/`, and linked guides. Follow branch/commit, changelog, issue-first, sign-off, and formatting requirements.
+- Report the template/guide found (or absence), requirements followed, and manual steps such as enabling maintainer edits.
+  Preserve existing review dialogue; publishing requires the applicable authorization.

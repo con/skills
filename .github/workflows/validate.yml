@@ -37,6 +37,14 @@ jobs:
         env:
           TOX_ENV: ${{ matrix.environment }}
 
+      - name: Check out the matching Git package source
+        if: github.event_name == 'pull_request' && matrix.environment == 'apm'
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
       - name: Check published PR package
         if: github.event_name == 'pull_request' && matrix.environment == 'apm'
         run: tox -e apm -- --source "$APM_SOURCE"
