@@ -1,6 +1,6 @@
 # Report conventions shared by the review skills
 
-`review-repo-code-quality` (one repository) and `review-org-health` (an
+`review-repo-code-quality` (one repository) and `review-org-code-quality` (an
 organization of related repositories) write their findings to a dated
 Markdown file. This document is the single source of truth for how that
 file is located, stamped, and kept honest. The skills reference it rather
@@ -44,7 +44,7 @@ disagree, trust the source commit.
 - **Single-repository default:** `docs/{reviews dir}/YYYY-MM-DD-{kind}.md`
   inside the reviewed repository, where `{reviews dir}` and `{kind}` are set by the
   calling skill (for example `docs/code-reviews/2026-10-11-code-quality-review.md`
-  or `docs/health-reviews/2026-10-11-health-review.md`). Use `date +%F`
+  or `docs/code-reviews/2026-10-11-org-code-quality-review.md`). Use `date +%F`
   for the date. If the repository already has a reviews directory under
   a different name (`docs/annual-reviews/`, `docs/healthstatus-review/`,
   …), keep using it; do not start a second one.

@@ -1,7 +1,7 @@
 ---
 name: review-repo-code-quality
 version: 1.0.0
-description: Functionality-preserving code-quality review of a single repository — dead code, duplication, consolidation, cleanup, and items needing verification — written as a dated Markdown report with per-finding location, proposed change, safety confidence, and a verification command. Use when asked to review, audit, or assess the code quality or health of one codebase. For an organization of related repositories use review-org-health instead.
+description: Functionality-preserving code-quality review of a single repository — dead code, duplication, consolidation, cleanup, and items needing verification — written as a dated Markdown report with per-finding location, proposed change, safety confidence, and a verification command. Use when asked to review, audit, or assess the code quality or health of one codebase. For an organization of related repositories use review-org-code-quality instead.
 allowed-tools: Bash, Read, Write, Glob, Grep, AskUserQuestion, Agent
 user-invocable: true
 ---
@@ -17,16 +17,16 @@ having touched the code.
 Shared rules — where the report goes, the provenance stamp that records
 which version of this skill produced it, evidence standards, re-review,
 and confidence/status labels — live in
-[`../review-conventions/report-conventions.md`](../review-conventions/report-conventions.md),
+[`../code-quality-report-conventions/report-conventions.md`](../code-quality-report-conventions/report-conventions.md),
 a sibling skill installed alongside this one. Read that file first; it is
 part of this skill's contract. If it is not installed, stop and ask the
-user to install `review-conventions`; do not proceed from memory.
+user to install `code-quality-report-conventions`; do not proceed from memory.
 
 ## When to use
 
 One repository (or one package in a monorepo), reviewed for quality rather
 than correctness: nothing proposed may change observable behavior. For
-sets of similarly built, interconnected repositories, run `review-org-health`,
+sets of similarly built, interconnected repositories, run `review-org-code-quality`,
 which calls this skill per repository and then looks across them.
 
 ## Inputs
@@ -190,9 +190,9 @@ under the finding, and offer to record the preference in `AGENTS.md`.
 Never bump a version or write a changelog entry for a tests-only change
 unless the project's rules say to.
 
-## Breadth mode (used by `review-org-health`)
+## Breadth mode (used by `review-org-code-quality`)
 
-When invoked per repository by `review-org-health`: do not ask the Inputs
+When invoked per repository by `review-org-code-quality`: do not ask the Inputs
 questions (the caller supplies scope), do not write a report, do not apply
 changes. Run Step 1 reading only (run the test suite only if it needs no
 credentials, network, or services; otherwise record `baseline not run:
@@ -203,7 +203,7 @@ the matrix and the evidence appendix.
 
 ## Operating rules
 
-- Follow `../review-conventions/report-conventions.md` for evidence, location,
+- Follow `../code-quality-report-conventions/report-conventions.md` for evidence, location,
   provenance, security-sensitive findings, and re-review. In particular:
   never overwrite an earlier report, never commit unless asked, never
   quote a secret value.
