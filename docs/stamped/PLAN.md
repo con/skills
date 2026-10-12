@@ -1,6 +1,7 @@
 # STAMPED skills for con/skills: development plan
 
 **Status:** draft for discussion, 2026-10-12. Nothing here is implemented yet.
+**Decided so far:** keep the issue's skill names for now; eval results go to [hub.centerforopenneuroscience.org/con/stamped-skills-evals](https://hub.centerforopenneuroscience.org/con/stamped-skills-evals); compute runs on typhon.
 **Tracks:** [stamped-principles/stamped-agent-skills#3](https://github.com/stamped-principles/stamped-agent-skills/issues/3),
 in particular [this comment](https://github.com/stamped-principles/stamped-agent-skills/issues/3#issuecomment-6128822460).
 **Feeds:** the MIT LLM-workshop deck and the US-RSE'26 deck in [con/talks#33](https://github.com/con/talks/pull/33).
@@ -41,7 +42,7 @@ From the comment, with the boundary each skill should keep:
 
 Target use cases named in the comment:
 - some or all of the experiments in Ben Dichter et al.'s SfN'25 poster ([zenodo 19834562](https://zenodo.org/records/19834562));
-- ReproNim tasks of the form "run X app on OpenNeuro dsXXXXXX subjects X–Y to plot ZZZ": brain and GM/WM volume ratios vs age on [ds007116](https://github.com/OpenNeuroDatasets/ds007116), MRIQC motion vs age, and AFNI/FSL brain extraction from `///repronim/containers`.
+- ReproNim tasks of the form "run X app on OpenNeuro dsXXXXXX subjects X–Y to plot ZZZ": brain volume with the GM/WM volume ratio (on a secondary axis) vs age on [ds007116](https://github.com/OpenNeuroDatasets/ds007116), MRIQC motion vs age, and AFNI/FSL brain extraction from `///repronim/containers`.
 
 These are developed in `con/skills`. Automated distribution, and vendoring into stamped-agent-skills, ReproNim and elsewhere, come later ([§7](#7-roadmap), phase 6).
 
@@ -258,9 +259,9 @@ Eval *results* are large and binary (produced projects, transcripts, container l
 
 ### 4.3 Names
 
-The issue's long names describe the skills well but are tedious to type, and they do not group in a `/` completion menu.
-The options are to keep them, or to use a `stamped-` family (`stamped-assess`, `stamped-align`, `stamped-create`, `stamped-create-repronim`, `stamped-research-loop`, `stamped-self-assess`), matching the verb-first convention of #21.
-This is open question 1.
+**Decided:** keep the issue's names for now.
+They are verb-first, like the `setup-*` convention of #21.
+A shorter `stamped-*` family remains possible later; a rename is a `git mv` plus a MAJOR version bump, with the old names kept as trigger phrases in the descriptions.
 
 ---
 
@@ -349,9 +350,9 @@ The rungs are ordered so that early ones are cheap enough for 3+ repeats per con
 
 | Rung | Prompt shape | Data | Tooling | Product | Oracle | Cost |
 |---|---|---|---|---|---|---|
-| **R0** | "Plot GM/WM volume ratio vs age, by group, from the shipped FreeSurfer derivatives" | ds007116: `sub-*_sessions.tsv` + `derivatives/freesurfer-post/*_qc.tsv` (plain git, 222 sessions) | Pinned Python (uv/pixi lock or a small container) | TSV + PNG | Deterministic rerun → identical outputs | Seconds, under 50 MB |
+| **R0** | "Plot brain volume, with the GM/WM volume ratio on a secondary axis, vs age, from the shipped FreeSurfer derivatives" | ds007116: `sub-*_sessions.tsv` + `derivatives/freesurfer-post/*_qc.tsv` (plain git, 222 sessions) | Pinned Python (uv/pixi lock or a small container) | TSV + PNG | Deterministic rerun → identical outputs | Seconds, under 50 MB |
 | **R1** | "Brain-extract the T1w of three subjects with AFNI from `///repronim/containers`; show masks and mask volume vs age" | ds007116, 3 × ses-1 T1w (about 7 MB each) | `neurodesk-afni` (3dSkullStrip). Swapping in `neurodesk-fsl` (bet) or `neurodesk-synthstrip` tests M. | Overlay mosaic, volumes TSV | Cross-tool Dice; ICV vs FreeSurfer `etiv` | Minutes CPU; 0.5–9 GB image; needs Apptainer |
-| **R2** | "Compute GM/WM volumes for about 30 sessions spanning ages 9–20 and plot the ratio vs age" | ds007116, about 30 T1w | `repronim-simple-workflow` (BET→FAST) or `neurodesk-synthseg` | Plot + fit + agreement scatter | R0 values from the shipped derivatives | 1–5 CPU-h |
+| **R2** | "Compute brain and GM/WM volumes for about 30 sessions spanning ages 9–20; plot brain volume and the GM/WM ratio (secondary axis) vs age" | ds007116, about 30 T1w | `repronim-simple-workflow` (BET→FAST) or `neurodesk-synthseg` | Plot + fit + agreement scatter | R0 values from the shipped derivatives | 1–5 CPU-h |
 | **R3** | "Run MRIQC on rest run-01 for 15 subjects; plot fd_mean vs age" | ds007116 BOLD + T1w (or the lighter ReproNim `ds000003-demo`) | `bids-mriqc` 24.0.2, participant + group, `REPRONIM_USE_DUCT=1` | `group_bold.tsv` ⨝ sessions → plot | FD from fMRIPrep confounds in ds007088 | 10–15 CPU-h |
 | **R4** | "All sessions on our cluster, export NIDM + PROV, publish" | OpenNeuroStudies `study-ds007116` | mechababs/BABS, `segstats_jsonld`, `metalad runprov` | Full-N group plots + `.ttl` + BEP028 | R2–R3 subsets reproduce exactly | Hundreds to thousands of CPU-h |
 | **R5** (cross-domain) | "Demonstrate orientation selectivity from a DANDI dandiset" (Dichter et al. SfN'25) | DANDI NWB, streamed | Generic *create* + dandi-cli (no ReproNim layer) | Tuning curve + OSI distribution | Published finding / `dandi/llm-analysis` | Up to about 1 CPU-h |
@@ -369,7 +370,7 @@ Notes:
 | Id | Agent receives | Purpose |
 |---|---|---|
 | `bare` | The use-case prompt only | Floor |
-| `pointer` | Prompt + "follow STAMPED" with links to the paper and checklist (today's practice, like the user-level `CLAUDE.md` snippet in the issue) | The bar a skill must clear to justify its context cost |
+| `pointer` | Prompt + @asmacdo's user-level `CLAUDE.md` STAMPED snippet from the issue, verbatim (the seven one-liners plus "read the latest paper"); this is today's practice | The bar a skill must clear to justify its context cost |
 | `skill@vN` (implicit) | Skills installed, prompt does not mention them | Does the description trigger? |
 | `skill@vN` (explicit) | Skills installed, prompt invokes `/create-…` or `/do-full-research-loop` | Does the procedure work? |
 | `skill@vN-1` | Previous version | Regression check |
@@ -387,7 +388,7 @@ Variance is reported, not hidden.
   Each is told to read the skill under test from a snapshot path, as skill-creator does.
   Use it for R0, for runs of *assess* on existing objects, and for mutant calibration.
   It is cheap, but runs are not isolated from the host, so its numbers are indicative only.
-- **Outer loop** (benchmark, per iteration): one **fresh container or VM per run**, which is the E principle applied to our own tests.
+- **Outer loop** (benchmark, per iteration): runs on **typhon**, with one **fresh container per run**, which is the E principle applied to our own tests.
   Following cierge#52:
   ```sh
   datalad create -c text2git run-<id>
@@ -397,6 +398,9 @@ Variance is reported, not hidden.
   The sandbox has `datalad`, `git-annex` and `apptainer`.
   Permissions are wide open *only* inside the throwaway sandbox.
   Datalad is pinned to a version with the concurrent-run fix (gh-7899/#7901).
+  The harness must start on typhon with one command per iteration (`harness/run.py --iteration N`), whoever launches it: you, or a Claude Code session running on typhon.
+  A cloud session like the one that wrote this plan can author skills and harness code and run R0 and *assess* inner-loop runs on public objects.
+  It cannot reach typhon, and currently not the hub either ([§6.8](#68-where-results-live)).
 - **Agent provenance per run.** At minimum: the stream-json transcript, annexed in the results dataset; consistent, machine-parsable `Co-Authored-By` trailers; and the skill commit plus model recorded in `assessor`.
   Optionally, Entire (`entire enable`) for commit-linked checkpoints, as cierge#52 proposes.
   Its redaction is best-effort, so it is used only on public-data use cases.
@@ -494,10 +498,18 @@ Separately, keep:
 
 ### 6.8 Where results live
 
-A separate DataLad dataset, proposed as `con/stamped-skills-evals`; its location is open question 3.
-- Each run is a subdataset (the produced object), plus `transcript.jsonl` (annexed), `grading.json` and stamped-assessment records.
-- Grading steps are `datalad run` records.
-- The skills repository is a subdataset pinned per iteration.
+A separate DataLad dataset, [`con/stamped-skills-evals`](https://hub.centerforopenneuroscience.org/con/stamped-skills-evals), on the CON Forgejo-aneksajo hub.
+Aneksajo is the git-annex-aware Forgejo, so git history and annexed content go to the same remote with no separate special remote.
+- **Layout:** each run is a subdataset (the produced object), plus `transcript.jsonl` (annexed), `grading.json` and stamped-assessment records.
+  Grading steps are `datalad run` records.
+  The skills repository is a subdataset pinned per iteration.
+- **Pushing:** from typhon, as `yarikoptic-gitmate` (`datalad push --to hub`).
+  Produced-object subdatasets are published as sibling repositories under `con/` on the same hub.
+  That way `subdatasets-resolvable` and `fresh-rerun` test real published URLs rather than paths on typhon.
+- **Mirroring:** optional, read-only, to GitHub for visibility; the hub stays authoritative.
+- **Cloud sessions:** their network policy currently denies `hub.centerforopenneuroscience.org`.
+  Allowing it (environment settings → Network access → Allowed domains), plus a hub token for `yarikoptic-gitmate`, would let a cloud session read and push results too.
+  Typhon does not need either.
 
 This keeps con/skills small and makes every number in a report or a talk re-executable.
 That is the same D check the MIT deck's "So I tried to `rerun` it" slide applies to the compression study.
@@ -532,6 +544,7 @@ Skills stay at `0.x` until their done criteria hold.
   - `stamped-conventions` v0.1: card, vendored checklist + lock, verdicts, encoder, `stacks/datalad-yoda.md`, seeded from @asmacdo's draft.
   - `assess-alignment-with-stamped-principles` v0.1 + probes.
   - `evals/stamped/` skeleton with R0 + mutants.
+  - Bootstrap `con/stamped-skills-evals` on the hub, from typhon: `datalad create`, con/skills as a pinned subdataset, a `hub` sibling, the first `datalad push`.
   - Calibration iterations ([§6.6](#66-calibrating-the-assessor)).
   - A size and duplicate-block check added to `ci/validate_skills.py`.
   - Outside con/skills: the `ChecklistResponse` PR on stamped-checklist-schema, and an issue on the paper-vs-schema drift.
@@ -553,6 +566,7 @@ Skills stay at `0.x` until their done criteria hold.
   - Vendoring into stamped-agent-skills, replacing its single draft, and closing #3.
   - The ReproNim layer into ReproNim/skills.
   - Domain-neutral pieces upstream to K-Dense (answering their issue #217, "should STAMPED be its own skill?").
+  - The "(de)compositions" the issue anticipates: split or merge skills where the eval data shows a boundary is wrong.
 
 ---
 
@@ -600,12 +614,13 @@ Deck edits happen on the `2026-usrse-con-talk` branch only after you confirm wha
 
 My recommendation comes first in each item.
 
-1. **Names:** keep the issue's long names, or use a `stamped-*` family?
-   → `stamped-*` for grouping and brevity; the long forms can be listed as trigger phrases in the descriptions.
+1. ~~**Names:** keep the issue's long names, or use a `stamped-*` family?~~
+   **Decided 2026-10-12:** keep the long names for now ([§4.3](#43-names)).
 2. **Verdict vocabulary:** the five statuses in [§5](#5-checklist-response-format)?
    → yes; `restricted` (STAMPED-dl) is folded into `partial` or `not-checked`, with the reason.
-3. **Where eval results live, and which compute host runs the outer loop** (needs Apptainer, roughly 100 GB of scratch for R3)?
-   → a new `con/stamped-skills-evals` DataLad dataset; the host is your call.
+3. ~~**Where eval results live, and which compute host runs the outer loop?**~~
+   **Decided 2026-10-12:** `con/stamped-skills-evals` on hub.centerforopenneuroscience.org (Forgejo-aneksajo; `yarikoptic-gitmate` can push annexed content); compute on typhon ([§6.8](#68-where-results-live)).
+   Still to confirm on typhon: Apptainer, roughly 100 GB of scratch for R3, and a Claude Code install for headless runs.
 4. **Runner:** in-session subagents for the inner loop and headless containerized runs for the outer loop?
    Which model tiers, and do we include a non-Claude harness now or in phase 6?
    → both loops; two Claude tiers now; a non-Claude harness in phase 6.
