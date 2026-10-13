@@ -180,12 +180,29 @@ def score(args: argparse.Namespace) -> int:
             }
             print(f"not run   {name:<42} (draft only, {placeholder} items unanswered)")
             continue
-        scored += 1
         prose = " ".join(
             [p.read_text() for p in sorted(outdir.glob("*.md"))]
             + [a.get("reason", "") for a in response.values()]
         ).lower()
 
+        if spec is None:
+            judged = {i: a.get("status") for i, a in response.items()
+                      if not (a.get("source") or "").startswith("probe:")}
+            accused = {i: s for i, s in judged.items() if s in {"unmet", "partial"}}
+            if entry.get("control"):
+                # The control: no defect, so every accusation is a false one.
+                report["mutants"][name] = {"scored": True, "control": True,
+                                           "judgement_items": len(judged), "accused": accused}
+                print(f"control   {name:<42} {len(accused)}/{len(judged)} judgement item(s) accused on "
+                      "the clean object"
+                      + (f": {', '.join(i.split(':')[-1] for i in accused)}" if accused else ""))
+            else:
+                # A mutant that was promoted to the scripted set since this run.
+                report["mutants"][name] = {"scored": False, "why": "retired from the judgement set "
+                                           "(the defect became script-catchable)"}
+                print(f"retired   {name:<42} now a scripted mutant; see mutants/mutate.py")
+            continue
+        scored += 1
         flagged = {i: response.get(i, {}).get("status", "(absent)") for i in spec["flag_any"]}
         noticed = any(s not in {"met", "(absent)"} for s in flagged.values())
         named = [m for m in spec["mention_any"] if m.lower() in prose]

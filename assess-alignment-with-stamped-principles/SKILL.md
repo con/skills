@@ -94,7 +94,9 @@ The expensive probe is separate, because it needs another host and real time:
 python3 scripts/fresh_rerun.py --url <published url> --entry '<documented command>' -o <date>-fresh-rerun.json
 ```
 
-Run it when the object claims to be reproducible and the user agrees to the cost; otherwise report `should/004` as `not-checked` with "fresh rerun not attempted" as the reason.
+Run it when the object claims to be reproducible and the user agrees to the cost.
+When you do not run it, `should/004` is **not** automatically `not-checked`: equivalent committed evidence counts (invariant 3 of the conventions), and a CI job that checks out the object into a fresh runner and executes the workflow is exactly that — cite the workflow file and answer from it.
+Only when there is neither a rerun nor equivalent evidence is the answer `not-checked`, with "fresh rerun not attempted, and nothing in the object records one" as the reason.
 
 ## Step 4. Judge what no probe can
 
@@ -108,7 +110,7 @@ Each of these needs a reading of the object, and each needs a citation:
 | must/017 | Does the documentation say how to obtain and use the environment, not just that it exists? |
 | should/001 | One version-control system across components, or several? |
 | should/005, should/004 | Does execution spawn a disposable environment per run (a container per job, a batch job, CI), or does it reuse a long-lived one? |
-| must/014 **and** should/008 | The same question twice (the checklist duplicates it word for word): is there a stated process for updating the environment spec, and does history show it followed? Answer both from the same evidence and say they are duplicates. |
+| must/014 **and** should/008 | The same question twice (the checklist duplicates it word for word): is there a stated process for updating the environment spec, and does history show it followed? Answer both from the same evidence, and put `upstream-duplicate` in both items' `flags` so a reader sees why two answers repeat. |
 | should/007 | Are environment artifacts archived with the object (image, binaries), or only referenced? |
 | should/009 | Are restricted data or software isolated in their own modules? |
 | may/002–005 | Is the modular structure documented, are boundaries independent, is there a composition mechanism? |

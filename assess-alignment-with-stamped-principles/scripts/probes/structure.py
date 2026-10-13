@@ -303,6 +303,12 @@ def entry_point(obj: Object) -> Probe:
                    and (p in text or p.rsplit("/", 1)[-1] in text))
     has_section = bool(re.search(r"(?i)^#+.*\b(reproduc|rerun|usage|quick\s*start|install|how to run|getting started)",
                                  readme_text, re.M))
+    # Commands the instructions tell a reader to run, checked against what the
+    # tracked workflow actually defines. The probe used to hold both lists and
+    # never compare them.
+    documented_targets = {m for m in re.findall(r"(?<![\w-])make\s+(?:-[\w-]+\s+)*([a-zA-Z][\w.%/-]*)", readme_text)}
+    documented_targets -= {"-n", "all"} if "all" not in targets else {"-n"}
+    missing_targets = sorted(t for t in documented_targets if t not in set(targets)) if makefiles else []
 
     evidence = [Evidence(p, "instructions") for p in readmes + makefiles]
     evidence += [Evidence(p, "entry point named in the instructions and present") for p in named[:5]]
@@ -312,7 +318,12 @@ def entry_point(obj: Object) -> Probe:
         evidence.append(Evidence(workflow[0], "workflow definition"))
 
     # must/007: are there instructions for installation and usage?
-    if readmes and has_section:
+    if missing_targets:
+        s7 = "partial"
+        r7 = clip(f"{readmes[0] if readmes else 'The instructions'} tells the reader to run "
+                  f"`make {missing_targets[0]}`, which {makefiles[0]} does not define "
+                  f"(targets: {', '.join(sorted(set(targets))[:5])}).")
+    elif readmes and has_section:
         s7 = "met"
         r7 = clip(f"{readmes[0]} has an install/usage/reproduce section.")
     elif readmes and (targets or workflow):
@@ -336,11 +347,15 @@ def entry_point(obj: Object) -> Probe:
         r8 = clip("No script, make target or workflow definition that a reader could start from"
                   + (f" is named in {readmes[0]}." if readmes else "."))
 
+    if missing_targets:
+        evidence.insert(0, Evidence(f"{readmes[0] if readmes else makefiles[0]}",
+                                    f"documents `make {missing_targets[0]}`; no such target"))
     worst = min((s7, s8), key=lambda s: {"unmet": 0, "partial": 1, "met": 2}[s])
     return Probe(
         "entry-point", worst, items, clip(f"must/007 {s7}: {r7} must/008 {s8}: {r8}"), evidence,
         {"readmes": readmes, "makefiles": makefiles, "named": named, "targets": sorted(set(targets)),
-         "workflow": workflow, "has_section": has_section},
+         "workflow": workflow, "has_section": has_section, "documented_targets": sorted(documented_targets),
+         "missing_targets": missing_targets},
         item_status={items[0]: s7, items[1]: s8},
         item_reason={items[0]: r7, items[1]: r8},
     )

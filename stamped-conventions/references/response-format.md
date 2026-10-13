@@ -44,7 +44,8 @@ The app ignores keys it does not know, so one file serves both.
     {"key": "licence-declared", "status": "unmet", "reason": "No LICENSE, LICENSES/ or REUSE.toml; paper S.2/D.3 have no checklist item.", "evidence": []}
   ],
   "object": {"url": "…", "commit": "…", "captured_at": "2026-10-13T12:00:00Z", "kind": "study"},
-  "assessor": {"skill": "assess-alignment-with-stamped-principles", "version": "0.1.0", "harness": "claude-code 2.1.x", "model": "…", "date": "2026-10-13"},
+  "assessor": {"skill": "assess-alignment-with-stamped-principles", "version": "0.2.0", "harness": "claude-code 2.1.x", "model": "…", "date": "2026-10-13",
+               "dependencies": ["stamped-conventions@0.2.0"]},
   "scope": "Assessed the repository at the commit above; container images were not pulled."
 }
 ```
@@ -59,7 +60,8 @@ The app ignores keys it does not know, so one file serves both.
 - `flags[]` is optional and holds what a reader has to know about *how* the answer was reached, not what it says:
   - `mapping-questioned` — the probe answered this item from a property the item does not ask about ([`verdicts.md`](verdicts.md) rule 10);
   - `probe-overridden` — a reading of the object changed the probe's verdict;
-  - `unverified-claim` — the verdict rests on something not confirmed independently, and the report says so.
+  - `unverified-claim` — the verdict rests on something not confirmed independently, and the report says so;
+  - `upstream-duplicate` — the checklist asks this question twice (must/014 and should/008 are the same sentence), so this answer repeats another by design rather than by mistake.
 
   Flagged items get their own short list in the report, after the per-item table.
 - `extra_items[]` carries findings with no checklist id (licences, T.4) so they are reported without bending an existing id.

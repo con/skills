@@ -28,6 +28,11 @@ This reconciles @asmacdo's draft (pass/partial/fail/unknown), STAMPED-dl's met/p
 
    Either way the reason names the ground, starting with `N/A:`.
    An item you merely could not check is `not-checked`, never this.
+
+   **Not** an N/A ground: *there was nothing of this kind to do*.
+   An object with no host assumptions to document satisfies must/011 — the requirement is "write down your assumptions", and having none meets it.
+   Answer `met`, and let the reason carry the emptiness ("no host assumptions beyond a POSIX shell and the tracked lockfile; nothing undocumented remains").
+   The difference from an empty subject is whether the *requirement* can be satisfied vacuously (must/011: yes) or the *property* has no instance to hold of (should/009 on an all-public object: no).
 6. **`restricted`** (from STAMPED-dl) is **not a status here**.
    Restricted data that is properly isolated is `met` on should/009 and `not-checked` elsewhere with "access-restricted" as the reason.
 7. **Equivalent evidence counts.**

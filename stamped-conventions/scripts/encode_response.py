@@ -215,7 +215,8 @@ def template(cl: Checklist) -> dict:
         "checklist_source": {k: cl.lock["source"][k] for k in ("repo", "tag", "commit")},
         "extra_items": [],
         "object": {"url": None, "commit": None, "captured_at": None, "kind": None},
-        "assessor": {"skill": None, "version": None, "harness": None, "model": None, "date": None},
+        "assessor": {"skill": None, "version": None, "harness": None, "model": None, "date": None,
+                     "dependencies": []},
         "scope": None,
     }
 
