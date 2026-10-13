@@ -142,8 +142,8 @@ Score each finding: **Impact** (blast radius via graph, 1–3) × **Likelihood**
 Everything else (a score of 1–2, or 3–4 in a single repository) is **Accept & document**, with the reason.
 
 Then pick the **depth set**: the hub nodes, the shared library/template,
-and any repository whose matrix row drove a "Fix now" item — usually two
-to five. Run `review-repo-code-quality` in full on each (its own Inputs,
+and any repository whose matrix row drove a "Fix now" or "Fix
+systemically" item — usually two to five. Run `review-repo-code-quality` in full on each (its own Inputs,
 its own report at that repository's default path), and link each report
 from "Per-repository notes". Ask before starting if the set is larger
 than five or the repositories are not the user's own. Its consent gate
