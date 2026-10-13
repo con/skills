@@ -25,6 +25,10 @@ NOT_DERIVED = (
     "test/", "code/containers/", "fixtures/",
 )
 CONTAINER_IMAGE = re.compile(r"(?:\.sif|\.simg|\.img\b|docker://|shub://|oras://|sha256:[0-9a-f]{12,})")
+# A per-run environment *capture* (duct, reprozip, a recorded `pip freeze`) is
+# weaker evidence than a specification that reconstitutes the environment, but
+# it is not nothing: it links the action to the environment it ran in.
+ENV_CAPTURE = re.compile(r"(?:\bduct\b|REPRONIM_USE_DUCT|reprozip|duct-info\.json|pip[ -]freeze|conda\s+env\s+export)")
 LOCKFILES = ("pixi.lock", "uv.lock", "poetry.lock", "conda-lock.yml", "renv.lock", "requirements.lock")
 UNPINNED_TAG = re.compile(r"(?:docker://|shub://|FROM\s+)[\w./-]+:latest\b|[\w./-]+:latest\b")
 
@@ -171,9 +175,14 @@ def run_env_linked(obj: Object) -> Probe:
         )
         has_container = bool(CONTAINER_IMAGE.search(blob)) or "containers-run" in rec["body"]
         has_lock = any(lock in blob for lock in LOCKFILES)
-        (with_env if has_container or has_lock else without_env).append(
+        has_capture = bool(ENV_CAPTURE.search(blob)) or any(
+            "duct" in str(out) for out in (info.get("outputs") or [])
+        )
+        mechanism = ("container" if has_container else "lockfile" if has_lock
+                     else "capture" if has_capture else None)
+        (with_env if mechanism else without_env).append(
             {"commit": rec["commit"], "cmd": clip(str(info.get("cmd", ""))[:160], 160),
-             "mechanism": "container" if has_container else ("lockfile" if has_lock else None)}
+             "mechanism": mechanism}
         )
 
     details = {"records": len(records), "with_env": len(with_env), "without_env": without_env[:20],
@@ -183,9 +192,14 @@ def run_env_linked(obj: Object) -> Probe:
     if not records:
         s006 = "not-checked"
         r006 = "No run records, so no record names the environment it ran in."
+    elif not without_env and all(r["mechanism"] == "capture" for r in with_env):
+        s006 = "partial"
+        r006 = clip(f"All {len(records)} run record(s) capture the environment they ran in (duct or similar), "
+                    "but none names a container image or lockfile that would reconstitute it.")
     elif not without_env:
         s006 = "met"
-        r006 = clip(f"All {len(records)} run record(s) name a container image or a lockfile.")
+        r006 = clip(f"All {len(records)} run record(s) name a container image, a lockfile or an "
+                    "environment capture.")
     elif with_env:
         s006 = "partial"
         r006 = clip(f"{len(without_env)} of {len(records)} run record(s) name no container or lockfile, "
@@ -199,10 +213,14 @@ def run_env_linked(obj: Object) -> Probe:
         s015 = "unmet"
         r015 = clip(f"{len(unpinned)} environment reference(s) use the floating ':latest' tag, "
                     f"e.g. {unpinned[0][0]} — a rerun cannot land in the same environment.")
-    elif with_env:
+    elif any(r["mechanism"] in {"container", "lockfile"} for r in with_env):
         s015 = "met"
         r015 = clip(f"{len(with_env)} run record(s) reference a pinned image or lockfile, and no ':latest' "
                     "reference is tracked.")
+    elif with_env:
+        s015 = "unmet"
+        r015 = clip("The run records capture the environment but nothing pins one: there is no image digest "
+                    "or frozen manifest another person could replicate from.")
     else:
         s015 = "not-checked"
         r015 = "Nothing names an environment to check for a pin."

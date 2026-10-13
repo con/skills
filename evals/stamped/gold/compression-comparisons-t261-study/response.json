@@ -1,0 +1,709 @@
+{
+  "checklist_version": "0.3.1",
+  "responses": {
+    "stamped-checklist:must/001": {
+      "value": "yes",
+      "reason": "One DataLad dataset root holds code, inputs (as subdatasets) and every derivative; nothing essential sits outside it.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": ".datalad/config",
+          "description": "dataset id c7b3b628; single root",
+          "sha256": null
+        },
+        {
+          "uri": "dataset_description.json#Layout",
+          "description": "declares what lives where under the root",
+          "sha256": null
+        }
+      ],
+      "source": "judgement"
+    },
+    "stamped-checklist:must/002": {
+      "value": "no",
+      "reason": "1 of 2 linked module(s) do not resolve elsewhere: code/compression-comparisons-tools url=../.. \u2014 relative url: resolves only next to this superdataset",
+      "status": "unmet",
+      "evidence": [
+        {
+          "uri": ".gitmodules",
+          "description": "code/compression-comparisons-tools: url=../.. \u2014 relative url: resolves only next to this superdataset",
+          "sha256": null
+        }
+      ],
+      "source": "probe:subdatasets-resolvable"
+    },
+    "stamped-checklist:must/003": {
+      "value": "yes",
+      "reason": "The benchmark tool is a pinned submodule and the BWC codec is built from source inside it; nothing is assumed preinstalled.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": ".gitmodules",
+          "description": "code/compression-comparisons-tools pinned as a submodule",
+          "sha256": null
+        },
+        {
+          "uri": "README.md#Reproducing",
+          "description": "cmake build of code/compression-comparisons-tools/src/bwc",
+          "sha256": null
+        }
+      ],
+      "source": "judgement"
+    },
+    "stamped-checklist:must/004": {
+      "value": "yes",
+      "reason": "git status is empty, including submodules: the committed state is the whole state.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": "git status --porcelain",
+          "description": "no output",
+          "sha256": null
+        }
+      ],
+      "source": "probe:tree-clean"
+    },
+    "stamped-checklist:must/005": {
+      "value": "no",
+      "reason": "No large binary in git, but 22 text blob(s) exceed 10 MiB (largest derivatives/compbench-2026-08-22-paper-real-np1-8-general/aind-634569-lsbbp__blosc-zlib-level_9-shuffle_byte-chunk1s/duct-usage.jsonl, 11 MiB) \u2014 every clone carries them in full.",
+      "status": "partial",
+      "evidence": [
+        {
+          "uri": "derivatives/compbench-2026-08-22-paper-real-np1-8-general/aind-634569-lsbbp__blosc-zlib-level_9-shuffle_byte-chunk1s/duct-usage.jsonl",
+          "description": "12087127 bytes of text in a git blob",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-22-paper-real-np1-8-general/aind-634569-lsbbp__gzip-level_9-shuffle_byte-chunk1s/duct-usage.jsonl",
+          "description": "12050356 bytes of text in a git blob",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-22-paper-real-np1-8-general/aind-634568-lsbbp__gzip-level_9-shuffle_byte-chunk1s/duct-usage.jsonl",
+          "description": "11828199 bytes of text in a git blob",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-22-paper-real-np1-8-general/aind-634569-bp__gzip-level_9-shuffle_byte-chunk1s/duct-usage.jsonl",
+          "description": "11824763 bytes of text in a git blob",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-25-gate-fig2-corrected/aind-634568-lsb__gzip-level_9-shuffle_byte-chunk1s/duct-usage.jsonl",
+          "description": "11770455 bytes of text in a git blob",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-22-paper-real-np1-8-general/aind-634568-lsb__blosc-zlib-level_9-shuffle_byte-chunk1s/duct-usage.jsonl",
+          "description": "11733340 bytes of text in a git blob",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-22-paper-real-np1-8-general/aind-634569-lsbbp__zlib-level_9-shuffle_byte-chunk1s/duct-usage.jsonl",
+          "description": "11667796 bytes of text in a git blob",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-22-paper-real-np1-8-general/aind-634568-bp__gzip-level_9-shuffle_byte-chunk1s/duct-usage.jsonl",
+          "description": "11522315 bytes of text in a git blob",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-22-paper-real-np1-8-general/aind-634568-lsbbp__blosc-zlib-level_9-shuffle_byte-chunk1s/duct-usage.jsonl",
+          "description": "11504796 bytes of text in a git blob",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-22-paper-real-np1-8-general/aind-634569-bp__zlib-level_9-shuffle_byte-chunk1s/duct-usage.jsonl",
+          "description": "11450127 bytes of text in a git blob",
+          "sha256": null
+        }
+      ],
+      "source": "probe:large-in-annex"
+    },
+    "stamped-checklist:must/006": {
+      "value": "no",
+      "reason": "1218 of 22286 derived file(s) have no re-executable record, e.g. derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/AUTO_TABLE.md; last touched by an ordinary commit.",
+      "status": "partial",
+      "evidence": [
+        {
+          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/AUTO_TABLE.md",
+          "description": "no run record or workflow rule produces this file",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/RESULTS.md",
+          "description": "no run record or workflow rule produces this file",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/aind-ibl-np1-CSHZAD026-slice10__blosc-lz4-level_3-shuffle_byte/duct-info.json",
+          "description": "no run record or workflow rule produces this file",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/aind-ibl-np1-CSHZAD026-slice10__blosc-lz4-level_3-shuffle_byte/duct-stderr",
+          "description": "no run record or workflow rule produces this file",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/aind-ibl-np1-CSHZAD026-slice10__blosc-lz4-level_3-shuffle_byte/duct-stdout",
+          "description": "no run record or workflow rule produces this file",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/aind-ibl-np1-CSHZAD026-slice10__blosc-lz4-level_3-shuffle_byte/duct-usage.jsonl",
+          "description": "no run record or workflow rule produces this file",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/aind-ibl-np1-CSHZAD026-slice10__blosc-lz4-level_3-shuffle_byte/manifest.json",
+          "description": "no run record or workflow rule produces this file",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/aind-ibl-np1-CSHZAD026-slice10__blosc-lz4-level_3-shuffle_byte/metrics.json",
+          "description": "no run record or workflow rule produces this file",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/aind-ibl-np1-CSHZAD026-slice10__blosc-lz4-level_9-shuffle_byte/duct-info.json",
+          "description": "no run record or workflow rule produces this file",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/aind-ibl-np1-CSHZAD026-slice10__blosc-lz4-level_9-shuffle_byte/duct-stderr",
+          "description": "no run record or workflow rule produces this file",
+          "sha256": null
+        }
+      ],
+      "source": "probe:derived-have-records"
+    },
+    "stamped-checklist:must/007": {
+      "value": "yes",
+      "reason": "README.md has an install/usage/reproduce section.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "instructions",
+          "sha256": null
+        },
+        {
+          "uri": "code/run_sorting_sweep.sh",
+          "description": "entry point named in the instructions and present",
+          "sha256": null
+        },
+        {
+          "uri": "code/run_sweep.sh",
+          "description": "entry point named in the instructions and present",
+          "sha256": null
+        }
+      ],
+      "source": "probe:entry-point"
+    },
+    "stamped-checklist:must/008": {
+      "value": "yes",
+      "reason": "Starting point present: code/run_sorting_sweep.sh.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "instructions",
+          "sha256": null
+        },
+        {
+          "uri": "code/run_sorting_sweep.sh",
+          "description": "entry point named in the instructions and present",
+          "sha256": null
+        },
+        {
+          "uri": "code/run_sweep.sh",
+          "description": "entry point named in the instructions and present",
+          "sha256": null
+        }
+      ],
+      "source": "probe:entry-point"
+    },
+    "stamped-checklist:must/009": {
+      "value": "no",
+      "reason": "No script depends on a home path, but 99 host-path mention(s) remain: 98 of them in recorded run output, which is provenance rather than a script",
+      "status": "partial",
+      "evidence": [
+        {
+          "uri": "code/run_sorting_sweep.sh#L76",
+          "description": "tmp path in code: for cell in expand_matrix(prof, generated_dir=Path(\"/tmp/sorting-gen\")):",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/aind-ibl-np1-CSHZAD026-slice10__blosc-lz4-level_3-shuffle_byte/duct-info.json#L1",
+          "description": "home path in record: {\"command\": \"compbench run --input configs/datasets/aind-ibl-np1-CSHZAD026-slice10s-bp.yaml --codec blosc-lz4 --codec-p\u2026",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/aind-ibl-np1-CSHZAD026-slice10__blosc-lz4-level_9-shuffle_byte/duct-info.json#L1",
+          "description": "home path in record: {\"command\": \"compbench run --input configs/datasets/aind-ibl-np1-CSHZAD026-slice10s-bp.yaml --codec blosc-lz4 --codec-p\u2026",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/aind-ibl-np1-CSHZAD026-slice10__blosc-lz4hc-level_3-shuffle_byte/duct-info.json#L1",
+          "description": "home path in record: {\"command\": \"compbench run --input configs/datasets/aind-ibl-np1-CSHZAD026-slice10s-bp.yaml --codec blosc-lz4hc --codec\u2026",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/aind-ibl-np1-CSHZAD026-slice10__blosc-lz4hc-level_9-shuffle_byte/duct-info.json#L1",
+          "description": "home path in record: {\"command\": \"compbench run --input configs/datasets/aind-ibl-np1-CSHZAD026-slice10s-bp.yaml --codec blosc-lz4hc --codec\u2026",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/aind-ibl-np1-CSHZAD026-slice10__blosc-zlib-level_3-shuffle_byte/duct-info.json#L1",
+          "description": "home path in record: {\"command\": \"compbench run --input configs/datasets/aind-ibl-np1-CSHZAD026-slice10s-bp.yaml --codec blosc-zlib --codec-\u2026",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/aind-ibl-np1-CSHZAD026-slice10__blosc-zlib-level_9-shuffle_byte/duct-info.json#L1",
+          "description": "home path in record: {\"command\": \"compbench run --input configs/datasets/aind-ibl-np1-CSHZAD026-slice10s-bp.yaml --codec blosc-zlib --codec-\u2026",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/aind-ibl-np1-CSHZAD026-slice10__blosc-zstd-level_3-shuffle_byte/duct-info.json#L1",
+          "description": "home path in record: {\"command\": \"compbench run --input configs/datasets/aind-ibl-np1-CSHZAD026-slice10s-bp.yaml --codec blosc-zstd --codec-\u2026",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/aind-ibl-np1-CSHZAD026-slice10__blosc-zstd-level_9-shuffle_byte/duct-info.json#L1",
+          "description": "home path in record: {\"command\": \"compbench run --input configs/datasets/aind-ibl-np1-CSHZAD026-slice10s-bp.yaml --codec blosc-zstd --codec-\u2026",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/aind-ibl-np1-CSHZAD026-slice10__gzip-level_5/duct-info.json#L1",
+          "description": "home path in record: {\"command\": \"compbench run --input configs/datasets/aind-ibl-np1-CSHZAD026-slice10s-bp.yaml --codec gzip --codec-params\u2026",
+          "sha256": null
+        }
+      ],
+      "source": "probe:no-abs-paths"
+    },
+    "stamped-checklist:must/010": {
+      "value": "no",
+      "reason": "No environment specification in this object; it may be inside the module(s) that are not installed here: code/compression-comparisons-tools, sourcedata/aind-ephys-compression.",
+      "status": "partial",
+      "evidence": [
+        {
+          "uri": "code/compression-comparisons-tools",
+          "description": "linked module, not installed: cannot be read",
+          "sha256": null
+        },
+        {
+          "uri": "sourcedata/aind-ephys-compression",
+          "description": "linked module, not installed: cannot be read",
+          "sha256": null
+        }
+      ],
+      "source": "probe:env-spec-tracked"
+    },
+    "stamped-checklist:must/011": {
+      "value": "yes",
+      "reason": "README names the host assumptions: a patched datalad (gh-7899/7900), a C++ toolchain with -Wno-restrict, and a GPU for Kilosort 4.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "'Requires a patched datalad' and the sorting step's GPU requirement",
+          "sha256": null
+        }
+      ],
+      "source": "judgement"
+    },
+    "stamped-checklist:must/012": {
+      "value": "no",
+      "reason": "README lists the install steps, but no tracked spec names versions: wavpack-numcodecs and flac-numcodecs are unpinned and the datalad build is prose.",
+      "status": "partial",
+      "evidence": [
+        {
+          "uri": "README.md#Reproducing",
+          "description": "uv pip install with unpinned extras",
+          "sha256": null
+        },
+        {
+          "uri": "probe:env-spec-tracked",
+          "description": "no lockfile, container definition or registration tracked in this object",
+          "sha256": null
+        }
+      ],
+      "source": "judgement"
+    },
+    "stamped-checklist:must/013": {
+      "value": "no",
+      "reason": "No environment specification in this object; it may be inside the module(s) that are not installed here: code/compression-comparisons-tools, sourcedata/aind-ephys-compression.",
+      "status": "partial",
+      "evidence": [
+        {
+          "uri": "code/compression-comparisons-tools",
+          "description": "linked module, not installed: cannot be read",
+          "sha256": null
+        },
+        {
+          "uri": "sourcedata/aind-ephys-compression",
+          "description": "linked module, not installed: cannot be read",
+          "sha256": null
+        }
+      ],
+      "source": "probe:env-spec-tracked"
+    },
+    "stamped-checklist:must/014": {
+      "value": "no",
+      "reason": "No environment specification exists here to update, and no process for updating one is documented; the pin guard covers the tool commit, not the environment.",
+      "status": "unmet",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "the venv is rebuilt by hand after checking out the tool commit",
+          "sha256": null
+        },
+        {
+          "uri": ".gitignore",
+          "description": "envs/ is not tracked",
+          "sha256": null
+        }
+      ],
+      "source": "judgement"
+    },
+    "stamped-checklist:must/015": {
+      "value": "no",
+      "reason": "The run records capture the environment but nothing pins one: there is no image digest or frozen manifest another person could replicate from.",
+      "status": "unmet",
+      "evidence": [
+        {
+          "uri": "commit:7733465",
+          "description": "capture: duct --clobber --output-prefix derivatives/compbench-2026-08-22-paper-real-np1-8-general/aind-634568-lsbbp__zstd-level_22-shuffle_no-chunk1s/duct- --sample-inte",
+          "sha256": null
+        },
+        {
+          "uri": "commit:13f2689",
+          "description": "capture: duct --clobber --output-prefix derivatives/compbench-2026-08-22-paper-real-np1-8-general/aind-625749-lsb__gzip-level_9-shuffle_byte-chunk1s/duct- --sample-inter",
+          "sha256": null
+        },
+        {
+          "uri": "commit:37d7125",
+          "description": "capture: duct --clobber --output-prefix derivatives/compbench-2026-08-22-paper-real-np1-8-general/ibl-CSHZAD029-bp__lzma-preset_9-shuffle_no-chunk1s/duct- --sample-inter",
+          "sha256": null
+        },
+        {
+          "uri": "commit:f7587ea",
+          "description": "capture: duct --clobber --output-prefix derivatives/compbench-2026-08-22-paper-real-np1-8-general/aind-625749-lsb__gzip-level_9-shuffle_no-chunk1s/duct- --sample-interva",
+          "sha256": null
+        },
+        {
+          "uri": "commit:e359687",
+          "description": "capture: duct --clobber --output-prefix derivatives/compbench-2026-08-22-paper-real-np1-8-general/aind-634569-lsbbp__wavpack-level_2-bps_2.25-chunk1s/duct- --sample-inte",
+          "sha256": null
+        },
+        {
+          "uri": "commit:3d7578e",
+          "description": "no environment named: ",
+          "sha256": null
+        },
+        {
+          "uri": "commit:1293222",
+          "description": "no environment named: snakemake -s code/compression-comparisons-tools/src/compbench/pipeline/Snakefile --configfile code/compression-comparisons-tools/configs/profiles/gate-fig2-",
+          "sha256": null
+        },
+        {
+          "uri": "commit:99ea987",
+          "description": "no environment named: compbench compare-sorting --sorting derivatives/sorting-2026-08-26-sorting-eval-t261-600s/bittrunc-bits_7/sorting --mearec sourcedata/aind-ephys-compression/mea",
+          "sha256": null
+        },
+        {
+          "uri": "commit:5155a13",
+          "description": "no environment named: compbench spikesort --zarr derivatives/sorting-2026-08-26-sorting-eval-t261-600s/bittrunc-bits_7/compressed.zarr --output-dir derivatives/sorting-2026-08-26-sor",
+          "sha256": null
+        },
+        {
+          "uri": "commit:dc031d7",
+          "description": "no environment named: compbench compress --mearec sourcedata/aind-ephys-compression/mearec/mearec_NP1.h5 --lsb 12 --duration-s 600 --codec bittrunc --codec-params bit",
+          "sha256": null
+        }
+      ],
+      "source": "probe:run-env-linked"
+    },
+    "stamped-checklist:must/016": {
+      "value": "no",
+      "reason": "1 of 2 linked module(s) do not resolve elsewhere: code/compression-comparisons-tools url=../.. \u2014 relative url: resolves only next to this superdataset",
+      "status": "unmet",
+      "evidence": [
+        {
+          "uri": ".gitmodules",
+          "description": "code/compression-comparisons-tools: url=../.. \u2014 relative url: resolves only next to this superdataset",
+          "sha256": null
+        }
+      ],
+      "source": "probe:subdatasets-resolvable"
+    },
+    "stamped-checklist:must/017": {
+      "value": "no",
+      "reason": "README says how to build the environment, but there is no specification to obtain: no lockfile, image or frozen manifest is published with the object.",
+      "status": "partial",
+      "evidence": [
+        {
+          "uri": "README.md#Reproducing",
+          "description": "build instructions, no artifact to fetch",
+          "sha256": null
+        }
+      ],
+      "source": "judgement"
+    },
+    "stamped-checklist:should/001": {
+      "value": "yes",
+      "reason": "git plus git-annex through DataLad across the superdataset and both linked modules.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": ".gitattributes",
+          "description": "annex backend MD5E, binary largefiles rule",
+          "sha256": null
+        },
+        {
+          "uri": ".gitmodules",
+          "description": "both modules are DataLad datasets",
+          "sha256": null
+        }
+      ],
+      "source": "judgement"
+    },
+    "stamped-checklist:should/002": {
+      "value": "no",
+      "reason": "No CI configuration: nothing checks that the instructions still work.",
+      "status": "unmet",
+      "evidence": [
+        {
+          "uri": "probe:ci-present",
+          "description": "no tracked .github/workflows/, .gitlab-ci.yml, .circleci/, .forgejo/workflows/, .gitea/workflows/ in 22863 tracked paths",
+          "sha256": null
+        }
+      ],
+      "source": "probe:ci-present"
+    },
+    "stamped-checklist:should/003": {
+      "value": null,
+      "reason": "2 of 2 module(s) are not installed here, so their state cannot be read: code/compression-comparisons-tools, sourcedata/aind-ephys-compression",
+      "status": "not-checked",
+      "evidence": [
+        {
+          "uri": "git submodule status",
+          "description": "code/compression-comparisons-tools not initialized",
+          "sha256": null
+        },
+        {
+          "uri": "git submodule status",
+          "description": "sourcedata/aind-ephys-compression not initialized",
+          "sha256": null
+        }
+      ],
+      "source": "probe:inputs-untouched"
+    },
+    "stamped-checklist:should/009": {
+      "value": null,
+      "reason": "N/A: every component is public (AIND open data, MIT code); there are no restricted data or software to isolate.",
+      "status": "not-applicable",
+      "evidence": [],
+      "source": "judgement"
+    },
+    "stamped-checklist:should/004": {
+      "value": null,
+      "reason": "Nothing in the object records a fresh-environment rerun, and attempting one here needs 523 GB of inputs and a GPU. fresh_rerun.py was not run.",
+      "status": "not-checked",
+      "evidence": [],
+      "source": "judgement"
+    },
+    "stamped-checklist:should/005": {
+      "value": "no",
+      "reason": "One long-lived venv (envs/compbench) is reused across the whole sweep by design; duct records each run but does not isolate it.",
+      "status": "unmet",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "'the study's own venv', reused; a stale venv once ran different code",
+          "sha256": null
+        },
+        {
+          "uri": "probe:run-env-linked",
+          "description": "1216 run records, none naming a per-run environment",
+          "sha256": null
+        }
+      ],
+      "source": "judgement"
+    },
+    "stamped-checklist:should/006": {
+      "value": "no",
+      "reason": "No CI configuration: nothing checks that the instructions still work.",
+      "status": "unmet",
+      "evidence": [
+        {
+          "uri": "probe:ci-present",
+          "description": "no tracked .github/workflows/, .gitlab-ci.yml, .circleci/, .forgejo/workflows/, .gitea/workflows/ in 22863 tracked paths",
+          "sha256": null
+        }
+      ],
+      "source": "probe:ci-present"
+    },
+    "stamped-checklist:should/007": {
+      "value": "no",
+      "reason": "No environment artifact is archived with the object: the venv is gitignored and no container image or binary is kept.",
+      "status": "unmet",
+      "evidence": [
+        {
+          "uri": ".gitignore",
+          "description": "envs/ untracked",
+          "sha256": null
+        },
+        {
+          "uri": "probe:env-spec-tracked",
+          "description": "no container definition or image tracked",
+          "sha256": null
+        }
+      ],
+      "source": "judgement"
+    },
+    "stamped-checklist:should/008": {
+      "value": "no",
+      "reason": "Same gap as must/014: no tracked environment specification, so no updates to it are tracked either.",
+      "status": "unmet",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "environment built by hand per tool commit",
+          "sha256": null
+        }
+      ],
+      "source": "judgement"
+    },
+    "stamped-checklist:may/001": {
+      "value": "yes",
+      "reason": "2 external component(s) are linked as modules: code/compression-comparisons-tools, sourcedata/aind-ephys-compression",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": ".gitmodules",
+          "description": "code/compression-comparisons-tools: url=../.. \u2014 relative url: resolves only next to this superdataset",
+          "sha256": null
+        }
+      ],
+      "source": "probe:subdatasets-resolvable"
+    },
+    "stamped-checklist:may/002": {
+      "value": "yes",
+      "reason": "The modular structure is documented twice: the README's Layout section and dataset_description.json's Layout and SourceDatasets fields.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": "README.md#Layout",
+          "description": "one bullet per module",
+          "sha256": null
+        },
+        {
+          "uri": "dataset_description.json",
+          "description": "Layout, SourceDatasets, GeneratedBy",
+          "sha256": null
+        }
+      ],
+      "source": "judgement"
+    },
+    "stamped-checklist:may/003": {
+      "value": "yes",
+      "reason": "Modules update independently: the tool submodule is pinned and run_sweep.sh refuses a drifted or dirty checkout; sourcedata is never modified.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": "README.md#Layout",
+          "description": "'run_sweep.sh refuses to start otherwise'",
+          "sha256": null
+        },
+        {
+          "uri": "dataset_description.json",
+          "description": "'Never modified' on the source subdataset",
+          "sha256": null
+        }
+      ],
+      "source": "judgement"
+    },
+    "stamped-checklist:may/004": {
+      "value": "yes",
+      "reason": "Composition is by git submodules and datalad clone/get, with the exact commands given.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": "README.md#Reproducing",
+          "description": "datalad clone + datalad get per module",
+          "sha256": null
+        }
+      ],
+      "source": "judgement"
+    },
+    "stamped-checklist:may/005": {
+      "value": "yes",
+      "reason": "Navigation is documented: the Layout sections plus a README in each derivatives/reports-* directory.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": "README.md#Layout",
+          "description": "'Start with the README.md in each'",
+          "sha256": null
+        }
+      ],
+      "source": "judgement"
+    }
+  },
+  "schema_version": "0.2.0",
+  "principles_version": "0.2.0",
+  "checklist_source": {
+    "repo": "https://github.com/stamped-principles/stamped-checklist-schema",
+    "tag": "v0.3.1",
+    "commit": "af259bad237fa57b856417db8dba45a1b283a527"
+  },
+  "extra_items": [
+    {
+      "key": "license-declared",
+      "status": "partial",
+      "reason": "dataset_description.json states MIT for code and derivatives, but no LICENSE file, LICENSES/ directory or REUSE.toml makes that machine-readable. Paper S.2/D.3 have no checklist item in 0.3.1.",
+      "evidence": [
+        {
+          "uri": "dataset_description.json#License",
+          "description": "MIT (code and derivatives)",
+          "sha256": null
+        }
+      ]
+    },
+    {
+      "key": "T.4-code-driven-provenance",
+      "status": "met",
+      "reason": "1216 [DATALAD RUNCMD] records plus duct traces per cell record provenance programmatically. T.4 exists in principles 0.2.0 but has no checklist item, so it is reported here.",
+      "evidence": [
+        {
+          "uri": "git log --grep='[DATALAD RUNCMD]'",
+          "description": "1216 run records",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-*/duct-info.json",
+          "description": "per-run resource and environment capture",
+          "sha256": null
+        }
+      ]
+    }
+  ],
+  "object": {
+    "url": "https://github.com/dandi/compression-comparisons-t261-study",
+    "commit": "f2f0802449095025b589337f8cb6f13be5112b25",
+    "captured_at": "2026-10-13T04:00:00+00:00",
+    "kind": "study"
+  },
+  "assessor": {
+    "skill": "assess-alignment-with-stamped-principles",
+    "version": "0.1.0",
+    "conventions_version": "0.1.0",
+    "harness": "claude-code (cloud session)",
+    "model": "claude-opus-5[1m]",
+    "date": "2026-10-13"
+  },
+  "scope": "Committed state of the superdataset at the commit above. The two linked modules were not installed, so their contents were not read; no container was pulled and no rerun attempted."
+}

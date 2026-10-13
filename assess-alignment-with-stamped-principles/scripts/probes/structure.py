@@ -32,6 +32,16 @@ CODE_SUFFIXES = {
     ".mk", ".make", ".do", ".sql", ".env",
 }
 CODE_NAMES = {"Makefile", "makefile", "GNUmakefile", "Snakefile", "Dockerfile", "Singularity", "config"}
+
+# Output of a recorded execution: a duct trace, a tool's own log or manifest.
+# These *should* carry the host path they ran on — that is provenance, not a
+# portability defect of the scripts must/009 asks about.
+RECORD_DIRS = ("derivatives/", "derivative/", "outputs/", "output/", "results/", "logs/", "log/",
+               ".duct/", ".snakemake/", ".sweep-logs/")
+RECORD_NAMES = re.compile(
+    r"^(?:duct-|manifest|provenance|dataset_description\.json$|.*-std(?:out|err)$|.*usage\.jsonl$"
+    r"|.*info\.json$|.*\.log$|.*_log\.txt$|params\.py$)"
+)
 RUNNABLE_SUFFIXES = (".py", ".sh", ".smk", ".nf", ".R", ".r", ".jl", ".m", ".do", ".bash")
 
 LARGE_SUFFIXES = {
@@ -85,6 +95,20 @@ def _is_code(relpath: str) -> bool:
     return name in CODE_NAMES or suffix in CODE_SUFFIXES
 
 
+def _is_record_output(relpath: str) -> bool:
+    name = relpath.rsplit("/", 1)[-1]
+    under_record_dir = any(relpath.startswith(d) or f"/{d}" in relpath for d in RECORD_DIRS)
+    return bool(RECORD_NAMES.match(name)) or (under_record_dir and not _looks_like_source(relpath))
+
+
+def _looks_like_source(relpath: str) -> bool:
+    """A script or workflow that happens to sit under a results directory."""
+    name = relpath.rsplit("/", 1)[-1]
+    return name in CODE_NAMES or name.endswith((".sh", ".smk", ".nf")) or (
+        name.endswith(".py") and not RECORD_NAMES.match(name)
+    )
+
+
 def no_abs_paths(obj: Object, allow: tuple[str, ...] = ()) -> Probe:
     """must/009 — scripts use relative paths, not host-specific absolute ones."""
     patterns = ABS_PATH_ALLOW + tuple(allow)
@@ -97,12 +121,12 @@ def no_abs_paths(obj: Object, allow: tuple[str, ...] = ()) -> Probe:
         text = obj.read(relpath)
         if not text:
             continue
-        code = _is_code(relpath)
+        where = "record" if _is_record_output(relpath) else ("code" if _is_code(relpath) else "docs")
         for lineno, line in enumerate(text.splitlines(), 1):
             kind = "home" if HOME_PATH.search(line) else ("tmp" if TMP_PATH.search(line) else None)
             if kind:
                 hits.append({"path": relpath, "line": lineno, "kind": kind,
-                             "where": "code" if code else "docs", "text": clip(line.strip(), 120)})
+                             "where": where, "text": clip(line.strip(), 120)})
             if len(hits) >= 100:
                 break
         if len(hits) >= 100:
@@ -120,12 +144,14 @@ def no_abs_paths(obj: Object, allow: tuple[str, ...] = ()) -> Probe:
             {"hits": hits},
         )
     if softer:
-        first = softer[0]
+        records = [h for h in softer if h["where"] == "record"]
+        first = (softer if not records or len(records) < len(softer) else records)[0]
         label = {"home": "a home directory", "tmp": "/tmp"}[first["kind"]]
+        detail = (f"{len(records)} of them in recorded run output, which is provenance rather than a script"
+                  if records else f"e.g. {first['path']} line {first['line']} ({label}, in {first['where']})")
         return Probe(
             "no-abs-paths", "partial", ["stamped-checklist:must/009"],
-            clip(f"No scripts depend on a home path, but {len(softer)} mention(s) of host paths remain, "
-                 f"e.g. {first['path']} line {first['line']} ({label}, in {first['where']})"),
+            clip(f"No script depends on a home path, but {len(softer)} host-path mention(s) remain: {detail}"),
             [Evidence(f"{h['path']}#L{h['line']}", f"{h['kind']} path in {h['where']}: {h['text']}")
              for h in softer[:10]],
             {"hits": hits},
@@ -137,31 +163,59 @@ def no_abs_paths(obj: Object, allow: tuple[str, ...] = ()) -> Probe:
     )
 
 
+def _is_binary(obj: Object, relpath: str) -> bool:
+    path = obj.root / relpath
+    try:
+        with path.open("rb") as fh:
+            chunk = fh.read(8192)
+        return b"\0" in chunk
+    except OSError:
+        # Content not present (annexed, or a broken pointer): fall back to the
+        # suffix, and say so in the evidence rather than guessing silently.
+        return relpath.lower().endswith(tuple(LARGE_SUFFIXES))
+
+
 def large_in_annex(obj: Object, max_bytes: int = 10 * 1024 * 1024) -> Probe:
-    """must/005 — large binaries are content-addressed, not git blobs."""
+    """must/005 — large *binary* data is content-addressed, not a git blob."""
     big = [(p, s) for p, s, _ in obj.blobs() if s > max_bytes]
     annexed = sum(1 for _, _, mode in obj.blobs() if mode == "120000")
     has_lfs = obj.exists(".gitattributes") and "filter=lfs" in obj.read(".gitattributes")
     mechanism = "git-annex" if obj.is_datalad or annexed else ("git-lfs" if has_lfs else None)
+    limit_mib = max_bytes // 1024 // 1024
     if not big:
         return Probe(
             "large-in-annex", "met", ["stamped-checklist:must/005"],
             clip(
-                f"No tracked git blob exceeds {max_bytes // 1024 // 1024} MiB"
+                f"No tracked git blob exceeds {limit_mib} MiB"
                 + (f"; large content is handled by {mechanism}." if mechanism else ".")
             ),
             [Evidence("git ls-tree -r -l HEAD", f"largest blob under {max_bytes} bytes")],
             {"mechanism": mechanism, "annex_pointers": annexed},
         )
-    worst = max(big, key=lambda t: t[1])
+
+    binary = [(p, s) for p, s in big if _is_binary(obj, p)]
+    text = [(p, s) for p, s in big if (p, s) not in binary]
+    details = {"mechanism": mechanism, "annex_pointers": annexed,
+               "large_binary": [{"path": p, "size": s} for p, s in binary],
+               "large_text": [{"path": p, "size": s} for p, s in text]}
+    if binary:
+        worst = max(binary, key=lambda t: t[1])
+        return Probe(
+            "large-in-annex", "unmet", ["stamped-checklist:must/005"],
+            clip(f"{len(binary)} binary blob(s) over {limit_mib} MiB committed to git, "
+                 f"largest {worst[0]} at {worst[1] // 1024 // 1024} MiB"),
+            [Evidence(p, f"{s} bytes of binary data in a git blob") for p, s in sorted(binary, key=lambda t: -t[1])[:10]],
+            details,
+        )
+    worst = max(text, key=lambda t: t[1])
+    # Text in git is what `datalad create -c text2git` asks for; a very large
+    # log is still a repository-weight problem, but it is not binary data.
     return Probe(
-        "large-in-annex", "unmet", ["stamped-checklist:must/005"],
-        clip(
-            f"{len(big)} blob(s) over {max_bytes // 1024 // 1024} MiB committed to git, "
-            f"largest {worst[0]} at {worst[1] // 1024 // 1024} MiB"
-        ),
-        [Evidence(p, f"{s} bytes in a git blob") for p, s in sorted(big, key=lambda t: -t[1])[:10]],
-        {"mechanism": mechanism, "large_blobs": [{"path": p, "size": s} for p, s in big]},
+        "large-in-annex", "partial", ["stamped-checklist:must/005"],
+        clip(f"No large binary in git, but {len(text)} text blob(s) exceed {limit_mib} MiB "
+             f"(largest {worst[0]}, {worst[1] // 1024 // 1024} MiB) — every clone carries them in full."),
+        [Evidence(p, f"{s} bytes of text in a git blob") for p, s in sorted(text, key=lambda t: -t[1])[:10]],
+        details,
     )
 
 
@@ -242,10 +296,20 @@ def env_spec_tracked(obj: Object) -> Probe:
     if containers:
         found[".datalad/config"] = "pinned"
     if not found:
+        uninstalled = [m.get("path", m["name"]) for m in obj.submodules() if not m.get("initialized", False)]
+        if uninstalled:
+            return Probe(
+                "env-spec-tracked", "partial", items,
+                clip("No environment specification in this object; it may be inside the module(s) that are "
+                     f"not installed here: {', '.join(uninstalled[:3])}."),
+                [Evidence(path, "linked module, not installed: cannot be read") for path in uninstalled[:5]],
+                {"specs": {}, "uninstalled_modules": uninstalled},
+            )
         return Probe(
             "env-spec-tracked", "unmet", items,
             "No tracked environment specification (lockfile, container definition or container registration).",
-            [],
+            [Evidence("probe:env-spec-tracked",
+                      "none of " + ", ".join(sorted(ENV_SPECS)[:8]) + ", *.def or a containers registration is tracked")],
         )
     pinned = [p for p, k in found.items() if k == "pinned"]
     evidence = [Evidence(p, f"{k} environment specification") for p, k in sorted(found.items())]
@@ -286,7 +350,8 @@ def license_declared(obj: Object) -> Probe:
     return Probe(
         "license-declared", "unmet", [],
         "No LICENSE, LICENSES/, REUSE.toml or BIDS License field: reuse terms are unstated.",
-        [],
+        [Evidence("probe:license-declared", f"no licence file among {len(tracked)} tracked paths, and no "
+                                            "License field in any dataset_description.json")],
     )
 
 
@@ -295,7 +360,12 @@ def ci_present(obj: Object) -> Probe:
     items = ["stamped-checklist:should/002", "stamped-checklist:should/006"]
     configs = [p for p in obj.tracked() if any(p.startswith(d) or p == d for d in CI_DIRS)]
     if not configs:
-        return Probe("ci-present", "unmet", items, "No CI configuration: nothing checks that the instructions still work.", [])
+        return Probe(
+            "ci-present", "unmet", items,
+            "No CI configuration: nothing checks that the instructions still work.",
+            [Evidence("probe:ci-present",
+                      "no tracked " + ", ".join(CI_DIRS) + " in " + str(len(obj.tracked())) + " tracked paths")],
+        )
     reexec = [p for p in configs if CI_REEXECUTES.search(obj.read(p))]
     evidence = [Evidence(p, "CI configuration") for p in configs[:5]]
     if reexec:
