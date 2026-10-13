@@ -1,0 +1,220 @@
+# SPDX-FileCopyrightText: 2026 Yaroslav Halchenko <yaroslav.o.halchenko@dartmouth.edu>
+# SPDX-License-Identifier: MIT
+"""Probes over provenance: does every derived file come from a re-executable
+record, and do those records name the environment they ran in."""
+
+from __future__ import annotations
+
+import fnmatch
+import re
+
+from .common import Evidence, Object, Probe, clip
+
+DERIVED_DIRS = (
+    "derivatives/", "derivative/", "outputs/", "output/", "results/", "result/",
+    "figures/", "figure/", "figs/", "plots/", "reports/",
+)
+DERIVED_SUFFIXES = (
+    ".png", ".pdf", ".svg", ".jpg", ".jpeg", ".tif", ".tiff",
+    ".tsv", ".csv", ".nii", ".nii.gz", ".mgz", ".npy", ".npz", ".h5", ".hdf5",
+)
+# Not products of this object: inputs, documentation illustrations, packaging.
+NOT_DERIVED = (
+    "sourcedata/", "rawbids/", "rawdata/", "inputs/", "input/", "sub-", "docs/",
+    "doc/", ".github/", "templates/", "template/", "assets/", "stories/", "tests/",
+    "test/", "code/containers/", "fixtures/",
+)
+CONTAINER_IMAGE = re.compile(r"(?:\.sif|\.simg|\.img\b|docker://|shub://|oras://|sha256:[0-9a-f]{12,})")
+LOCKFILES = ("pixi.lock", "uv.lock", "poetry.lock", "conda-lock.yml", "renv.lock", "requirements.lock")
+UNPINNED_TAG = re.compile(r"(?:docker://|shub://|FROM\s+)[\w./-]+:latest\b|[\w./-]+:latest\b")
+
+
+def _derived_candidates(obj: Object) -> list[str]:
+    out = []
+    for relpath in obj.tracked():
+        if any(relpath.startswith(p) or f"/{p}" in relpath for p in NOT_DERIVED):
+            continue
+        lower = relpath.lower()
+        if any(relpath.startswith(d) or f"/{d}" in relpath for d in DERIVED_DIRS) or lower.endswith(DERIVED_SUFFIXES):
+            out.append(relpath)
+    return out
+
+
+def _last_commit_per_path(obj: Object) -> dict[str, str]:
+    """Most recent commit that touched each tracked path."""
+    out = obj.git("log", "--format=%x1e%H", "--name-only", "--no-renames")
+    last: dict[str, str] = {}
+    for block in out.split("\x1e"):
+        lines = [line for line in block.splitlines() if line.strip()]
+        if not lines:
+            continue
+        commit, paths = lines[0].strip(), lines[1:]
+        for path in paths:
+            last.setdefault(path, commit)
+    return last
+
+
+def _workflow_targets(obj: Object) -> tuple[list[str], list[str]]:
+    """(patterns a tracked workflow declares as outputs, the files declaring them)."""
+    patterns: list[str] = []
+    sources: list[str] = []
+    for relpath in obj.tracked():
+        name = relpath.rsplit("/", 1)[-1]
+        if name in {"Makefile", "makefile", "GNUmakefile"}:
+            text = obj.read(relpath)
+            found = re.findall(r"^([^\s:#=][^:=\n]*?):(?!=)", text, re.M)
+            patterns += [t.strip() for target in found for t in target.split() if not t.startswith(".")]
+            sources.append(relpath)
+        elif name in {"Snakefile"} or name.endswith(".smk"):
+            text = obj.read(relpath)
+            for block in re.findall(r"output:\s*((?:\s*[^\n]*\n)+?)(?=\s*(?:input|run|shell|params|log|rule|$))", text):
+                patterns += re.findall(r'["\']([^"\']+)["\']', block)
+            sources.append(relpath)
+        elif name == "dvc.yaml":
+            text = obj.read(relpath)
+            patterns += re.findall(r"^\s*-\s*([\w./*{}-]+)\s*$", text, re.M)
+            sources.append(relpath)
+    # Snakemake and Make wildcards are close enough to fnmatch for a probe.
+    patterns = [re.sub(r"\{[^}]*\}", "*", p) for p in patterns]
+    return patterns, sources
+
+
+def derived_have_records(obj: Object) -> Probe:
+    """must/006 and A.2 — every derived file traces back to a re-executable record."""
+    items = ["stamped-checklist:must/006"]
+    candidates = _derived_candidates(obj)
+    records = obj.run_records()
+    wf_patterns, wf_sources = _workflow_targets(obj)
+
+    if not candidates:
+        return Probe(
+            "derived-have-records", "not-applicable", items,
+            "N/A: no tracked file looks like a product of this object (no derivatives, tables or figures).",
+            [], {"records": len(records), "workflow_sources": wf_sources},
+        )
+    if not records and not wf_patterns:
+        return Probe(
+            "derived-have-records", "unmet", items,
+            clip(f"{len(candidates)} derived file(s) tracked (e.g. {candidates[0]}) and no run record or "
+                 "tracked workflow that would re-create any of them."),
+            [Evidence(p, "derived file with no re-executable record") for p in candidates[:10]],
+            {"candidates": candidates},
+        )
+
+    run_commits = {r["commit"] for r in records}
+    record_outputs: list[str] = []
+    for rec in records:
+        info = rec.get("run_info") or {}
+        for out in info.get("outputs") or []:
+            record_outputs.append(out)
+    last = _last_commit_per_path(obj)
+
+    covered: dict[str, str] = {}
+    uncovered: list[str] = []
+    for path in candidates:
+        if last.get(path) in run_commits:
+            covered[path] = f"run record {last[path][:7]}"
+        elif any(fnmatch.fnmatch(path, pat) or path == pat for pat in record_outputs):
+            covered[path] = "named as an output of a run record"
+        elif any(fnmatch.fnmatch(path, pat) or path == pat for pat in wf_patterns):
+            covered[path] = f"declared as an output by {wf_sources[0]}"
+        else:
+            uncovered.append(path)
+
+    details = {
+        "candidates": len(candidates), "covered": len(covered), "uncovered": uncovered,
+        "run_records": len(records), "workflow_sources": wf_sources,
+    }
+    if not uncovered:
+        example = next(iter(covered.items()))
+        return Probe(
+            "derived-have-records", "met", items,
+            clip(f"All {len(candidates)} derived file(s) trace to a re-executable record "
+                 f"({len(records)} run record(s), workflows: {', '.join(wf_sources) or 'none'})."),
+            [Evidence(p, why) for p, why in list(covered.items())[:10]] or [Evidence(example[0], example[1])],
+            details,
+        )
+    status = "partial" if covered else "unmet"
+    return Probe(
+        "derived-have-records", status, items,
+        clip(f"{len(uncovered)} of {len(candidates)} derived file(s) have no re-executable record, "
+             f"e.g. {uncovered[0]}; last touched by an ordinary commit."),
+        [Evidence(p, "no run record or workflow rule produces this file") for p in uncovered[:10]],
+        details,
+    )
+
+
+def run_env_linked(obj: Object) -> Probe:
+    """must/006 (records name their environment) and must/015 (that environment is pinned)."""
+    i006, i015 = "stamped-checklist:must/006", "stamped-checklist:must/015"
+    items = [i006, i015]
+    records = obj.run_records()
+    unpinned: list[tuple[str, str]] = []
+    for relpath in list(obj.tracked()) + ([".datalad/config"] if obj.exists(".datalad/config") else []):
+        name = relpath.rsplit("/", 1)[-1]
+        if name not in {"Dockerfile", "Singularity", "config", "docker-compose.yml"} and not name.endswith(
+            (".def", ".yml", ".yaml", ".toml", ".cfg", ".json", ".sh", ".txt")
+        ):
+            continue
+        for lineno, line in enumerate(obj.read(relpath).splitlines(), 1):
+            if "latest" in line and UNPINNED_TAG.search(line):
+                unpinned.append((f"{relpath}#L{lineno}", clip(line.strip(), 120)))
+
+    with_env: list[dict] = []
+    without_env: list[dict] = []
+    for rec in records:
+        info = rec.get("run_info") or {}
+        blob = " ".join(
+            [str(info.get("cmd", ""))]
+            + [str(x) for x in (info.get("extra_inputs") or [])]
+            + [str(x) for x in (info.get("inputs") or [])]
+        )
+        has_container = bool(CONTAINER_IMAGE.search(blob)) or "containers-run" in rec["body"]
+        has_lock = any(lock in blob for lock in LOCKFILES)
+        (with_env if has_container or has_lock else without_env).append(
+            {"commit": rec["commit"], "cmd": clip(str(info.get("cmd", ""))[:160], 160),
+             "mechanism": "container" if has_container else ("lockfile" if has_lock else None)}
+        )
+
+    details = {"records": len(records), "with_env": len(with_env), "without_env": without_env[:20],
+               "unpinned": unpinned}
+
+    # must/006 — do the run records name the environment they ran in?
+    if not records:
+        s006 = "not-checked"
+        r006 = "No run records, so no record names the environment it ran in."
+    elif not without_env:
+        s006 = "met"
+        r006 = clip(f"All {len(records)} run record(s) name a container image or a lockfile.")
+    elif with_env:
+        s006 = "partial"
+        r006 = clip(f"{len(without_env)} of {len(records)} run record(s) name no container or lockfile, "
+                    f"e.g. {without_env[0]['commit'][:7]}: {without_env[0]['cmd']}")
+    else:
+        s006 = "unmet"
+        r006 = clip(f"None of the {len(records)} run record(s) name a container or a lockfile.")
+
+    # must/015 — is that environment pinned, or does it float?
+    if unpinned:
+        s015 = "unmet"
+        r015 = clip(f"{len(unpinned)} environment reference(s) use the floating ':latest' tag, "
+                    f"e.g. {unpinned[0][0]} — a rerun cannot land in the same environment.")
+    elif with_env:
+        s015 = "met"
+        r015 = clip(f"{len(with_env)} run record(s) reference a pinned image or lockfile, and no ':latest' "
+                    "reference is tracked.")
+    else:
+        s015 = "not-checked"
+        r015 = "Nothing names an environment to check for a pin."
+
+    evidence = [Evidence(u[0], u[1]) for u in unpinned[:5]]
+    evidence += [Evidence(f"commit:{r['commit'][:7]}", f"{r['mechanism']}: {r['cmd']}") for r in with_env[:5]]
+    evidence += [Evidence(f"commit:{r['commit'][:7]}", f"no environment named: {r['cmd']}") for r in without_env[:5]]
+
+    worst = min((s006, s015), key=lambda s: {"unmet": 0, "partial": 1, "not-checked": 2, "met": 3}[s])
+    return Probe(
+        "run-env-linked", worst, items, clip(f"must/006 {s006}: {r006} must/015 {s015}: {r015}"),
+        evidence, details,
+        item_status={i006: s006, i015: s015},
+        item_reason={i006: r006, i015: r015},
+    )

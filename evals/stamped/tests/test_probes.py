@@ -1,0 +1,180 @@
+# SPDX-FileCopyrightText: 2026 Yaroslav Halchenko <yaroslav.o.halchenko@dartmouth.edu>
+# SPDX-License-Identifier: MIT
+"""Tests for the STAMPED probes, the mutants and the response encoder.
+
+They live outside the skill directories on purpose (K-Dense convention): a
+skill ships its instructions and its scripts, not its test suite.
+
+    python3 -m pytest evals/stamped/tests -q
+"""
+
+from __future__ import annotations
+
+import json
+import pathlib
+import shutil
+import subprocess
+import sys
+
+import pytest
+
+REPO = pathlib.Path(__file__).resolve().parents[3]
+EVALS = REPO / "evals" / "stamped"
+ASSESS = REPO / "assess-alignment-with-stamped-principles"
+CONVENTIONS = REPO / "stamped-conventions"
+
+sys.path.insert(0, str(ASSESS / "scripts"))
+sys.path.insert(0, str(CONVENTIONS / "scripts"))
+sys.path.insert(0, str(EVALS / "mutants"))
+
+from encode_response import Checklist, app_payload, decode, encode, template, validate  # noqa: E402
+from mutate import MUTANTS  # noqa: E402
+from probes import REGISTRY, Object  # noqa: E402
+
+
+@pytest.fixture(scope="session")
+def clean(tmp_path_factory) -> pathlib.Path:
+    root = tmp_path_factory.mktemp("fixture") / "clean"
+    subprocess.run(
+        [sys.executable, str(EVALS / "fixtures" / "make_r0_object.py"), str(root)],
+        check=True, capture_output=True,
+    )
+    return root
+
+
+def _statuses(root: pathlib.Path) -> dict[str, str]:
+    obj = Object(root)
+    severity = {"unmet": 0, "partial": 1, "not-checked": 2, "not-applicable": 3, "met": 4}
+    out: dict[str, str] = {}
+    for probe in REGISTRY.values():
+        result = probe(obj)
+        for item in result.items:
+            status = result.status_of(item)
+            if item not in out or severity[status] < severity[out[item]]:
+                out[item] = status
+    return out
+
+
+def test_fixture_is_clean_and_all_probes_pass(clean):
+    statuses = _statuses(clean)
+    assert statuses, "no probe answered any item"
+    bad = {item: status for item, status in statuses.items() if status != "met"}
+    assert not bad, f"the known-good fixture should be all met, got {bad}"
+
+
+def test_every_probe_returns_a_known_status(clean):
+    obj = Object(clean)
+    allowed = {"met", "partial", "unmet", "not-checked", "not-applicable"}
+    checklist = Checklist()
+    for name, probe in REGISTRY.items():
+        result = probe(obj)
+        assert result.status in allowed, f"{name} returned {result.status}"
+        assert len(result.reason) <= 250, f"{name} reason is too long for the checklist app"
+        for item in result.items:
+            assert item in checklist.by_id, f"{name} answers unknown item {item}"
+        if result.status in {"met", "partial", "unmet"}:
+            assert result.evidence, f"{name} reported {result.status} without evidence"
+
+
+@pytest.mark.parametrize("name", sorted(MUTANTS))
+def test_mutant_flips_its_items(clean, tmp_path, name):
+    target = tmp_path / name
+    shutil.copytree(clean, target, symlinks=True)
+    subprocess.run(
+        [sys.executable, str(EVALS / "mutants" / "mutate.py"), "apply", name, str(target)],
+        check=True, capture_output=True,
+    )
+    statuses = _statuses(target)
+    for item, expected in MUTANTS[name]["expect"].items():
+        assert statuses.get(item) == expected, (
+            f"{name}: {item} is {statuses.get(item)}, expected {expected}"
+        )
+
+
+def test_probes_do_not_modify_the_object(clean, tmp_path):
+    target = tmp_path / "untouched"
+    shutil.copytree(clean, target, symlinks=True)
+    before = subprocess.run(["git", "status", "--porcelain"], cwd=target,
+                            capture_output=True, text=True).stdout
+    head_before = subprocess.run(["git", "rev-parse", "HEAD"], cwd=target,
+                                 capture_output=True, text=True).stdout
+    _statuses(target)
+    after = subprocess.run(["git", "status", "--porcelain"], cwd=target,
+                           capture_output=True, text=True).stdout
+    head_after = subprocess.run(["git", "rev-parse", "HEAD"], cwd=target,
+                                capture_output=True, text=True).stdout
+    assert (before, head_before) == (after, head_after)
+
+
+def test_run_probes_writes_a_valid_response(clean, tmp_path):
+    response = tmp_path / "response.json"
+    subprocess.run(
+        [sys.executable, str(ASSESS / "scripts" / "run_probes.py"), str(clean),
+         "--kind", "study", "--response", str(response), "--quiet"],
+        check=True, capture_output=True,
+    )
+    payload = json.loads(response.read_text())
+    checklist = Checklist()
+    assert set(payload["responses"]) == set(checklist.by_id)
+    # The draft leaves judgement items not-checked, which validate() accepts.
+    problems = [p for p in validate(payload, checklist) if "needs at least one evidence" not in p]
+    assert problems == [], problems
+
+
+def test_checklist_pin_matches_the_lock():
+    out = subprocess.run(
+        [sys.executable, str(CONVENTIONS / "scripts" / "vendor_checklist.py"), "--check"],
+        capture_output=True, text=True,
+    )
+    assert out.returncode == 0, out.stderr
+
+
+def test_response_round_trips_through_the_app_url():
+    checklist = Checklist()
+    response = template(checklist)
+    first = next(iter(response["responses"]))
+    response["responses"][first] = {
+        "value": None, "reason": "code/plot.py hardcodes an input path", "status": "unmet",
+        "evidence": [{"uri": "code/plot.py#L12", "description": "absolute path", "sha256": None}],
+        "source": "probe:no-abs-paths",
+    }
+    url = encode(response, checklist)
+    assert "format=3" in url and "responses=" in url
+    back = decode(url, checklist)
+    assert set(back["responses"]) == set(checklist.by_id)
+    assert back["responses"][first]["value"] == "no"
+    assert back["responses"][first]["reason"].startswith("code/plot.py")
+
+
+def test_app_payload_only_carries_what_the_app_accepts():
+    checklist = Checklist()
+    response = template(checklist)
+    first = next(iter(response["responses"]))
+    response["responses"][first].update(status="met", reason="x" * 400)
+    payload = app_payload(response, checklist)
+    answer = payload["responses"][first]
+    assert set(answer) == {"value", "reason"}
+    assert answer["value"] == "yes"
+    assert len(answer["reason"]) == 250
+
+
+def test_must_items_are_never_satisfied_by_partial():
+    checklist = Checklist()
+    response = template(checklist)
+    must = next(i["id"] for i in checklist.items if i["level"] == "must")
+    response["responses"][must] = {
+        "value": None, "reason": "met in code, violated in derivatives", "status": "partial",
+        "evidence": [{"uri": "derivatives/", "description": "no run record", "sha256": None}],
+        "source": "judgement",
+    }
+    assert app_payload(response, checklist)["responses"][must]["value"] == "no"
+
+
+def test_unknown_item_id_is_refused():
+    checklist = Checklist()
+    response = template(checklist)
+    response["responses"]["stamped-checklist:must/999"] = {
+        "value": "yes", "reason": "", "status": "met", "evidence": [{"uri": "x", "description": "y"}],
+    }
+    problems = validate(response, checklist)
+    assert any("unknown item ids" in p for p in problems)

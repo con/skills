@@ -1,0 +1,38 @@
+# SPDX-FileCopyrightText: 2026 Yaroslav Halchenko <yaroslav.o.halchenko@dartmouth.edu>
+# SPDX-License-Identifier: MIT
+#
+# Rung 0 of the ladder in docs/stamped/PLAN.md §6.2: no compute, so it can be
+# run many times per iteration.  It exercises the S/T/A/P plumbing only;
+# computation starts at R1 (brain extraction).
+id: r0-freesurfer-plot
+rung: 0
+title: Brain volume and GM/WM ratio against age, from the derivatives ds007116 ships
+prompt: prompt.md
+kind: study
+compute:
+  cpu_hours: 0.01
+  containers: optional
+  network: required          # to clone the input dataset
+inputs:
+  - name: ds007116
+    url: https://github.com/OpenNeuroDatasets/ds007116
+    datalad: ///openneuro/ds007116
+    license: CC0
+    notes: |
+      derivatives/freesurfer-post/*_desc-FreeSurfer_qc.tsv are in plain git
+      (222 sessions), and per-session ages are in sub-*/sub-*_sessions.tsv —
+      not in participants.tsv, which carries baseline ages only.
+product:
+  - a table with one row per session: age and the volumes used
+  - a figure: brain volume against age, GM/WM ratio on a secondary axis
+oracle:
+  script: oracle/check_r0.py
+  rules:
+    - the table has at least 50 sessions with an age and a volume
+    - a rerun of the documented entry point reproduces the table byte-for-byte
+    - the shipped FreeSurfer values may be used as the result at this rung only
+conditions: [bare, pointer, skill-implicit, skill-explicit]
+repeats:
+  exploring: 1
+  benchmark: 3
+hold_out: false

@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2026 Yaroslav Halchenko <yaroslav.o.halchenko@dartmouth.edu>
+# SPDX-License-Identifier: MIT
+#
+# Pinned tooling for the eval harness.  P.2/P.3 apply to our own tests too, so
+# this is the spec the harness host installs from:
+#
+#   uv tool install datalad --with git-annex --with-executables-from git-annex
+#   uv pip install -r evals/stamped/requirements.txt
+#
+# datalad 1.7.1 carries the concurrent-run fix (datalad#7899, #7901); do not
+# relax that lower bound while outer-loop runs may overlap.
+datalad==1.7.1
+datalad-container==1.2.6
+git-annex==10.20260901
+con-duct==0.16.0
+PyYAML==6.0.2
+pytest==8.3.5
