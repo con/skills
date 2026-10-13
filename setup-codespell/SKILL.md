@@ -1,11 +1,11 @@
 ---
-name: introduce-codespell
-description: Introduce codespell spell-checking to a project. Creates branch, config file, CI workflow (GitHub Actions or Forgejo Actions for Codeberg), pre-commit hook. Lists typos, helps identify paths/words to ignore, and fixes typos interactively. Use when setting up codespell in a new project.
+name: setup-codespell
+description: Set up codespell spell-checking in a project. Creates branch, config file, CI workflow (GitHub Actions or Forgejo Actions for Codeberg), pre-commit hook. Lists typos, helps identify paths/words to ignore, and fixes typos interactively. Use when setting up codespell in a new project.
 allowed-tools: Bash, Read, Edit, Write, Glob, Grep, AskUserQuestion
 user-invocable: true
 ---
 
-# Introduce Codespell to a Project
+# Set Up Codespell in a Project
 
 Set up codespell spell-checking infrastructure in a project, identify typos, configure exclusions, and fix spelling errors.
 
@@ -14,7 +14,7 @@ Set up codespell spell-checking infrastructure in a project, identify typos, con
 - User wants to add spell-checking to a project
 - User mentions "codespell" or wants to check for typos
 - User wants to set up CI for spelling errors
-- User asks to "introduce codespell" or run "/introduce-codespell"
+- User asks to "set up codespell" or "introduce codespell", or runs "/setup-codespell"
 
 ## Prerequisites
 

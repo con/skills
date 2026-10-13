@@ -1,11 +1,11 @@
 ---
-name: introduce-intuit-auto
-description: Introduce automated releases using intuit/auto to a project. Creates .autorc, GitHub Actions release workflow, GitHub labels (with optional prefix to avoid dependabot conflicts), CHANGELOG transition, and release documentation. Use when setting up auto-release for GitHub projects (Python/PyPI, JS/npm, or pure GitHub releases).
+name: setup-intuit-auto
+description: Set up automated releases using intuit/auto in a project. Creates .autorc, GitHub Actions release workflow, GitHub labels (with optional prefix to avoid dependabot conflicts), CHANGELOG transition, and release documentation. Use when setting up auto-release for GitHub projects (Python/PyPI, JS/npm, or pure GitHub releases).
 allowed-tools: Bash, Read, Edit, Write, Glob, Grep, AskUserQuestion, WebFetch
 user-invocable: true
 ---
 
-# Introduce intuit/auto for Automated Releases
+# Set Up intuit/auto for Automated Releases
 
 Set up [intuit/auto](https://intuit.github.io/auto/) release automation in a project:
 create the `.autorc` config, GitHub Actions release workflow, GitHub labels, CHANGELOG
@@ -15,7 +15,7 @@ transition, and release-process documentation.
 
 - User wants to automate releases (tagging, changelog, PyPI/npm upload)
 - User mentions "auto", "intuit/auto", or "automated releases"
-- User asks to "introduce auto-release" or "/introduce-intuit-auto"
+- User asks to "set up auto-release" or "introduce auto-release", or runs "/setup-intuit-auto"
 
 ## Prerequisites
 

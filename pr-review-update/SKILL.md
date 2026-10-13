@@ -535,7 +535,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
    - **Reproducibility**: Command is recorded in git commit metadata
    - **Re-runnable**: Can re-execute with `datalad rerun`
    - **Auditable**: Clear record of what tool made changes
-   - **Standard practice**: Follows introduce-codespell skill workflow
+   - **Standard practice**: Follows setup-codespell skill workflow
 
 4. **Review changes after commit:**
    ```bash

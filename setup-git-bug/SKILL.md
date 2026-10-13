@@ -1,11 +1,11 @@
 ---
-name: introduce-git-bug
-description: Introduce git-bug distributed issue tracking to a git project. Configures GitHub bridge, syncs issues, pushes refs, and documents workflow in DEVELOPMENT.md and CLAUDE.md. Use when setting up git-bug in a new project.
+name: setup-git-bug
+description: Set up git-bug distributed issue tracking in a git project. Configures GitHub bridge, syncs issues, pushes refs, and documents workflow in DEVELOPMENT.md and CLAUDE.md. Use when setting up git-bug in a new project.
 allowed-tools: Bash, Read, Edit, Write, Glob, Grep, AskUserQuestion
 user-invocable: true
 ---
 
-# Introduce git-bug to a Project
+# Set Up git-bug in a Project
 
 Set up [git-bug](https://github.com/git-bug/git-bug) distributed, offline-first issue tracking
 in a git project. Configures a GitHub bridge to sync issues, stores them as native git objects
@@ -16,7 +16,7 @@ under `refs/bugs/*`, and documents the workflow for developers and AI assistants
 - User wants to add local/offline issue tracking to a project
 - User mentions "git-bug" or wants distributed issue tracking
 - User asks to sync GitHub issues into git
-- User asks to "introduce git-bug" or run "/introduce-git-bug"
+- User asks to "set up git-bug" or "introduce git-bug", or runs "/setup-git-bug"
 
 ## Prerequisites
 
