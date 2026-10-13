@@ -593,8 +593,18 @@ What they are **not** is the test of the skill:
 - a report that is only probe output is a draft, and the skill says so;
 - when a blind run exposes a gap, the fix to reach for first is a probe, template or hook — prose last, because prose grows back (§3.5).
 
-**Cadence.** At least one blind run per skill per iteration, on a scope the previous iteration also used (so the diff is a regression test) plus one it has not seen.
+**Judgement mutants** make this measurable rather than anecdotal.
+A blind run on a real object tells you what the skill missed *this time*; a judgement mutant pins one prose defect that **no probe can see** and asks every later version to catch it again:
+
+- the defect goes into a copy of the known-good fixture — a README naming a `make` target that does not exist, install steps that only work on one operating system, `pixi run` instructions in a `uv` project, reproduce steps in an impossible order, prose promising a container nobody registered, a documented route through `/mnt/labshare`, metadata describing a different project;
+- `harness/judgement_calibrate.py prepare` **refuses the mutant if it changes what the probes say** — a judgement mutant that a script catches is not testing judgement, and that gate caught a real false positive on its first run (`///openneuro/…` registry shortcuts read as host paths);
+- the grader is a blind subagent, and scoring has three parts: did it flag *any* of the items the defect could land on, did the report **name the specific thing** (the bogus target, `brew`, `pixi`), and did it stay `met` everywhere it should have — because an assessor that gets suspicious of everything is not detecting anything.
+
+Which of two related items a reader pins a prose defect on is not under test; naming the defect is.
+
+**Cadence.** At least one blind run per skill per iteration, on a scope the previous iteration also used (so the diff is a regression test) plus one it has not seen, and the judgement mutants whenever the prose of a skill changes.
 Runs are cheap enough — minutes, on an object already on disk — that there is no excuse for an untested wording change.
+The harness this grows into is surveyed in [`eval-platforms.md`](eval-platforms.md): keep our object generators and structured scorer, adopt `pytest-evals` for aggregation now, and Inspect AI at phase 3 for containers per run and local models.
 
 ### 6.3 Use-case ladder
 
@@ -777,6 +787,10 @@ Separately, keep:
    | A derived file without a run record | must/006 |
 
    Measure per-item sensitivity, plus the false `unmet` rate on the clean object.
+   Two of them are **negative controls**: `large-text-in-git` asserts that must/005 does *not* move (the item asks about binary data), and `remote-removed` moves only must/016.
+1a. **Judgement mutants** (`mutants/judgement.py`), for everything a script cannot see: prose that describes an execution which cannot work, or works on one machine only.
+   Graded by a blind subagent, scored on flagged item + the defect being **named** + no collateral accusations, with the probes verified unchanged first ([§6.2](#62-the-blind-subagent-run--the-core-test)).
+   This is where the sentences in a `SKILL.md` are tested; the scripted mutants never touch them.
 2. **Real-world gold set.**
    - compression-comparisons-t261-study, with known D (`../..`) and P/E (no built containers) gaps;
    - STAMPED-dl_morphometrics_biases, which has its own assessment TSV to compare against;
@@ -861,6 +875,7 @@ These are initial targets, to be revised after the first two iterations.
   - never `met` without cited evidence;
   - **blind runs:** two consecutive iterations in which a fresh subagent, given only the snapshot and an object, produces all three products, agrees with the reference answer on every MUST item, and returns no friction item classified as "skill wording" that is worth fixing.
     One blind run on a *new* object each iteration, so the wording is not fitted to the gold set.
+  - **judgement mutants:** ≥ 80 % detected (flagged *and* named) on the frontier tier and ≥ 60 % on the smaller tier, with no collateral accusation on the clean fixture — the scripted-mutant bar applied to the half of the skill made of sentences.
 - **create / align / do-full-research-loop v1.0:**
   - at R0–R2, explicit-skill runs — which are blind runs with a PROMPT as their scope — pass every mechanically checkable MUST probe, including `fresh-rerun`, in ≥ 2 of 3 repeats on two model tiers;
   - they clearly beat `pointer`;

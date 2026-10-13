@@ -29,7 +29,9 @@ SYSTEM_ROOTS = {
     "dev", "proc", "sys", "run", "boot", "srv", "snap", "nix", "var",
 }
 # URLs carry path components that are not host paths; strip them before looking.
-URL = re.compile(r"\b[a-zA-Z][\w+.-]*://\S*")
+# `///openneuro/ds007116` and `ria+http://...` are DataLad registry shortcuts —
+# locations anyone can resolve, not paths on one machine.
+URL = re.compile(r"\b[a-zA-Z][\w+.-]*://\S*|(?<![\w])/{3}\S*|\bria\+\S*")
 # Documentation placeholders, which are instructions to the reader rather than
 # paths the scripts use.
 PLACEHOLDER_ROOTS = {"path", "paths", "your", "some", "somewhere", "foo", "bar", "abs"}

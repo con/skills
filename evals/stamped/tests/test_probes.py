@@ -231,3 +231,45 @@ def test_fresh_rerun_reports_a_difference_as_such(tmp_path):
     result = json.loads(report.read_text())
     assert result["status"] in {"unmet", "partial"}, result
     assert result["comparison"]["differing"] == ["results.tsv"]
+
+
+# The path classifier is the probe that a blind run caught being blind, so its
+# cases are pinned individually: each line here is a verdict somebody argued
+# about once.
+@pytest.mark.parametrize(("line", "expected"), [
+    ('WV=/data/yoh/compression-comparisons/vendor/wavpack', "host"),
+    ('inputs=/mnt/labshare/openneuro/ds007116', "host"),
+    ('home = "/home/researcher/data"', "home"),
+    ('out > /tmp/scratch-file', "tmp"),
+    # DataLad registry shortcuts are locations anyone can resolve.
+    ('"SourceDatasets": [{"URL": "///openneuro/ds000003"}]', None),
+    ('datalad clone ///repronim/containers code/containers', None),
+    ('url = ria+http://store.datalad.org#~abc', None),
+    # System roots and URLs are not host paths.
+    ('#!/usr/bin/env python3', None),
+    ('export FREESURFER_HOME=/opt/local/freesurfer-7.4.1', None),
+    ('pip install "datalad @ git+https://github.com/datalad/datalad.git@30b6dee"', None),
+])
+def test_absolute_path_classifier(line, expected):
+    from probes.structure import _classify_path
+
+    assert _classify_path(line) == expected
+
+
+def test_judgement_mutants_do_not_trip_the_probes(clean, tmp_path):
+    """A judgement mutant that a script catches is not testing judgement."""
+    sys.path.insert(0, str(EVALS / "mutants"))
+    from judgement import JUDGEMENT_MUTANTS
+
+    baseline = _statuses(clean)
+    for name, spec in sorted(JUDGEMENT_MUTANTS.items()):
+        target = tmp_path / name
+        shutil.copytree(clean, target, symlinks=True)
+        subprocess.run(
+            [sys.executable, str(EVALS / "mutants" / "judgement.py"), "apply", name, str(target)],
+            check=True, capture_output=True,
+        )
+        after = _statuses(target)
+        expected = {**baseline, **(spec.get("probes_expected") or {})}
+        changed = {i: s for i, s in after.items() if expected.get(i) != s}
+        assert not changed, f"{name} changed probe verdicts: {changed}"

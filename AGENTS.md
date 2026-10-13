@@ -162,6 +162,17 @@ Run it with more than one model tier where the skill may be used by one,
 and keep at least one target out of the loop you tune against, so the
 wording is not fitted to a single fixture.
 
+**When the defect can only be caught by reading, make it a fixture.**
+Inject it into a copy of a known-good target — instructions naming a
+command that does not exist, steps that work on one operating system,
+prose promising something the project does not carry — then verify the
+skill's own scripts stay green on it (otherwise it is not testing
+judgement) and require the blind run to *name* the specific defect, not
+merely to look unhappy. That is a regression artifact for a sentence,
+and it is the only kind of test that keeps prose honest. The STAMPED
+collection's are in `evals/stamped/mutants/judgement.py`, driven by
+`evals/stamped/harness/judgement_calibrate.py`.
+
 ### Scripts are the fast half, not the whole test
 
 Bundled scripts — probes, validators, generators — exist so that the
