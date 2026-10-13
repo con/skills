@@ -757,6 +757,11 @@ Separately, keep:
 
 A separate DataLad dataset, [`con/stamped-skills-evals`](https://hub.centerforopenneuroscience.org/con/stamped-skills-evals), on the CON Forgejo-aneksajo hub.
 Aneksajo is the git-annex-aware Forgejo, so git history and annexed content go to the same remote with no separate special remote.
+
+**Bootstrapped 2026-10-13** (`datalad create -c text2git`, `hub` sibling, `datalad push`, verified by an anonymous `datalad clone`).
+It carries the dataset README with the layout below and `calibration/2026-10-13-probes-0.1.0/` — the first probe calibration, 8/8 mutants and 0/15 false `unmet`.
+Its own README states the two gaps it starts with rather than hiding them: con/skills is not yet a subdataset (pinning it at an unpublished commit would be the very `must/002`/`must/016` failure these skills catch), and the bootstrap commit is not a recorded run.
+The default branch is `main`, matching the hub repository.
 - **Layout:** each run is a subdataset (the produced object), plus `transcript.jsonl` (annexed), `grading.json` and stamped-assessment records.
   Grading steps are `datalad run` records.
   The skills repository is a subdataset pinned per iteration.
@@ -813,7 +818,8 @@ Skills stay at `0.x` until their done criteria hold.
   - [x] `stamped-conventions` v0.1: card, vendored checklist + lock, verdicts, encoder, `stacks/datalad.md`, seeded from @asmacdo's draft.
   - [x] `assess-alignment-with-stamped-principles` v0.1 + probes.
   - [x] `evals/stamped/` skeleton with R0 + mutants.
-  - [ ] Bootstrap `con/stamped-skills-evals` on the hub, from typhon: `datalad create`, con/skills as a pinned subdataset, a `hub` sibling, the first `datalad push`.
+  - [x] Bootstrap `con/stamped-skills-evals` on the hub: `datalad create -c text2git`, a `hub` sibling, the first `datalad push` — done 2026-10-13 from a cloud session, not typhon ([§6.8](#68-where-results-live)).
+    Still to add there: con/skills as a pinned subdataset, which waits for this branch to be published.
   - [x] First calibration iteration ([§6.6](#66-calibrating-the-assessor)): mutants, plus one real object with its reference answer.
   - [x] A size and duplicate-block check added to `ci/validate_skills.py`.
   - [ ] Outside con/skills: the `ChecklistResponse` PR on stamped-checklist-schema, and an issue on the paper-vs-schema drift.
