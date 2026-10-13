@@ -62,6 +62,21 @@ from judgement import JUDGEMENT_MUTANTS  # noqa: E402
 
 SEVERITY = {"unmet": 0, "partial": 1, "not-checked": 2, "not-applicable": 3, "met": 4}
 
+# The control is the clean fixture, and two of its properties are simulated so
+# that it can be built offline (see the object's own FIXTURE.md): its input is
+# pinned to a locally generated commit, and its remote is not published. A
+# careful assessor finds both — the first control run did, by fetching the
+# commit and querying the remote — so they are *expected* accusations, not
+# false ones. Anything else the control accuses is a false accusation and is
+# reported as such.
+CONTROL_EXPECTED = {
+    "stamped-checklist:must/002": "the input is pinned to a commit that exists only in this build",
+    "stamped-checklist:must/016": "the object's own remote is not published",
+    "stamped-checklist:should/004": "no rerun was attempted, and the fake pin would break a fresh clone",
+    "stamped-checklist:should/007": "the container image is a placeholder, so no environment artifact is "
+                                    "actually archived (see the object's FIXTURE.md)",
+}
+
 
 def _probe_items(path: pathlib.Path) -> dict[str, str]:
     out = subprocess.run([sys.executable, str(RUN_PROBES), str(path), "--quiet"],
@@ -186,16 +201,25 @@ def score(args: argparse.Namespace) -> int:
         ).lower()
 
         if spec is None:
+            # An override is a judgement: `probe:<name>+judgement` counts here,
+            # a bare `probe:<name>` does not.
             judged = {i: a.get("status") for i, a in response.items()
-                      if not (a.get("source") or "").startswith("probe:")}
+                      if "judgement" in (a.get("source") or "")}
             accused = {i: s for i, s in judged.items() if s in {"unmet", "partial"}}
             if entry.get("control"):
-                # The control: no defect, so every accusation is a false one.
-                report["mutants"][name] = {"scored": True, "control": True,
-                                           "judgement_items": len(judged), "accused": accused}
-                print(f"control   {name:<42} {len(accused)}/{len(judged)} judgement item(s) accused on "
-                      "the clean object"
-                      + (f": {', '.join(i.split(':')[-1] for i in accused)}" if accused else ""))
+                expected = {i: s for i, s in accused.items() if i in CONTROL_EXPECTED}
+                false_accusations = {i: s for i, s in accused.items() if i not in CONTROL_EXPECTED}
+                report["mutants"][name] = {
+                    "scored": True, "control": True, "judgement_items": len(judged),
+                    "accused": accused, "expected": expected,
+                    "false_accusations": false_accusations,
+                    "false_accusation_rate": f"{len(false_accusations)}/{len(judged)}",
+                }
+                print(f"control   {name:<42} {len(false_accusations)}/{len(judged)} false accusation(s)"
+                      + (f": {', '.join(i.split(':')[-1] for i in false_accusations)}"
+                         if false_accusations else "")
+                      + (f" | {len(expected)} expected (the fixture's simulated properties: "
+                         f"{', '.join(i.split(':')[-1] for i in expected)})" if expected else ""))
             else:
                 # A mutant that was promoted to the scripted set since this run.
                 report["mutants"][name] = {"scored": False, "why": "retired from the judgement set "

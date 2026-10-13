@@ -55,6 +55,8 @@ def subdatasets_resolvable(obj: Object, check_remote: bool = False) -> Probe:
 
     unreachable: list[dict] = []
     if check_remote:
+        recorded = {m.get("path", m["name"]): m.get("recorded_commit", "").lstrip("+-U")
+                    for m in mods}
         for mod in good:
             url = mod["url"]
             if not url.startswith(("http://", "https://")):
@@ -65,6 +67,22 @@ def subdatasets_resolvable(obj: Object, check_remote: bool = False) -> Probe:
             )
             if proc.returncode != 0:
                 unreachable.append({**mod, "why": clip(proc.stderr.strip(), 120)})
+                continue
+            # A live url pinned to a commit nobody can fetch fails a fresh clone
+            # just as surely as a bad url. A blind run found exactly this in the
+            # eval fixture, which the shape check had called fine.
+            commit = recorded.get(mod["path"])
+            if not commit:
+                continue
+            fetch = subprocess.run(
+                ["git", "fetch", "--depth=1", "--no-tags", url, commit],
+                capture_output=True, text=True, timeout=300,
+                cwd=str(obj.root),
+            )
+            if fetch.returncode != 0:
+                unreachable.append({**mod, "commit": commit,
+                                    "why": f"url answers, but commit {commit[:9]} is not fetchable from it: "
+                                           + clip(fetch.stderr.strip(), 90)})
 
     details = {"resolvable": good, "unresolvable": bad, "unreachable": unreachable}
     # may/001 asks whether external components are linked as modules at all; a
@@ -90,7 +108,8 @@ def subdatasets_resolvable(obj: Object, check_remote: bool = False) -> Probe:
     if unreachable:
         return Probe(
             "subdatasets-resolvable", "partial", items,
-            clip(f"{len(unreachable)} module url(s) are well-formed but did not answer: {unreachable[0]['path']}"),
+            clip(f"{len(unreachable)} linked module(s) are well-formed but do not resolve in fact: "
+                 f"{unreachable[0]['path']} — {unreachable[0]['why']}"),
             [Evidence(".gitmodules", f"{u['path']}: {u['url']} — {u['why']}") for u in unreachable[:5]],
             details, item_status=may, item_reason=may_reason,
         )

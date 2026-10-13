@@ -66,6 +66,21 @@ make all          # joins the tables, then draws the figure
 
 Entry point: `code/plot_volumes.py`, called by `make figures/brain-volume-vs-age.png`.
 
+## Layout
+
+| Path | What it is |
+|---|---|
+| `sourcedata/ds007116` | the input dataset, linked as a module and never modified |
+| `code/` | the two steps, their `requirements.in`, and the container registration |
+| `code/containers/` | the image the run records name, pinned by digest in `containers.json` |
+| `results/`, `figures/` | the products; each arrives in its own run record |
+| `docs/` | how the method works and how to navigate the above |
+
+Each part can be replaced on its own: a different input module, a different
+container digest, or a different plotting step, without touching the others —
+the `Makefile` rules are the only coupling, and they name files rather than
+steps.
+
 ## Reproduce
 
 ```console
@@ -183,10 +198,59 @@ jobs:
       - uses: actions/checkout@v4
         with: {submodules: recursive}
       - run: pip install -r requirements.lock
+      # The records name a container; CI has to exercise *that* environment,
+      # not merely some environment (should/006 asks about the one the results
+      # came from).
+      - run: python3 -c "import json;d=json.load(open('code/containers.json'));print(d['containers']['plotting']['digest'])"
+      - run: test -e code/containers/plotting.sif
       - run: make all
       - run: git diff --exit-code results figures
 """,
-    "docs/README.md": "Notes on the method live here.\n",
+    "docs/README.md": """# Notes on the method, and how to navigate this object
+
+**The question:** does brain volume grow with age over 8–20 years, and does the
+grey/white matter ratio fall over the same range?
+
+**Where things are.** `../README.md` has the layout table; this file explains
+how the pieces relate:
+
+1. `sourcedata/ds007116` is an input module. It is never written to. Swapping it
+   for another BIDS dataset with FreeSurfer derivatives is the intended way to
+   re-use this object.
+2. `code/collect_volumes.py` reads only `derivatives/freesurfer-post/*_qc.tsv`
+   from that module and writes one row per session to `results/volumes.tsv`.
+   It is the only step that knows the input's layout.
+3. `code/plot_volumes.py` reads that table and nothing else, so a different
+   plot, or a different table with the same columns, needs no change upstream.
+4. The container in `code/containers/`, pinned by digest in
+   `code/containers.json`, is what both steps run inside; the run records name
+   it, so the environment and the action are linked in the history.
+
+**Re-running one step.** `make results/volumes.tsv` or
+`make figures/brain-volume-vs-age.png`; each target depends only on what it
+actually reads.
+""",
+    # Stated inside the object, because a careful assessor checks and finds out:
+    # a blind control run fetched the pinned input commit and queried this
+    # object's own remote, and was right that neither exists.
+    "FIXTURE.md": """# This object is a test fixture
+
+It exists to calibrate `assess-alignment-with-stamped-principles`, and two
+things about it are **simulated**:
+
+- `sourcedata/ds007116` records the URL of the real OpenNeuro dataset, but is
+  pinned to a commit generated locally when this fixture was built. That commit
+  does not exist upstream, so `git submodule update --init` from a fresh clone
+  cannot succeed.
+- `remote.origin.url` names a repository that is not published.
+
+Everything else — the layout, the pinned environment, the run records, the
+entry point, the CI job — is as a good R0-shaped object would have it. The two
+simulations are what make the fixture buildable offline in seconds; they are
+also why an honest assessment of *this* object cannot answer must/002 or
+must/016 `met`. See `evals/stamped/harness/judgement_calibrate.py`, which
+expects exactly those two.
+""",
 }
 
 RUNS = [

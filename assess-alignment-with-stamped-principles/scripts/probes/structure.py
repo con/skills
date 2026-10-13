@@ -75,6 +75,8 @@ ENV_SPECS = {
     "Pipfile": "spec", "setup.cfg": "spec",
 }
 CI_DIRS = (".github/workflows/", ".gitlab-ci.yml", ".circleci/", ".forgejo/workflows/", ".gitea/workflows/")
+LOCKFILES_CI = ("pixi.lock", "uv.lock", "poetry.lock", "conda-lock.yml", "renv.lock",
+                "requirements.lock", "requirements.txt")
 CI_REEXECUTES = re.compile(
     r"\b(datalad\s+rerun|datalad\s+run|make\b|snakemake|nextflow|pixi\s+run|uv\s+sync|"
     r"docker\s+build|apptainer\s+build|singularity\s+build|conda\s+env\s+create|tox\b)",
@@ -605,26 +607,88 @@ def platform_assumptions(obj: Object) -> Probe:
 
 
 def ci_present(obj: Object) -> Probe:
-    """should/002, should/006 — the workflow or the environment is exercised automatically."""
-    items = ["stamped-checklist:should/002", "stamped-checklist:should/006"]
+    """should/002 (the workflow is tested regularly) and should/006 (the
+    environment that produced the results is tested regularly).
+
+    These were one verdict from one coarse regex — the bare word `make` in a CI
+    file was taken as proof of both. A blind run pointed out that they ask
+    different questions: whether the workflow still runs, and whether *the*
+    environment behind the shipped results can still be reconstituted. CI that
+    runs `make all` under its own `pip install` answers the first and not the
+    second.
+    """
+    i002, i006 = "stamped-checklist:should/002", "stamped-checklist:should/006"
+    items = [i002, i006]
     configs = [p for p in obj.tracked() if any(p.startswith(d) or p == d for d in CI_DIRS)]
     if not configs:
+        reason = "No CI configuration: nothing checks that the instructions still work."
         return Probe(
-            "ci-present", "unmet", items,
-            "No CI configuration: nothing checks that the instructions still work.",
+            "ci-present", "unmet", items, reason,
             [Evidence("probe:ci-present",
-                      "no tracked " + ", ".join(CI_DIRS) + " in " + str(len(obj.tracked())) + " tracked paths")],
+                      "no tracked " + ", ".join(CI_DIRS) + f" in {len(obj.tracked())} tracked paths")],
+            {"configs": []},
+            item_status={i002: "unmet", i006: "unmet"},
+            item_reason={i002: reason,
+                         i006: "No CI configuration: the environment behind the results is never rebuilt."},
         )
-    reexec = [p for p in configs if CI_REEXECUTES.search(obj.read(p))]
-    evidence = [Evidence(p, "CI configuration") for p in configs[:5]]
-    if reexec:
-        return Probe(
-            "ci-present", "met", items,
-            clip(f"{', '.join(reexec[:2])} re-executes the workflow or rebuilds the environment."),
-            [Evidence(p, "re-executes the workflow or rebuilds the environment") for p in reexec[:5]],
+
+    texts = {path: obj.read(path) for path in configs}
+    runs_workflow = [p for p, text in texts.items() if CI_REEXECUTES.search(text)]
+    # What the run records actually ran in, so that "the environment" means the
+    # one behind the shipped results rather than whatever CI happens to build.
+    recorded = " ".join(
+        str((rec.get("run_info") or {}).get("cmd", "")) + " ".join(
+            str(x) for x in ((rec.get("run_info") or {}).get("extra_inputs") or [])
         )
+        for rec in obj.run_records()
+    )
+    rebuild = re.compile(r"(?:docker|apptainer|singularity)\s+(?:build|pull|exec|run)|"
+                         r"containers-run|datalad\s+rerun|pixi\s+install|uv\s+sync|conda\s+env\s+create|"
+                         r"pip\s+install\s+-r|renv::restore", re.IGNORECASE)
+    rebuilders = [p for p, text in texts.items() if rebuild.search(text)]
+    # Does CI rebuild the *recorded* environment, or merely some environment?
+    recorded_images = set(re.findall(r"[\w./-]+\.(?:sif|simg)|docker://[\w./:-]+", recorded))
+    recorded_locks = {lock for lock in LOCKFILES_CI if lock in recorded}
+    same_env = [p for p, text in texts.items()
+                if any(img.rsplit("/", 1)[-1] in text for img in recorded_images)
+                or any(lock in text for lock in recorded_locks)]
+
+    evidence = [Evidence(p, "CI configuration") for p in configs[:3]]
+    evidence += [Evidence(p, "re-executes the workflow") for p in runs_workflow[:3]]
+    evidence += [Evidence(p, "rebuilds an environment") for p in rebuilders[:3]]
+
+    if runs_workflow:
+        s002 = "met"
+        r002 = clip(f"{', '.join(runs_workflow[:2])} re-executes the workflow, so the instructions are "
+                    "exercised on every push.")
+    else:
+        s002 = "partial"
+        r002 = clip(f"CI exists ({configs[0]}) but no job re-executes the workflow.")
+
+    if not obj.run_records() and not recorded_images and not recorded_locks:
+        s006 = "met" if rebuilders else "partial"
+        r006 = clip(f"{', '.join(rebuilders[:2])} rebuilds the environment from its specification."
+                    if rebuilders else
+                    f"CI exists ({configs[0]}) but no job rebuilds the environment.")
+    elif same_env:
+        s006 = "met"
+        r006 = clip(f"{', '.join(same_env[:2])} reconstitutes the same environment the run records name.")
+    elif rebuilders:
+        s006 = "partial"
+        r006 = clip(f"{rebuilders[0]} rebuilds *an* environment, but not the one the run records name "
+                    f"({', '.join(sorted(recorded_images | recorded_locks)[:2]) or 'see the records'}): "
+                    "the environment behind the shipped results is never tested.")
+    else:
+        s006 = "unmet"
+        r006 = clip(f"CI exists ({configs[0]}) but nothing rebuilds the environment the results came from.")
+
+    worst = min((s002, s006), key=lambda s: {"unmet": 0, "partial": 1, "met": 2}[s])
     return Probe(
-        "ci-present", "partial", items,
-        clip(f"CI exists ({configs[0]}) but no job re-executes the workflow or rebuilds the environment."),
+        "ci-present", worst, items, clip(f"should/002 {s002}: {r002} should/006 {s006}: {r006}"),
         evidence,
+        {"configs": configs, "runs_workflow": runs_workflow, "rebuilders": rebuilders,
+         "recorded_images": sorted(recorded_images), "recorded_locks": sorted(recorded_locks),
+         "same_environment": same_env},
+        item_status={i002: s002, i006: s006},
+        item_reason={i002: r002, i006: r006},
     )

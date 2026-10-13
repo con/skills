@@ -74,7 +74,8 @@ python3 scripts/run_probes.py <object> --kind <kind> \
     -o <date>-probes.json --response <date>-response.json
 ```
 
-That answers 13 of the 17 MUST items, 2 SHOULD items and may/001 from committed state, and leaves the rest `not-checked` for you.
+That answers 13 of the 17 MUST items, 3 SHOULD items (should/002, should/003, should/006) and may/001 from committed state, and leaves the rest `not-checked` for you.
+Do not take the count on trust — read the sweep's own summary line, which prints what it actually answered.
 `platform-assumptions` covers the lock-in that comes through *tool choice* — `brew`, BSD `sed -i ''`, `nproc`, `sbatch` — which the path probe cannot see; what it cannot judge is whether an assumption the object *does* name is adequately documented, or whether two accounts of how the object runs agree ([`verdicts.md`](../stamped-conventions/references/verdicts.md) rule 10).
 Three probes answer no checklist item at all and are reported as extras: `license-declared` (paper S.2/D.3), `clone-weight` (oversized text in git) and `inputs-untouched` (did an input move).
 Read `<date>-probes.json`, not just the summary: `details` carries the paths, commits and lines you cite.
@@ -111,6 +112,7 @@ Each of these needs a reading of the object, and each needs a citation:
 | must/011, must/012 | `platform-assumptions` flags platform-specific commands with no platform named. You judge the rest: are the OS, system libraries, environment variables, scheduler and hardware written down *where a stranger will look*, and does the documented route match what CI and the run records actually do? |
 | must/017 | Does the documentation say how to obtain and use the environment, not just that it exists? |
 | should/001 | One version-control system across components, or several? |
+| should/008 | The duplicate of must/014 — the same sentence at SHOULD level. Answer it, with the same evidence and the `upstream-duplicate` flag; it is easy to miss when skimming for `should/*` ids. |
 | should/005, should/004 | Does execution spawn a disposable environment per run (a container per job, a batch job, CI), or does it reuse a long-lived one? |
 | must/014 **and** should/008 | The same question twice (the checklist duplicates it word for word): is there a stated process for updating the environment spec, and does history show it followed? Answer both from the same evidence, and put `upstream-duplicate` in both items' `flags` so a reader sees why two answers repeat. |
 | should/007 | Are environment artifacts archived with the object (image, binaries), or only referenced? |
@@ -125,6 +127,8 @@ Before a finding goes first in the report, confirm it yourself rather than repea
 The cheap confirmations:
 
 - **An unresolvable module url** (must/002): clone the object into a temporary directory from its *published* remote and run `git submodule update --init <path>`, or resolve the recorded url by hand against that remote. `url = ../..` resolving to something real on your disk and to nothing for a stranger is exactly the case worth being sure about.
+  A url can also be live and still unusable: `git fetch --depth=1 <url> <recorded commit>` catches a module pinned to a commit that does not exist upstream, which the shape check cannot see and `--check-remote` now does.
+- **A remote that does not exist** (must/016): `git ls-remote <remote url>` before believing a publication claim. A tracked specification in an unpublished repository is not shared.
 - **A missing environment specification** (must/010, must/013): look for what the entry point actually requires — a tool checked on `PATH`, a version gate, a vendored directory — and cite that line, not the absence of a file.
 - **A derived file with no record** (must/006): `git log --format=%H -1 -- <path>` and check whether that commit is a run record.
 
@@ -133,6 +137,7 @@ Anything you did not confirm keeps `unverified-claim` in its `flags`, and the re
 ## Step 5. Check what the project already knows
 
 Look at the project's own issue tracker, TODOs and `AGENTS.md`/`CLAUDE.md` for gaps it has already recorded (`gh issue list --search 'reproduc OR provenance OR container'` where there is a GitHub remote).
+If `gh` is unauthenticated, or the tracker is unreachable, say so in the scope line and move on — this step informs the wording of findings, it never blocks the assessment.
 A known, tracked gap is reported differently from one nobody has noticed: say "already tracked in #NN" in the reason, and do not propose it as a new finding.
 
 ## Step 6. Write the three products

@@ -33,6 +33,10 @@ This reconciles @asmacdo's draft (pass/partial/fail/unknown), STAMPED-dl's met/p
    An object with no host assumptions to document satisfies must/011 — the requirement is "write down your assumptions", and having none meets it.
    Answer `met`, and let the reason carry the emptiness ("no host assumptions beyond a POSIX shell and the tracked lockfile; nothing undocumented remains").
    The difference from an empty subject is whether the *requirement* can be satisfied vacuously (must/011: yes) or the *property* has no instance to hold of (should/009 on an all-public object: no).
+
+   **A declared process that has never run is `partial`**, not `met` and not `not-checked`.
+   must/014 and should/008 ask for a process *and* for its updates to be tracked; a documented regeneration command with no update in the history is half of that, so say "declared in <file>, no instance in the history yet".
+   This is the commonest borderline case, and it comes up on every young object.
 6. **`restricted`** (from STAMPED-dl) is **not a status here**.
    Restricted data that is properly isolated is `met` on should/009 and `not-checked` elsewhere with "access-restricted" as the reason.
 7. **Equivalent evidence counts.**

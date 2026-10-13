@@ -282,3 +282,29 @@ def test_judgement_mutants_do_not_trip_the_probes(clean, tmp_path):
         expected = {**baseline, **(spec.get("probes_expected") or {})}
         changed = {i: s for i, s in after.items() if expected.get(i) != s}
         assert not changed, f"{name} changed probe verdicts: {changed}"
+
+
+def test_skill_states_the_coverage_it_actually_has(clean):
+    """The counts in SKILL.md must match what the probes answer.
+
+    Two blind runs in a row reported that the skill's "probes answer N of the
+    MUST items, M SHOULD items" sentence was wrong after the probe set grew. A
+    doc that drifts from the code is a doc nobody can trust, so the sentence is
+    pinned here.
+    """
+    import re
+
+    statuses = _statuses(clean)
+    checklist = Checklist()
+    answered = {level: sum(1 for i in checklist.items
+                           if i["level"] == level and i["id"] in statuses)
+                for level in ("must", "should", "may")}
+    text = (ASSESS / "SKILL.md").read_text()
+    match = re.search(r"answers (\d+) of the (\d+) MUST items, (\d+) SHOULD items", text)
+    assert match, "SKILL.md no longer states its probe coverage in the expected form"
+    stated_must, stated_total, stated_should = (int(g) for g in match.groups())
+    assert stated_must == answered["must"], f"SKILL.md says {stated_must} MUST, probes answer {answered['must']}"
+    assert stated_should == answered["should"], (
+        f"SKILL.md says {stated_should} SHOULD, probes answer {answered['should']}"
+    )
+    assert stated_total == sum(1 for i in checklist.items if i["level"] == "must")

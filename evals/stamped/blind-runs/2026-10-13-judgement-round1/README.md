@@ -1,14 +1,17 @@
 # Judgement mutants, round 1 — 2026-10-13
 
 The first runs of the judgement half: prose defects, graded by blind subagents
-rather than by scripts. Three were run of the seven prepared, one deliberately
-on a smaller model.
+rather than by scripts. Five runs of the seven prepared, one deliberately on a
+smaller model, plus the control.
 
 | Mutant | Model | Result | What it said |
 |---|---|---|---|
 | `readme-wrong-make-target` | sonnet | **detected**, now **retired** | Flagged must/007 `partial`, named `brain-volumes`, and confirmed it by running `make -n brain-volumes` ("No rule to make target") rather than asserting it. Then pointed out that `entry-point` already held both the README's commands *and* the Makefile's targets and never compared them — so the defect is script-catchable, the probe now catches it, and the mutant moved to `mutants/mutate.py`. |
 | `readme-platform-specific-steps` | sonnet | **detected**, now **retired** | must/011 `unmet`, must/012 `partial`; named `brew`, `sysctl`, `sed -i` and macOS, and noted that **13 of 13 probes said `met`** on an object that runs on one developer's Mac. That verdict is now mechanical: `platform-assumptions` flags platform-specific commands when no platform is named in the same file, and the mutant moved to the scripted set. |
 | `readme-claims-absent-container` | **haiku** | **detected** | must/017 `unmet`, naming `neurodesk-freesurfer` and `///repronim/containers`, and spotting that three sources of truth disagree (README, Makefile, run records). A smaller model caught the prose defect. |
+
+| `readme-misdescribes-target` | sonnet | **detected** (after the net was widened) | It read the prose, caught the falsehood and named it — "claims (falsely) that `make all` alone installs the environment" — then pinned it on should/002 and must/017 rather than on must/007. The mutant's `flag_any` was too narrow, which is a defect in the fixture, not the run: which item a reader chooses for a prose defect is not under test, and `mention_any` is what carries the weight. |
+| **`control-clean`** (no defect) | sonnet | **2/18 false accusations** | The baseline that had never been measured — and the most useful run of the five. See below. |
 
 Scored 2/2 at the time (`score.json`); **both of those mutants have since been
 retired into the scripted set**, where the same defects now cost nothing to
@@ -37,7 +40,7 @@ Three findings in the harness and the object, one per layer:
   response that carries the placeholder, so the skill cannot report before
   answering all 31.
 
-## And ten friction items, all acted on
+## And sixteen friction items, fifteen acted on
 
 1. **`dependencies` existed in one authority of three.** The skill asked for
    `assessor.dependencies`; `response-format.md`'s example and
@@ -73,12 +76,59 @@ Three findings in the harness and the object, one per layer:
 10. **`project-kinds.md` had no example of the commonest shape** — a study whose
     product is a re-derivation from another dataset's derivatives. It has one
     now, with what that implies for S.1, M.1, T and E.1.
+11. **`ci-present` answered two different items from one coarse regex** — the
+    bare word `make` in a CI file was taken as proof both that the workflow is
+    tested *and* that the environment behind the results is rebuilt. Split:
+    should/002 asks whether CI re-executes the workflow; should/006 asks whether
+    it reconstitutes **the** environment the run records name, which CI running
+    its own `pip install` does not.
+12. **The skill's probe-coverage sentence was wrong** (it said 2 SHOULD items;
+    the probes answer 3) — reported independently by two runs. Fixed, and now
+    pinned by a test that compares the sentence against the registry, so the
+    doc cannot drift again.
+13. **"Verify the finding you are about to lead with" had one worked example**,
+    and not the one that mattered: a live URL pinned to a commit that does not
+    exist upstream. Both that and `git ls-remote` on a publication claim are
+    named now.
+14. **`not-applicable` still had a borderline case**: a declared process that
+    has never run (must/014 on a young object). It is `partial` — "declared in
+    <file>, no instance in the history yet" — not `met` and not `not-checked`.
+15. **should/008 was not its own row** in the judgement table, which cost one
+    run a `validate` failure cycle. It has one.
+16. **Nothing said what to do when `gh` is unauthenticated** in step 5. Say so
+    in the scope line and move on; the step informs wording, it never blocks.
+
+## The control run, which found that the fixture was not known-good
+
+Given the unmutated object, it accused six judgement items. Four are the
+fixture's own simulated properties, now declared in the object's `FIXTURE.md`
+and listed in `judgement_calibrate.py`'s `CONTROL_EXPECTED`:
+
+- **must/002 `unmet`** — it fetched the pinned input commit
+  (`2c445a41…`) from the real `OpenNeuroDatasets/ds007116` and got
+  `upload-pack: not our ref`. **Correct**: the fixture generates the input
+  locally and then records the real URL, so the pin cannot resolve for anyone.
+  `--check-remote` now verifies the recorded commit and not only the URL shape.
+- **must/016 `partial`** — it queried `github.com/con/stamped-eval-fixture-r0`
+  and got 404. **Correct**: the fixture's own remote is invented.
+- **should/004, should/007** — downstream of the same two simulations.
+
+Two were fair criticisms of the fixture itself, so the fixture changed rather
+than the expectations: **may/002** and **may/005** (the modular structure was
+nowhere documented, and `docs/README.md` was a one-line stub). The README now
+carries a layout table and a sentence on what can be swapped independently, and
+`docs/README.md` explains how the parts relate. Those two accusations were
+measured against the fixture *as it then was*; the next control run is what
+will show the baseline on the improved object.
+
+One of its five friction items was simply **wrong**: it reported `lock.json`'s
+sha256 as 65 hex characters. It is 64, and `vendor_checklist.py --check`
+recomputes and compares, so the claim could not have been true. Worth recording:
+a blind run's friction list is evidence, not verdicts, and this one does not
+survive checking.
 
 ## Still to run
 
-`control-clean` (the unmutated object, whose only score is how many judgement
-items it accuses — the false-accusation baseline for the judgement half, which
-has never been measured), plus `readme-misdescribes-target` (the judgement
-replacement for the retired mutant), `readme-wrong-tool`,
+A fresh `control-clean` on the improved fixture, plus `readme-wrong-tool`,
 `readme-steps-out-of-order`, `readme-host-path-in-instructions` and
 `dataset-description-contradicts-layout`.
