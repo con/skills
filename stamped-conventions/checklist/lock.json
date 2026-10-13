@@ -1,0 +1,22 @@
+{
+  "checklist_version": "0.3.1",
+  "schema_version": "0.2.0",
+  "principles_version": "0.2.0",
+  "source": {
+    "repo": "https://github.com/stamped-principles/stamped-checklist-schema",
+    "tag": "v0.3.1",
+    "commit": "af259bad237fa57b856417db8dba45a1b283a527",
+    "path": "stamped-checklist.json",
+    "url": "https://raw.githubusercontent.com/stamped-principles/stamped-checklist-schema/af259bad237fa57b856417db8dba45a1b283a527/stamped-checklist.json"
+  },
+  "file": "stamped-checklist-0.3.1.json",
+  "sha256": "da2eb88ed49dff64f098ad92200dec81c1b4404cc2d3ba1e1e1404d0e10e7bba",
+  "size": 10709,
+  "vendored_at": "2026-10-13",
+  "vendored_by": "stamped-conventions/scripts/vendor_checklist.py",
+  "item_counts": {
+    "must": 17,
+    "should": 9,
+    "may": 5
+  }
+}

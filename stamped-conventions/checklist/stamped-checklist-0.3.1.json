@@ -1,0 +1,216 @@
+{
+    "checklist_version": "0.3.1",
+    "schema_version": "0.2.0",
+    "principles_version": "0.2.0",
+    "data": [
+        {
+            "level": "must",
+            "entries": [
+                {
+                    "principle_codes": ["S.1"],
+                    "items": [
+                        {
+                            "id": "stamped-checklist:must/001",
+                            "text": "Are all files and directories nested under a common root?"
+                        },
+                        {
+                            "id": "stamped-checklist:must/002",
+                            "text": "Are datasets included, linked, or referenced reachable from the code and environment specifications without crossing the boundary of a common root?"
+                        },
+                        {
+                            "id": "stamped-checklist:must/003",
+                            "text": "Is external software included in the environment or linked as submodules within the project boundary?"
+                        }
+                    ]
+                },
+                {
+                    "principle_codes": ["T.1", "T.3", "T.5"],
+                    "items": [
+                        {
+                            "id": "stamped-checklist:must/004",
+                            "text": "Are version control systems such as `Git` used for code, text, documentation, and configuration files?"
+                        },
+                        {
+                            "id": "stamped-checklist:must/005",
+                            "text": "Are version control systems such as `git-annex`, DataLad, or `Git` LFS used for large binary data?"
+                        },
+                        {
+                            "id": "stamped-checklist:must/006",
+                            "text": "Are the exact environment specifications used to generate a set of results included in the provenance records to link computational actions to particular environments?"
+                        }
+                    ]
+                },
+                {
+                    "principle_codes": ["A.1"],
+                    "items": [
+                        {
+                            "id": "stamped-checklist:must/007",
+                            "text": "Is a `README.md` or `Makefile` included with instructions for installation and usage?"
+                        },
+                        {
+                            "id": "stamped-checklist:must/008",
+                            "text": "Is there a clear starting point for users to start reproducing results (e.g., a main script, a workflow definition, or a container image)?"
+                        }
+                    ]
+                },
+                {
+                    "principle_codes": ["P.1"],
+                    "items": [
+                        {
+                            "id": "stamped-checklist:must/009",
+                            "text": "Are relative paths used in scripts, avoiding hardcoded or system-specific paths like `C:\\Users\\...` or `/home/user/...`?"
+                        },
+                        {
+                            "id": "stamped-checklist:must/010",
+                            "text": "Are all software dependencies included in the environment specification, rather than relying on pre-installed tools?"
+                        },
+                        {
+                            "id": "stamped-checklist:must/011",
+                            "text": "Have all assumptions about the host system's configuration been documented (e.g., specific OS versions, required system libraries, or environment variables)?"
+                        }
+                    ]
+                },
+                {
+                    "principle_codes": ["P.2"],
+                    "items": [
+                        {
+                            "id": "stamped-checklist:must/012",
+                            "text": "Is there a clear list of system requirements and dependencies documented in the README or environment specifications?"
+                        }
+                    ]
+                },
+                {
+                    "principle_codes": ["P.3"],
+                    "items": [
+                        {
+                            "id": "stamped-checklist:must/013",
+                            "text": "Are environment specifications (e.g., Dockerfiles, `pyproject.toml`, `package.json`) included in the version control system alongside code and data?"
+                        },
+                        {
+                            "id": "stamped-checklist:must/014",
+                            "text": "Is there a process for updating environment specifications when dependencies change, and are these updates tracked in version control?"
+                        }
+                    ]
+                },
+                {
+                    "principle_codes": ["D.1"],
+                    "items": [
+                        {
+                            "id": "stamped-checklist:must/015",
+                            "text": "Are environment specifications (e.g., container digests, frozen package manifests) included to ensure others can attempt to exactly replicate the environment?"
+                        },
+                        {
+                            "id": "stamped-checklist:must/016",
+                            "text": "Are environment specifications shared in a way that others can access and use them (e.g., published container images, archived environment files)?"
+                        },
+                        {
+                            "id": "stamped-checklist:must/017",
+                            "text": "Is there documentation on how to obtain and use the environment specifications for reproduction?"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "level": "should",
+            "entries": [
+                {
+                    "principle_codes": ["T.2"],
+                    "items": [
+                        {
+                            "id": "stamped-checklist:should/001",
+                            "text": "Is a common version control system (e.g., `Git`, DVC, `git-annex`, or DataLad) used across all components?"
+                        }
+                    ]
+                },
+                {
+                    "principle_codes": ["A.2"],
+                    "items": [
+                        {
+                            "id": "stamped-checklist:should/002",
+                            "text": "Is the workflow tested regularly to ensure instructions remain accurate?"
+                        }
+                    ]
+                },
+                {
+                    "principle_codes": ["M.1"],
+                    "items": [
+                        {
+                            "id": "stamped-checklist:should/003",
+                            "text": "Are raw data, processed data, code, and environment definitions separated into distinct modules?"
+                        }
+                    ]
+                },
+                {
+                    "principle_codes": ["M.4"],
+                    "items": [
+                        {
+                            "id": "stamped-checklist:should/009",
+                            "text": "Are restricted data or software kept in their own modules?"
+                        }
+                    ]
+                },
+                {
+                    "principle_codes": ["E.1"],
+                    "items": [
+                        {
+                            "id": "stamped-checklist:should/004",
+                            "text": "Is the pipeline tested in a fresh container, batch job, clean virtual machine, or cloud-based instance?"
+                        },
+                        {
+                            "id": "stamped-checklist:should/005",
+                            "text": "Does the workflow spawn disposable environments for each execution, allowing for isolation of runs?"
+                        }
+                    ]
+                },
+                {
+                    "principle_codes": ["D.2"],
+                    "items": [
+                        {
+                            "id": "stamped-checklist:should/006",
+                            "text": "Are the exact environment specifications used to generate a specific set of results regularly tested to ensure they can be reconstituted as intended?"
+                        },
+                        {
+                            "id": "stamped-checklist:should/007",
+                            "text": "Are environment artifacts archived within the research object where possible (e.g., executable binaries, container images)?"
+                        },
+                        {
+                            "id": "stamped-checklist:should/008",
+                            "text": "Is there a process for updating environment specifications when dependencies change, and are these updates tracked in version control?"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "level": "may",
+            "entries": [
+                {
+                    "principle_codes": ["M.2"],
+                    "items": [
+                        {
+                            "id": "stamped-checklist:may/001",
+                            "text": "Are external datasets or software dependencies included as submodules or linked as submodules?"
+                        },
+                        {
+                            "id": "stamped-checklist:may/002",
+                            "text": "Is the modular structure documented to clarify how components relate and can be recombined?"
+                        },
+                        {
+                            "id": "stamped-checklist:may/003",
+                            "text": "Are modular boundaries defined in a way that allows independent updates without breaking the overall workflow?"
+                        },
+                        {
+                            "id": "stamped-checklist:may/004",
+                            "text": "Is there a clear mechanism for composing modules together (e.g., `git` submodules, or container orchestration)?"
+                        },
+                        {
+                            "id": "stamped-checklist:may/005",
+                            "text": "Is there documentation or tooling to support users in understanding and navigating the modular structure?"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
