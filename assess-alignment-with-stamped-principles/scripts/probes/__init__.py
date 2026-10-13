@@ -20,6 +20,7 @@ from .structure import (
     large_in_annex,
     license_declared,
     no_abs_paths,
+    platform_assumptions,
     tree_clean,
 )
 
@@ -31,6 +32,7 @@ REGISTRY = {
     "derived-have-records": derived_have_records,
     "run-env-linked": run_env_linked,
     "env-spec-tracked": env_spec_tracked,
+    "platform-assumptions": platform_assumptions,
     "entry-point": entry_point,
     "modules-separated": modules_separated,
     "inputs-untouched": inputs_untouched,

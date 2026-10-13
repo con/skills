@@ -41,7 +41,11 @@ This reconciles @asmacdo's draft (pass/partial/fail/unknown), STAMPED-dl's met/p
    Where a probe exists for an item, run it and cite its output; use judgement only for what no probe can settle, and record which of the two produced each verdict.
 9. **Disagreements are surfaced, not averaged.**
    When a probe and a reading of the object disagree, report both and flag the item for the human.
-10. **A right answer reached by the wrong route is still a finding.**
+10. **When the object tells two stories about how it runs, that disagreement *is* the answer.**
+    An object can carry three accounts of its own execution — what the documentation says, what CI exercises, and what the run records recorded — and they need not agree.
+    Judge **A.1 items (must/007, must/008, must/017) on the documented route**, because that is what a reader will follow; judge **T items on the records**, because that is what produced the results.
+    Where the accounts disagree, the verdict is at most `partial`, the reason names both accounts, and the disagreement is reported as a finding in its own right: a README promising a container that the `Makefile` never invokes is worse than either an honest README or an honest Makefile.
+11. **A right answer reached by the wrong route is still a finding.**
     When a probe answers an item from a property the item does not ask about, the verdict may happen to be right and the reasoning is still wrong.
     Record it in the item's `flags` (`mapping-questioned`), say which property the probe actually measured, and keep your own verdict with `source` ending in `+judgement`.
     That is how a wrong probe-to-item mapping gets fixed instead of being inherited by every later report.

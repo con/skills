@@ -1,12 +1,13 @@
 # Response, report and stamp
 
-Every STAMPED assessment produces three files and one URL, named for **the day the assessment was made** (UTC, `YYYY-MM-DD`) — not the object's commit date, and not the date of an earlier assessment being redone:
+Every STAMPED assessment produces four files, named for **the day the assessment was made** (UTC, `YYYY-MM-DD`) — not the object's commit date, and not the date of an earlier assessment being redone:
 
 | File | What it is |
 |---|---|
 | `<date>-assessment.md` | the human report (layout below) |
 | `<date>-response.json` | the machine-readable per-item answer, with evidence and pins |
 | `<date>-probes.json` | what the scripted probes said, unedited, including the ones overridden |
+| `<date>-url.txt` | the checklist-app URL, on one line |
 | `<date>-fresh-rerun.json` | only when the expensive rerun probe was actually run |
 
 The URL is derived from the response, never maintained by hand.
@@ -89,6 +90,7 @@ One page, in this order, so the reader meets the actionable part first:
 6. **Not checked** — each with what would settle it.
 7. **Goals and kind** — the project's stated goals (and where they came from: documentation, or the user's answers), its kind, and the emphasis that follows.
 8. **The checklist URL**, the stamp, and a pointer to the response JSON.
+   The URL is ~8–10 kB of base64 for a full 31-item response, so the report **links** `<date>-url.txt` rather than inlining it; a link a reader can click, not a wall they have to scroll.
 
 ## The checklist-app URL
 

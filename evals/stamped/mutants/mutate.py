@@ -194,6 +194,35 @@ def readme_wrong_make_target(root: pathlib.Path) -> str:
     return "README tells the reader to run `make brain-volumes`, which the Makefile does not define"
 
 
+def readme_platform_specific_steps(root: pathlib.Path) -> str:
+    """Instructions that only work on one operating system.
+
+    Promoted from a judgement mutant: a blind run reported 13 probes `met` on
+    this object, and the fix was a probe (`platform-assumptions`) rather than a
+    sentence. What stays judgement is prose whose *meaning* is wrong, not prose
+    naming a platform-specific command.
+    """
+    path = root / "README.md"
+    text = path.read_text()
+    text = text.replace("""## Install
+
+```console
+python3 -m venv .venv && .venv/bin/pip install -r requirements.lock
+```""", """## Install
+
+```console
+brew install python@3.12 freesurfer
+python3 -m venv .venv && .venv/bin/pip install -r requirements.lock
+sed -i '' 's|REPLACE_ME|'"$(pwd)"'|' code/containers.json
+make all -j $(sysctl -n hw.ncpu)
+```""")
+    path.write_text(text)
+    git(root, "add", "README.md")
+    git(root, "commit", "-q", "-m", "spell out the install steps")
+    return ("the documented install uses Homebrew, BSD `sed -i ''` and `sysctl -n hw.ncpu`: "
+            "it runs on one developer's macOS and nowhere else")
+
+
 def readme_reproduce_removed(root: pathlib.Path) -> str:
     """Instructions that no longer say how to run anything."""
     path = root / "README.md"
@@ -256,6 +285,11 @@ MUTANTS: dict[str, dict] = {
         "apply": relative_subdataset_url,
         "expect": {"stamped-checklist:must/002": "unmet"},
         "probe": "subdatasets-resolvable",
+    },
+    "readme-platform-specific-steps": {
+        "apply": readme_platform_specific_steps,
+        "expect": {"stamped-checklist:must/011": "partial"},
+        "probe": "platform-assumptions",
     },
     "readme-wrong-make-target": {
         "apply": readme_wrong_make_target,

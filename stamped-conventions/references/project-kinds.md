@@ -11,6 +11,16 @@ The kind is recorded in the response JSON (`object.kind`) and, for eval runs, as
 | **study** | A question answered with data and compute: the usual shape of these skills' output | All seven; **T** (every derived file has a re-executable record) and **S** (inputs under the boundary as subdatasets, not paths) carry the most weight | Rarely anything |
 | **skill / agent harness** | A skill, prompt collection or agent configuration — including the skills in this collection | **T** (`version:`, changelog), **A** (tests outside the skill directory), **P** (no host assumptions), **D** (installable at a pin) | may/001 where there are no external modules |
 
+## A shape that comes up constantly
+
+**A study whose product is a re-derivation from another dataset's derivatives** —
+it consumes published results, adds a join, a table and a figure, and produces no
+raw or intermediate data of its own. It is a **study**, not a dataset: the product
+is an answer, and the inputs belong to someone else.
+What follows: S.1 and M.1 are judged on whether those inputs are *linked* rather than copied;
+T is judged on the few derived files it does make, and "few" is not a discount;
+E.1 is weighed lightly if the computation is seconds of CPU, and never counted against the object for being cheap.
+
 ## Mixed objects
 
 Most real projects are more than one kind.

@@ -515,6 +515,95 @@ def license_declared(obj: Object) -> Probe:
     )
 
 
+# Commands that exist on one platform only. A project may use them — it just
+# has to say which platform it expects, which is what must/011 asks.
+PLATFORM_COMMANDS = {
+    "brew": "macOS (Homebrew)",
+    "port install": "macOS (MacPorts)",
+    "sysctl -n hw.": "macOS/BSD",
+    "sed -i ''": "BSD sed (macOS); GNU sed needs `sed -i`",
+    "apt-get": "Debian/Ubuntu",
+    "apt install": "Debian/Ubuntu",
+    "yum install": "RHEL/CentOS",
+    "dnf install": "Fedora/RHEL",
+    "pacman -S": "Arch",
+    "apk add": "Alpine",
+    "choco install": "Windows (Chocolatey)",
+    "winget install": "Windows",
+    "powershell": "Windows",
+    "nproc": "GNU coreutils (absent on macOS)",
+    "readlink -f": "GNU coreutils (absent on macOS)",
+    "realpath --relative-to": "GNU coreutils",
+    "sbatch": "a Slurm cluster",
+    "srun": "a Slurm cluster",
+    "qsub": "an SGE/PBS cluster",
+    "module load": "an HPC module system",
+}
+# Naming the platform is what turns a lock-in into a documented assumption.
+PLATFORM_DOCUMENTED = re.compile(
+    r"(?i)\b(macos|mac os|osx|darwin|linux|ubuntu|debian|centos|rhel|fedora|alpine|windows|wsl|"
+    r"slurm|sge|pbs|torque|hpc|cluster|requirements?:|tested on|prerequisites)\b"
+)
+
+
+def platform_assumptions(obj: Object) -> Probe:
+    """must/011, must/012 — host assumptions are documented, not just implied.
+
+    A blind run reported 13 probes `met` on an object whose documented install
+    was Homebrew, BSD `sed -i ''` and `sysctl -n hw.ncpu`: platform lock-in
+    through *tool choice* rather than through paths, which `no-abs-paths` cannot
+    see. Naming the platform is the difference between an assumption and an
+    undocumented one.
+    """
+    i011, i012 = "stamped-checklist:must/011", "stamped-checklist:must/012"
+    items = [i011, i012]
+    hits: list[dict] = []
+    for relpath in obj.tracked():
+        if not is_text_path(relpath) or in_log_dir(relpath) or _is_record_output(relpath):
+            continue
+        text = obj.read(relpath)
+        if not text:
+            continue
+        documented = bool(PLATFORM_DOCUMENTED.search(text))
+        for lineno, line in enumerate(text.splitlines(), 1):
+            lowered = line.lower()
+            for needle, platform in PLATFORM_COMMANDS.items():
+                if needle in lowered:
+                    hits.append({"path": relpath, "line": lineno, "needle": needle,
+                                 "platform": platform, "documented_in_file": documented,
+                                 "where": "code" if _is_code(relpath) else "docs",
+                                 "text": clip(line.strip(), 120)})
+                    break
+    undocumented = [h for h in hits if not h["documented_in_file"]]
+    evidence = [Evidence(f"{h['path']}#L{h['line']}", f"{h['platform']}: {h['text']}") for h in hits[:10]]
+
+    if undocumented:
+        first = undocumented[0]
+        platforms = sorted({h["platform"] for h in undocumented})
+        reason = clip(f"{len(undocumented)} command(s) that exist on one platform only, with no platform "
+                      f"named in the same file: {first['path']} line {first['line']} needs "
+                      f"{first['platform']}" + (f" (also: {', '.join(platforms[1:3])})" if len(platforms) > 1 else ""))
+        return Probe("platform-assumptions", "partial", items, reason, evidence,
+                     {"hits": hits, "undocumented": undocumented},
+                     item_status={i011: "partial", i012: "partial"},
+                     item_reason={i011: reason, i012: reason})
+    if hits:
+        reason = clip(f"{len(hits)} platform-specific command(s), each in a file that names the platform "
+                      f"it expects (e.g. {hits[0]['path']}: {hits[0]['platform']}).")
+        return Probe("platform-assumptions", "met", items, reason, evidence, {"hits": hits},
+                     item_status={i011: "met", i012: "met"},
+                     item_reason={i011: reason, i012: reason})
+    reason = ("No platform-specific package manager, BSD/GNU-only flag or cluster scheduler command in "
+              "tracked text: nothing ties the object to one host kind.")
+    return Probe("platform-assumptions", "met", items, reason,
+                 [Evidence("probe:platform-assumptions",
+                           f"scanned {len(obj.tracked())} tracked paths for "
+                           f"{len(PLATFORM_COMMANDS)} platform-specific commands, 0 hits")],
+                 {"hits": []},
+                 item_status={i011: "met", i012: "met"},
+                 item_reason={i011: reason, i012: reason})
+
+
 def ci_present(obj: Object) -> Probe:
     """should/002, should/006 — the workflow or the environment is exercised automatically."""
     items = ["stamped-checklist:should/002", "stamped-checklist:should/006"]
