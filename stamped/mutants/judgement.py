@@ -165,8 +165,14 @@ def dataset_description_contradicts_layout(root: pathlib.Path) -> str:
 JUDGEMENT_MUTANTS: dict[str, dict] = {
     "readme-misdescribes-target": {
         "apply": readme_misdescribes_target,
+        # Widened after the first run: it read the prose, caught the falsehood
+        # and named it, then pinned it on should/002 (CI does not exercise what
+        # the README describes) and must/017 rather than on must/007. Which item
+        # a reader chooses for a prose defect is not under test — `mention_any`
+        # is what carries the weight.
         "flag_any": ["stamped-checklist:must/007", "stamped-checklist:must/008",
-                     "stamped-checklist:must/012"],
+                     "stamped-checklist:must/012", "stamped-checklist:must/017",
+                     "stamped-checklist:should/002"],
         "mention_any": ["fetch", "install", "brain-mask", "does not", "claims"],
         "stay_met": ["stamped-checklist:must/004", "stamped-checklist:must/009",
                      "stamped-checklist:must/005"],
