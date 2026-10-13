@@ -400,7 +400,7 @@ Variance is reported, not hidden.
   Datalad is pinned to a version with the concurrent-run fix (gh-7899/#7901).
   The harness must start on typhon with one command per iteration (`harness/run.py --iteration N`), whoever launches it: you, or a Claude Code session running on typhon.
   A cloud session like the one that wrote this plan can author skills and harness code and run R0 and *assess* inner-loop runs on public objects.
-  It cannot reach typhon, and currently not the hub either ([§6.8](#68-where-results-live)).
+  It cannot reach typhon, but it can read and push the results dataset on the hub ([§6.8](#68-where-results-live)).
 - **Agent provenance per run.** At minimum: the stream-json transcript, annexed in the results dataset; consistent, machine-parsable `Co-Authored-By` trailers; and the skill commit plus model recorded in `assessor`.
   Optionally, Entire (`entire enable`) for commit-linked checkpoints, as cierge#52 proposes.
   Its redaction is best-effort, so it is used only on public-data use cases.
@@ -507,9 +507,22 @@ Aneksajo is the git-annex-aware Forgejo, so git history and annexed content go t
   Produced-object subdatasets are published as sibling repositories under `con/` on the same hub.
   That way `subdatasets-resolvable` and `fresh-rerun` test real published URLs rather than paths on typhon.
 - **Mirroring:** optional, read-only, to GitHub for visibility; the hub stays authoritative.
-- **Cloud sessions:** their network policy currently denies `hub.centerforopenneuroscience.org`.
-  Allowing it (environment settings → Network access → Allowed domains), plus a hub token for `yarikoptic-gitmate`, would let a cloud session read and push results too.
-  Typhon does not need either.
+- **Cloud sessions** can read and push too.
+  This was verified 2026-10-13 from the environment used for this plan: Forgejo 16.0.5 + git-annex, `push: true`, and a `git push --dry-run` was accepted.
+  Three things make that work:
+  - **Network:** `*.centerforopenneuroscience.org` and `*.stamped-principles.org` (plus the bare domains) are under Allowed domains, with the package-manager defaults kept.
+  - **Hub access control:** the hub's Apache admits Anthropic's egress network.
+  - **Credentials:** a `HUB_TOKEN` network secret for `yarikoptic-gitmate` is scoped to `hub.centerforopenneuroscience.org`, so the proxy adds the `Authorization: Bearer` header and the session never sees the token.
+
+  `datalad` and `git-annex` are not preinstalled in cloud sessions, but both come from PyPI (the `git-annex` wheel ships a standalone build).
+  Either of these works (tested: datalad 1.7.1, git-annex 10.20260901):
+  ```sh
+  uv tool install datalad --with git-annex --with-executables-from git-annex
+  # or, in a venv:
+  pip install datalad git-annex
+  ```
+  Put that line in the environment's setup script so the environment cache keeps it, and pin versions there (§6.4 on datalad's concurrent-run fix).
+  Typhon needs none of this.
 
 This keeps con/skills small and makes every number in a report or a talk re-executable.
 That is the same D check the MIT deck's "So I tried to `rerun` it" slide applies to the compression study.
