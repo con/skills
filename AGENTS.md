@@ -120,6 +120,68 @@ rewrite is safe).
 
 ---
 
+## Test a skill by handing it to an independent subagent
+
+A `SKILL.md` is instructions for somebody else. The session that wrote
+the wording is the worst possible judge of whether the wording can be
+followed, because it knows what it meant. So **every non-trivial change
+to a skill in this repository is tested by handing the skill to a fresh
+subagent, with a concrete scope, and reading what comes back** — not by
+the authoring session walking through its own procedure.
+
+### The pattern
+
+1. **Snapshot** the skill, together with any sibling conventions skill
+   it reads, into a directory outside this repository, and point the
+   subagent at that copy. The snapshot is what makes the run
+   reproducible and keeps the repository's own state out of it.
+2. **Scope it concretely.** Give the subagent what a real invocation
+   would give it: a repository or path to work on, a PROMPT, or both.
+   "Try the skill" is not a test; "`/assess-alignment-with-stamped-principles
+   <path to this clone>`" is.
+3. **Blind it.** The subagent must not read this repository: no
+   reference answers, no earlier reports on the same target, no plan or
+   design documents. Say so in its prompt, and say why, or it will
+   helpfully go looking.
+4. **Ask for two things back.** The work product (the report, the diff,
+   the PR body — whatever the skill is for), and its **friction**: every
+   place the instructions were ambiguous, missing, contradictory or
+   slow, quoting the wording at fault. The friction is usually the more
+   valuable half.
+5. **Diff** the product against the reference answer or against what you
+   expected, and classify every difference as one of: skill wording,
+   missing artifact (a script, template or hook the skill should ship),
+   harness fault, model limit, or defect in the test target. **Only the
+   first two change the skill.**
+6. **Record the run** so the next iteration can be compared with it: for
+   skills with an eval harness, as a run under `evals/`; for everything
+   else, at minimum the diff and the classification in the commit
+   message that follows.
+
+Run it with more than one model tier where the skill may be used by one,
+and keep at least one target out of the loop you tune against, so the
+wording is not fitted to a single fixture.
+
+### Scripts are the fast half, not the whole test
+
+Bundled scripts — probes, validators, generators — exist so that the
+deterministic part of a job is cheap, repeatable and identical between
+the skill and its graders. Use them, and prefer them wherever a check
+can be mechanical. But they are a **first pass whose output tells the
+skill where to look harder**, not the answer: a skill reports what the
+scripts found *and* what reading the target showed, says which produced
+each conclusion, and flags the disagreements instead of averaging them.
+
+Two consequences:
+
+- A passing script suite is **not** evidence that the instructions are
+  followable. Only a subagent run shows that.
+- When a subagent run exposes a gap, the first fix to reach for is a
+  script, template or hook — prose in the `SKILL.md` is the last resort,
+  because prose is what grows back.
+
+---
+
 ## Other repo-wide conventions
 
 (Add new cross-cutting rules here as they emerge. Skill-specific rules

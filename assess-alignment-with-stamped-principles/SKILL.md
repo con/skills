@@ -148,8 +148,9 @@ Where the products go:
 
 This version is calibrated on:
 
-- the defect-injection mutants in `evals/stamped/mutants/` (one injected defect, one expected item flip);
-- the gold objects in `evals/stamped/use-cases/`, against reference answers decoded from checklists a human filled in the web app.
+- the defect-injection mutants in `evals/stamped/mutants/` (one injected defect, one expected item flip) — which test the probes, not this procedure;
+- blind runs of this skill by fresh subagents on real objects, diffed per item against the reference answers in `evals/stamped/gold/` (`evals/stamped/harness/blind_run.py`) — which are what test the procedure;
+- reference answers decoded from checklists a human filled in the web app, where one exists.
 
 What it does **not** yet do: verify container image digests by pulling them, read NIDM or BEP028 provenance, assess restricted-access modules it cannot see, or judge whether the science is right.
 Each of those is reported as `not-checked` with that reason, never as `unmet`.
