@@ -825,7 +825,7 @@ Skills stay at `0.x` until their done criteria hold.
   - [x] First calibration iteration ([§6.6](#66-calibrating-the-assessor)): mutants, plus one real object with its reference answer.
   - [x] A size and duplicate-block check added to `ci/validate_skills.py`.
   - [x] Outside con/skills: both drafted, verified and ready to file in `docs/stamped/upstream/` — the `ChecklistResponse` schema (linted, and `linkml-validate`d against a real 31-item response, an app-exported payload and the example) with its PR body, and the paper-vs-schema drift issue with line numbers.
-    [ ] Filing them needs push access upstream.
+    Filing them is the one step left, and needs push access upstream.
 - [ ] **Phase 2: create + align.**
   - v0.1 of both, with templates (pre-commit run guard, preflight).
   - Inner-loop harness.
@@ -867,7 +867,9 @@ What exists in con/skills as of 2026-10-13, on branch `claude/ecstatic-cerf-nh4j
 Calibrating on that real object is what paid for itself: it caught must/009 counting host paths inside duct traces as script defects, must/005 calling 12 MiB of JSONL "binary data", must/006 ignoring environment *capture* as distinct from an environment *specification*, and four probes reporting `unmet` with no evidence of absence.
 Its full assessment is kept as the first gold-set answer in `evals/stamped/gold/`, with its checklist-app URL.
 
-Still open before `assess` can be called v1.0: agreement with a human's answers on the gold set, agreement across model tiers, and the hub dataset for results.
+`fresh_rerun.py` is exercised both ways in the test suite: `met` on an object whose entry point re-creates its output, and `not-checked` — not `unmet` — when `datalad get` cannot fetch the clone's content, because a collector failure is not an object defect.
+
+Still open before `assess` can be called v1.0: agreement with a human's answers on the gold set ([§6.6](#66-calibrating-the-assessor) step 2 — fill the checklist for one of the gold objects in the app and send the URL), agreement across model tiers, and the first agent runs.
 
 ### 7.2 Continuing on typhon
 

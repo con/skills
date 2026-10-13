@@ -152,9 +152,11 @@ def main(argv: list[str] | None = None) -> int:
         report.update(status="unmet", reason=f"clone from {args.url or args.path} failed: nothing to reproduce.")
         return _finish(report, args)
 
+    get_failed = False
     if shutil.which("datalad"):
         code, log = _run(["datalad", "get", "-r", "-J4", "."], cwd=clone, timeout=args.timeout)
         step("datalad get -r .", code, log)
+        get_failed = code != 0
 
     before = _collect(clone, args.outputs)
     report["outputs_shipped"] = dict(before)
@@ -209,7 +211,16 @@ def main(argv: list[str] | None = None) -> int:
     report["comparison"] = {"identical": identical, "within_tolerance": close,
                             "differing": differing, "missing_after_rerun": vanished}
     total = len(identical) + len(close) + len(differing) + len(vanished)
-    if differing or vanished:
+    if (differing or vanished) and get_failed:
+        # A collector failure is not an object defect: the inputs never arrived,
+        # so a difference cannot be attributed to the object.
+        report.update(
+            status="not-checked",
+            reason=(f"`datalad get` could not fetch the clone's content, so the rerun ran without its inputs and "
+                    f"{len(differing) + len(vanished)} of {total} output(s) differ for that reason. "
+                    "Re-run where the input modules are reachable."),
+        )
+    elif differing or vanished:
         report.update(status="partial" if identical or close else "unmet",
                       reason=(f"{len(differing) + len(vanished)} of {total} output(s) did not come back the same "
                               f"in a fresh clone, e.g. {(differing + vanished)[0]}."))
