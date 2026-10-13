@@ -913,22 +913,28 @@ Skills stay at `0.x` until their done criteria hold.
 
 What exists in con/skills as of 2026-10-13, on branch `claude/ecstatic-cerf-nh4j6w`:
 
-- **`stamped-conventions/` 0.1.0** — the five references, the checklist vendored at `v0.3.1` (`af259ba`) with a `lock.json` carrying tag, commit and sha256, `vendor_checklist.py` (`--check` verifies the files against the lock) and `encode_response.py` (`items`, `validate`, `encode`, `decode`, `template`).
+- **`stamped-conventions/` 0.2.0** — the five references, the checklist vendored at `v0.3.1` (`af259ba`) with a `lock.json` carrying tag, commit and sha256, `vendor_checklist.py` (`--check` verifies the files against the lock) and `encode_response.py` (`items`, `validate`, `encode`, `decode`, `template`).
   The encoder is the only writer of an app URL, and `decode` is what turns a checklist a person filled in the web app into reference answers.
-- **`assess-alignment-with-stamped-principles/` 0.1.0** — the skill, eleven probes in `scripts/probes/`, `scripts/run_probes.py` (which also writes a draft response JSON) and `scripts/fresh_rerun.py`.
-  The probes answer **11 of the 17 MUST items**, 3 SHOULD items and may/001 from committed state; the other six MUST items are judgement, listed in the skill.
+- **`assess-alignment-with-stamped-principles/` 0.2.0** — the skill, thirteen probes in `scripts/probes/`, `scripts/run_probes.py` (which also writes a draft response JSON) and `scripts/fresh_rerun.py`.
+  The probes answer **11 of the 17 MUST items**, 2 SHOULD items and may/001 from committed state; the other six MUST items are judgement, listed in the skill.
+  Three probes answer no checklist item and are reported as extras: `license-declared`, `clone-weight` and `inputs-untouched`.
   One probe can answer two items differently — `entry-point` separates must/007 (instructions) from must/008 (a starting point), `run-env-linked` separates must/006 (the record names an environment) from must/015 (that environment is pinned).
-- **`evals/stamped/`** — the R0 use case with its rubric and science oracle, the `pointer` baseline quoted verbatim from the issue, a known-good R0 fixture built with plain git (no datalad, no network), eight defect mutants, `calibrate.py`, `run.py`, `grade.py`, `aggregate.py`, and pytest tests outside the skill directories.
+- **`evals/stamped/`** — the R0 use case with its rubric and science oracle, the `pointer` baseline quoted verbatim from the issue, a known-good R0 fixture built with plain git (no datalad, no network), thirteen defect mutants, `calibrate.py`, `blind_run.py`, `run.py`, `grade.py`, `aggregate.py`, 24 pytest tests outside the skill directories, plus `gold/` (reference answers) and `blind-runs/` (what independent subagents returned).
 - **CI** — `tox -e validate` gained E007 (a skill's own `max-lines` budget: 150 for the conventions skill, 250 for the assessor) and W004 (eight or more repeated lines of prose between a skill's Markdown files), and recursive checks over bundled Python; `tox -e stamped-evals` runs the tests and the calibration on every change.
 
 **Measured, not asserted** ([§6.10](#610-done-criteria)):
 
-- mutant detection **8/8**, with no collateral item flips;
+- mutant detection **13/13**, including two negative controls, with no collateral item flips;
 - false `unmet`/`partial` on the clean fixture **0/15** answered items;
-- on `compression-comparisons-t261-study` (1265 commits, 22286 tracked derivatives) the probe sweep takes **3.6 s** and finds the `url = ../..` gap the plan predicted.
+- on `compression-comparisons-t261-study` (1265 commits, 22286 tracked derivatives) the probe sweep takes **3.6 s** and finds the `url = ../..` gap the plan predicted;
+- after one blind run and the fixes it forced, an independent subagent's 31 verdicts and the reference answer agree on **30 of 31** items.
 
-Calibrating on that real object is what paid for itself: it caught must/009 counting host paths inside duct traces as script defects, must/005 calling 12 MiB of JSONL "binary data", must/006 ignoring environment *capture* as distinct from an environment *specification*, and four probes reporting `unmet` with no evidence of absence.
-Its full assessment is kept as the first gold-set answer in `evals/stamped/gold/`, with its checklist-app URL.
+Two rounds of calibration paid for themselves.
+Running the probes on a real object caught must/009 counting host paths inside duct traces as script defects, must/005 calling 12 MiB of JSONL "binary data", must/006 ignoring environment *capture* as distinct from an environment *specification*, and four probes reporting `unmet` with no evidence of absence.
+Then the **first blind run** ([§6.2](#62-the-blind-subagent-run--the-core-test)) found what no amount of self-review had: the `no-abs-paths` probe knew `/home` and `/tmp` but not `/data/<user>`, so two entry points pinned to a single machine read as clean; `must/005` applied a size criterion the item does not state; `must/010` hedged where the object carried positive evidence; `should/003` was answered from the wrong property; `must/016` was mapped to submodule urls rather than to environment specifications; and the documented `--allow` flag did not exist.
+Each became a probe fix **and** a mutant, which is why the mutant count moved from 8 to 13.
+Its five friction items became one `verdicts.md` rule, the `flags` field, the filename contract, a "verify the finding you are about to lead with" step, and an addition to the upstream drift issue.
+The run is kept in `evals/stamped/blind-runs/2026-10-13-assess-t261/`, as the subagent wrote it; the gold answer it corrected is in `evals/stamped/gold/`, with a Corrections section and its checklist-app URL.
 
 `fresh_rerun.py` is exercised both ways in the test suite: `met` on an object whose entry point re-creates its output, and `not-checked` — not `unmet` — when `datalad get` cannot fetch the clone's content, because a collector failure is not an object defect.
 

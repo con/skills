@@ -64,6 +64,84 @@ def abs_path_in_script(root: pathlib.Path) -> str:
     return "code/plot_volumes.py now carries an absolute home path"
 
 
+def host_mount_path_in_script(root: pathlib.Path) -> str:
+    """A script pinned to a mount that exists on one machine.
+
+    Regression artifact for the worst false negative a blind run found: the
+    probe only knew about `/home` and `/tmp`, so `/data/<user>/...` in two
+    entry points of compression-comparisons-t261-study read as clean.
+    """
+    path = root / "code" / "collect_volumes.py"
+    text = path.read_text()
+    hardcoded = "/" + "data/" + "yoh/ds007116/vendor/freesurfer"
+    text = text.replace(
+        "    args = ap.parse_args()",
+        f'    args = ap.parse_args()\n    freesurfer = "{hardcoded}"  # tables live here',
+        1,
+    )
+    path.write_text(text)
+    git(root, "add", "code/collect_volumes.py")
+    git(root, "commit", "-q", "-m", "read the FreeSurfer tables from the shared mount")
+    return "code/collect_volumes.py is pinned to a host-specific mount outside any home directory"
+
+
+def host_tool_precondition(root: pathlib.Path) -> str:
+    """An entry point that requires a tool to be installed on the host already.
+
+    Regression artifact for a blind run's override: the probe hedged at
+    `partial` because a specification *might* live in an uninstalled module,
+    while the object carried positive evidence of relying on host tools.
+    """
+    path = root / "code" / "run.sh"
+    path.write_text(
+        "#!/bin/sh\n"
+        "set -eu\n"
+        "# The sweep needs the patched build, not whatever is on PATH.\n"
+        "command -v mri_segstats || { echo 'please install FreeSurfer first' >&2; exit 1; }\n"
+        "make all\n"
+    )
+    path.chmod(0o755)
+    git(root, "add", "code/run.sh")
+    git(root, "commit", "-q", "-m", "add the sweep entry point")
+    return "code/run.sh requires FreeSurfer to be on PATH already, and no tracked spec carries it"
+
+
+def large_text_in_git(root: pathlib.Path, size_mb: int = 12) -> str:
+    """A negative control: 12 MiB of *text* in git.
+
+    Real clone weight, and deliberately **not** a must/005 defect — that item
+    asks about large *binary* data. The probe used to call this `partial` on
+    must/005; a blind run caught it applying a criterion the item does not
+    state.
+    """
+    path = root / "logs" / "duct-usage.jsonl"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    line = '{"timestamp": 0.0, "pmem": 0.1, "pcpu": 1.0, "rss": 1048576, "vsz": 2097152}\n'
+    with path.open("w") as fh:
+        while path.stat().st_size < size_mb * 1024 * 1024:
+            fh.writelines([line] * 20000)
+            fh.flush()
+    git(root, "add", "-f", "logs/duct-usage.jsonl")
+    git(root, "commit", "-q", "-m", "keep the duct resource trace")
+    return f"a {size_mb} MiB JSONL trace sits in git: clone weight, but not binary data"
+
+
+def outputs_under_inputs(root: pathlib.Path) -> str:
+    """Derived output written into the input tree of the superdataset itself."""
+    path = root / "sourcedata" / "derivatives" / "volumes.tsv"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("session_id\tbrainseg\nses-1\t1150000\n")
+    git(root, "add", "sourcedata/derivatives/volumes.tsv")
+    git(root, "commit", "-q", "-m", "stage the volumes next to the inputs")
+    return "sourcedata/derivatives/ mixes this object's output into the input tree"
+
+
+def remote_removed(root: pathlib.Path) -> str:
+    """Nothing records where the object (and so its environment spec) is published."""
+    git(root, "remote", "remove", "origin")
+    return "no published remote is recorded, so there is no evidence anyone else can obtain the spec"
+
+
 def large_binary_in_git(root: pathlib.Path, size_mb: int = 50) -> str:
     """A big image committed as a git blob instead of content-addressed."""
     path = root / "results" / "sub-01_T1w_brain.nii.gz"
@@ -157,7 +235,7 @@ MUTANTS: dict[str, dict] = {
     },
     "relative-subdataset-url": {
         "apply": relative_subdataset_url,
-        "expect": {"stamped-checklist:must/002": "unmet", "stamped-checklist:must/016": "unmet"},
+        "expect": {"stamped-checklist:must/002": "unmet"},
         "probe": "subdatasets-resolvable",
     },
     "readme-reproduce-removed": {
@@ -170,10 +248,39 @@ MUTANTS: dict[str, dict] = {
     },
     "outputs-into-inputs": {
         "apply": outputs_into_inputs,
-        "expect": {"stamped-checklist:should/003": "unmet"},
-        # A modified submodule pointer is also uncommitted superdataset state.
-        "also": {"stamped-checklist:must/004": "unmet"},
+        # A modified submodule pointer is uncommitted superdataset state, and
+        # `inputs-untouched` reports the input drift as an extra finding: no
+        # 0.3.1 item asks whether an input was modified.
+        "expect": {"stamped-checklist:must/004": "unmet"},
+        "expect_extra": {"inputs-untouched": "unmet"},
         "probe": "inputs-untouched",
+    },
+    "outputs-under-inputs": {
+        "apply": outputs_under_inputs,
+        "expect": {"stamped-checklist:should/003": "unmet"},
+        "probe": "modules-separated",
+    },
+    "host-mount-path-in-script": {
+        "apply": host_mount_path_in_script,
+        "expect": {"stamped-checklist:must/009": "unmet"},
+        "probe": "no-abs-paths",
+    },
+    "host-tool-precondition": {
+        "apply": host_tool_precondition,
+        "expect": {"stamped-checklist:must/010": "unmet"},
+        "probe": "env-spec-tracked",
+    },
+    "large-text-in-git": {
+        "apply": large_text_in_git,
+        # Negative control: must/005 asks about binary data and must NOT move.
+        "expect": {"stamped-checklist:must/005": "met"},
+        "expect_extra": {"clone-weight": "partial"},
+        "probe": "clone-weight",
+    },
+    "remote-removed": {
+        "apply": remote_removed,
+        "expect": {"stamped-checklist:must/016": "partial"},
+        "probe": "env-spec-tracked",
     },
     "untracked-figure": {
         "apply": untracked_figure,
@@ -200,7 +307,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "list":
         for name, spec in sorted(MUTANTS.items()):
             flips = ", ".join(f"{i.split(':')[-1]}->{s}" for i, s in spec["expect"].items())
-            print(f"{name:<26} probe:{spec['probe']:<24} {flips}")
+            extra = ", ".join(f"{k}->{v}" for k, v in (spec.get("expect_extra") or {}).items())
+            print(f"{name:<26} probe:{spec['probe']:<24} {flips}" + (f" | extra: {extra}" if extra else ""))
         return 0
 
     spec = MUTANTS[args.name]
@@ -210,6 +318,8 @@ def main(argv: list[str] | None = None) -> int:
     what = spec["apply"](args.dir)
     print(f"{args.name}: {what}")
     print("expected flips: " + ", ".join(f"{i}={s}" for i, s in spec["expect"].items()))
+    if spec.get("expect_extra"):
+        print("expected extras: " + ", ".join(f"{k}={v}" for k, v in spec["expect_extra"].items()))
     return 0
 
 

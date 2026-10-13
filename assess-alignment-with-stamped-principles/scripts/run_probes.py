@@ -68,13 +68,15 @@ def _load_checklist(conventions: pathlib.Path):
     return Checklist(), template, STATUS_VALUE
 
 
-def run(obj: Object, names: list[str], check_remote: bool) -> list[dict]:
+def run(obj: Object, names: list[str], check_remote: bool, allow: tuple[str, ...] = ()) -> list[dict]:
     results = []
     for name in names:
         probe = REGISTRY[name]
         try:
             if name == "subdatasets-resolvable":
                 result = probe(obj, check_remote=check_remote)
+            elif name == "no-abs-paths":
+                result = probe(obj, allow=allow)
             else:
                 result = probe(obj)
             payload = result.asdict()
@@ -117,10 +119,12 @@ def merge_into_response(results: list[dict], obj: Object, checklist, template, s
             "status": status,
             "evidence": result["evidence"],
             "source": "probe:" + result["probe"],
+            "flags": [],
         }
     for item_id, answer in response["responses"].items():
         if answer["source"] == "judgement":
             answer["reason"] = "No probe covers this item; a reading of the object is required."
+        answer.setdefault("flags", [])
 
     extras = [
         {
@@ -170,6 +174,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--only", nargs="+", choices=sorted(REGISTRY), help="run just these probes")
     ap.add_argument("--skip", nargs="+", choices=sorted(REGISTRY), default=[])
     ap.add_argument("--check-remote", action="store_true", help="contact submodule urls (network)")
+    ap.add_argument("--allow", nargs="+", default=[], metavar="GLOB",
+                    help="paths no-abs-paths may skip, for files that genuinely have to carry a host path")
     ap.add_argument("--kind", choices=["dataset", "component", "study", "skill"])
     ap.add_argument("--quiet", action="store_true")
     args = ap.parse_args(argv)
@@ -187,7 +193,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     names = [n for n in (args.only or sorted(REGISTRY)) if n not in args.skip]
-    results = run(obj, names, args.check_remote)
+    results = run(obj, names, args.check_remote, tuple(args.allow))
 
     conventions = _conventions_dir(pathlib.Path(__file__).resolve().parent.parent)
     if conventions is None:

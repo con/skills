@@ -1,12 +1,17 @@
 # Response, report and stamp
 
-Every STAMPED assessment produces three things from one source:
+Every STAMPED assessment produces three files and one URL, named for **the day the assessment was made** (UTC, `YYYY-MM-DD`) — not the object's commit date, and not the date of an earlier assessment being redone:
 
-1. **`<date>-response.json`** — the machine-readable per-item answer (below).
-2. **`<date>-assessment.md`** — the human report rendered from it (layout below).
-3. **A checklist-app URL** — the same answers, openable by a person, produced by `scripts/encode_response.py encode`.
+| File | What it is |
+|---|---|
+| `<date>-assessment.md` | the human report (layout below) |
+| `<date>-response.json` | the machine-readable per-item answer, with evidence and pins |
+| `<date>-probes.json` | what the scripted probes said, unedited, including the ones overridden |
+| `<date>-fresh-rerun.json` | only when the expensive rerun probe was actually run |
 
-Where they are written and how they are named is the calling skill's business; the shape is this file's.
+The URL is derived from the response, never maintained by hand.
+Two assessments of the same object on the same day get a `-2` suffix on all four; the second one's report says what changed and why.
+Where the files are written is the calling skill's business; their names and shapes are this file's.
 
 ## Response JSON
 
@@ -24,7 +29,8 @@ The app ignores keys it does not know, so one file serves both.
       "evidence": [
         {"uri": "code/plot.py#L12", "description": "open(<absolute path under $HOME>)", "sha256": null}
       ],
-      "source": "probe:no-abs-paths"
+      "source": "probe:no-abs-paths",
+      "flags": []
     }
   },
   "schema_version": "0.2.0",
@@ -50,6 +56,12 @@ The app ignores keys it does not know, so one file serves both.
 - `evidence[]` uses stamped-skills-assessment's `Evidence` shape: `{uri, description, sha256?}`.
   `uri` is relative to the object's root, or absolute for anything outside it.
 - `source` is `probe:<name>`, `judgement`, or `probe:<name>+judgement` when a reading of the object overrode a probe (and then the item is flagged).
+- `flags[]` is optional and holds what a reader has to know about *how* the answer was reached, not what it says:
+  - `mapping-questioned` — the probe answered this item from a property the item does not ask about ([`verdicts.md`](verdicts.md) rule 10);
+  - `probe-overridden` — a reading of the object changed the probe's verdict;
+  - `unverified-claim` — the verdict rests on something not confirmed independently, and the report says so.
+
+  Flagged items get their own short list in the report, after the per-item table.
 - `extra_items[]` carries findings with no checklist id (licences, T.4) so they are reported without bending an existing id.
 
 ## The provenance stamp
@@ -70,9 +82,11 @@ One page, in this order, so the reader meets the actionable part first:
 2. **What to fix first** — at most five, highest leverage first, each as *what to change* → *why it matters to this project* → *the item ids it closes*.
 3. **What the project already does well** — two or three, with citations.
 4. **Per-item table** — MUST first, then SHOULD, then MAY: id, principle codes, status, evidence, reason.
-5. **Not checked** — each with what would settle it.
-6. **Goals and kind** — the project's stated goals (and where they came from: documentation, or the user's answers), its kind, and the emphasis that follows.
-7. **The checklist URL**, the stamp, and a pointer to the response JSON.
+5. **Flagged items** — every item carrying a `flags` entry, with one line each: what the probe measured versus what the item asks, or what the override was.
+   An empty list is worth stating as "none".
+6. **Not checked** — each with what would settle it.
+7. **Goals and kind** — the project's stated goals (and where they came from: documentation, or the user's answers), its kind, and the emphasis that follows.
+8. **The checklist URL**, the stamp, and a pointer to the response JSON.
 
 ## The checklist-app URL
 

@@ -199,6 +199,7 @@ def template(cl: Checklist) -> dict:
                 "status": "not-checked",
                 "evidence": [],
                 "source": "judgement",
+                "flags": [],
             }
             for i in cl.items
         },

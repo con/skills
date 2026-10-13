@@ -22,8 +22,13 @@ DATALAD_RIA = re.compile(r"^(?:///|ria\+)")
 
 
 def subdatasets_resolvable(obj: Object, check_remote: bool = False) -> Probe:
-    """must/002, must/016, may/001 — linked components resolve from a fresh clone."""
-    items = ["stamped-checklist:must/002", "stamped-checklist:must/016", "stamped-checklist:may/001"]
+    """must/002 and may/001 — linked components resolve from a fresh clone.
+
+    It used to answer must/016 as well, which asks whether *environment
+    specifications* are shared where others can get them: a different property,
+    now answered by `env-spec-tracked` (found by a blind run of this skill).
+    """
+    items = ["stamped-checklist:must/002", "stamped-checklist:may/001"]
     mods = obj.submodules()
     if not mods:
         return Probe(
@@ -99,13 +104,20 @@ def subdatasets_resolvable(obj: Object, check_remote: bool = False) -> Probe:
 
 
 def inputs_untouched(obj: Object) -> Probe:
-    """should/003 (M.1) — inputs stay at their recorded state; results go elsewhere."""
-    items = ["stamped-checklist:should/003"]
+    """Extra (no checklist item) — inputs stay at the state the object records.
+
+    should/003 asks whether components are *separated into distinct modules*,
+    which `modules-separated` reads from the committed layout. Whether an input
+    was modified is a different question, no 0.3.1 item asks it, and answering
+    should/003 with it hid real layout evidence behind `not-checked` (found by a
+    blind run of this skill).
+    """
+    items: list[str] = []
     mods = obj.submodules()
     if not mods:
         return Probe(
-            "inputs-untouched", "not-checked", items,
-            "No submodules: whether raw data, derivatives and code are separate modules needs a reading of the layout.",
+            "inputs-untouched", "not-applicable", items,
+            "N/A: no linked modules, so there is no recorded input state to compare against.",
             [],
         )
     uninit = [m for m in mods if not m.get("initialized", False)]
@@ -133,4 +145,73 @@ def inputs_untouched(obj: Object) -> Probe:
         "inputs-untouched", "met", items,
         clip(f"All {len(mods)} linked module(s) are clean and at the commit the superdataset records."),
         [Evidence("git submodule status", "no '+' or 'U' flags")],
+    )
+
+
+# Where each kind of component conventionally lives.  Layout, not tooling: a
+# plain repository with `data/`, `scripts/` and `results/` satisfies M.1 as well
+# as a DataLad superdataset with subdatasets does.
+INPUT_DIRS = ("sourcedata", "rawbids", "rawdata", "inputs", "input", "raw", "data")
+CODE_DIRS = ("code", "scripts", "src", "workflow", "analysis")
+DERIVED_DIRS = ("derivatives", "derivative", "results", "outputs", "output", "figures", "figs", "plots")
+CODE_NAMES = ("Makefile", "makefile", "GNUmakefile", "Snakefile", "dvc.yaml", "main.nf")
+ENV_NAMES = (
+    "requirements.txt", "requirements.lock", "pyproject.toml", "environment.yml", "environment.yaml",
+    "pixi.toml", "pixi.lock", "uv.lock", "poetry.lock", "renv.lock", "Dockerfile", "Singularity",
+    "conda-lock.yml", "containers.json",
+)
+
+
+def modules_separated(obj: Object) -> Probe:
+    """should/003 (M.1) — raw data, derived data, code and environment are distinct modules."""
+    items = ["stamped-checklist:should/003"]
+    tracked = obj.tracked()
+    module_paths = [m.get("path", m["name"]) for m in obj.submodules()]
+
+    def under(prefixes: tuple[str, ...]) -> list[str]:
+        return sorted({p.split("/")[0] for p in tracked if p.split("/")[0] in prefixes})
+
+    found: dict[str, list[str]] = {
+        "inputs": sorted(set(under(INPUT_DIRS)) | {m for m in module_paths if m.split("/")[0] in INPUT_DIRS}),
+        "code": sorted(set(under(CODE_DIRS)) | {p for p in tracked if p in CODE_NAMES}),
+        "derived": under(DERIVED_DIRS),
+        "environment": sorted({p for p in tracked if p.rsplit("/", 1)[-1] in ENV_NAMES}),
+    }
+    # Any input module that also holds this object's own derived output is the
+    # failure this item is really about.
+    mixed = [
+        p for p in tracked
+        if p.split("/")[0] in INPUT_DIRS and any(f"/{d}/" in f"/{p}" for d in DERIVED_DIRS)
+    ]
+    present = [kind for kind, paths in found.items() if paths]
+    evidence = [Evidence(path, f"{kind} module") for kind, paths in found.items() for path in paths[:2]]
+
+    if mixed:
+        return Probe(
+            "modules-separated", "unmet", items,
+            clip(f"{len(mixed)} derived file(s) live inside an input tree, e.g. {mixed[0]}: "
+                 "raw and processed data are not separate modules."),
+            [Evidence(p, "derived output inside an input module") for p in mixed[:10]],
+            {"found": found, "mixed": mixed},
+        )
+    if len(present) >= 3:
+        return Probe(
+            "modules-separated", "met", items,
+            clip(f"{len(present)} kinds of component live in distinct places: "
+                 + "; ".join(f"{kind} in {', '.join(found[kind][:2])}" for kind in present)),
+            evidence, {"found": found},
+        )
+    if present:
+        missing = [kind for kind in found if not found[kind]]
+        return Probe(
+            "modules-separated", "partial", items,
+            clip(f"Only {', '.join(present)} are separate here; no distinct place for {', '.join(missing)}."),
+            evidence, {"found": found},
+        )
+    return Probe(
+        "modules-separated", "unmet", items,
+        clip("Nothing distinguishes raw data, derived data, code and environment: no module or directory "
+             "of any of those kinds is tracked."),
+        [Evidence("probe:modules-separated", f"{len(tracked)} tracked paths, none in a recognised layout")],
+        {"found": found},
     )

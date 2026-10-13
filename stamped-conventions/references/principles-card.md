@@ -31,5 +31,8 @@ When a judgement turns on wording, open the paper rather than this card.
 - **T.4** ("code-driven provenance SHOULD be recorded programmatically") exists in the schema but has **no checklist item**.
   Evidence for it is reported under the T items it supports, with the gap named.
   The paper's T.4 is one compound statement; the schema splits it into T.4 (SHOULD, programmatic) and **T.5** (MUST, versions recorded), so T.5 has no paper counterpart to cite.
+- **must/014 and should/008 are the same sentence**, word for word: "Is there a process for updating environment specifications when dependencies change, and are these updates tracked in version control?" — one as a MUST under P.3, one as a SHOULD under D.2.
+  Answer both, from the same evidence, and say in the report that they are duplicates rather than letting a reader think two different things were checked.
+  Nothing in the checklist explains the duplication; it is in the upstream issue draft.
 - @asmacdo's draft in [stamped-agent-skills](https://github.com/stamped-principles/stamped-agent-skills) cites "checklist v1.0.1"; that is the web app's `package.json` version.
   The checklist's own `checklist_version` is **0.3.1**.

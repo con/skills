@@ -1,6 +1,6 @@
 ---
 name: stamped-conventions
-version: 0.1.0
+version: 0.2.0
 description: Shared conventions for the STAMPED skills (assess-, align-, create-, create-repronim-, do-full-research-loop, self-assess-alignment-with-stamped-principles) — the pinned checklist 0.3.1 and its vendored JSON, the verdict vocabulary, the response/report format and its checklist-app URL encoding, the provenance stamp, project kinds and their emphasis, and the per-stack references. Not invoked directly. Use when a STAMPED skill tells you to read it, or when asked what the STAMPED skills agree on.
 allowed-tools: Read, Bash
 user-invocable: false
@@ -26,8 +26,8 @@ A skill that depends on it says so in its `SKILL.md` and reads `../stamped-conve
 | [`checklist/stamped-checklist-0.3.1.json`](checklist/stamped-checklist-0.3.1.json) | The 31 checklist items, their ids, their text and their principle codes. Vendored, never hand-edited. |
 | [`checklist/lock.json`](checklist/lock.json) | Which upstream tag, commit and sha256 that file came from. |
 | [`scripts/vendor_checklist.py`](scripts/vendor_checklist.py) | How the pin is refreshed (through a recorded command). |
-| [`references/verdicts.md`](references/verdicts.md) | The five statuses, what evidence each needs, and how they map onto the web app's `yes`/`no`/`null`. |
-| [`references/response-format.md`](references/response-format.md) | The response JSON, the report layout, the provenance stamp, and the checklist-app URL. |
+| [`references/verdicts.md`](references/verdicts.md) | The five statuses, what evidence each needs, the two grounds for `not-applicable`, and how they map onto the web app's `yes`/`no`/`null`. |
+| [`references/response-format.md`](references/response-format.md) | The response JSON (including `flags`), the four output filenames and what `<date>` means, the report layout, the provenance stamp, and the checklist-app URL. |
 | [`scripts/encode_response.py`](scripts/encode_response.py) | Response JSON → app URL, and app URL → response JSON. |
 | [`references/principles-card.md`](references/principles-card.md) | The one-screen principles summary, and what to link instead of restating. |
 | [`references/project-kinds.md`](references/project-kinds.md) | Dataset / component / study / skill, and which principles each emphasises. |

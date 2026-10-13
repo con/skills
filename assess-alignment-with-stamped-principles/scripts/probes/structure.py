@@ -15,10 +15,24 @@ from .common import Evidence, Object, Probe, clip, in_log_dir, is_text_path
 _HOME = "/home/" + r"[a-z][\w.-]+/"
 _USERS = "/Users/" + r"[A-Za-z][\w.-]+/"
 _WIN = r"[A-Za-z]:\\+(?:Users|home)\\+"
-# A path under someone's home directory cannot resolve on another machine; a
-# path under /tmp resolves but leaks host state, so the two are weighed apart.
 HOME_PATH = re.compile("|".join((_HOME, _USERS, _WIN)))
-TMP_PATH = re.compile(r"(?<![\w.])/tmp/[\w.${}-]+")
+TMP_PATH = re.compile(r"(?<![\w.:])/(?:tmp|var/tmp)/[\w.${}-]+")
+# Any other absolute path whose root is not a standard system location: a
+# cluster mount, a second disk, somebody's scratch space.  `/data/<user>/...`
+# is exactly as unportable as a home directory, and missing that was this
+# probe's worst false negative (see evals/stamped/blind-runs/).
+ABSOLUTE_PATH = re.compile(r"(?<![\w.:$])/([a-zA-Z][\w.-]*)(/[\w.${}-]+)+")
+# Roots that exist on any POSIX host, so an absolute path into them is not a
+# portability defect: interpreters, system tools, container-internal trees.
+SYSTEM_ROOTS = {
+    "usr", "bin", "sbin", "lib", "lib32", "lib64", "libexec", "etc", "opt",
+    "dev", "proc", "sys", "run", "boot", "srv", "snap", "nix", "var",
+}
+# URLs carry path components that are not host paths; strip them before looking.
+URL = re.compile(r"\b[a-zA-Z][\w+.-]*://\S*")
+# Documentation placeholders, which are instructions to the reader rather than
+# paths the scripts use.
+PLACEHOLDER_ROOTS = {"path", "paths", "your", "some", "somewhere", "foo", "bar", "abs"}
 
 # Files that may legitimately contain such a string: git's own module records,
 # and vendored upstream data (the checklist item text quotes an example path).
@@ -67,25 +81,29 @@ CI_REEXECUTES = re.compile(
 
 
 def tree_clean(obj: Object) -> Probe:
-    """must/004 — committed state is the whole state."""
+    """must/004 — code, text, documentation and configuration are under version
+    control, and nothing that matters is left outside it."""
     out = obj.git("status", "--porcelain", "--untracked-files=normal")
     dirty = [line for line in out.splitlines() if line.strip()]
-    sub_dirty: list[str] = []
-    for mod in obj.submodules():
-        if mod.get("differs"):
-            sub_dirty.append(mod.get("path", mod["name"]))
+    sub_dirty = [m.get("path", m["name"]) for m in obj.submodules() if m.get("differs")]
+    tracked_text = [p for p in obj.tracked() if is_text_path(p)]
     if not dirty and not sub_dirty:
         return Probe(
             "tree-clean", "met", ["stamped-checklist:must/004"],
-            "git status is empty, including submodules: the committed state is the whole state.",
-            [Evidence("git status --porcelain", "no output", None)],
+            clip(f"git tracks {len(tracked_text)} text, code and configuration file(s), and `git status` is "
+                 "empty including submodules: the committed state is the whole state."),
+            [Evidence("git ls-files", f"{len(tracked_text)} tracked text/code/config paths of "
+                                      f"{len(obj.tracked())} tracked paths"),
+             Evidence("git status --porcelain", "no output")],
+            {"tracked_text": len(tracked_text)},
         )
     shown = ", ".join(d.strip() for d in dirty[:5]) or ", ".join(sub_dirty[:5])
     return Probe(
         "tree-clean", "unmet", ["stamped-checklist:must/004"],
-        clip(f"{len(dirty) + len(sub_dirty)} path(s) not committed: {shown}"),
+        clip(f"{len(dirty) + len(sub_dirty)} path(s) are not committed, so the repository is not the whole "
+             f"state: {shown}"),
         [Evidence("git status --porcelain", clip(shown, 200))],
-        {"dirty": dirty, "submodules_modified": sub_dirty},
+        {"dirty": dirty, "submodules_modified": sub_dirty, "tracked_text": len(tracked_text)},
     )
 
 
@@ -109,6 +127,23 @@ def _looks_like_source(relpath: str) -> bool:
     )
 
 
+def _classify_path(raw: str) -> str | None:
+    """Which kind of unportable absolute path this line carries, if any."""
+    line = URL.sub(" ", raw)
+    if HOME_PATH.search(line):
+        return "home"
+    for match in ABSOLUTE_PATH.finditer(line):
+        root = match.group(1)
+        if root in SYSTEM_ROOTS or root in PLACEHOLDER_ROOTS:
+            continue
+        if root in {"tmp"}:
+            return "tmp"
+        return "host"  # a mount that exists on one machine
+    if TMP_PATH.search(line):
+        return "tmp"
+    return None
+
+
 def no_abs_paths(obj: Object, allow: tuple[str, ...] = ()) -> Probe:
     """must/009 — scripts use relative paths, not host-specific absolute ones."""
     patterns = ABS_PATH_ALLOW + tuple(allow)
@@ -123,35 +158,37 @@ def no_abs_paths(obj: Object, allow: tuple[str, ...] = ()) -> Probe:
             continue
         where = "record" if _is_record_output(relpath) else ("code" if _is_code(relpath) else "docs")
         for lineno, line in enumerate(text.splitlines(), 1):
-            kind = "home" if HOME_PATH.search(line) else ("tmp" if TMP_PATH.search(line) else None)
+            kind = _classify_path(line)
             if kind:
                 hits.append({"path": relpath, "line": lineno, "kind": kind,
                              "where": where, "text": clip(line.strip(), 120)})
-            if len(hits) >= 100:
+            if len(hits) >= 200:
                 break
-        if len(hits) >= 100:
+        if len(hits) >= 200:
             break
 
-    blocking = [h for h in hits if h["kind"] == "home" and h["where"] == "code"]
+    # A script that names a path only one machine has cannot run elsewhere.
+    blocking = [h for h in hits if h["kind"] in {"home", "host"} and h["where"] == "code"]
     softer = [h for h in hits if h not in blocking]
     if blocking:
         first = blocking[0]
+        files = sorted({h["path"] for h in blocking})
         return Probe(
             "no-abs-paths", "unmet", ["stamped-checklist:must/009"],
-            clip(f"{len(blocking)} absolute home path(s) in scripts or configs, "
-                 f"e.g. {first['path']} line {first['line']}"),
-            [Evidence(f"{h['path']}#L{h['line']}", h["text"]) for h in blocking[:10]],
-            {"hits": hits},
+            clip(f"{len(blocking)} host-specific absolute path(s) in {len(files)} script(s) or config(s), "
+                 f"e.g. {first['path']} line {first['line']}: {first['text']}"),
+            [Evidence(f"{h['path']}#L{h['line']}", f"{h['kind']} path: {h['text']}") for h in blocking[:10]],
+            {"hits": hits, "blocking_files": files},
         )
     if softer:
         records = [h for h in softer if h["where"] == "record"]
         first = (softer if not records or len(records) < len(softer) else records)[0]
-        label = {"home": "a home directory", "tmp": "/tmp"}[first["kind"]]
+        label = {"home": "a home directory", "host": "a host-specific mount", "tmp": "/tmp"}[first["kind"]]
         detail = (f"{len(records)} of them in recorded run output, which is provenance rather than a script"
                   if records else f"e.g. {first['path']} line {first['line']} ({label}, in {first['where']})")
         return Probe(
             "no-abs-paths", "partial", ["stamped-checklist:must/009"],
-            clip(f"No script depends on a home path, but {len(softer)} host-path mention(s) remain: {detail}"),
+            clip(f"No script depends on a host-specific path, but {len(softer)} such mention(s) remain: {detail}"),
             [Evidence(f"{h['path']}#L{h['line']}", f"{h['kind']} path in {h['where']}: {h['text']}")
              for h in softer[:10]],
             {"hits": hits},
@@ -176,46 +213,74 @@ def _is_binary(obj: Object, relpath: str) -> bool:
 
 
 def large_in_annex(obj: Object, max_bytes: int = 10 * 1024 * 1024) -> Probe:
-    """must/005 — large *binary* data is content-addressed, not a git blob."""
-    big = [(p, s) for p, s, _ in obj.blobs() if s > max_bytes]
-    annexed = sum(1 for _, _, mode in obj.blobs() if mode == "120000")
+    """must/005 — large *binary* data is content-addressed rather than a git blob.
+
+    The item asks about binary data, so a large *text* blob is not a violation of
+    it; `clone-weight` reports that separately (a blind run of this skill caught
+    this probe applying a size criterion the item does not state).
+    """
+    blobs = obj.blobs()
+    big_binary = [(p, s) for p, s, _ in blobs if s > max_bytes and _is_binary(obj, p)]
+    annexed = sum(1 for _, _, mode in blobs if mode == "120000")
     has_lfs = obj.exists(".gitattributes") and "filter=lfs" in obj.read(".gitattributes")
     mechanism = "git-annex" if obj.is_datalad or annexed else ("git-lfs" if has_lfs else None)
     limit_mib = max_bytes // 1024 // 1024
-    if not big:
-        return Probe(
-            "large-in-annex", "met", ["stamped-checklist:must/005"],
-            clip(
-                f"No tracked git blob exceeds {limit_mib} MiB"
-                + (f"; large content is handled by {mechanism}." if mechanism else ".")
-            ),
-            [Evidence("git ls-tree -r -l HEAD", f"largest blob under {max_bytes} bytes")],
-            {"mechanism": mechanism, "annex_pointers": annexed},
-        )
-
-    binary = [(p, s) for p, s in big if _is_binary(obj, p)]
-    text = [(p, s) for p, s in big if (p, s) not in binary]
     details = {"mechanism": mechanism, "annex_pointers": annexed,
-               "large_binary": [{"path": p, "size": s} for p, s in binary],
-               "large_text": [{"path": p, "size": s} for p, s in text]}
-    if binary:
-        worst = max(binary, key=lambda t: t[1])
+               "large_binary": [{"path": p, "size": s} for p, s in big_binary]}
+    if big_binary:
+        worst = max(big_binary, key=lambda t: t[1])
         return Probe(
             "large-in-annex", "unmet", ["stamped-checklist:must/005"],
-            clip(f"{len(binary)} binary blob(s) over {limit_mib} MiB committed to git, "
+            clip(f"{len(big_binary)} binary blob(s) over {limit_mib} MiB committed to git, "
                  f"largest {worst[0]} at {worst[1] // 1024 // 1024} MiB"),
-            [Evidence(p, f"{s} bytes of binary data in a git blob") for p, s in sorted(binary, key=lambda t: -t[1])[:10]],
+            [Evidence(p, f"{s} bytes of binary data in a git blob")
+             for p, s in sorted(big_binary, key=lambda t: -t[1])[:10]],
             details,
         )
-    worst = max(text, key=lambda t: t[1])
-    # Text in git is what `datalad create -c text2git` asks for; a very large
-    # log is still a repository-weight problem, but it is not binary data.
+    if mechanism:
+        return Probe(
+            "large-in-annex", "met", ["stamped-checklist:must/005"],
+            clip(f"{mechanism} carries the binary content ({annexed} pointer(s) tracked) and no binary blob "
+                 f"over {limit_mib} MiB is in git."),
+            [Evidence("git ls-tree -r -l HEAD", f"no binary blob over {max_bytes} bytes"),
+             Evidence(".gitattributes" if has_lfs else ".datalad/config",
+                      f"{mechanism} in use for large content")],
+            details,
+        )
     return Probe(
-        "large-in-annex", "partial", ["stamped-checklist:must/005"],
-        clip(f"No large binary in git, but {len(text)} text blob(s) exceed {limit_mib} MiB "
-             f"(largest {worst[0]}, {worst[1] // 1024 // 1024} MiB) — every clone carries them in full."),
-        [Evidence(p, f"{s} bytes of text in a git blob") for p, s in sorted(text, key=lambda t: -t[1])[:10]],
+        "large-in-annex", "met", ["stamped-checklist:must/005"],
+        clip(f"No binary blob over {limit_mib} MiB in git, and no large-content mechanism is needed: "
+             "nothing in this object is large binary data."),
+        [Evidence("git ls-tree -r -l HEAD", f"no binary blob over {max_bytes} bytes; "
+                                            f"{len(blobs)} blobs tracked")],
         details,
+    )
+
+
+def clone_weight(obj: Object, max_bytes: int = 10 * 1024 * 1024) -> Probe:
+    """Extra (no checklist item) — oversized *text* in git, which every clone carries.
+
+    `-c text2git` deliberately keeps text in git; an 11 MiB log is still weight
+    a reader pays before any `datalad get`, which is worth saying without
+    pretending the checklist asks about it.
+    """
+    limit_mib = max_bytes // 1024 // 1024
+    big_text = [(p, s) for p, s, _ in obj.blobs() if s > max_bytes and not _is_binary(obj, p)]
+    if not big_text:
+        return Probe(
+            "clone-weight", "met", [],
+            clip(f"No text blob in git exceeds {limit_mib} MiB."),
+            [Evidence("git ls-tree -r -l HEAD", f"largest text blob under {max_bytes} bytes")],
+        )
+    worst = max(big_text, key=lambda t: t[1])
+    total = sum(s for _, s in big_text)
+    return Probe(
+        "clone-weight", "partial", [],
+        clip(f"{len(big_text)} text blob(s) exceed {limit_mib} MiB ({total // 1024 // 1024} MiB in total, "
+             f"largest {worst[0]}) — every clone carries them in full. Not a must/005 defect: they are text."),
+        [Evidence(p, f"{s} bytes of text in a git blob")
+         for p, s in sorted(big_text, key=lambda t: -t[1])[:10]],
+        {"large_text": [{"path": p, "size": s} for p, s in big_text]},
     )
 
 
@@ -279,9 +344,50 @@ def entry_point(obj: Object) -> Probe:
     )
 
 
+# A tracked script that checks for a tool on PATH, or tells the reader to
+# install one, is positive evidence that the environment is *not* contained:
+# must/009 asks about paths, must/010 about pre-installed tools.
+TOOL_PRECONDITION = re.compile(
+    r"(?:command\s+-v|which|type\s+-p|hash)\s+([\w.+-]{2,})"
+    r"|\b([\w.+-]{2,})\s+--version\b"
+    r"|(please install|must be installed|not found on PATH|install with|needs? to be installed)",
+    re.IGNORECASE,
+)
+PRECONDITION_EXIT = re.compile(r"\bexit\s+[1-9]|\breturn\s+[1-9]|\bdie\b")
+PRECONDITION_IGNORE = {"echo", "then", "else", "fi", "do", "done", "if", "set", "the", "this", "python3", "python"}
+
+
+def _host_tool_preconditions(obj: Object) -> list[dict]:
+    """Places a tracked script requires a tool to be present on the host already."""
+    found: list[dict] = []
+    for relpath in obj.tracked():
+        name = relpath.rsplit("/", 1)[-1]
+        if not (name.endswith((".sh", ".bash", ".zsh", ".py")) or name in CODE_NAMES):
+            continue
+        if _is_record_output(relpath):
+            continue
+        lines = obj.read(relpath).splitlines()
+        for lineno, line in enumerate(lines, 1):
+            match = TOOL_PRECONDITION.search(line)
+            if not match:
+                continue
+            tool = next((g for g in match.groups()[:2] if g), None)
+            if tool and tool.lower() in PRECONDITION_IGNORE:
+                continue
+            window = "\n".join(lines[max(0, lineno - 9):lineno + 8])
+            if tool and not PRECONDITION_EXIT.search(window) and not match.group(3):
+                continue  # a version check that does not gate anything
+            found.append({"path": relpath, "line": lineno, "tool": tool,
+                          "text": clip(line.strip(), 120)})
+    return found
+
+
 def env_spec_tracked(obj: Object) -> Probe:
-    """must/010, must/013 — the environment, including the project's own tooling, is specified and tracked."""
-    items = ["stamped-checklist:must/010", "stamped-checklist:must/013"]
+    """must/010 (nothing assumed pre-installed), must/013 (the spec is tracked),
+    must/016 (the spec is published where others can get it)."""
+    i010, i013, i016 = ("stamped-checklist:must/010", "stamped-checklist:must/013",
+                        "stamped-checklist:must/016")
+    items = [i010, i013, i016]
     found: dict[str, str] = {}
     for relpath in obj.tracked():
         name = relpath.rsplit("/", 1)[-1]
@@ -292,37 +398,74 @@ def env_spec_tracked(obj: Object) -> Probe:
             kind = "spec"
         if kind:
             found[relpath] = kind
-    containers = obj.exists(".datalad/config") and "containers." in obj.read(".datalad/config")
-    if containers:
+    if obj.exists(".datalad/config") and "containers." in obj.read(".datalad/config"):
         found[".datalad/config"] = "pinned"
-    if not found:
-        uninstalled = [m.get("path", m["name"]) for m in obj.submodules() if not m.get("initialized", False)]
-        if uninstalled:
-            return Probe(
-                "env-spec-tracked", "partial", items,
-                clip("No environment specification in this object; it may be inside the module(s) that are "
-                     f"not installed here: {', '.join(uninstalled[:3])}."),
-                [Evidence(path, "linked module, not installed: cannot be read") for path in uninstalled[:5]],
-                {"specs": {}, "uninstalled_modules": uninstalled},
-            )
-        return Probe(
-            "env-spec-tracked", "unmet", items,
-            "No tracked environment specification (lockfile, container definition or container registration).",
-            [Evidence("probe:env-spec-tracked",
-                      "none of " + ", ".join(sorted(ENV_SPECS)[:8]) + ", *.def or a containers registration is tracked")],
-        )
-    pinned = [p for p, k in found.items() if k == "pinned"]
+
+    pinned = sorted(p for p, k in found.items() if k == "pinned")
+    uninstalled = [m.get("path", m["name"]) for m in obj.submodules() if not m.get("initialized", False)]
+    preconditions = _host_tool_preconditions(obj)
+    remote = obj.git("config", "--get", "remote.origin.url").strip()
+    published = bool(remote) and not remote.startswith(("/", ".", "file://", "~"))
+
     evidence = [Evidence(p, f"{k} environment specification") for p, k in sorted(found.items())]
-    if pinned:
-        return Probe(
-            "env-spec-tracked", "met", items,
-            clip(f"Tracked and pinned: {', '.join(sorted(pinned)[:3])}."),
-            evidence, {"specs": found},
-        )
+    evidence += [Evidence(f"{h['path']}#L{h['line']}",
+                          f"requires {h['tool'] or 'a tool'} to be installed on the host already: {h['text']}")
+                 for h in preconditions[:5]]
+    evidence += [Evidence(path, "linked module, not installed: cannot be read") for path in uninstalled[:3]]
+
+    # must/013 — is a specification tracked at all?
+    if found:
+        s013 = "met"
+        r013 = clip(f"Tracked: {', '.join(sorted(found)[:3])}.")
+    elif uninstalled:
+        s013 = "partial"
+        r013 = clip("No specification in this object; it may be inside the module(s) not installed here: "
+                    f"{', '.join(uninstalled[:3])}.")
+    else:
+        s013 = "unmet"
+        r013 = "No tracked environment specification (lockfile, container definition or registration)."
+
+    # must/010 — are the dependencies in it, rather than assumed present?
+    if preconditions:
+        first = preconditions[0]
+        s010 = "unmet"
+        r010 = clip(f"{len(preconditions)} tracked script(s) require a tool to be installed on the host "
+                    f"already, e.g. {first['path']} line {first['line']} ({first['tool'] or 'see line'}); "
+                    "that dependency is not in any tracked specification.")
+    elif pinned:
+        s010 = "met"
+        r010 = clip(f"Dependencies are pinned in {', '.join(pinned[:3])}, and no tracked script expects a "
+                    "tool to be present already.")
+    elif found:
+        s010 = "partial"
+        r010 = clip(f"{', '.join(sorted(found)[:3])} lists dependencies but pins no versions "
+                    "(no lockfile or digest).")
+    else:
+        s010 = s013
+        r010 = r013
+
+    # must/016 — can someone else obtain the specification?
+    if not found:
+        s016, r016 = s013, clip("Nothing to share: " + r013)
+    elif published:
+        s016 = "met"
+        r016 = clip(f"The specification is tracked in a repository published at {remote}, so it travels with "
+                    "the object for anyone who can clone it.")
+    else:
+        s016 = "partial"
+        r016 = clip("The specification is tracked, but this checkout records no published remote, so there is "
+                    "no evidence anyone else can obtain it.")
+
+    worst = min((s010, s013, s016), key=lambda s: {"unmet": 0, "partial": 1, "not-checked": 2,
+                                                   "not-applicable": 3, "met": 4}[s])
     return Probe(
-        "env-spec-tracked", "partial", items,
-        clip(f"{', '.join(sorted(found)[:3])} is tracked but nothing pins versions (no lockfile or digest)."),
-        evidence, {"specs": found},
+        "env-spec-tracked", worst, items,
+        clip(f"must/010 {s010}: {r010} must/013 {s013}. must/016 {s016}."),
+        evidence,
+        {"specs": found, "uninstalled_modules": uninstalled, "preconditions": preconditions,
+         "remote": remote or None},
+        item_status={i010: s010, i013: s013, i016: s016},
+        item_reason={i010: r010, i013: r013, i016: r016},
     )
 
 

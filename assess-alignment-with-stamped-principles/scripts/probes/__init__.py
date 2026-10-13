@@ -10,10 +10,11 @@ mutant that the probe misses is a bug in one place only.
 from __future__ import annotations
 
 from .common import Evidence, Object, Probe
-from .modules import inputs_untouched, subdatasets_resolvable
+from .modules import inputs_untouched, modules_separated, subdatasets_resolvable
 from .provenance import derived_have_records, run_env_linked
 from .structure import (
     ci_present,
+    clone_weight,
     entry_point,
     env_spec_tracked,
     large_in_annex,
@@ -31,8 +32,10 @@ REGISTRY = {
     "run-env-linked": run_env_linked,
     "env-spec-tracked": env_spec_tracked,
     "entry-point": entry_point,
+    "modules-separated": modules_separated,
     "inputs-untouched": inputs_untouched,
     "license-declared": license_declared,
+    "clone-weight": clone_weight,
     "ci-present": ci_present,
 }
 

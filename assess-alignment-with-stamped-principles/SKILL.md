@@ -1,6 +1,6 @@
 ---
 name: assess-alignment-with-stamped-principles
-version: 0.1.0
+version: 0.2.0
 description: Assess how a project aligns with the STAMPED principles (self-contained, tracked, actionable, modular, portable, ephemeral, distributable) and leave a filled checklist behind — a dated report, a response JSON with per-item evidence, and a link that opens the answers in the STAMPED checklist app. Strictly read-only — it never changes the project it assesses. Use when asked to assess, audit, review or check a project, dataset or repository against STAMPED, to fill in the STAMPED checklist for something, or when another skill (align-, create-, do-full-research-loop) calls for an assessment.
 allowed-tools: Bash, Read, Glob, Grep, AskUserQuestion, Task
 user-invocable: true
@@ -73,13 +73,20 @@ python3 scripts/run_probes.py <object> --kind <kind> \
     -o <date>-probes.json --response <date>-response.json
 ```
 
-That answers 11 of the 17 MUST items, 3 SHOULD items and may/001 from committed state, and leaves the rest `not-checked` for you.
+That answers 11 of the 17 MUST items, 2 SHOULD items and may/001 from committed state, and leaves the rest `not-checked` for you.
+Three probes answer no checklist item at all and are reported as extras: `license-declared` (paper S.2/D.3), `clone-weight` (oversized text in git) and `inputs-untouched` (did an input move).
 Read `<date>-probes.json`, not just the summary: `details` carries the paths, commits and lines you cite.
-Add `--check-remote` to contact the recorded module urls (network), and `--allow <glob>` through `no-abs-paths` only when a file genuinely has to carry a host path.
+Options: `--check-remote` contacts the recorded module urls (network); `--allow <glob>` tells `no-abs-paths` to skip a file that genuinely has to carry a host path (recorded run output is already skipped); `--only`/`--skip` select probes.
 
-A probe result is evidence; it is not the last word.
-If a probe is wrong about this object — equivalent evidence it does not know about, a vendored upstream file, a path that is a documented example — override it, say so in the item's `source` (`probe:<name>+judgement`), explain why in the reason, and **flag the item** in the report.
-That disagreement is how probes get fixed; silently editing the verdict loses it.
+A probe result is evidence; it is not the last word, and two kinds of disagreement are worth catching:
+
+- **The verdict is wrong** — equivalent evidence the probe does not know about, a vendored upstream file, a path that is a documented example.
+  Override it, set `source` to `probe:<name>+judgement`, add `probe-overridden` to the item's `flags`, and say why in the reason.
+- **The verdict is right but the route is wrong** — the probe answered the item from a property the item does not ask about.
+  Keep the verdict, add `mapping-questioned` to `flags`, and name what the probe actually measured.
+
+Both end up in the report's flagged-items section ([`response-format.md`](../stamped-conventions/references/response-format.md)).
+That is how probes get fixed; silently editing a verdict loses the finding.
 
 The expensive probe is separate, because it needs another host and real time:
 
@@ -98,15 +105,26 @@ Each of these needs a reading of the object, and each needs a citation:
 | must/001 | Is everything essential under one root, or does something live only on a share, a cluster path or in prose? |
 | must/003 | Is external software inside the environment or linked as a module, rather than assumed present? |
 | must/011, must/012 | Are host assumptions (OS, system libraries, environment variables, cluster scheduler, GPU) written down where a stranger will find them? |
-| must/014, should/008 | Is there a stated process for updating the environment spec, and does history show it being followed? |
 | must/017 | Does the documentation say how to obtain and use the environment, not just that it exists? |
 | should/001 | One version-control system across components, or several? |
 | should/005, should/004 | Does execution spawn a disposable environment per run (a container per job, a batch job, CI), or does it reuse a long-lived one? |
+| must/014 **and** should/008 | The same question twice (the checklist duplicates it word for word): is there a stated process for updating the environment spec, and does history show it followed? Answer both from the same evidence and say they are duplicates. |
 | should/007 | Are environment artifacts archived with the object (image, binaries), or only referenced? |
 | should/009 | Are restricted data or software isolated in their own modules? |
 | may/002–005 | Is the modular structure documented, are boundaries independent, is there a composition mechanism? |
 
 Consider fanning these out to subagents, one per principle, when the object is large; give each the same object path and the same verdict vocabulary, and have it return item ids with evidence.
+
+### Verify the finding you are about to lead with
+
+Before a finding goes first in the report, confirm it yourself rather than repeating a probe.
+The cheap confirmations:
+
+- **An unresolvable module url** (must/002): clone the object into a temporary directory from its *published* remote and run `git submodule update --init <path>`, or resolve the recorded url by hand against that remote. `url = ../..` resolving to something real on your disk and to nothing for a stranger is exactly the case worth being sure about.
+- **A missing environment specification** (must/010, must/013): look for what the entry point actually requires — a tool checked on `PATH`, a version gate, a vendored directory — and cite that line, not the absence of a file.
+- **A derived file with no record** (must/006): `git log --format=%H -1 -- <path>` and check whether that commit is a run record.
+
+Anything you did not confirm keeps `unverified-claim` in its `flags`, and the report says so.
 
 ## Step 5. Check what the project already knows
 
@@ -123,8 +141,9 @@ python3 ../stamped-conventions/scripts/encode_response.py encode   <date>-respon
 ```
 
 `validate` must pass before you report anything: it catches an unanswered item, a status without evidence, a reason over the app's 250 characters, and an id the app would reject.
-Write the report in the layout `response-format.md` gives — verdict line with denominators, what to fix first, what is already good, the per-item table, the not-checked list, goals and kind, then the URL and the stamp.
-Fill `assessor` with this skill's `version:`, the conventions skill's `version:`, the harness and the model.
+Write the four files `response-format.md` names — `<date>-assessment.md`, `<date>-response.json`, `<date>-probes.json`, and `<date>-fresh-rerun.json` only if that probe ran — where `<date>` is the day you made the assessment, in UTC.
+Follow its report layout: verdict line with denominators, what to fix first, what is already good, the per-item table, the flagged items, the not-checked list, goals and kind, then the URL and the stamp.
+Fill `assessor` with this skill's `version:`, the harness, the model, and `dependencies: ["stamped-conventions@<version>"]`.
 
 Where the products go:
 
