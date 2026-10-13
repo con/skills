@@ -20,7 +20,9 @@ conditions/pointer-CLAUDE.md   the `pointer` baseline, verbatim from the issue
 harness/blind_run.py           snapshot a skill + render the subagent prompt; diff what comes back
 fixtures/make_r0_object.py     builds a known-good R0 object (plain git; no datalad or network)
 mutants/mutate.py              one injected defect each, with the items it should flip
+mutants/judgement.py           prose defects no probe can see, graded by a blind subagent
 harness/calibrate.py           fixture + mutants -> per-item sensitivity, false-unmet rate
+harness/judgement_calibrate.py prepare the judgement mutants, then score what the runs returned
 harness/run.py                 set up one sandboxed run of a use case under a condition
 harness/grade.py               T1 probes + science oracle + process metrics -> grading.json
 harness/aggregate.py           grading files -> iteration report (always with denominators)
@@ -65,6 +67,33 @@ verdicts.
 Each difference and each friction item gets a classification — skill wording,
 missing artifact, harness fault, model limit, or a defect in the reference —
 and only the first two change the skill.
+
+## Two kinds of mutant
+
+A mutant is one deliberately broken copy of the known-good fixture, used to test
+the **assessor** rather than the project. They come in two kinds, and the split
+matters:
+
+| | `mutants/mutate.py` | `mutants/judgement.py` |
+|---|---|---|
+| Defect | mechanical: an absolute path, a 50 MB blob in git, `url = ../..` | prose: a `make` target that does not exist, macOS-only install steps, `pixi run` in a `uv` project, impossible step order, a container nobody registered |
+| Grader | the probes, in seconds, for free | a blind subagent, in minutes, for tokens |
+| Scored on | exactly the declared items flipped, nothing else | one of the candidate items flagged, **the defect named**, no collateral accusations |
+| Gate | the clean fixture must stay all-`met` | the **probes must stay green** — a script-catchable defect is not testing judgement |
+| Catches | a probe that stopped working | a `SKILL.md` sentence that never worked |
+
+```console
+python3 evals/stamped/harness/calibrate.py                        # the scripted half
+python3 evals/stamped/harness/judgement_calibrate.py prepare --workdir ~/scratch/j1
+# run one blind subagent per printed prompt, then:
+python3 evals/stamped/harness/judgement_calibrate.py score --workdir ~/scratch/j1
+```
+
+`prepare` builds one object per judgement mutant and **refuses any whose defect
+moves a probe verdict**. That gate earned its place immediately: it rejected
+`dataset-description-contradicts-layout` because `///openneuro/ds000003` in the
+metadata was being read as a host-specific path — a false positive that would
+have fired on every ReproNim project.
 
 ## The loop, in commands
 
