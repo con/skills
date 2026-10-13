@@ -26,10 +26,18 @@ Scoring, per mutant:
   part that separates reading the instructions from guessing;
 * **no collateral** — every item in ``stay_met`` is still ``met``, so the
   assessor did not simply get suspicious of everything;
+* and separately, a **control run on the unmutated object**, whose only score is
+  how many judgement items it accused: without it, "it flagged something" cannot
+  be told apart from "it flags everything";
 * **probes stayed green** — the scripted half was not what caught it (checked
-  in `prepare`, re-checked here).
+  in `prepare`).
 
 A mutant counts as detected only when the first three hold.
+
+A response that is still the probe draft — every judgement item carrying the
+"No probe covers this item" placeholder — is reported as **not run**, not as a
+miss: reading a file while the agent is still working is a collector failure,
+and the plan is explicit that those are kept apart from real results.
 """
 
 from __future__ import annotations
@@ -79,6 +87,25 @@ def prepare(args: argparse.Namespace) -> int:
 
     names = args.only or sorted(JUDGEMENT_MUTANTS)
     index = {}
+    if not args.no_control:
+        # The control: the same prompt on the *unmutated* object. Without it,
+        # "it flagged something" cannot be told apart from "it flags everything".
+        prepared = subprocess.run(
+            [sys.executable, str(BLIND_RUN), "prepare",
+             "--skill", "assess-alignment-with-stamped-principles",
+             "--object", str(clean), "--workdir", str(workdir / "control-clean")],
+            capture_output=True, text=True,
+        )
+        if prepared.returncode != 0:
+            print(prepared.stderr, file=sys.stderr)
+            return 1
+        index["control-clean"] = {
+            "object": str(clean), "prompt": str(workdir / "control-clean" / "prompt.md"),
+            "outdir": str(workdir / "control-clean" / "out"),
+            "injected": "nothing: this is the control", "probes_unchanged": True, "control": True,
+        }
+        print(f"control-clean\n  object: {clean}\n  prompt: {workdir / 'control-clean' / 'prompt.md'}\n"
+              "  no defect injected: every non-met judgement verdict here is a false accusation")
     for name in names:
         spec = JUDGEMENT_MUTANTS[name]
         target = workdir / name
@@ -132,15 +159,28 @@ def score(args: argparse.Namespace) -> int:
     detected = 0
     scored = 0
     for name, entry in sorted(index.items()):
-        spec = JUDGEMENT_MUTANTS[name]
+        spec = JUDGEMENT_MUTANTS.get(name)
         outdir = pathlib.Path(entry["outdir"])
-        response_path = next(iter(sorted(outdir.glob("*response.json"))), None)
+        response_path = next(iter(sorted(outdir.glob("*response.json"), key=lambda p: -p.stat().st_mtime)), None)
         if response_path is None:
             report["mutants"][name] = {"scored": False, "why": "no response JSON in the run's outdir"}
             print(f"not run   {name:<42} (no response JSON yet)")
             continue
-        scored += 1
         response = json.loads(response_path.read_text()).get("responses") or {}
+        # `run_probes.py --response` writes a draft in which every judgement item
+        # carries a placeholder. Scoring that would blame the agent for the
+        # harness reading a file mid-flight: a collector failure, not a miss.
+        placeholder = sum(1 for a in response.values()
+                          if "No probe covers this item" in (a.get("reason") or ""))
+        if placeholder >= 5:
+            report["mutants"][name] = {
+                "scored": False,
+                "why": f"{response_path.name} is still the probe draft ({placeholder} placeholder "
+                       "reasons): the run has not written its answers yet",
+            }
+            print(f"not run   {name:<42} (draft only, {placeholder} items unanswered)")
+            continue
+        scored += 1
         prose = " ".join(
             [p.read_text() for p in sorted(outdir.glob("*.md"))]
             + [a.get("reason", "") for a in response.values()]
@@ -180,6 +220,8 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("prepare", help="build the objects and the prompts")
     p.add_argument("--workdir", type=pathlib.Path, required=True)
     p.add_argument("--only", nargs="+", choices=sorted(JUDGEMENT_MUTANTS))
+    p.add_argument("--no-control", action="store_true",
+                   help="skip the clean-object control run (not recommended)")
     s = sub.add_parser("score", help="score the responses the runs produced")
     s.add_argument("--workdir", type=pathlib.Path, required=True)
     s.add_argument("-o", "--output", type=pathlib.Path)

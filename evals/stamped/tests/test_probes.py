@@ -117,9 +117,18 @@ def test_run_probes_writes_a_valid_response(clean, tmp_path):
     payload = json.loads(response.read_text())
     checklist = Checklist()
     assert set(payload["responses"]) == set(checklist.by_id)
-    # The draft leaves judgement items not-checked, which validate() accepts.
-    problems = [p for p in validate(payload, checklist) if "needs at least one evidence" not in p]
-    assert problems == [], problems
+    problems = validate(payload, checklist)
+    # A draft is not a finished response: validate() must refuse it, and the
+    # only reasons it refuses are the two a draft legitimately has — items no
+    # probe answered still carrying the placeholder, and probe verdicts whose
+    # evidence the assessor has not yet cited.
+    assert problems, "validate() accepted a probe draft as a finished response"
+    unexpected = [
+        p for p in problems
+        if "placeholder" not in p and "needs at least one evidence" not in p
+    ]
+    assert unexpected == [], unexpected
+    assert any("placeholder" in p for p in problems)
 
 
 def test_checklist_pin_matches_the_lock():

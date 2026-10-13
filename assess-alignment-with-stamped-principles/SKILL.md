@@ -140,7 +140,8 @@ python3 ../stamped-conventions/scripts/encode_response.py validate <date>-respon
 python3 ../stamped-conventions/scripts/encode_response.py encode   <date>-response.json
 ```
 
-`validate` must pass before you report anything: it catches an unanswered item, a status without evidence, a reason over the app's 250 characters, and an id the app would reject.
+`validate` must pass before you report anything: it catches an unanswered item, an item still carrying the probe draft's "No probe covers this item" placeholder, a status without evidence, a reason over the app's 250 characters, and an id the app would reject.
+Every one of the 31 items gets your answer — the judgement items in [Step 4](#step-4-judge-what-no-probe-can) are not optional, and a smaller model skipping the `may/*` items is the observed failure this check exists to stop.
 Write the four files `response-format.md` names — `<date>-assessment.md`, `<date>-response.json`, `<date>-probes.json`, and `<date>-fresh-rerun.json` only if that probe ran — where `<date>` is the day you made the assessment, in UTC.
 Follow its report layout: verdict line with denominators, what to fix first, what is already good, the per-item table, the flagged items, the not-checked list, goals and kind, then the URL and the stamp.
 Fill `assessor` with this skill's `version:`, the harness, the model, and `dependencies: ["stamped-conventions@<version>"]`.

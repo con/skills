@@ -34,6 +34,10 @@ CHECKLIST_DIR = HERE.parent / "checklist"
 APP_URL = "https://checklist.stamped-principles.org/"
 PERSISTENCE_FORMAT = 3
 REASON_MAX = 250
+# What `run_probes.py --response` writes for an item no probe covers. A finished
+# response never still carries it: that is an unanswered item wearing the
+# costume of an answer.
+DRAFT_PLACEHOLDER = "No probe covers this item"
 
 # status -> app value; see ../references/verdicts.md
 STATUS_VALUE = {
@@ -108,6 +112,9 @@ def validate(response: dict, cl: Checklist) -> list[str]:
             problems.append(f"{where} 'reason' must be a string (the app rejects anything else)")
         elif len(reason) > REASON_MAX:
             problems.append(f"{where} reason is {len(reason)} chars; the app truncates at {REASON_MAX}")
+        elif DRAFT_PLACEHOLDER in reason:
+            problems.append(f"{where} still carries the probe draft's placeholder reason: this item was "
+                            "never answered")
         status = answer.get("status")
         if status is None:
             problems.append(f"{where} no 'status' (see references/verdicts.md)")
