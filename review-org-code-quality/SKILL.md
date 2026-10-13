@@ -136,9 +136,10 @@ Score each finding: **Impact** (blast radius via graph, 1–3) × **Likelihood**
 
 - **Retire** — orphaned pipelines, dead DAG branches (any score).
 - **Accept & document** — an intentional divergence (any score), with the reason.
-- **Fix now** — score 6–9, or any score on a critical path with a silent failure mode and no test. If several repositories share the root cause, also list the systemic fix below.
-- **Fix systemically** — score 3 or more with the same root cause in several repositories: push into the template/shared lib so it lands everywhere.
-- **Accept & document** — everything else (a score of 1–2, or 3–4 in a single repository), with the reason.
+- **Fix systemically** — score 3 or more with the same root cause in several repositories (including 6–9): push into the template/shared lib so it lands everywhere.
+- **Fix now** — score 6–9 in a single repository, or any score on a critical path with a silent failure mode and no test.
+
+Everything else (a score of 1–2, or 3–4 in a single repository) is **Accept & document**, with the reason.
 
 Then pick the **depth set**: the hub nodes, the shared library/template,
 and any repository whose matrix row drove a "Fix now" item — usually two
@@ -202,7 +203,7 @@ Only notable deviations; don't repeat the matrix. Link the full
 `review-repo-code-quality` report for each repository in the depth set.
 
 ## Prioritized action plan
-Fix now / Fix systemically / Accept / Retire — each item with its score, owner suggestion and Effort (S/M/L).
+Retire / Accept & document / Fix systemically / Fix now — each item with its score, owner suggestion and Effort (S/M/L).
 
 ## Method & limits
 What was scanned, what was sampled, what was verified empirically vs. inferred,
