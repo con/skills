@@ -9,6 +9,12 @@ on the CON hub, where each run is a subdataset and every grading step is a
 recorded run. That keeps this repository small and makes every number in a
 report or a talk re-executable.
 
+That dataset exists as of 2026-10-13 and holds the first probe calibration;
+`datalad clone https://hub.centerforopenneuroscience.org/con/stamped-skills-evals.git`
+works anonymously. The exception is [`gold/`](gold/README.md): those reference
+answers are *inputs* to development rather than run results, so they are kept
+here, beside the mutants they complement.
+
 ```
 conditions/pointer-CLAUDE.md   the `pointer` baseline, verbatim from the issue
 fixtures/make_r0_object.py     builds a known-good R0 object (plain git; no datalad or network)
