@@ -25,9 +25,11 @@ When a judgement turns on wording, open the paper rather than this card.
 
 ## Known drift to be aware of (and not to paper over)
 
-- The paper names **S.2**, **M.3** and **D.3** (licensing among them); principles-schema 0.2.0 does not carry them, so no checklist item covers them.
+- The paper names **S.2**, **M.3** and **D.3** — all three about licensing; principles-schema 0.2.0 does not carry them, so none of the 31 checklist items asks about a licence.
+  The paper lists 19 principles, the schema 17 ([`../../docs/stamped/upstream/paper-schema-drift-issue.md`](../../docs/stamped/upstream/paper-schema-drift-issue.md) has the line numbers).
   The assessor reports licence findings as an extra item outside the checklist rather than bending an existing id ([`response-format.md`](response-format.md)).
 - **T.4** ("code-driven provenance SHOULD be recorded programmatically") exists in the schema but has **no checklist item**.
   Evidence for it is reported under the T items it supports, with the gap named.
+  The paper's T.4 is one compound statement; the schema splits it into T.4 (SHOULD, programmatic) and **T.5** (MUST, versions recorded), so T.5 has no paper counterpart to cite.
 - @asmacdo's draft in [stamped-agent-skills](https://github.com/stamped-principles/stamped-agent-skills) cites "checklist v1.0.1"; that is the web app's `package.json` version.
   The checklist's own `checklist_version` is **0.3.1**.

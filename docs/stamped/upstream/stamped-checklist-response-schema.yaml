@@ -1,0 +1,259 @@
+id: https://github.com/stamped-principles/stamped-checklist-schema/stamped-checklist-response-schema
+name: stamped-checklist-response
+title: STAMPED Checklist Response Schema
+description: >-
+  LinkML schema modeling a *filled* STAMPED checklist: one answer per item of a
+  pinned `stamped-checklist`, with the evidence the answer rests on and the
+  provenance of whoever produced it.
+
+  The required core is exactly what the checklist web app persists in a shared
+  URL (`format=3`): `checklist_version` plus, per item, a `value` of `yes`,
+  `no` or absent/null and a `reason` string of at most 250 characters.
+  Everything else is optional, so a response written by tooling stays readable
+  by the app, and a response exported from the app validates here unchanged.
+license: CC-BY-4.0
+version: 0.1.0
+
+prefixes:
+  linkml: https://w3id.org/linkml/
+  schema: https://schema.org/
+  stamped-checklist: https://github.com/stamped-principles/stamped-checklist-schema
+
+default_range: string
+
+imports:
+  - linkml:types
+
+classes:
+  ChecklistResponse:
+    description: >-
+      A completed checklist for one assessed object, at one point in time, by
+      one assessor.
+    tree_root: true
+    class_uri: schema:Dataset
+    attributes:
+      checklist_version:
+        description: >-
+          Version of the `stamped-checklist` whose item ids this response
+          answers. A response MUST NOT be read against a different version
+          without translation: item ids are stable, but wording and governing
+          principles are not.
+        slot_uri: schema:version
+        required: true
+        pattern: "^\\d+\\.\\d+\\.\\d+$"
+      responses:
+        description: >-
+          One answer per checklist item, keyed by the item's stable id. A
+          complete response answers every item of the pinned checklist; a
+          missing id means "not answered", which is not the same as
+          `not-checked`.
+        range: ItemResponse
+        multivalued: true
+        inlined: true
+        required: true
+        minimum_cardinality: 1
+      schema_version:
+        description: Version of the checklist schema the pinned checklist was written against.
+        pattern: "^\\d+\\.\\d+\\.\\d+$"
+      principles_version:
+        description: Version of the `stamped-principles` schema the checklist references.
+        pattern: "^\\d+\\.\\d+\\.\\d+$"
+      checklist_source:
+        description: Where the pinned checklist was obtained, so a reader can fetch the same items.
+        range: ChecklistSource
+        inlined: true
+      object:
+        description: The research object this response is about.
+        range: AssessedObject
+        inlined: true
+      assessor:
+        description: Who or what produced this response.
+        range: Assessor
+        inlined: true
+      scope:
+        description: >-
+          What was and was not examined, in prose: the boundary every
+          `not-checked` answer refers back to.
+      extra_items:
+        description: >-
+          Findings with no checklist item to carry them — licensing (paper
+          S.2/D.3) and T.4 have none in checklist 0.3.1 — reported here rather
+          than by bending an existing id.
+        range: ExtraFinding
+        multivalued: true
+        inlined_as_list: true
+
+  ItemResponse:
+    description: One answer, with its evidence.
+    attributes:
+      item:
+        description: >-
+          The checklist item answered. References `ChecklistItem.id` in the
+          `stamped-checklist` schema, at the version pinned in
+          `ChecklistResponse.checklist_version`.
+        range: uriorcurie
+        identifier: true
+        required: true
+        pattern: "^stamped-checklist:(must|should|may)/[0-9]{3}$"
+      value:
+        description: >-
+          The app-level answer. Absent (or explicitly `null`) means unanswered
+          or indeterminate, and is how `not-checked` and `not-applicable`
+          appear to a consumer that reads only the core.
+        range: ResponseValue
+      reason:
+        description: >-
+          Why, in at most 250 characters. Required even when empty, so that a
+          consumer never has to distinguish absent from empty. Consumers MAY
+          truncate at 250 characters; producers SHOULD NOT exceed it.
+        slot_uri: schema:description
+        required: true
+      status:
+        description: >-
+          The richer verdict `value` is derived from. `partial` and `unmet`
+          both map to `no`; `not-checked` and `not-applicable` both map to an
+          absent `value`, and keeping them apart is the point of this slot.
+        range: ResponseStatus
+      evidence:
+        description: >-
+          What the answer rests on. A response SHOULD carry at least one
+          evidence entry for any `status` of `met`, `partial` or `unmet`.
+        range: Evidence
+        multivalued: true
+        inlined_as_list: true
+      source:
+        description: >-
+          How the answer was produced, e.g. `probe:<name>`, `judgement`,
+          `human:web-app`, or `probe:<name>+judgement` when a reading of the
+          object overrode an automated check.
+
+  Evidence:
+    description: A citable observation. Same shape as `Evidence` in stamped-skills-assessment.
+    attributes:
+      uri:
+        description: >-
+          Where to look: a path relative to the object's root (optionally with
+          a line anchor), a commit, a command, or an absolute URL for anything
+          outside the object.
+        range: uriorcurie
+        required: true
+      description:
+        description: What a reader will find there, and why it supports the answer.
+        slot_uri: schema:description
+        required: true
+      sha256:
+        description: Checksum of the cited artifact, where one is meaningful.
+        pattern: "^[0-9a-f]{64}$"
+
+  ChecklistSource:
+    description: >-
+      The pin — which published checklist these ids and texts come from.
+    attributes:
+      repo:
+        description: Repository the checklist was published from.
+        range: uri
+      tag:
+        description: Release tag of the checklist, e.g. `v0.3.1`.
+      commit:
+        description: Commit the tag resolved to when the checklist was fetched.
+        pattern: "^[0-9a-f]{7,40}$"
+      sha256:
+        description: Checksum of the fetched checklist file.
+        pattern: "^[0-9a-f]{64}$"
+
+  AssessedObject:
+    description: The research object the response is about.
+    attributes:
+      url:
+        description: Where the object can be retrieved by others.
+        range: uri
+      commit:
+        description: The exact state assessed. An assessment of uncommitted state is not reproducible.
+        pattern: "^[0-9a-f]{7,40}$"
+      captured_at:
+        description: When the object was read.
+        range: datetime
+      kind:
+        description: What kind of object it is, which sets the emphasis and the honest `not-applicable` answers.
+        range: ObjectKind
+
+  Assessor:
+    description: Who or what produced the response.
+    attributes:
+      skill:
+        description: Name of the skill, tool or person.
+      version:
+        description: Version of that skill or tool.
+      harness:
+        description: Agent harness, if any, e.g. `claude-code 2.1.x`.
+      model:
+        description: Model identifier, if a language model was involved.
+      dependencies:
+        description: >-
+          Other versioned components the answer relied on, as `name@version`
+          strings — a shared conventions package, a probe suite, a validator.
+        multivalued: true
+      date:
+        description: Date the response was produced.
+        range: date
+
+  ExtraFinding:
+    description: A finding outside the pinned checklist.
+    attributes:
+      key:
+        description: Short stable slug for the finding, e.g. `license-declared`.
+        required: true
+      status:
+        range: ResponseStatus
+        required: true
+      reason:
+        required: true
+      evidence:
+        range: Evidence
+        multivalued: true
+        inlined_as_list: true
+
+enums:
+  ResponseValue:
+    description: The answer as the checklist app stores it.
+    permissible_values:
+      "yes":
+        description: The item is satisfied.
+      "no":
+        description: The item is not satisfied, in full or in part.
+
+  ResponseStatus:
+    description: >-
+      The richer verdict. Reconciles the vocabularies in use across the STAMPED
+      tooling, and keeps "could not check" apart from "checked and absent".
+    permissible_values:
+      met:
+        description: Evidence shows the property holds across the object. Maps to `yes`.
+      partial:
+        description: >-
+          It holds by design but is violated somewhere specific, or holds in
+          some components only. Maps to `no`; a MUST item is never satisfied by
+          `partial`.
+      unmet:
+        description: Evidence shows the property is absent. Maps to `no`.
+      not-checked:
+        description: >-
+          Could not be checked — tool unavailable, cost, access, or out of the
+          stated scope. Maps to an absent `value`, and MUST NOT be reported or
+          scored as `unmet`.
+      not-applicable:
+        description: >-
+          The property cannot apply to this kind of object. Maps to an absent
+          `value`; the reason names the kind.
+
+  ObjectKind:
+    description: What the assessed object primarily is.
+    permissible_values:
+      dataset:
+        description: Data as the product, raw or derivative.
+      component:
+        description: Code others call — a library, container recipe or workflow.
+      study:
+        description: A question answered with data and compute.
+      skill:
+        description: A skill, prompt collection or agent configuration.

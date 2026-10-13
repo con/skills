@@ -700,10 +700,12 @@
   "assessor": {
     "skill": "assess-alignment-with-stamped-principles",
     "version": "0.1.0",
-    "conventions_version": "0.1.0",
     "harness": "claude-code (cloud session)",
     "model": "claude-opus-5[1m]",
-    "date": "2026-10-13"
+    "date": "2026-10-13",
+    "dependencies": [
+      "stamped-conventions@0.1.0"
+    ]
   },
   "scope": "Committed state of the superdataset at the commit above. The two linked modules were not installed, so their contents were not read; no container was pulled and no rerun attempted."
 }

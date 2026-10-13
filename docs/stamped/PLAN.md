@@ -505,6 +505,8 @@ A shorter `stamped-*` family remains possible later; a rename is a `git mv` plus
    Its required core is exactly format 3; the extensions above are optional.
    Coordinate with the app maintainers on whether this becomes `format=4`.
    File the paper-vs-schema drift (S.2, M.3, D.3, T.4) as a separate issue.
+   **Drafted 2026-10-13** in [`upstream/`](upstream/): the schema as a standalone file carrying its own version (so the upstream version-bump gate does not apply), linted, and validated against a real 31-item response, an app-exported core payload and a trimmed example.
+   The drift issue cites `main.tex` line numbers, and adds a detail the plan did not have: the schema's T.5 is a split of the paper's compound T.4, so T.5 has no paper counterpart.
 4. **Full assessment vs quick response.**
    The response is the quick, per-item product.
    When a rubric, plan and activities matter (eval runs, reviewed assessments), the same run also writes stamped-skills-assessment records, so the two never diverge.
@@ -822,7 +824,8 @@ Skills stay at `0.x` until their done criteria hold.
     Still to add there: con/skills as a pinned subdataset, which waits for this branch to be published.
   - [x] First calibration iteration ([§6.6](#66-calibrating-the-assessor)): mutants, plus one real object with its reference answer.
   - [x] A size and duplicate-block check added to `ci/validate_skills.py`.
-  - [ ] Outside con/skills: the `ChecklistResponse` PR on stamped-checklist-schema, and an issue on the paper-vs-schema drift.
+  - [x] Outside con/skills: both drafted, verified and ready to file in `docs/stamped/upstream/` — the `ChecklistResponse` schema (linted, and `linkml-validate`d against a real 31-item response, an app-exported payload and the example) with its PR body, and the paper-vs-schema drift issue with line numbers.
+    [ ] Filing them needs push access upstream.
 - [ ] **Phase 2: create + align.**
   - v0.1 of both, with templates (pre-commit run guard, preflight).
   - Inner-loop harness.
