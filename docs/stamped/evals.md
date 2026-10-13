@@ -362,7 +362,7 @@ Raw pass counts per use case and arm, side by side (`skill` 3/3 vs `pointer` 1/3
 Repeats are independent per arm, not paired; with three repeats even 3/3 against 0/3 is only p ≈ 0.1 (two-sided Fisher), so per-iteration numbers are **smoke thresholds** and a release claim needs the benchmark (about 10 repeats per arm).
 `aggregate.py` prints that caveat in every report it writes, so nobody has to remember it.
 
-## 10.1 Done criteria
+### 10.1 Done criteria
 
 These are initial targets, to be revised after the first two iterations.
 
