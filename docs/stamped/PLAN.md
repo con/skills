@@ -1,13 +1,14 @@
 # STAMPED skills for con/skills: development plan
 
-**Status:** draft for discussion, 2026-10-12. Nothing here is implemented yet.
-**Decided so far:** keep the issue's skill names for now; eval results go to [hub.centerforopenneuroscience.org/con/stamped-skills-evals](https://hub.centerforopenneuroscience.org/con/stamped-skills-evals); compute runs on typhon.
+**Status:** draft for discussion, 2026-10-13. Nothing here is implemented yet.
+**Decided so far:** keep the issue's skill names for now; eval results go to [hub.centerforopenneuroscience.org/con/stamped-skills-evals](https://hub.centerforopenneuroscience.org/con/stamped-skills-evals); compute runs on typhon; the development ladder starts with cheap neuroimaging tasks and leaves MRIQC until those are stable.
 **Tracks:** [stamped-principles/stamped-agent-skills#3](https://github.com/stamped-principles/stamped-agent-skills/issues/3),
 in particular [this comment](https://github.com/stamped-principles/stamped-agent-skills/issues/3#issuecomment-6128822460).
 **Feeds:** the MIT LLM-workshop deck and the US-RSE'26 deck in [con/talks#33](https://github.com/con/talks/pull/33).
 
 This is a working document.
 Decisions that are still open are collected in [§10](#10-open-questions); answer them inline or in review comments, and this file gets updated.
+A session picking this up on typhon should start at [§7.1](#71-starting-on-typhon).
 
 ---
 
@@ -16,7 +17,10 @@ Decisions that are still open are collected in [§10](#10-open-questions); answe
 - **What:** six user-facing skills from the issue, plus one shared, non-invocable `stamped-conventions` skill that holds what they must agree on: the pinned checklist, the verdict vocabulary, the response format and the stack references.
   They form layers: *assess* → *align* → *create* → *create-repronim*, with *do-full-research-loop* and *self-assess* on the side ([§4](#4-the-collection)).
 - **How they are developed:** use-case first.
-  Every change to a skill is tested by handing that skill to fresh subagents on a ladder of concrete scientific tasks, from "plot a TSV" up to "run MRIQC on 15 subjects of ds007116".
+  Every change to a skill is tested by handing that skill to fresh subagents on a ladder of concrete scientific tasks.
+  The ladder starts at "plot two TSVs that ds007116 already ships".
+  The main development target is "brain-extract the anatomicals of at least 10 ds007116 subjects with a container from `///repronim/containers` and plot brain size vs age".
+  Heavier tasks, such as MRIQC motion vs age and time of day, come only after those are stable ([§6.2](#62-use-case-ladder)).
   The project each subagent produces is graded against STAMPED checklist 0.3.1, mostly by scripted checks plus a fresh-clone rerun.
   The same task is also run without the skill and with only a pointer to the paper.
   You review each iteration's report, and your verdicts and comments become skill edits, new checks or new use cases ([§6](#6-development-cycle)).
@@ -29,20 +33,47 @@ Decisions that are still open are collected in [§10](#10-open-questions); answe
 
 ## 1. What the issue asks for
 
-From the comment, with the boundary each skill should keep:
+From the comment, with the boundary each skill should keep.
 
-| Skill (working name) | Job | Must not |
-|---|---|---|
-| `/assess-alignment-with-stamped-principles POINTER` | Check how a project aligns with STAMPED. Review the project's **goals** with the user, from documentation and the user's answers rather than guesses. Produce a filled checklist with per-item evidence. | Change the project. Restate the paper or checklist (summarize briefly and point to the current versions instead). |
-| `/align-with-stamped-principles PROMPT` | Assess, then change the project's AI harness (`AGENTS.md`/`CLAUDE.md`, skills, a spec-kit constitution followed by `/speckit.analyze` for TODOs) so later work follows STAMPED. Say **what** to change and **why it matters to this project**. Shift emphasis by project kind: modularity and portability for datasets, ephemerality for compute components. Re-assess and loop. | Prescribe a stack the project does not use. Rewrite the science. |
-| `/create-stamped-project PROMPT` | Start a new project. Learn the user's environment and similar past projects (asking the user, "grilling" them where needed), lay out an initial structure, then hand off to *align*. | Read shell history or other AI sessions without consent. |
-| `/create-repronim-stamped-project PROMPT` | Build a ReproNim-specific prompt and call `/create-stamped-project` with it, using the technologies from [con/cierge#52](https://github.com/con/cierge/issues/52). Later this may be combined with a ReproNim assessment skill. | Duplicate the generic create logic. |
-| `/do-full-research-loop` | A deliberately simple skill that carries the study in PROMPT through to results, so the project is actionable rather than only scaffolded. The issue's alternative is to hand off to a "full loop scientist" system. | Skip the project's provenance mechanism "just this once". |
-| `/self-assess-alignment-with-stamped-principles` | Assess the *user's* practice from their past history and projects. Recommend next steps and say why each matters to them. | Judge without evidence. Exfiltrate history. |
+**`/assess-alignment-with-stamped-principles POINTER`**
+- *Job:* check how a project aligns with STAMPED.
+  Review the project's **goals** with the user, from documentation and the user's answers rather than guesses.
+  Produce a filled checklist with per-item evidence.
+- *Must not:* change the project, or restate the paper or checklist (summarize briefly and point to the current versions instead).
 
-Target use cases named in the comment:
+**`/align-with-stamped-principles PROMPT`**
+- *Job:* assess, then change the project's AI harness (`AGENTS.md`/`CLAUDE.md`, skills, a spec-kit constitution followed by `/speckit.analyze` for TODOs) so later work follows STAMPED.
+  Say **what** to change and **why it matters to this project**.
+  Shift emphasis by project kind: modularity and portability for datasets, ephemerality for compute components.
+  Re-assess and loop.
+- *Must not:* prescribe a stack the project does not use, or rewrite the science.
+
+**`/create-stamped-project PROMPT`**
+- *Job:* start a new project.
+  Learn the user's environment and similar past projects (asking the user, "grilling" them where needed), lay out an initial structure, then hand off to *align*.
+- *Must not:* read shell history or other AI sessions without consent.
+
+**`/create-repronim-stamped-project PROMPT`**
+- *Job:* build a ReproNim-specific prompt and call `/create-stamped-project` with it, using the technologies from [con/cierge#52](https://github.com/con/cierge/issues/52).
+  Later this may be combined with a ReproNim assessment skill.
+- *Must not:* duplicate the generic create logic.
+
+**`/do-full-research-loop`**
+- *Job:* a deliberately naive skill that carries the study in PROMPT through to results, so the project is actionable rather than only scaffolded.
+  The issue's alternative is to hand off to a "full loop scientist" system.
+- *Must not:* skip the project's provenance mechanism "just this once".
+
+**`/self-assess-alignment-with-stamped-principles`**
+- *Job:* assess the *user's* practice from their past history and projects.
+  Recommend next steps and say why each matters to them.
+- *Must not:* judge without evidence, or exfiltrate history.
+
+**Target use cases named in the comment:**
 - some or all of the experiments in Ben Dichter et al.'s SfN'25 poster ([zenodo 19834562](https://zenodo.org/records/19834562));
-- ReproNim tasks of the form "run X app on OpenNeuro dsXXXXXX subjects X–Y to plot ZZZ": brain volume with the GM/WM volume ratio (on a secondary axis) vs age on [ds007116](https://github.com/OpenNeuroDatasets/ds007116), MRIQC motion vs age, and AFNI/FSL brain extraction from `///repronim/containers`.
+- ReproNim tasks of the form "run X app on OpenNeuro dsXXXXXX subjects X–Y to plot ZZZ", on [ds007116](https://github.com/OpenNeuroDatasets/ds007116), in this order:
+  1. brain extraction with a container from `///repronim/containers` (AFNI, FSL, SynthStrip, …), plotting brain size vs age;
+  2. brain volume with the GM/WM volume ratio on a secondary axis vs age;
+  3. only once those are done, MRIQC motion vs age and vs time of day.
 
 These are developed in `con/skills`. Automated distribution, and vendoring into stamped-agent-skills, ReproNim and elsewhere, come later ([§7](#7-roadmap), phase 6).
 
@@ -50,23 +81,137 @@ These are developed in `con/skills`. Automated distribution, and vendoring into 
 
 ## 2. Prior work and what this plan takes from it
 
-| Source | What it is | What we take |
-|---|---|---|
-| [stamped-agent-skills](https://github.com/stamped-principles/stamped-agent-skills): `stamped-skill-draft.md`, `stamped-skill-next-steps.md` (@asmacdo) | One draft STAMPED skill: facts → make it stick → 7 rules → moments → audit, plus a next-steps document | Its settled decisions carry over: an agent-agnostic core, "intervene, don't summarize", establish facts before applying rules, the "make it stick" pointer in `AGENTS.md`, and audit items generated from the checklist. Also its development method, the **audit loop**: diff what the agent improvised against what the skill said, then promote or prune. Its content becomes the seed of `stamped-conventions` and *assess*. One fix: it cites "checklist v1.0.1", which is the web app's `package.json` version, not `checklist_version` (0.3.1). |
-| [stamped-checklist-schema](https://github.com/stamped-principles/stamped-checklist-schema) 0.3.1 | LinkML schema and JSON for the checklist items: 31 items (17 MUST, 9 SHOULD, 5 MAY), ids such as `stamped-checklist:must/009` | The only item source we use, vendored and pinned. There is **no response schema** (see [§5](#5-checklist-response-format)). |
-| [stamped-checklist](https://github.com/stamped-principles/stamped-checklist) (web app) | Pulls the items at a pinned tag. Persists answers in the URL as `format=3`: base64 of `{"checklist_version", "responses": {id: {"value": "yes"\|"no"\|null, "reason"}}}`. Reasons are capped at 250 characters, and an unknown id fails the whole load. | The URL is how a report hands its result to people. The app is also a ready-made labeling UI: you fill the checklist for a test project and we decode the link into a reference answer ([§6.6](#66-calibrating-the-assessor)). |
-| [stamped-skills-assessment](https://github.com/stamped-principles/stamped-skills-assessment) | LinkML records for `use_case`, `object`, `rubric`, `assessment` and `review`, with a validator, a pinned "reference lock", and `docs/automation-evidence.md` | The durable record format for eval runs: use case → `use_case` + `rubric`, produced project → `object`, grading → `assessment`, your feedback → `review`. The evidence rules carry over: an agent's success report is an assertion, not evidence; a skill path being present does not show it was used; unknown is not zero; collector failures are separated from object defects; and numerators are reported with denominators. |
-| [stamped-paper](https://github.com/stamped-principles/stamped-paper) `main.tex` | Normative definitions. Its AI section covers pinning models, `datalad run` around agent calls, `Co-Authored-By`, and AGENTS.md | Linked, never pasted. Note the drift: the paper's S.2, M.3 and D.3 (licenses) are missing from principles-schema 0.2.0, and T.4 has no checklist item. To be raised upstream. |
-| [STAMPED-dl_morphometrics_biases](https://github.com/STAMPED-dl-morphometrics-biases/STAMPED-dl_morphometrics_biases) `skills/` (@leej3, Codex) | A heavy STAMPED neuroimaging skill with a roughly 3,000-row assessment TSV. Its own phase-3 reviews document the failures. | The negative lessons. Execution ran ahead of committed state. The preflight was "three documents about the gate and zero lines of gate". An absolute `$HOME` path sat in "portable" YAML. The guidance outgrew the context window. A slimmed skill grew back within two days. What follows: **commit before execute**; one-screen operating cards; **a lesson requires a regression artifact**; a size and duplication lint; a 2×2×2×N factorial evaluation design. |
-| [dandi/compression-comparisons](https://github.com/dandi/compression-comparisons) → [compression-comparisons-t261-study](https://github.com/dandi/compression-comparisons-t261-study) | 1,265 commits, about 1,215 `[DATALAD RUNCMD]` records, duct logs. Built with Claude. | Lessons: never commit while a `datalad run` is in flight (cells were lost, and the fix became a pre-commit hook); pin the tool subdataset and refuse a dirty or drifted checkout; measurements are immutable while narrative can be corrected; trace each parameter to its consumer; run no-op controls; use adversarial reviews and `CORRECTION:` commits. Known gaps to catch: the subdataset `url = ../..` (fails D), and containers that were written but never built (P/E). This makes it a **real-world calibration object**. |
-| [K-Dense scientific-agent-skills#227](https://github.com/K-Dense-AI/scientific-agent-skills/pull/227) (DataLad skill), [#265](https://github.com/K-Dense-AI/scientific-agent-skills/pull/265) (STAMPED probes, changes requested) | The STAMPED section in `references/provenance.md`. Review feedback on #265: tool-agnostic evidence; "not checked with the tooling available" is not "unmet". | Probes are *examples* of evidence, and equivalent evidence counts (a tracked Makefile or Snakefile satisfies A.2). `not-checked` is a separate verdict. Also adopt the "Validation scope" section, `metadata.version`, and tests kept outside the skill directory. |
-| [bcmcpher/my-skills](https://github.com/bcmcpher/my-skills/tree/main/plugins/datalad-cli) `datalad-stamped-assess` | Read-only ✓/◐/✗ assessment that cites evidence, with `--plan` mapping fixes to other skills | Prior art for *assess*. Avoid its `Stop`-hook autosave: it is exactly what destroys a long `datalad run`. |
-| [con/cierge#52](https://github.com/con/cierge/issues/52) (@leej3) | A demo design for US-RSE: a vanilla run vs a `/repronim-stamped-analysis` run, each started via `datalad run claude "…"` in a fresh `datalad create -c text2git` dataset and recorded with Entire | The runner design for the outer loop in [§6.4](#64-runners-inner-and-outer-loop), and a name to reconcile with `create-repronim-stamped-project` (see [§10](#10-open-questions)). |
-| [ReproNim/containers](https://github.com/ReproNim/containers) | 341 registered Apptainer images, including `bids-mriqc` 24.0.2, `repronim-simple-workflow`, and about 345 `neurodesk-*` images (afni, fsl, synthstrip, synthseg, fastsurfer). Uses `freeze_versions` and `REPRONIM_USE_DUCT=1`. | The environment layer for the ReproNim rungs. |
-| [ReproNim/skills](https://github.com/ReproNim/skills) | Empty scaffold (Agent Skills format) | Where the ReproNim layer could eventually be vendored. |
-| con/skills itself | `AGENTS.md` rules. `ci/validate_skills.py`. The shared-conventions pattern and `version:` frontmatter (#16/#22). APM distribution with a `skills/` tree (#13). Claude-neutral wording (#14). `introduce-*` → `setup-*` (#21). | Follow all of these. The STAMPED skills use the same "sibling conventions skill, read it or stop" contract as `code-quality-report-conventions`. |
-| [anthropics/skills `skill-creator`](https://github.com/anthropics/skills/tree/main/skills/skill-creator) | An eval loop: with-skill and baseline runs, `grading.json` (`text`/`passed`/`evidence`), benchmark aggregation, an HTML viewer for human feedback, and description-trigger optimization | Reuse its workspace layout and viewer for the inner loop rather than building our own. |
-| [ds007116](https://github.com/OpenNeuroDatasets/ds007116) (Penn LEAD, CC0) | 132 subjects and 225 sessions, ages 8.7–20 y per session. T1w/T2w, rest/n-back BOLD, DWI, ASL. It already includes `derivatives/freesurfer-post/*_qc.tsv`, in plain git. Linked fMRIPrep derivatives are in ds007088. | An ideal ladder: rung 0 needs no compute at all, and the shipped derivatives double as an **oracle** for later rungs. |
+### STAMPED itself
+
+**[stamped-agent-skills](https://github.com/stamped-principles/stamped-agent-skills): `stamped-skill-draft.md`, `stamped-skill-next-steps.md`** (@asmacdo)
+- *What it is:* one draft STAMPED skill (facts → make it stick → 7 rules → moments → audit) plus a next-steps document.
+- *What we take:* its settled decisions.
+  - an agent-agnostic core;
+  - "intervene, don't summarize";
+  - establish facts before applying rules;
+  - the "make it stick" pointer in `AGENTS.md`;
+  - audit items generated from the checklist;
+  - its development method, the **audit loop**: diff what the agent improvised against what the skill said, then promote or prune.
+
+  Its content becomes the seed of `stamped-conventions` and *assess*.
+  One fix: it cites "checklist v1.0.1", which is the web app's `package.json` version, not `checklist_version` (0.3.1).
+
+**[stamped-checklist-schema](https://github.com/stamped-principles/stamped-checklist-schema) 0.3.1**
+- *What it is:* LinkML schema and JSON for the checklist items: 31 items (17 MUST, 9 SHOULD, 5 MAY), with ids such as `stamped-checklist:must/009`.
+- *What we take:* the only item source we use, vendored and pinned.
+  There is **no response schema** ([§5](#5-checklist-response-format)).
+
+**[stamped-checklist](https://github.com/stamped-principles/stamped-checklist) (web app)**
+- *What it is:* pulls the items at a pinned tag and persists answers in the URL as `format=3`.
+  The payload is base64 of `{"checklist_version", "responses": {id: {"value", "reason"}}}`, where `value` is `"yes"`, `"no"` or `null`.
+  Reasons are capped at 250 characters, and an unknown id fails the whole load.
+- *What we take:* the URL is how a report hands its result to people.
+  The app is also a ready-made labeling UI: you fill the checklist for a test project and we decode the link into a reference answer ([§6.6](#66-calibrating-the-assessor)).
+
+**[stamped-skills-assessment](https://github.com/stamped-principles/stamped-skills-assessment)**
+- *What it is:* LinkML records for `use_case`, `object`, `rubric`, `assessment` and `review`, with a validator, a pinned "reference lock", and `docs/automation-evidence.md`.
+- *What we take:* the durable record format for eval runs.
+  Use case → `use_case` + `rubric`; produced project → `object`; grading → `assessment`; your feedback → `review`.
+  Its evidence rules carry over:
+  - an agent's success report is an assertion, not evidence;
+  - a skill path being present does not show the skill was used;
+  - unknown is not zero;
+  - collector failures are kept apart from object defects;
+  - numerators are reported with their denominators.
+
+**[stamped-paper](https://github.com/stamped-principles/stamped-paper) `main.tex`**
+- *What it is:* the normative definitions.
+  Its AI section covers pinning models, `datalad run` around agent calls, `Co-Authored-By`, and AGENTS.md.
+- *What we take:* linked, never pasted.
+  Note the drift to raise upstream: the paper's S.2, M.3 and D.3 (licenses) are missing from principles-schema 0.2.0, and T.4 has no checklist item.
+
+### Earlier attempts to learn from
+
+**[STAMPED-dl_morphometrics_biases](https://github.com/STAMPED-dl-morphometrics-biases/STAMPED-dl_morphometrics_biases) `skills/`** (@leej3, Codex)
+- *What it is:* a heavy STAMPED neuroimaging skill with a roughly 3,000-row assessment TSV.
+  Its own phase-3 reviews document the failures.
+- *What we take:* the negative lessons.
+  - Execution ran ahead of committed state.
+  - The preflight was "three documents about the gate and zero lines of gate".
+  - An absolute `$HOME` path sat in "portable" YAML.
+  - The guidance outgrew the context window.
+  - A slimmed skill grew back within two days.
+
+  What follows: **commit before execute**; one-screen operating cards; **a lesson requires a regression artifact**; a size and duplication lint; a factorial evaluation design.
+
+**[dandi/compression-comparisons](https://github.com/dandi/compression-comparisons) → [compression-comparisons-t261-study](https://github.com/dandi/compression-comparisons-t261-study)**
+- *What it is:* 1,265 commits, about 1,215 `[DATALAD RUNCMD]` records, and duct logs, built with Claude.
+- *What we take:*
+  - never commit while a `datalad run` is in flight (cells were lost; the fix became a pre-commit hook);
+  - pin the tool subdataset and refuse a dirty or drifted checkout;
+  - measurements are immutable while narrative can be corrected;
+  - trace each parameter to its consumer, and run no-op controls;
+  - adversarial reviews and `CORRECTION:` commits.
+
+  Its known gaps make it a **real-world calibration object**: the subdataset `url = ../..` (fails D), and containers that were written but never built (P/E).
+
+**[K-Dense scientific-agent-skills#227](https://github.com/K-Dense-AI/scientific-agent-skills/pull/227) (DataLad skill) and [#265](https://github.com/K-Dense-AI/scientific-agent-skills/pull/265) (STAMPED probes, changes requested)**
+- *What it is:* the STAMPED section in `references/provenance.md`, and review feedback on #265.
+  The feedback asks for tool-agnostic evidence, and says "not checked with the tooling available" is not "unmet".
+- *What we take:*
+  - probes are *examples* of evidence, and equivalent evidence counts (a tracked Makefile or Snakefile satisfies A.2);
+  - `not-checked` is a separate verdict;
+  - adopt the "Validation scope" section, `metadata.version`, and tests kept outside the skill directory.
+
+**[bcmcpher/my-skills](https://github.com/bcmcpher/my-skills/tree/main/plugins/datalad-cli) `datalad-stamped-assess`**
+- *What it is:* a read-only ✓/◐/✗ assessment that cites evidence, with `--plan` mapping fixes to other skills.
+- *What we take:* prior art for *assess*.
+  Avoid its `Stop`-hook autosave: it is exactly what destroys a long `datalad run`.
+
+**[con/cierge#52](https://github.com/con/cierge/issues/52)** (@leej3)
+- *What it is:* a demo design for US-RSE.
+  A vanilla run is compared with a `/repronim-stamped-analysis` run.
+  Each is started via `datalad run claude "…"` in a fresh `datalad create -c text2git` dataset and recorded with Entire.
+- *What we take:* the runner design for the outer loop ([§6.4](#64-runners-inner-and-outer-loop)), and a name to reconcile with `create-repronim-stamped-project` ([§10](#10-open-questions)).
+
+### Infrastructure and data
+
+**[ReproNim/containers](https://github.com/ReproNim/containers)**
+- *What it is:* 341 registered Apptainer images.
+  They include `bids-mriqc` 24.0.2, `repronim-simple-workflow`, and about 345 `neurodesk-*` images (afni, fsl, synthstrip, synthseg, fastsurfer).
+  It uses `freeze_versions` and `REPRONIM_USE_DUCT=1`.
+- *What we take:* the environment layer for the ReproNim rungs.
+
+**[brain-bbqs/study-template](https://github.com/brain-bbqs/study-template)**
+- *What it is:* a BIDS 1.11.2 ["study" dataset](https://bids-specification.readthedocs.io/en/stable/common-principles.html#study-dataset) skeleton.
+  It has `rawbids/`, `sourcedata/`, `derivatives/`, `code/`, `docs/`, `logs/` and `scratch/`, each with a README.
+  Its `sourcedata/` README already points at STAMPED self-containment.
+- *What we take:* the starting layout for ReproNim/BIDS projects ([§4.2](#create-repronim-stamped-project)).
+
+**[ReproNim/skills](https://github.com/ReproNim/skills)**
+- *What it is:* an empty scaffold in Agent Skills format.
+- *What we take:* where the ReproNim layer could eventually be vendored.
+
+**con/skills itself**
+- *What it is:*
+  - `AGENTS.md` rules;
+  - `ci/validate_skills.py`;
+  - the shared-conventions pattern and `version:` frontmatter (#16/#22);
+  - APM distribution with a `skills/` tree (#13);
+  - Claude-neutral wording (#14);
+  - `introduce-*` → `setup-*` (#21).
+- *What we take:* follow all of these.
+  The STAMPED skills use the same "sibling conventions skill, read it or stop" contract as `code-quality-report-conventions`.
+
+**[anthropics/skills `skill-creator`](https://github.com/anthropics/skills/tree/main/skills/skill-creator)**
+- *What it is:* an eval loop.
+  It runs with-skill and baseline runs, grades into `grading.json` (`text`/`passed`/`evidence`), aggregates a benchmark, and has an HTML viewer for human feedback and a description-trigger optimizer.
+- *What we take:* its workspace layout and viewer for the inner loop, rather than building our own.
+
+**[ds007116](https://github.com/OpenNeuroDatasets/ds007116)** (Penn LEAD, CC0)
+- *What it is:* 132 subjects and 225 sessions.
+  - Ages run 8.7–20 y per session.
+  - `sessions.tsv` keeps the time of day at hour resolution (09:00–19:00), with dates shifted to the 1800s.
+  - Modalities: T1w/T2w, rest and n-back BOLD, DWI, ASL.
+  - It already ships `derivatives/freesurfer-post/*_qc.tsv` in plain git.
+  - Linked fMRIPrep derivatives are in ds007088.
+- *What we take:* an ideal ladder.
+  Rung 0 needs no compute at all, and the shipped derivatives double as an **oracle** for later rungs.
 
 ---
 
@@ -74,7 +219,9 @@ These are developed in `con/skills`. Automated distribution, and vendoring into 
 
 1. **Agent-agnostic core, opinionated stacks in references.**
    The skill bodies are written in terms of properties: "every derived file has a re-executable record".
-   Concrete stacks live in `stamped-conventions/references/stacks/*.md`, loaded only when the project uses that stack: `datalad-yoda.md` first, then `repronim.md`, then others (Snakemake, DVC, Pixi/uv) as needed.
+   Concrete stacks live in `stamped-conventions/references/stacks/*.md`, loaded only when the project uses that stack.
+   `datalad.md` comes first, then `repronim.md`, then others (Snakemake, DVC, Pixi/uv) as needed.
+   STAMPED generalizes YODA, so nothing in them is YODA-specific.
    This follows @asmacdo's draft and con/skills#14.
 2. **Do not duplicate the paper or the checklist.**
    A one-screen principles card links to the paper.
@@ -123,8 +270,8 @@ flowchart BT
   align["align-with-stamped-principles<br/>(changes the harness, re-assesses, loops)"]
   create["create-stamped-project"]
   repronim["create-repronim-stamped-project<br/>(prompt builder + stacks/repronim.md)"]
-  loop["do-full-research-loop<br/>(executes the study; assesses at gates)"]
-  self["self-assess-alignment-with-stamped-principles"]
+  loop["do-full-research-loop<br/>(quick and dirty; ends with assess)"]
+  self["self-assess-alignment-with-stamped-principles<br/>(assess per project, then aggregate)"]
   assess --> conv
   align --> assess
   create --> align
@@ -144,7 +291,7 @@ stamped-conventions/
     verdicts.md                 # vocabulary + mapping table (§5)
     response-format.md          # JSON layout, URL encoding, provenance stamp
     project-kinds.md            # dataset / component / study / skill → emphasis
-    stacks/datalad-yoda.md
+    stacks/datalad.md
     stacks/repronim.md
   checklist/
     stamped-checklist-0.3.1.json  # vendored; never hand-edited
@@ -171,7 +318,8 @@ Eval *results* are large and binary (produced projects, transcripts, container l
 
 ### 4.2 Skill specifications
 
-#### `stamped-conventions` (shared, `user-invocable: false`)
+#### `stamped-conventions`
+Shared; `user-invocable: false`.
 - Holds everything in the tree above.
   Dependent skills read `../stamped-conventions/…` and stop if it is missing; they never work from memory.
   This is the same contract as `code-quality-report-conventions`.
@@ -217,44 +365,85 @@ Eval *results* are large and binary (produced projects, transcripts, container l
   1. Discover the environment: `datalad`, `git-annex`, `apptainer`/`docker`, `pixi`/`uv`/`conda`, cluster access, disk.
   2. Ask about similar past projects ("grill").
      With explicit consent only, skim shell history or AI-session logs, summarizing rather than copying.
-  3. Propose a layout: YODA when DataLad is available, otherwise Git plus a lockfile plus a Makefile.
-     Inputs become subdatasets or recorded references; there is an entry point, a README stub naming the question, an environment spec, and a CI stub.
+  3. Propose a layout:
+     - with DataLad available, a DataLad dataset, created with `-c text2git` when its text files may be shared publicly;
+     - otherwise Git plus a lockfile plus a Makefile.
+
+     Inputs become subdatasets or recorded references.
+     There is an entry point, a README stub naming the question, an environment spec, and a CI stub.
+     For BIDS-shaped domains, use the study-template layout from `stacks/repronim.md`.
   4. Hand off to *align*.
   5. If the PROMPT asks for results, hand off to *do-full-research-loop*.
 - **Templates:** a minimal skeleton per stack, plus the hook and preflight scripts from the regression-artifact rule.
 
 #### `create-repronim-stamped-project`
-- Thin.
-  It reads `stacks/repronim.md` and turns PROMPT into PROMPT-WITH-REPRONIM-SPECIFICS for *create*.
-  That covers:
-  - DataLad + YODA;
-  - `///repronim/containers` installed as `code/containers`, with `freeze_versions` and `datalad containers-run`;
-  - `REPRONIM_USE_DUCT=1`;
-  - OpenNeuro inputs (`///openneuro/dsXXXXXX` or OpenNeuroStudies `study-dsXXXXXX`) as subdatasets;
-  - a BIDS-derivatives layout with `GeneratedBy`;
-  - HeuDiConv/ReproIn when the inputs are DICOMs;
-  - optionally NIDM (`segstats_jsonld`), BEP028 PROV (`metalad runprov`), and mechababs/BABS for scale.
-- It is also where a future ReproNim assessment skill plugs in.
+Thin: it reads `stacks/repronim.md` and turns PROMPT into PROMPT-WITH-REPRONIM-SPECIFICS for *create*.
+It is also where a future ReproNim assessment skill plugs in.
+The ReproNim stack reference covers:
+
+- **Dataset:** a DataLad dataset, `-c text2git` when text files can be shared.
+  Nothing YODA-specific; STAMPED is the generalization.
+- **Layout:** a BIDS 1.11 study dataset, starting from [brain-bbqs/study-template](https://github.com/brain-bbqs/study-template):
+  - raw BIDS goes under `rawbids/`;
+  - multiple sources, or sources that are not raw BIDS, go under `sourcedata/`;
+  - processing results go under `derivatives/`, alongside `code/`, `docs/` and `logs/`.
+
+  If the whole project *is* the creation of one derivative (for example, brain masks for ds007116), the dataset itself becomes a BIDS derivative dataset (`DatasetType: derivative`).
+  Results then go at its root, with no `derivatives/` folder, and the input datasets are subdatasets under `sourcedata/`.
+- **Inputs:** OpenNeuro datasets (`///openneuro/dsXXXXXX`, or OpenNeuroStudies `study-dsXXXXXX`) as subdatasets in the place the layout above gives them.
+- **Containers:** `///repronim/containers` installed as `code/containers`, with `freeze_versions` and `datalad containers-run`, and `REPRONIM_USE_DUCT=1` so every run gets a duct trace.
+- **The project's own tooling:** `datalad`, `datalad-container`, `git-annex` and `con-duct` are declared in a tracked spec with pinned versions.
+  That spec is `code/requirements.txt`, `code/pyproject.toml` or a `pixi.toml`; git-annex comes from its PyPI wheel.
+  The spec is what P.2/P.3 (must/010, must/013) check for the tooling itself, not only for the containers.
+- **Conversion to BIDS:**
+  - DICOMs: [HeuDiConv](https://heudiconv.readthedocs.io/en/latest/) with the ReproIn heuristic.
+    That may first need a mapping of the acquisition names into the ReproIn convention, or a custom heuristic; follow the HeuDiConv docs and their tutorials.
+  - Other data types: pick from the [BIDS converters](https://bids.neuroimaging.io/tools/converters.html) after a fair comparison for the data and environment at hand (for example, a MATLAB-based converter where MATLAB is already in use).
+  - Video collections: [ReproStim](https://github.com/ReproNim/reprostim) can slice them into BIDS.
+- **Metadata:** `GeneratedBy` in `dataset_description.json`.
+- **Optional:** NIDM (`segstats_jsonld`), BEP028 PROV (`metalad runprov`), and mechababs/BABS for scale.
 
 #### `do-full-research-loop`
+**This is quick and dirty on purpose.**
+It exists to make a STAMPED project actionable end to end, and to exercise the other skills on real execution.
+Real research needs a proper "virtual scientist" (the issue's "full loop scientist" system), which this skill does not try to be.
+The skill says so at its top, and in the README of every project it produces.
+
 - **Input:** a STAMPED project plus a study PROMPT; if no project exists, it creates one first.
-- **Gates, in order:**
-  1. Plan.
-  2. Pilot a single unit, then inspect its run record and outputs.
-  3. Scale up.
-  4. Aggregate and plot.
-  5. Sanity checks and controls: trace each parameter to its consumer, run a no-op control, compare paired rather than pooled.
-  6. An independent review subagent.
-  7. Write up results in the README.
-  8. Final *assess*.
+- **Steps:**
+  1. **Plan.**
+     Write the question, inputs, method and expected outputs into the project, and commit them.
+  2. **Pilot.**
+     Run one unit (one subject, one session) through the recorded mechanism.
+     Inspect its run record and output before going further.
+  3. **Execute and adjust, in a loop.**
+     Scale up in batches.
+     After each batch, look at failures, QC and the values themselves.
+     When something fails or looks wrong (tool errors, failed QC, implausible numbers, missing units):
+     - record what happened;
+     - revise the plan, as a commit that says why;
+     - go back to the pilot if the method changed.
+
+     A method change goes to a new dated derivative; it never overwrites earlier results.
+     The loop stops when every unit is done, the budget is spent, or a blocker needs the user.
+  4. **Aggregate and plot,** also as recorded runs.
+     If aggregation turns up gaps or outliers, go back into the loop of step 3 rather than patching outputs.
+  5. **Sanity checks and controls:** trace each parameter to its consumer, run a no-op control, compare paired rather than pooled.
+  6. **Independent review** by a fresh subagent that sees only the committed project.
+  7. **Write up** the results and the "quick and dirty" disclaimer in the README.
+  8. **Run `/assess-alignment-with-stamped-principles`** on the finished project.
+     Its report is part of the deliverable.
+     MUST failures it finds are fixed, via `/align-with-stamped-principles` when they are harness gaps, before the loop declares itself done.
 - **Invariants:** §3.7 (commit before execute), with no editable installs of pinned code and no manual edits to derived files.
 
 #### `self-assess-alignment-with-stamped-principles`
-- **Input:** a set of the user's projects (for example `projects.tsv` from `scan-projects`), plus, with consent, history.
+- **Input:** PROMPT with pointers to the folders holding the user's relevant projects, and/or `projects.tsv` from `scan-projects`.
+  Plus, with consent, shell and AI-session history.
 - **Steps:**
-  1. Run a light *assess* on a sample of the projects.
-  2. Look for cross-project patterns.
-  3. Give three to five next steps, each saying why it matters to this user.
+  1. List candidate projects shallowly (the pointed folders and one level down, not a deep crawl), and confirm the selection with the user.
+  2. Run `/assess-alignment-with-stamped-principles` on each selected project, in parallel subagents where possible.
+  3. Aggregate the collected assessments: recurring gaps per principle and per checklist item, and consistent strengths.
+  4. Give three to five generic next steps drawn from that aggregate, each with what to change and why it matters to this user.
 - Lowest priority.
 
 ### 4.3 Names
@@ -298,11 +487,11 @@ A shorter `stamped-*` family remains possible later; a rename is a `git mv` plus
 
    | `status` | Meaning | App `value` | App `reason` |
    |---|---|---|---|
-   | `met` | Evidence shows it | `"yes"` | (hidden by the app; the evidence lives in JSON) |
-   | `partial` | Some components, or met by design but violated somewhere specific | `"no"` | Where it falls short |
+   | `met` | Evidence shows it | `"yes"` | Hidden by the app; evidence lives in the JSON |
+   | `partial` | Met in some components, or by design but violated somewhere specific | `"no"` | Where it falls short |
    | `unmet` | Evidence shows it is absent | `"no"` | Shortest fix |
    | `not-checked` | Could not check: tool missing, cost, access | `null` | Why, and what would check it |
-   | `not-applicable` | Item does not apply to this kind of object | `null` | `N/A: …` |
+   | `not-applicable` | Does not apply to this kind of object | `null` | `N/A: …` |
 
    A MUST is never satisfied by `partial`.
    This reconciles @asmacdo's draft (pass/partial/fail/unknown), STAMPED-dl (met/partial/unmet/restricted/n-a), the K-Dense #265 review (keep not-checked apart), and the five judgment statuses of stamped-skills-assessment.
@@ -346,34 +535,78 @@ flowchart LR
 ### 6.2 Use-case ladder
 
 Climb only when the rung below is stable.
-The rungs are ordered so that early ones are cheap enough for 3+ repeats per condition.
+The point of the ladder is to make the agent **actually compute**; R0 is the only rung that may reuse results the dataset already ships.
 
-| Rung | Prompt shape | Data | Tooling | Product | Oracle | Cost |
-|---|---|---|---|---|---|---|
-| **R0** | "Plot brain volume, with the GM/WM volume ratio on a secondary axis, vs age, from the shipped FreeSurfer derivatives" | ds007116: `sub-*_sessions.tsv` + `derivatives/freesurfer-post/*_qc.tsv` (plain git, 222 sessions) | Pinned Python (uv/pixi lock or a small container) | TSV + PNG | Deterministic rerun → identical outputs | Seconds, under 50 MB |
-| **R1** | "Brain-extract the T1w of three subjects with AFNI from `///repronim/containers`; show masks and mask volume vs age" | ds007116, 3 × ses-1 T1w (about 7 MB each) | `neurodesk-afni` (3dSkullStrip). Swapping in `neurodesk-fsl` (bet) or `neurodesk-synthstrip` tests M. | Overlay mosaic, volumes TSV | Cross-tool Dice; ICV vs FreeSurfer `etiv` | Minutes CPU; 0.5–9 GB image; needs Apptainer |
-| **R2** | "Compute brain and GM/WM volumes for about 30 sessions spanning ages 9–20; plot brain volume and the GM/WM ratio (secondary axis) vs age" | ds007116, about 30 T1w | `repronim-simple-workflow` (BET→FAST) or `neurodesk-synthseg` | Plot + fit + agreement scatter | R0 values from the shipped derivatives | 1–5 CPU-h |
-| **R3** | "Run MRIQC on rest run-01 for 15 subjects; plot fd_mean vs age" | ds007116 BOLD + T1w (or the lighter ReproNim `ds000003-demo`) | `bids-mriqc` 24.0.2, participant + group, `REPRONIM_USE_DUCT=1` | `group_bold.tsv` ⨝ sessions → plot | FD from fMRIPrep confounds in ds007088 | 10–15 CPU-h |
-| **R4** | "All sessions on our cluster, export NIDM + PROV, publish" | OpenNeuroStudies `study-ds007116` | mechababs/BABS, `segstats_jsonld`, `metalad runprov` | Full-N group plots + `.ttl` + BEP028 | R2–R3 subsets reproduce exactly | Hundreds to thousands of CPU-h |
-| **R5** (cross-domain) | "Demonstrate orientation selectivity from a DANDI dandiset" (Dichter et al. SfN'25) | DANDI NWB, streamed | Generic *create* + dandi-cli (no ReproNim layer) | Tuning curve + OSI distribution | Published finding / `dandi/llm-analysis` | Up to about 1 CPU-h |
+| Rung | Task | Compute | Starts when |
+|---|---|---|---|
+| R0 | Plot from the FreeSurfer tables ds007116 ships | None (seconds) | Now |
+| **R1** | **Brain extraction, ≥ 10 subjects → brain size vs age** | Minutes per subject; Apptainer | R0 stable; main development target |
+| R2 | Brain, GM and WM volumes, about 30 sessions | 1–5 CPU-h | R1 stable |
+| R3 | MRIQC: motion vs age and vs time of day | About 1 CPU-h per BOLD run | R0–R2 done |
+| R4 | Whole dataset at scale, NIDM + PROV | Hundreds to thousands of CPU-h | Demonstration only |
+| R5 | DANDI: orientation selectivity (cross-domain) | Up to about 1 CPU-h | Hold-out |
 
-Notes:
-- **R0 is also a trap.** At R1–R2 the prompt must say whether shipped derivatives may be used.
-  If they may not, a probe checks that the agent did not just copy `freesurfer-post`.
+**R0: warm-up, no compute.**
+- *Prompt:* "For ds007116, plot brain volume, with the GM/WM volume ratio on a secondary axis, against age, using the FreeSurfer derivatives the dataset ships."
+- *Data:* per-session ages from `sub-*/sub-*_sessions.tsv`, plus `derivatives/freesurfer-post/*_desc-FreeSurfer_qc.tsv` (plain git, 222 sessions).
+- *Tooling:* Python with a lockfile (uv or pixi), or a small container.
+- *Product:* a TSV and a PNG.
+- *Oracle:* a deterministic rerun gives identical outputs.
+- *Why:* it exercises the S/T/A/P plumbing (layout, inputs as a subdataset, run records, environment spec) cheaply enough for three or more repeats per condition.
+  It does not exercise computation; that starts at R1.
+
+**R1: brain extraction (main development target).**
+- *Prompt:* "Do brain extraction on the anatomical (T1w) images of at least 10 ds007116 subjects, spread over the age range, using one of the containers in `///repronim/containers`, and plot brain size against age."
+- *Data:* ses-1 T1w (`rec-normrefaced`), about 7 MB each.
+- *Tooling:* the agent picks, for example `neurodesk-afni` (3dSkullStrip), `neurodesk-fsl` (bet) or `neurodesk-synthstrip`.
+  Swapping one for another is a free test of M.
+  It goes through `datalad containers-run` with `REPRONIM_USE_DUCT=1`.
+- *Product:* brain-mask volumes (TSV), the brain size vs age plot, and an overlay mosaic for visual QC.
+- *Oracle:* the computed volumes correlate with FreeSurfer `brainseg`/`etiv` from the shipped derivatives.
+  Those must be used for the comparison only, never copied as results.
+  Optionally, Dice between two tools.
+- *Cost:* minutes of CPU per subject.
+  The image is 0.5–9 GB depending on the tool (SynthStrip is the smallest).
+- *Caveat:* the T1w images are refaced, which may affect skull stripping.
+  It is a known caveat, not a failure.
+
+**R2: tissue volumes.**
+- *Prompt:* "Compute brain, GM and WM volumes for about 30 sessions spanning ages 9–20; plot brain volume with the GM/WM ratio on a secondary axis against age."
+- *Tooling:* `neurodesk-synthseg` (`--vol` CSV) or `repronim-simple-workflow` (BET → FAST).
+- *Oracle:* the R0 values from the shipped FreeSurfer derivatives.
+
+**R3: MRIQC.** Only once R0–R2 are done.
+- *Prompt:* "Run MRIQC on the resting-state BOLD of N subjects and plot motion (mean framewise displacement) against age and against time of day."
+- *Data:* `task-rest_run-01` BOLD.
+  Time of day comes from `acq_time` in `sessions.tsv`, at hour resolution.
+  Start N small and grow it.
+- *Tooling:* `bids-mriqc` 24.0.2, `-m bold`, participant level then group level.
+- *Oracle:* framewise displacement from the fMRIPrep confounds in ds007088.
+
+**R4: scale and standards** (demonstration, not a gate).
+- *Prompt:* "All sessions on our cluster; export NIDM and PROV; publish."
+- *Tooling:* OpenNeuroStudies `study-ds007116`, mechababs/BABS, `segstats_jsonld`, `metalad runprov`.
+- *Oracle:* the R1–R3 subsets reproduce exactly.
+
+**R5: cross-domain** (hold-out).
+- *Prompt:* "Demonstrate orientation selectivity from a DANDI dandiset" (from Dichter et al. SfN'25).
+- *Tooling:* the generic *create* with dandi-cli, without the ReproNim layer.
+- *Oracle:* the published finding, or `dandi/llm-analysis`.
+
+Across rungs:
 - **Use per-session ages.** Ages differ between `participants.tsv` (baseline) and per-session `sessions.tsv`.
-  The ReproNim stack reference should steer to the per-session ages.
-- **Refaced T1w.** ds007116's T1w images are refaced, which may affect skull stripping. Note it as a known caveat, not a failure.
+  The ReproNim stack reference steers to the per-session ages.
 - **Hold-out set.** Keep R5 and one ReproNim variant (another dataset, for example ds000003) out of the inner loop, so skills are not tuned to the fixtures.
 
 ### 6.3 Conditions
 
-| Id | Agent receives | Purpose |
+| Id | Agent receives | Tests |
 |---|---|---|
-| `bare` | The use-case prompt only | Floor |
-| `pointer` | Prompt + @asmacdo's user-level `CLAUDE.md` STAMPED snippet from the issue, verbatim (the seven one-liners plus "read the latest paper"); this is today's practice | The bar a skill must clear to justify its context cost |
-| `skill@vN` (implicit) | Skills installed, prompt does not mention them | Does the description trigger? |
-| `skill@vN` (explicit) | Skills installed, prompt invokes `/create-…` or `/do-full-research-loop` | Does the procedure work? |
-| `skill@vN-1` | Previous version | Regression check |
+| `bare` | The use-case prompt only | The floor |
+| `pointer` | Prompt + @asmacdo's `CLAUDE.md` STAMPED snippet from the issue, verbatim | Today's practice: the bar a skill must clear |
+| `skill@vN`, implicit | Skills installed; the prompt does not mention them | Does the description trigger? |
+| `skill@vN`, explicit | Skills installed; the prompt invokes `/create-…` or `/do-full-research-loop` | Does the procedure work? |
+| `skill@vN-1` | The previous version | Regressions |
 
 **Models.** Two or three tiers, from frontier to small.
 Some neuroimaging content already pushes sessions to a non-frontier model (@asmacdo's note), so the skills must not assume frontier judgment.
@@ -399,9 +632,13 @@ Variance is reported, not hidden.
   Permissions are wide open *only* inside the throwaway sandbox.
   Datalad is pinned to a version with the concurrent-run fix (gh-7899/#7901).
   The harness must start on typhon with one command per iteration (`harness/run.py --iteration N`), whoever launches it: you, or a Claude Code session running on typhon.
-  A cloud session like the one that wrote this plan can author skills and harness code and run R0 and *assess* inner-loop runs on public objects.
+  A cloud session can author skills and harness code and run R0 and *assess* inner-loop runs on public objects.
   It cannot reach typhon, but it can read and push the results dataset on the hub ([§6.8](#68-where-results-live)).
-- **Agent provenance per run.** At minimum: the stream-json transcript, annexed in the results dataset; consistent, machine-parsable `Co-Authored-By` trailers; and the skill commit plus model recorded in `assessor`.
+- **Agent provenance per run.** At minimum:
+  - the stream-json transcript, annexed in the results dataset;
+  - consistent, machine-parsable `Co-Authored-By` trailers;
+  - the skill commit plus model, recorded in `assessor`.
+
   Optionally, Entire (`entire enable`) for commit-linked checkpoints, as cierge#52 proposes.
   Its redaction is best-effort, so it is used only on public-data use cases.
 
@@ -411,20 +648,26 @@ Variance is reported, not hidden.
 Deterministic and tool-agnostic; equivalent evidence passes.
 They live in `assess…/scripts/probes/`, so *assess* and the graders use the same code, and the mutants catch bugs in the probes.
 
-| Probe | Checks | Checklist items |
+| Probe | Passes when | Checklist items |
 |---|---|---|
-| `tree-clean` | `git status --porcelain` empty, recursively | must/004 |
-| `no-abs-paths` | No `/home/…`, `/Users/…`, `C:\…`, or `/tmp/…` in tracked text (allow-list for run records) | must/009 |
+| `tree-clean` | `git status --porcelain` is empty, recursively | must/004 |
+| `no-abs-paths` | No `/home/…`, `/Users/…`, `C:\…` or `/tmp/…` in tracked text (run records allow-listed) | must/009 |
 | `large-in-annex` | No large binaries in git objects | must/005 |
-| `subdatasets-resolvable` | No `../..` or local-path URLs; a fresh recursive clone from the published location works | must/002, must/016, may/001 |
-| `derived-have-records` | Every file under the outputs comes from a run record (`datalad run`, Make/Snakemake + tracked workflow) | must/006, A.2 |
+| `subdatasets-resolvable` | No `../..` or local-path URLs, and a fresh recursive clone from the published location works | must/002, must/016, may/001 |
+| `derived-have-records` | Every output file comes from a run record (`datalad run`, or Make/Snakemake with a tracked workflow) | must/006, A.2 |
 | `run-env-linked` | Run records name a container image key or digest, or a lockfile hash | must/006, must/015 |
-| `env-spec-tracked` | Lockfile, container definition or `containers` registration is tracked | must/010, must/013 |
-| `entry-point` | The README names an entry point and it exists | must/007, must/008 |
-| `inputs-untouched` | Input subdatasets are clean and at their recorded commit; nothing was written into inputs | should/003 (M.1) |
-| `license-declared` | Code and data licenses are declared (`LICENSES/`, REUSE, BIDS `License`) | paper S.2/D.3 (extra criterion until the schema catches up) |
-| **`fresh-rerun`** | On another host, in a fresh container: clone from the published sibling, get the minimum, `datalad rerun` or the documented entry point, then compare outputs (checksums, or a tolerance for plots and tables) | A.1, P.1–3, E, D.1, should/004 |
+| `env-spec-tracked` | A lockfile, container definition or `containers` registration is tracked, including for the project's own tooling | must/010, must/013 |
+| `entry-point` | The README names an entry point, and it exists | must/007, must/008 |
+| `inputs-untouched` | Input subdatasets are clean and at their recorded commit | should/003 (M.1) |
+| `license-declared` | Code and data licenses are declared (`LICENSES/`, REUSE, BIDS `License`) | paper S.2/D.3 (extra, until the schema catches up) |
+| **`fresh-rerun`** | The documented rerun reproduces the outputs on another host (below) | A.1, P.1–3, E, D.1, should/004 |
 | `ci-present` | CI re-executes the workflow or rebuilds the environment | should/002, should/006 |
+
+`fresh-rerun` in detail:
+1. On another host, in a fresh container, clone from the published sibling.
+2. Get the minimum content needed.
+3. Run `datalad rerun` or the documented entry point.
+4. Compare outputs: checksums, or a tolerance for plots and tables.
 
 **T2: blind LLM assessor.**
 Runs *assess* at a pinned version on the object only, with the condition hidden, to cover the judgment items: must/011, 012, 014, 017, the may/* documentation items, and goal fit.
@@ -452,15 +695,18 @@ Separately, keep:
 *Assess* is the grader for everything else, so it is calibrated first:
 
 1. **Mutants.** Start from a known-good R0 object (built by hand, or the best skill run after your sign-off).
-   Each mutant script injects one defect meant to flip one item. Examples:
-   - an absolute path in a script → must/009;
-   - a 50 MB NIfTI committed to git → must/005;
-   - a container tag `:latest` → must/015;
-   - a subdataset `url = ../..` → must/002 and must/016;
-   - the README's reproduce section removed → must/007 and must/008;
-   - outputs written into the inputs → should/003;
-   - an untracked figure → must/004;
-   - a derived file without a run record → must/006.
+   Each mutant script injects one defect meant to flip one item:
+
+   | Injected defect | Should flip |
+   |---|---|
+   | An absolute path in a script | must/009 |
+   | A 50 MB NIfTI committed to git | must/005 |
+   | A container referenced as `:latest` | must/015 |
+   | A subdataset with `url = ../..` | must/002, must/016 |
+   | The README's reproduce section removed | must/007, must/008 |
+   | Outputs written into the inputs | should/003 |
+   | An untracked figure | must/004 |
+   | A derived file without a run record | must/006 |
 
    Measure per-item sensitivity, plus the false `unmet` rate on the clean object.
 2. **Real-world gold set.**
@@ -481,7 +727,12 @@ Separately, keep:
    Freeze the skill commit.
 2. Run them: the inner loop for exploring, the outer loop for benchmarks.
 3. Grade (T1, T2, oracle) and aggregate.
-4. **Write the iteration report**, one page: what changed in the skill (diff link), a table of conditions × rungs (MUST pass rate, failing probes, oracle), the three to five most telling improvisations or failures (links to transcripts and objects), and the proposed next edits.
+4. **Write the iteration report**, one page:
+   - what changed in the skill (diff link);
+   - a table of conditions × rungs: MUST pass rate, failing probes, oracle;
+   - the three to five most telling improvisations or failures, with links to transcripts and objects;
+   - the proposed next edits.
+
    The skill-creator viewer is available for browsing outputs.
 5. **You review**: comments on the report, verdicts on flagged T1/T2 disagreements, and optionally a checklist URL for an object.
    These become `review` records.
@@ -508,7 +759,7 @@ Aneksajo is the git-annex-aware Forgejo, so git history and annexed content go t
   That way `subdatasets-resolvable` and `fresh-rerun` test real published URLs rather than paths on typhon.
 - **Mirroring:** optional, read-only, to GitHub for visibility; the hub stays authoritative.
 - **Cloud sessions** can read and push too.
-  This was verified 2026-10-13 from the environment used for this plan: Forgejo 16.0.5 + git-annex, `push: true`, and a `git push --dry-run` was accepted.
+  This was verified 2026-10-13: Forgejo 16.0.5 + git-annex, `push: true`, and a `git push --dry-run` was accepted.
   Three things make that work:
   - **Network:** `*.centerforopenneuroscience.org` and `*.stamped-principles.org` (plus the bare domains) are under Allowed domains, with the package-manager defaults kept.
   - **Hub access control:** the hub's Apache admits Anthropic's egress network.
@@ -522,7 +773,6 @@ Aneksajo is the git-annex-aware Forgejo, so git history and annexed content go t
   pip install datalad git-annex
   ```
   Put that line in the environment's setup script so the environment cache keeps it, and pin versions there (§6.4 on datalad's concurrent-run fix).
-  Typhon needs none of this.
 
 This keeps con/skills small and makes every number in a report or a talk re-executable.
 That is the same D check the MIT deck's "So I tried to `rerun` it" slide applies to the compression study.
@@ -542,7 +792,7 @@ These are initial targets, to be revised after the first two iterations.
   - the oracle agrees;
   - no regression against vN-1;
   - you sign off.
-- **create-repronim:** the same at R1–R3.
+- **create-repronim:** the same at R1–R2; R3 once it is reached.
   R4 counts as a demonstration, not a gate.
 
 ---
@@ -554,7 +804,7 @@ Skills stay at `0.x` until their done criteria hold.
 
 - [ ] **Phase 0:** this plan; agree on [§10](#10-open-questions).
 - [ ] **Phase 1: conventions + assess.**
-  - `stamped-conventions` v0.1: card, vendored checklist + lock, verdicts, encoder, `stacks/datalad-yoda.md`, seeded from @asmacdo's draft.
+  - `stamped-conventions` v0.1: card, vendored checklist + lock, verdicts, encoder, `stacks/datalad.md`, seeded from @asmacdo's draft.
   - `assess-alignment-with-stamped-principles` v0.1 + probes.
   - `evals/stamped/` skeleton with R0 + mutants.
   - Bootstrap `con/stamped-skills-evals` on the hub, from typhon: `datalad create`, con/skills as a pinned subdataset, a `hub` sibling, the first `datalad push`.
@@ -568,11 +818,11 @@ Skills stay at `0.x` until their done criteria hold.
 - [ ] **Phase 3: do-full-research-loop.**
   - v0.1.
   - Outer-loop runner (container per run, pinned datalad, transcripts).
-  - R1–R3.
+  - R1–R2.
 - [ ] **Phase 4: ReproNim.**
   - `stacks/repronim.md` + `create-repronim-stamped-project` v0.1.
   - Reconcile with the cierge#52 demo.
-  - R2–R4, with NIDM and BEP028 outputs at R4.
+  - R1–R3, then R4 as a demonstration with NIDM and BEP028 outputs.
 - [ ] **Phase 5:** `self-assess-alignment-with-stamped-principles` v0.1, plus R5 (cross-domain).
 - [ ] **Phase 6: distribution.**
   - APM packaging, once #13 lands.
@@ -581,13 +831,32 @@ Skills stay at `0.x` until their done criteria hold.
   - Domain-neutral pieces upstream to K-Dense (answering their issue #217, "should STAMPED be its own skill?").
   - The "(de)compositions" the issue anticipates: split or merge skills where the eval data shows a boundary is wrong.
 
+### 7.1 Starting on typhon
+
+For a Claude Code session on typhon (under Remote Control) picking this up:
+
+1. Continue from branch `claude/ecstatic-cerf-nh4j6w` of con/skills, or branch off it.
+2. **Check the host.**
+   - `apptainer --version`;
+   - free scratch space (R1 needs a few GB per container image, R3 much more);
+   - `claude --version` for headless outer-loop runs;
+   - `uv`.
+3. **Install pinned tooling** for the harness: `datalad`, `datalad-container`, `git-annex` (PyPI wheel) and `con-duct`, recorded in `evals/stamped/` as a lockfile or requirements file.
+4. **Bootstrap `con/stamped-skills-evals`** (phase 1):
+   1. `datalad create -c text2git`;
+   2. add con/skills as a subdataset;
+   3. add the hub as a sibling;
+   4. `datalad push`.
+5. **Phase 1 work:** `stamped-conventions` and the assess skill, R0 as the first use case, and the mutants.
+   Then move to R1, the main development target.
+
 ---
 
 ## 8. Talks
 
 **MIT LLM workshop, Friday 2026-10-16** (`2026-reproAI-MIT-STAMPED.html`, con/talks#33).
 The deck already makes the argument this collection backs up: slide #/4/4 "a skill is a research object", the #/6/7 con/skills table, and Monday checklist item 6, "push one skill upstream".
-A realistic **talk slice** in four days:
+A realistic **talk slice** in the days left:
 1. One slide: the collection (the [§4.1](#41-layering) diagram) and the development cycle ([§6](#6-development-cycle) diagram).
    It replaces a SKIP CANDIDATE such as #/6/5, so the deck does not grow.
 2. Stretch: *assess* v0.1 run on compression-comparisons-t261-study.
@@ -611,8 +880,10 @@ Deck edits happen on the `2026-usrse-con-talk` branch only after you confirm wha
 - **Circular grading.** *assess* grades its siblings.
   Mitigations: the mutants, your reference answers, keeping T1 scripted, a blind T2, and an assessor version pinned per iteration.
 - **Overfitting to fixtures.** Mitigated by the hold-out use cases and rotating prompt phrasings.
-- **Oracle leakage.** ds007116 ships the answer to R0–R2; the prompts must say what is allowed.
-- **Compute and cost.** R3 and up need Apptainer and hours of CPU; outer-loop runs are batched per iteration.
+- **Oracle leakage.** ds007116 ships the answer to R0–R2.
+  Only R0 may use it as a result; later rungs compare against it, which a probe checks.
+- **Compute and cost.** R1 and up need Apptainer, and R3 and up need hours of CPU.
+  Outer-loop runs are batched per iteration, and MRIQC waits until R0–R2 are done.
 - **Tool bugs mistaken for agent failures.** Pin datalad (gh-7899), and attribute collector failures separately.
 - **Privacy.** *create* and *self-assess* may read history only with consent, and they summarize rather than copy.
   Transcripts of public-data runs only go to public storage.
@@ -633,7 +904,7 @@ My recommendation comes first in each item.
    → yes; `restricted` (STAMPED-dl) is folded into `partial` or `not-checked`, with the reason.
 3. ~~**Where eval results live, and which compute host runs the outer loop?**~~
    **Decided 2026-10-12:** `con/stamped-skills-evals` on hub.centerforopenneuroscience.org (Forgejo-aneksajo; `yarikoptic-gitmate` can push annexed content); compute on typhon ([§6.8](#68-where-results-live)).
-   Still to confirm on typhon: Apptainer, roughly 100 GB of scratch for R3, and a Claude Code install for headless runs.
+   Still to confirm on typhon: Apptainer, scratch space, and a Claude Code install for headless runs ([§7.1](#71-starting-on-typhon)).
 4. **Runner:** in-session subagents for the inner loop and headless containerized runs for the outer loop?
    Which model tiers, and do we include a non-Claude harness now or in phase 6?
    → both loops; two Claude tiers now; a non-Claude harness in phase 6.
@@ -647,8 +918,8 @@ My recommendation comes first in each item.
    → two, each with its own job; cierge#52's demo invokes create-repronim with "carry it through".
 9. **spec-kit:** have *align* amend a constitution only where `.specify/` already exists, or offer to introduce spec-kit?
    → only where it exists.
-10. **Shipped derivatives in ds007116:** allowed at R0, forbidden at R1–R2?
-    → yes.
+10. ~~**Shipped derivatives in ds007116:** allowed at R0, forbidden at R1–R2?~~
+    **Decided 2026-10-13:** R0 may use them as its result; from R1 on, the agent must compute, and shipped derivatives serve only as the oracle ([§6.2](#62-use-case-ladder)).
 11. **MIT talk slice (2026-10-16):** the slide only, or also the live assess link and the R0 table?
     → slide plus live link if *assess* v0.1 holds up by Wednesday; otherwise slide only.
 12. **Layout:** start at the repository root now, or wait for #13's `skills/` tree?
@@ -675,13 +946,17 @@ My recommendation comes first in each item.
   [K-Dense #227](https://github.com/K-Dense-AI/scientific-agent-skills/pull/227),
   [#265](https://github.com/K-Dense-AI/scientific-agent-skills/pull/265) ·
   [bcmcpher datalad-cli](https://github.com/bcmcpher/my-skills/tree/main/plugins/datalad-cli).
-- ReproNim:
+- ReproNim and BIDS:
   [containers](https://github.com/ReproNim/containers) ·
   [simple_workflow](https://github.com/ReproNim/simple_workflow) ·
   [OpenNeuroDerivatives-NIDM](https://github.com/ReproNim/OpenNeuroDerivatives-NIDM) ·
+  [ReproStim](https://github.com/ReproNim/reprostim) ·
   [ReproNim/skills](https://github.com/ReproNim/skills) ·
   [con/mechababs](https://github.com/con/mechababs) ·
-  [con/cierge#52](https://github.com/con/cierge/issues/52).
+  [con/cierge#52](https://github.com/con/cierge/issues/52) ·
+  [brain-bbqs/study-template](https://github.com/brain-bbqs/study-template) ·
+  [HeuDiConv](https://heudiconv.readthedocs.io/en/latest/) ·
+  [BIDS converters](https://bids.neuroimaging.io/tools/converters.html).
 - Data:
   [ds007116](https://github.com/OpenNeuroDatasets/ds007116) ·
   [ds007088](https://github.com/OpenNeuroDatasets/ds007088) (fMRIPrep) ·
