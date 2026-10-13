@@ -32,6 +32,23 @@ from probes import REGISTRY, Object  # noqa: E402
 # both reasons are kept.
 SEVERITY = {"unmet": 0, "partial": 1, "not-checked": 2, "not-applicable": 3, "met": 4}
 
+# A probe over a big object can collect tens of thousands of paths.  The
+# report has to stay readable and committable, so lists in `details` are
+# capped and the cap is stated rather than hidden.
+DETAIL_CAP = 50
+
+
+def cap_details(details: dict) -> dict:
+    out: dict = {}
+    for key, value in details.items():
+        if isinstance(value, list) and len(value) > DETAIL_CAP:
+            out[key] = value[:DETAIL_CAP]
+            out[f"{key}_total"] = len(value)
+            out[f"{key}_truncated_at"] = DETAIL_CAP
+        else:
+            out[key] = value
+    return out
+
 
 def _conventions_dir(start: pathlib.Path) -> pathlib.Path | None:
     for base in (start, *start.parents):
@@ -60,7 +77,9 @@ def run(obj: Object, names: list[str], check_remote: bool) -> list[dict]:
                 result = probe(obj, check_remote=check_remote)
             else:
                 result = probe(obj)
-            results.append(result.asdict())
+            payload = result.asdict()
+            payload["details"] = cap_details(payload["details"])
+            results.append(payload)
         except Exception as exc:  # a collector failure is not an object defect
             results.append(
                 {

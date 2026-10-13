@@ -1,6 +1,6 @@
 # STAMPED skills for con/skills: development plan
 
-**Status:** draft for discussion, 2026-10-13. Nothing here is implemented yet.
+**Status:** phase 1 implemented, 2026-10-13 ([§7.1](#71-phase-1-as-landed)); the rest is still a plan.
 **Decided so far:** keep the issue's skill names for now; eval results go to [hub.centerforopenneuroscience.org/con/stamped-skills-evals](https://hub.centerforopenneuroscience.org/con/stamped-skills-evals); compute runs on typhon; the development ladder starts with cheap neuroimaging tasks and leaves MRIQC until those are stable.
 **Tracks:** [stamped-principles/stamped-agent-skills#3](https://github.com/stamped-principles/stamped-agent-skills/issues/3),
 in particular [this comment](https://github.com/stamped-principles/stamped-agent-skills/issues/3#issuecomment-6128822460).
@@ -8,7 +8,7 @@ in particular [this comment](https://github.com/stamped-principles/stamped-agent
 
 This is a working document.
 Decisions that are still open are collected in [§10](#10-open-questions); answer them inline or in review comments, and this file gets updated.
-A session picking this up on typhon should start at [§7.1](#71-starting-on-typhon).
+A session picking this up on typhon should start at [§7.2](#72-continuing-on-typhon).
 
 ---
 
@@ -302,15 +302,21 @@ stamped-conventions/
 assess-alignment-with-stamped-principles/
   SKILL.md
   scripts/probes/*.py           # scripted checks (§6.5), shared with the graders
+  scripts/run_probes.py         # the sweep; also writes a draft response JSON
+  scripts/fresh_rerun.py        # the expensive probe: clone elsewhere and re-run
 align-with-stamped-principles/SKILL.md
 create-stamped-project/{SKILL.md, templates/…}
 create-repronim-stamped-project/SKILL.md
 do-full-research-loop/SKILL.md
 self-assess-alignment-with-stamped-principles/SKILL.md
 evals/stamped/                  # kept outside the skills (K-Dense convention)
+  conditions/pointer-CLAUDE.md  # the `pointer` baseline, verbatim from the issue
+  fixtures/make_r0_object.py    # a known-good object, built with plain git
+  mutants/mutate.py             # defect injectors for calibrating the assessor
+  harness/{calibrate.py, run.py, grade.py, aggregate.py}
   use-cases/<id>/{use_case.yaml, rubric.yaml, prompt.md, oracle/…}
-  mutants/<id>.py               # defect injectors for calibrating the assessor
-  harness/{run.py, grade.py, aggregate.py}
+  gold/<object>/{assessment.md, response.json, probes.json}   # reference answers
+  tests/                        # pytest over the probes, mutants and encoder
 docs/stamped/PLAN.md            # this file
 ```
 
@@ -802,15 +808,15 @@ These are initial targets, to be revised after the first two iterations.
 Each phase is a pull request against con/skills unless noted otherwise.
 Skills stay at `0.x` until their done criteria hold.
 
-- [ ] **Phase 0:** this plan; agree on [§10](#10-open-questions).
+- [x] **Phase 0:** this plan; agree on [§10](#10-open-questions).
 - [ ] **Phase 1: conventions + assess.**
-  - `stamped-conventions` v0.1: card, vendored checklist + lock, verdicts, encoder, `stacks/datalad.md`, seeded from @asmacdo's draft.
-  - `assess-alignment-with-stamped-principles` v0.1 + probes.
-  - `evals/stamped/` skeleton with R0 + mutants.
-  - Bootstrap `con/stamped-skills-evals` on the hub, from typhon: `datalad create`, con/skills as a pinned subdataset, a `hub` sibling, the first `datalad push`.
-  - Calibration iterations ([§6.6](#66-calibrating-the-assessor)).
-  - A size and duplicate-block check added to `ci/validate_skills.py`.
-  - Outside con/skills: the `ChecklistResponse` PR on stamped-checklist-schema, and an issue on the paper-vs-schema drift.
+  - [x] `stamped-conventions` v0.1: card, vendored checklist + lock, verdicts, encoder, `stacks/datalad.md`, seeded from @asmacdo's draft.
+  - [x] `assess-alignment-with-stamped-principles` v0.1 + probes.
+  - [x] `evals/stamped/` skeleton with R0 + mutants.
+  - [ ] Bootstrap `con/stamped-skills-evals` on the hub, from typhon: `datalad create`, con/skills as a pinned subdataset, a `hub` sibling, the first `datalad push`.
+  - [x] First calibration iteration ([§6.6](#66-calibrating-the-assessor)): mutants, plus one real object with its reference answer.
+  - [x] A size and duplicate-block check added to `ci/validate_skills.py`.
+  - [ ] Outside con/skills: the `ChecklistResponse` PR on stamped-checklist-schema, and an issue on the paper-vs-schema drift.
 - [ ] **Phase 2: create + align.**
   - v0.1 of both, with templates (pre-commit run guard, preflight).
   - Inner-loop harness.
@@ -831,23 +837,47 @@ Skills stay at `0.x` until their done criteria hold.
   - Domain-neutral pieces upstream to K-Dense (answering their issue #217, "should STAMPED be its own skill?").
   - The "(de)compositions" the issue anticipates: split or merge skills where the eval data shows a boundary is wrong.
 
-### 7.1 Starting on typhon
+### 7.1 Phase 1 as landed
+
+What exists in con/skills as of 2026-10-13, on branch `claude/ecstatic-cerf-nh4j6w`:
+
+- **`stamped-conventions/` 0.1.0** — the five references, the checklist vendored at `v0.3.1` (`af259ba`) with a `lock.json` carrying tag, commit and sha256, `vendor_checklist.py` (`--check` verifies the files against the lock) and `encode_response.py` (`items`, `validate`, `encode`, `decode`, `template`).
+  The encoder is the only writer of an app URL, and `decode` is what turns a checklist a person filled in the web app into reference answers.
+- **`assess-alignment-with-stamped-principles/` 0.1.0** — the skill, eleven probes in `scripts/probes/`, `scripts/run_probes.py` (which also writes a draft response JSON) and `scripts/fresh_rerun.py`.
+  The probes answer **11 of the 17 MUST items**, 3 SHOULD items and may/001 from committed state; the other six MUST items are judgement, listed in the skill.
+  One probe can answer two items differently — `entry-point` separates must/007 (instructions) from must/008 (a starting point), `run-env-linked` separates must/006 (the record names an environment) from must/015 (that environment is pinned).
+- **`evals/stamped/`** — the R0 use case with its rubric and science oracle, the `pointer` baseline quoted verbatim from the issue, a known-good R0 fixture built with plain git (no datalad, no network), eight defect mutants, `calibrate.py`, `run.py`, `grade.py`, `aggregate.py`, and pytest tests outside the skill directories.
+- **CI** — `tox -e validate` gained E007 (a skill's own `max-lines` budget: 150 for the conventions skill, 250 for the assessor) and W004 (eight or more repeated lines of prose between a skill's Markdown files), and recursive checks over bundled Python; `tox -e stamped-evals` runs the tests and the calibration on every change.
+
+**Measured, not asserted** ([§6.9](#69-done-criteria)):
+
+- mutant detection **8/8**, with no collateral item flips;
+- false `unmet`/`partial` on the clean fixture **0/15** answered items;
+- on `compression-comparisons-t261-study` (1265 commits, 22286 tracked derivatives) the probe sweep takes **3.6 s** and finds the `url = ../..` gap the plan predicted.
+
+Calibrating on that real object is what paid for itself: it caught must/009 counting host paths inside duct traces as script defects, must/005 calling 12 MiB of JSONL "binary data", must/006 ignoring environment *capture* as distinct from an environment *specification*, and four probes reporting `unmet` with no evidence of absence.
+Its full assessment is kept as the first gold-set answer in `evals/stamped/gold/`, with its checklist-app URL.
+
+Still open before `assess` can be called v1.0: agreement with a human's answers on the gold set, agreement across model tiers, and the hub dataset for results.
+
+### 7.2 Continuing on typhon
 
 For a Claude Code session on typhon (under Remote Control) picking this up:
 
-1. Continue from branch `claude/ecstatic-cerf-nh4j6w` of con/skills, or branch off it.
+1. Continue from branch `claude/ecstatic-cerf-nh4j6w` of con/skills, or branch off it; [§7.1](#71-phase-1-as-landed) says what is already there.
 2. **Check the host.**
    - `apptainer --version`;
    - free scratch space (R1 needs a few GB per container image, R3 much more);
    - `claude --version` for headless outer-loop runs;
    - `uv`.
-3. **Install pinned tooling** for the harness: `datalad`, `datalad-container`, `git-annex` (PyPI wheel) and `con-duct`, recorded in `evals/stamped/` as a lockfile or requirements file.
+3. **Install the pinned tooling** for the harness from `evals/stamped/requirements.txt` (datalad 1.7.1 with the concurrent-run fix, datalad-container, the git-annex wheel, con-duct), and run `tox -e stamped-evals` once to confirm the host reproduces 8/8 mutant detection.
 4. **Bootstrap `con/stamped-skills-evals`** (phase 1):
    1. `datalad create -c text2git`;
    2. add con/skills as a subdataset;
    3. add the hub as a sibling;
    4. `datalad push`.
-5. **Phase 1 work:** `stamped-conventions` and the assess skill, R0 as the first use case, and the mutants.
+5. **Remaining phase-1 work:** the hub dataset, then the first real runs — R0 through `harness/run.py --execute` in all four conditions, graded and aggregated.
+   `tox -e stamped-evals` must pass on the host first; it needs nothing but git and Python.
    Then move to R1, the main development target.
 
 ---
@@ -860,7 +890,9 @@ A realistic **talk slice** in the days left:
 1. One slide: the collection (the [§4.1](#41-layering) diagram) and the development cycle ([§6](#6-development-cycle) diagram).
    It replaces a SKIP CANDIDATE such as #/6/5, so the deck does not grow.
 2. Stretch: *assess* v0.1 run on compression-comparisons-t261-study.
-   This yields a **live checklist link** with D.1 and must/002 marked `no` for `url = ../..`, the same finding the "So I tried to `rerun` it" slide reports by hand.
+   **Done 2026-10-13:** the report and the **live checklist link** are in `evals/stamped/gold/compression-comparisons-t261-study/`.
+   must/002 and must/016 are `no` for `url = ../..`, the same finding the "So I tried to `rerun` it" slide reports by hand — and the deck can now show the link instead of the hand-written finding.
+   The headline for the slide: MUST 6 met / 7 partial / 4 unmet, no single score, and `not-checked` kept apart.
 3. Stretch beyond that: R0 in `bare` / `pointer` / `skill` conditions, one repeat each, shown as a three-row table.
 
 Small fix noticed in passing: the appendix P+E slide uses `-n repronim-mriqc`, but the registered name is `bids-mriqc`.
@@ -902,9 +934,10 @@ My recommendation comes first in each item.
    **Decided 2026-10-12:** keep the long names for now ([§4.3](#43-names)).
 2. **Verdict vocabulary:** the five statuses in [§5](#5-checklist-response-format)?
    → yes; `restricted` (STAMPED-dl) is folded into `partial` or `not-checked`, with the reason.
+   **Implemented as proposed** in `stamped-conventions` 0.1.0 (`references/verdicts.md`), so changing it now is a MINOR bump plus a re-encode; still open for your review.
 3. ~~**Where eval results live, and which compute host runs the outer loop?**~~
    **Decided 2026-10-12:** `con/stamped-skills-evals` on hub.centerforopenneuroscience.org (Forgejo-aneksajo; `yarikoptic-gitmate` can push annexed content); compute on typhon ([§6.8](#68-where-results-live)).
-   Still to confirm on typhon: Apptainer, scratch space, and a Claude Code install for headless runs ([§7.1](#71-starting-on-typhon)).
+   Still to confirm on typhon: Apptainer, scratch space, and a Claude Code install for headless runs ([§7.2](#72-continuing-on-typhon)).
 4. **Runner:** in-session subagents for the inner loop and headless containerized runs for the outer loop?
    Which model tiers, and do we include a non-Claude harness now or in phase 6?
    → both loops; two Claude tiers now; a non-Claude harness in phase 6.
@@ -922,8 +955,9 @@ My recommendation comes first in each item.
     **Decided 2026-10-13:** R0 may use them as its result; from R1 on, the agent must compute, and shipped derivatives serve only as the oracle ([§6.2](#62-use-case-ladder)).
 11. **MIT talk slice (2026-10-16):** the slide only, or also the live assess link and the R0 table?
     → slide plus live link if *assess* v0.1 holds up by Wednesday; otherwise slide only.
-12. **Layout:** start at the repository root now, or wait for #13's `skills/` tree?
-    → start at the root; moving is one `git mv` when #13 lands.
+12. ~~**Layout:** start at the repository root now, or wait for #13's `skills/` tree?~~
+    **Decided 2026-10-13:** started at the root, as recommended; moving is one `git mv` when #13 lands.
+    `evals/` sits beside the skills, outside them.
 
 ---
 
