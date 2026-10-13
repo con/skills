@@ -27,6 +27,7 @@ Each source, and the one thing the plan takes from it.
   Its `DESIGN.md` files list the deferred drop-ins this plan schedules.
 - [#16](https://github.com/con/skills/pull/16): `code-quality-report-conventions` (location, provenance stamp, evidence rules) and the top-level `version:` rule; not yet merged.
 - [#13](https://github.com/con/skills/pull/13) (APM, `skills/` tree), [#14](https://github.com/con/skills/pull/14) (Claude-neutral wording), [#21](https://github.com/con/skills/pull/21) (`introduce-*` → `setup-*`): followed as they land.
+- [#25](https://github.com/con/skills/issues/25): the `allowed-tools` separator question; the STAMPED skills omit the field.
 - `ci/validate_skills.py`:
   - W003 warns when a `SKILL.md` exceeds 600 lines;
   - E003 scans `SKILL.md` for home-directory paths;
@@ -36,7 +37,6 @@ Each source, and the one thing the plan takes from it.
 
 - [STAMPED-dl_morphometrics_biases](https://github.com/STAMPED-dl-morphometrics-biases/STAMPED-dl_morphometrics_biases) `skills/` (@leej3)
   - Its own reviews: execution ran ahead of committed state; a preflight was documented but never built; an absolute `$HOME` path sat in "portable" YAML; the guidance outgrew the context window, and a slimmed skill grew back.
-  - Hence: commit before execute; one-screen skills; a lesson needs a regression artifact.
 - [dandi/compression-comparisons](https://github.com/dandi/compression-comparisons) → [-t261-study](https://github.com/dandi/compression-comparisons-t261-study)
   - About 1,215 `datalad run` records, built with Claude.
   - Its lessons: no commits during a run; pin the tool and refuse a drifted checkout; measurements are immutable.

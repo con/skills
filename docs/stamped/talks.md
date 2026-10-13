@@ -18,8 +18,6 @@ What fits in the days left:
    It should report must/002 and must/016 as `no` for the subdataset `url = ../..`, the finding the "So I tried to `rerun` it" slide reports by hand.
    The assessor is not calibrated yet (evals.md §7), so this is an illustration, not a result.
 
-Small fix noticed in passing: the appendix P+E slide uses `-n repronim-mriqc`, but the registered name is `bids-mriqc`.
-
 ## US-RSE'26
 
 Deck: `2026-usrse-con-talk.html`.
