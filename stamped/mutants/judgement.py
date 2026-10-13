@@ -70,29 +70,6 @@ make all          # fetches the input dataset, joins the tables, draws the figur
             "volumes; the target does none of those three things")
 
 
-def readme_platform_specific_steps(root: pathlib.Path) -> str:
-    """Instructions that only work on one operating system."""
-    path = root / "README.md"
-    text = path.read_text()
-    text = text.replace("""## Install
-
-```console
-python3 -m venv .venv && .venv/bin/pip install -r requirements.lock
-```""", """## Install
-
-```console
-brew install python@3.12 freesurfer
-python3 -m venv .venv && .venv/bin/pip install -r requirements.lock
-sed -i '' 's|REPLACE_ME|'"$(pwd)"'|' code/containers.json
-make all -j $(sysctl -n hw.ncpu)
-```""")
-    path.write_text(text)
-    git(root, "add", "README.md")
-    git(root, "commit", "-q", "-m", "spell out the install steps")
-    return ("the documented install uses Homebrew, BSD `sed -i ''` and `sysctl -n hw.ncpu`: "
-            "it runs on one developer's macOS and nowhere else")
-
-
 def readme_wrong_tool(root: pathlib.Path) -> str:
     """Instructions for a tool the object does not use."""
     path = root / "README.md"
@@ -195,15 +172,6 @@ JUDGEMENT_MUTANTS: dict[str, dict] = {
                      "stamped-checklist:must/005"],
         "tests": "A1: the command exists and the description of it is false. Name lookup cannot "
                  "catch this; only reading the Makefile against the prose can.",
-    },
-    "readme-platform-specific-steps": {
-        "apply": readme_platform_specific_steps,
-        "flag_any": ["stamped-checklist:must/011", "stamped-checklist:must/012",
-                     "stamped-checklist:must/007"],
-        "mention_any": ["brew", "sysctl", "macOS", "Homebrew", "sed -i"],
-        "stay_met": ["stamped-checklist:must/009", "stamped-checklist:must/013"],
-        "tests": "P1: undocumented host state. Every tool named exists somewhere; only a reader "
-                 "notices the route is one operating system's.",
     },
     "readme-wrong-tool": {
         "apply": readme_wrong_tool,

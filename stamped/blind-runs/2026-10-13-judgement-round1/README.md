@@ -7,11 +7,15 @@ on a smaller model.
 | Mutant | Model | Result | What it said |
 |---|---|---|---|
 | `readme-wrong-make-target` | sonnet | **detected**, now **retired** | Flagged must/007 `partial`, named `brain-volumes`, and confirmed it by running `make -n brain-volumes` ("No rule to make target") rather than asserting it. Then pointed out that `entry-point` already held both the README's commands *and* the Makefile's targets and never compared them — so the defect is script-catchable, the probe now catches it, and the mutant moved to `mutants/mutate.py`. |
-| `readme-platform-specific-steps` | sonnet | **detected** | must/011 `unmet`, must/012 `partial`; named `brew`, `sysctl`, `sed -i` and macOS. |
+| `readme-platform-specific-steps` | sonnet | **detected**, now **retired** | must/011 `unmet`, must/012 `partial`; named `brew`, `sysctl`, `sed -i` and macOS, and noted that **13 of 13 probes said `met`** on an object that runs on one developer's Mac. That verdict is now mechanical: `platform-assumptions` flags platform-specific commands when no platform is named in the same file, and the mutant moved to the scripted set. |
 | `readme-claims-absent-container` | **haiku** | **detected** | must/017 `unmet`, naming `neurodesk-freesurfer` and `///repronim/containers`, and spotting that three sources of truth disagree (README, Makefile, run records). A smaller model caught the prose defect. |
 
-Scored 2/2 of the mutants still in the judgement set (`score.json`); the third
-is now scored by `calibrate.py` instead, where it is cheap.
+Scored 2/2 at the time (`score.json`); **both of those mutants have since been
+retired into the scripted set**, where the same defects now cost nothing to
+check. That is the loop working in the direction it should: a judgement mutant
+that turns out to be mechanizable becomes a probe, and the judgement set keeps
+only what genuinely needs a reader. Scripted mutants went 13 → 15; the
+judgement set is 6.
 
 ## What the runs changed
 
@@ -33,7 +37,7 @@ Three findings in the harness and the object, one per layer:
   response that carries the placeholder, so the skill cannot report before
   answering all 31.
 
-## And five friction items, all acted on
+## And ten friction items, all acted on
 
 1. **`dependencies` existed in one authority of three.** The skill asked for
    `assessor.dependencies`; `response-format.md`'s example and
@@ -53,6 +57,22 @@ Three findings in the harness and the object, one per layer:
    the same sentence; saying so in free text left a reader unable to tell a
    duplicate from an ordinary second finding. `upstream-duplicate` joins the
    `flags` vocabulary.
+6. **Platform lock-in through tool choice was invisible to every probe** — the
+   run said so after watching 13/13 come back `met` on a macOS-only object. Now
+   a probe (`platform-assumptions`), and the mutant is scripted.
+7. **Nothing said what to do when the object tells two stories about how it
+   runs** — documentation, CI and run records can each describe a different
+   execution. `verdicts.md` rule 10 now settles it: judge A.1 items on the
+   documented route, T items on the records, cap the verdict at `partial` where
+   they disagree, and report the disagreement as a finding of its own.
+8. **The skill never said what to do when no user is available** to confirm
+   goals and kind — only the conventions gestured at it. Step 2 now says:
+   label the assumption, say it was unconfirmed, carry on.
+9. **A 9 kB base64 URL has nowhere to go.** The filename table gains
+   `<date>-url.txt`, and the report links it instead of inlining it.
+10. **`project-kinds.md` had no example of the commonest shape** — a study whose
+    product is a re-derivation from another dataset's derivatives. It has one
+    now, with what that implies for S.1, M.1, T and E.1.
 
 ## Still to run
 
