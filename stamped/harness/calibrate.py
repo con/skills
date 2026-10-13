@@ -36,8 +36,8 @@ sys.path.insert(0, str(EVALS / "mutants"))
 from mutate import MUTANTS  # noqa: E402
 
 
-def _probe(path: pathlib.Path) -> dict[str, dict]:
-    """item id -> probe answer, for one object."""
+def _probe(path: pathlib.Path) -> tuple[dict[str, dict], dict[str, dict]]:
+    """(item id -> answer, probe name -> answer for probes with no item)."""
     out = subprocess.run(
         [sys.executable, str(RUN_PROBES), str(path), "--quiet"],
         capture_output=True, text=True,
@@ -46,15 +46,19 @@ def _probe(path: pathlib.Path) -> dict[str, dict]:
         raise RuntimeError(f"run_probes.py failed on {path}: {out.stderr.strip()}")
     payload = json.loads(out.stdout)
     answers: dict[str, dict] = {}
+    extras: dict[str, dict] = {}
     severity = {"unmet": 0, "partial": 1, "not-checked": 2, "not-applicable": 3, "met": 4}
     for result in payload["probes"]:
+        if not result["items"]:
+            extras[result["probe"]] = {"status": result["status"], "reason": result["reason"]}
+            continue
         for item in result["items"]:
             status = result.get("item_status", {}).get(item, result["status"])
             previous = answers.get(item)
             if previous is None or severity[status] < severity[previous["status"]]:
                 answers[item] = {"status": status, "probe": result["probe"],
                                  "reason": result.get("item_reason", {}).get(item, result["reason"])}
-    return answers
+    return answers, extras
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -71,8 +75,9 @@ def main(argv: list[str] | None = None) -> int:
     if not (clean / ".git").exists():
         subprocess.run([sys.executable, str(FIXTURE), str(clean)], check=True, capture_output=True)
 
-    baseline = _probe(clean)
+    baseline, baseline_extras = _probe(clean)
     false_unmet = {i: a for i, a in baseline.items() if a["status"] in {"unmet", "partial"}}
+    false_unmet.update({k: v for k, v in baseline_extras.items() if v["status"] in {"unmet", "partial"}})
     report: dict = {
         "clean_object": {
             "answered_items": len(baseline),
@@ -95,10 +100,13 @@ def main(argv: list[str] | None = None) -> int:
         if out.returncode != 0:
             report["mutants"][name] = {"collector_failure": out.stderr.strip()[:400]}
             continue
-        answers = _probe(target)
+        answers, extras = _probe(target)
         expect = MUTANTS[name]["expect"]
+        expect_extra = MUTANTS[name].get("expect_extra") or {}
         got = {item: answers.get(item, {"status": "absent"})["status"] for item in expect}
-        hit = all(got[item] == status for item, status in expect.items())
+        got_extra = {key: extras.get(key, {"status": "absent"})["status"] for key in expect_extra}
+        hit = (all(got[item] == status for item, status in expect.items())
+               and all(got_extra[key] == status for key, status in expect_extra.items()))
         detected += 1 if hit else 0
         also = MUTANTS[name].get("also", {})
         collateral = {
@@ -110,14 +118,19 @@ def main(argv: list[str] | None = None) -> int:
         }
         report["mutants"][name] = {
             "expected": expect,
+            "expected_extra": expect_extra,
             "observed": got,
+            "observed_extra": got_extra,
             "detected": hit,
             "by_probe": {item: answers.get(item, {}).get("probe") for item in expect},
             "reasons": {item: answers.get(item, {}).get("reason") for item in expect},
             "collateral_flips": collateral,
         }
         flag = "detected" if hit else "MISSED  "
-        print(f"{flag}  {name:<26} " + ", ".join(f"{i.split(':')[-1]}={s}" for i, s in got.items()))
+        shown = ", ".join(f"{i.split(':')[-1]}={s}" for i, s in got.items())
+        if got_extra:
+            shown += " | " + ", ".join(f"{k}={s}" for k, s in got_extra.items())
+        print(f"{flag}  {name:<26} {shown}")
         if collateral:
             print("          collateral: " + ", ".join(f"{i.split(':')[-1]}={s}" for i, s in collateral.items()))
 

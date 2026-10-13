@@ -280,6 +280,11 @@ def build(root: pathlib.Path, input_remote: str) -> None:
         git(root, "add", *run["paths"])
         git(root, "commit", "-q", "-m", run_message(run["message"], run["run_info"]))
 
+    # A STAMPED object has somewhere others can retrieve it from.  The URL is a
+    # stand-in (nothing is published from this fixture), recorded so that the
+    # probes which ask "can anyone else obtain this?" have something to read.
+    git(root, "remote", "add", "origin", "https://github.com/con/stamped-eval-fixture-r0.git")
+
     status = git(root, "status", "--porcelain")
     if status.strip():
         raise RuntimeError(f"fixture is not clean after build:\n{status}")

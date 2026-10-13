@@ -14,6 +14,10 @@ object, kept as a reference answer:
 <object-id>/probes.json      what the scripted probes said, unedited
 ```
 
+Reference answers are what [`../blind-runs/`](../blind-runs/) are diffed
+against: a blind run's disagreement is either a defect in the skill or a defect
+in the reference, and both outcomes are useful.
+
 ## How a reference answer is made
 
 1. Run the probes, then fill the judgement items by reading the object
@@ -27,15 +31,16 @@ object, kept as a reference answer:
 3. Record *who* answered in `source` per item (`probe:<name>`, `judgement`,
    `human:web-app`), so a later iteration can tell them apart.
 
-A reference answer is not frozen truth: when a maintainer corrects one, the
-correction is committed with the reason, the same way the objects themselves
-treat narrative.
+A reference answer is not frozen truth: when a maintainer — or a blind run that
+reads the object more carefully — corrects one, the correction is committed with
+its reason, the same way the objects themselves treat narrative. The t261
+answer carries a "Corrections" section recording exactly that.
 
 ## What is here
 
 | Object | Why it is in the set | Assessed |
 |---|---|---|
-| [compression-comparisons-t261-study](compression-comparisons-t261-study/) | Heavy, real provenance (1216 run records) with two *known* gaps — the `url = ../..` tool module and no published environment specification. It is the object the MIT deck's "So I tried to `rerun` it" slide reports by hand, so the skill's answer can be checked against a human's. | 2026-10-13, probes 0.1.0 |
+| [compression-comparisons-t261-study](compression-comparisons-t261-study/) | Heavy, real provenance (1216 run records) with two *known* gaps — the `url = ../..` tool module and no published environment specification. It is the object the MIT deck's "So I tried to `rerun` it" slide reports by hand, so the skill's answer can be checked against a human's. | 2026-10-13, assessor 0.2.0; corrected after [the first blind run](../blind-runs/2026-10-13-assess-t261/) |
 
 Planned, from `docs/stamped/PLAN.md` §6.6: STAMPED-dl_morphometrics_biases
 (which has its own assessment TSV to compare against), stamped-paper,

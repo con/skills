@@ -2,22 +2,23 @@
   "checklist_version": "0.3.1",
   "responses": {
     "stamped-checklist:must/001": {
-      "value": "yes",
-      "reason": "One DataLad dataset root holds code, inputs (as subdatasets) and every derivative; nothing essential sits outside it.",
-      "status": "met",
+      "value": "no",
+      "reason": "One DataLad root holds code, inputs and derivatives, but envs/compbench \u2014 the venv every result came from \u2014 is gitignored, so it is not reachable within the object.",
+      "status": "partial",
       "evidence": [
         {
-          "uri": ".datalad/config",
-          "description": "dataset id c7b3b628; single root",
+          "uri": ".gitignore",
+          "description": "envs/ untracked",
           "sha256": null
         },
         {
-          "uri": "dataset_description.json#Layout",
-          "description": "declares what lives where under the root",
+          "uri": "README.md#Layout",
+          "description": "'the study's own venv', built by hand",
           "sha256": null
         }
       ],
-      "source": "judgement"
+      "source": "judgement",
+      "flags": []
     },
     "stamped-checklist:must/002": {
       "value": "no",
@@ -30,96 +31,65 @@
           "sha256": null
         }
       ],
-      "source": "probe:subdatasets-resolvable"
+      "source": "probe:subdatasets-resolvable",
+      "flags": []
     },
     "stamped-checklist:must/003": {
-      "value": "yes",
-      "reason": "The benchmark tool is a pinned submodule and the BWC codec is built from source inside it; nothing is assumed preinstalled.",
-      "status": "met",
+      "value": "no",
+      "reason": "The benchmark tool and the BWC source are one pinned submodule, but the patched datalad and the wavpack/flac binaries are host tools the scripts expect to find.",
+      "status": "partial",
       "evidence": [
         {
           "uri": ".gitmodules",
-          "description": "code/compression-comparisons-tools pinned as a submodule",
+          "description": "code/compression-comparisons-tools pinned",
           "sha256": null
         },
         {
-          "uri": "README.md#Reproducing",
-          "description": "cmake build of code/compression-comparisons-tools/src/bwc",
+          "uri": "code/run_sweep.sh#L27",
+          "description": "requires a datalad built from commit 30b6dee on PATH",
           "sha256": null
         }
       ],
-      "source": "judgement"
+      "source": "judgement",
+      "flags": []
     },
     "stamped-checklist:must/004": {
       "value": "yes",
-      "reason": "git status is empty, including submodules: the committed state is the whole state.",
+      "reason": "git tracks 4422 text, code and configuration file(s), and `git status` is empty including submodules: the committed state is the whole state.",
       "status": "met",
       "evidence": [
+        {
+          "uri": "git ls-files",
+          "description": "4422 tracked text/code/config paths of 22863 tracked paths",
+          "sha256": null
+        },
         {
           "uri": "git status --porcelain",
           "description": "no output",
           "sha256": null
         }
       ],
-      "source": "probe:tree-clean"
+      "source": "probe:tree-clean",
+      "flags": []
     },
     "stamped-checklist:must/005": {
-      "value": "no",
-      "reason": "No large binary in git, but 22 text blob(s) exceed 10 MiB (largest derivatives/compbench-2026-08-22-paper-real-np1-8-general/aind-634569-lsbbp__blosc-zlib-level_9-shuffle_byte-chunk1s/duct-usage.jsonl, 11 MiB) \u2014 every clone carries them in full.",
-      "status": "partial",
+      "value": "yes",
+      "reason": "git-annex carries the binary content (13407 pointer(s) tracked) and no binary blob over 10 MiB is in git.",
+      "status": "met",
       "evidence": [
         {
-          "uri": "derivatives/compbench-2026-08-22-paper-real-np1-8-general/aind-634569-lsbbp__blosc-zlib-level_9-shuffle_byte-chunk1s/duct-usage.jsonl",
-          "description": "12087127 bytes of text in a git blob",
+          "uri": "git ls-tree -r -l HEAD",
+          "description": "no binary blob over 10485760 bytes",
           "sha256": null
         },
         {
-          "uri": "derivatives/compbench-2026-08-22-paper-real-np1-8-general/aind-634569-lsbbp__gzip-level_9-shuffle_byte-chunk1s/duct-usage.jsonl",
-          "description": "12050356 bytes of text in a git blob",
-          "sha256": null
-        },
-        {
-          "uri": "derivatives/compbench-2026-08-22-paper-real-np1-8-general/aind-634568-lsbbp__gzip-level_9-shuffle_byte-chunk1s/duct-usage.jsonl",
-          "description": "11828199 bytes of text in a git blob",
-          "sha256": null
-        },
-        {
-          "uri": "derivatives/compbench-2026-08-22-paper-real-np1-8-general/aind-634569-bp__gzip-level_9-shuffle_byte-chunk1s/duct-usage.jsonl",
-          "description": "11824763 bytes of text in a git blob",
-          "sha256": null
-        },
-        {
-          "uri": "derivatives/compbench-2026-08-25-gate-fig2-corrected/aind-634568-lsb__gzip-level_9-shuffle_byte-chunk1s/duct-usage.jsonl",
-          "description": "11770455 bytes of text in a git blob",
-          "sha256": null
-        },
-        {
-          "uri": "derivatives/compbench-2026-08-22-paper-real-np1-8-general/aind-634568-lsb__blosc-zlib-level_9-shuffle_byte-chunk1s/duct-usage.jsonl",
-          "description": "11733340 bytes of text in a git blob",
-          "sha256": null
-        },
-        {
-          "uri": "derivatives/compbench-2026-08-22-paper-real-np1-8-general/aind-634569-lsbbp__zlib-level_9-shuffle_byte-chunk1s/duct-usage.jsonl",
-          "description": "11667796 bytes of text in a git blob",
-          "sha256": null
-        },
-        {
-          "uri": "derivatives/compbench-2026-08-22-paper-real-np1-8-general/aind-634568-bp__gzip-level_9-shuffle_byte-chunk1s/duct-usage.jsonl",
-          "description": "11522315 bytes of text in a git blob",
-          "sha256": null
-        },
-        {
-          "uri": "derivatives/compbench-2026-08-22-paper-real-np1-8-general/aind-634568-lsbbp__blosc-zlib-level_9-shuffle_byte-chunk1s/duct-usage.jsonl",
-          "description": "11504796 bytes of text in a git blob",
-          "sha256": null
-        },
-        {
-          "uri": "derivatives/compbench-2026-08-22-paper-real-np1-8-general/aind-634569-bp__zlib-level_9-shuffle_byte-chunk1s/duct-usage.jsonl",
-          "description": "11450127 bytes of text in a git blob",
+          "uri": ".datalad/config",
+          "description": "git-annex in use for large content",
           "sha256": null
         }
       ],
-      "source": "probe:large-in-annex"
+      "source": "probe:large-in-annex",
+      "flags": []
     },
     "stamped-checklist:must/006": {
       "value": "no",
@@ -177,7 +147,8 @@
           "sha256": null
         }
       ],
-      "source": "probe:derived-have-records"
+      "source": "probe:derived-have-records",
+      "flags": []
     },
     "stamped-checklist:must/007": {
       "value": "yes",
@@ -200,7 +171,8 @@
           "sha256": null
         }
       ],
-      "source": "probe:entry-point"
+      "source": "probe:entry-point",
+      "flags": []
     },
     "stamped-checklist:must/008": {
       "value": "yes",
@@ -223,71 +195,58 @@
           "sha256": null
         }
       ],
-      "source": "probe:entry-point"
+      "source": "probe:entry-point",
+      "flags": []
     },
     "stamped-checklist:must/009": {
       "value": "no",
-      "reason": "No script depends on a home path, but 99 host-path mention(s) remain: 98 of them in recorded run output, which is provenance rather than a script",
-      "status": "partial",
+      "reason": "4 host-specific absolute path(s) in 4 script(s) or config(s), e.g. code/partial_report.sh line 47: /data/yoh/compression-comparisons/.specify/specs/paper-reference-lossless.csv",
+      "status": "unmet",
       "evidence": [
         {
-          "uri": "code/run_sorting_sweep.sh#L76",
-          "description": "tmp path in code: for cell in expand_matrix(prof, generated_dir=Path(\"/tmp/sorting-gen\")):",
+          "uri": "code/partial_report.sh#L47",
+          "description": "host path: /data/yoh/compression-comparisons/.specify/specs/paper-reference-lossless.csv",
           "sha256": null
         },
         {
-          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/aind-ibl-np1-CSHZAD026-slice10__blosc-lz4-level_3-shuffle_byte/duct-info.json#L1",
-          "description": "home path in record: {\"command\": \"compbench run --input configs/datasets/aind-ibl-np1-CSHZAD026-slice10s-bp.yaml --codec blosc-lz4 --codec-p\u2026",
+          "uri": "code/run_sorting_loop.sh#L30",
+          "description": "host path: WV=/data/yoh/compression-comparisons/vendor/wavpack",
           "sha256": null
         },
         {
-          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/aind-ibl-np1-CSHZAD026-slice10__blosc-lz4-level_9-shuffle_byte/duct-info.json#L1",
-          "description": "home path in record: {\"command\": \"compbench run --input configs/datasets/aind-ibl-np1-CSHZAD026-slice10s-bp.yaml --codec blosc-lz4 --codec-p\u2026",
+          "uri": "code/run_sorting_sweep.sh#L48",
+          "description": "host path: WV=/data/yoh/compression-comparisons/vendor/wavpack",
           "sha256": null
         },
         {
-          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/aind-ibl-np1-CSHZAD026-slice10__blosc-lz4hc-level_3-shuffle_byte/duct-info.json#L1",
-          "description": "home path in record: {\"command\": \"compbench run --input configs/datasets/aind-ibl-np1-CSHZAD026-slice10s-bp.yaml --codec blosc-lz4hc --codec\u2026",
-          "sha256": null
-        },
-        {
-          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/aind-ibl-np1-CSHZAD026-slice10__blosc-lz4hc-level_9-shuffle_byte/duct-info.json#L1",
-          "description": "home path in record: {\"command\": \"compbench run --input configs/datasets/aind-ibl-np1-CSHZAD026-slice10s-bp.yaml --codec blosc-lz4hc --codec\u2026",
-          "sha256": null
-        },
-        {
-          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/aind-ibl-np1-CSHZAD026-slice10__blosc-zlib-level_3-shuffle_byte/duct-info.json#L1",
-          "description": "home path in record: {\"command\": \"compbench run --input configs/datasets/aind-ibl-np1-CSHZAD026-slice10s-bp.yaml --codec blosc-zlib --codec-\u2026",
-          "sha256": null
-        },
-        {
-          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/aind-ibl-np1-CSHZAD026-slice10__blosc-zlib-level_9-shuffle_byte/duct-info.json#L1",
-          "description": "home path in record: {\"command\": \"compbench run --input configs/datasets/aind-ibl-np1-CSHZAD026-slice10s-bp.yaml --codec blosc-zlib --codec-\u2026",
-          "sha256": null
-        },
-        {
-          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/aind-ibl-np1-CSHZAD026-slice10__blosc-zstd-level_3-shuffle_byte/duct-info.json#L1",
-          "description": "home path in record: {\"command\": \"compbench run --input configs/datasets/aind-ibl-np1-CSHZAD026-slice10s-bp.yaml --codec blosc-zstd --codec-\u2026",
-          "sha256": null
-        },
-        {
-          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/aind-ibl-np1-CSHZAD026-slice10__blosc-zstd-level_9-shuffle_byte/duct-info.json#L1",
-          "description": "home path in record: {\"command\": \"compbench run --input configs/datasets/aind-ibl-np1-CSHZAD026-slice10s-bp.yaml --codec blosc-zstd --codec-\u2026",
-          "sha256": null
-        },
-        {
-          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/aind-ibl-np1-CSHZAD026-slice10__gzip-level_5/duct-info.json#L1",
-          "description": "home path in record: {\"command\": \"compbench run --input configs/datasets/aind-ibl-np1-CSHZAD026-slice10s-bp.yaml --codec gzip --codec-params\u2026",
+          "uri": "code/run_sweep.sh#L84",
+          "description": "host path: [ -d \"$WAVPACK\" ] || WAVPACK=\"/data/yoh/compression-comparisons/vendor/wavpack\"",
           "sha256": null
         }
       ],
-      "source": "probe:no-abs-paths"
+      "source": "probe:no-abs-paths",
+      "flags": []
     },
     "stamped-checklist:must/010": {
       "value": "no",
-      "reason": "No environment specification in this object; it may be inside the module(s) that are not installed here: code/compression-comparisons-tools, sourcedata/aind-ephys-compression.",
-      "status": "partial",
+      "reason": "3 tracked script(s) require a tool to be installed on the host already, e.g. code/run_sorting_loop.sh line 20 (see line); that dependency is not in any tracked specification.",
+      "status": "unmet",
       "evidence": [
+        {
+          "uri": "code/run_sorting_loop.sh#L20",
+          "description": "requires a tool to be installed on the host already: echo \"Install with:\" >&2",
+          "sha256": null
+        },
+        {
+          "uri": "code/run_sorting_sweep.sh#L36",
+          "description": "requires datalad to be installed on the host already: DATALAD_VERSION=\"$(datalad --version 2>&1 | awk '{print $NF}')\"",
+          "sha256": null
+        },
+        {
+          "uri": "code/run_sweep.sh#L34",
+          "description": "requires a tool to be installed on the host already: echo \"Install with:\" >&2",
+          "sha256": null
+        },
         {
           "uri": "code/compression-comparisons-tools",
           "description": "linked module, not installed: cannot be read",
@@ -299,20 +258,27 @@
           "sha256": null
         }
       ],
-      "source": "probe:env-spec-tracked"
+      "source": "probe:env-spec-tracked",
+      "flags": []
     },
     "stamped-checklist:must/011": {
-      "value": "yes",
-      "reason": "README names the host assumptions: a patched datalad (gh-7899/7900), a C++ toolchain with -Wno-restrict, and a GPU for Kilosort 4.",
-      "status": "met",
+      "value": "no",
+      "reason": "README documents the patched datalad, the cmake flag and the GPU, but not the /data mount the sorting entry points require, which is the assumption that actually breaks elsewhere.",
+      "status": "partial",
       "evidence": [
         {
           "uri": "README.md",
-          "description": "'Requires a patched datalad' and the sorting step's GPU requirement",
+          "description": "'Requires a patched datalad'; Kilosort GPU",
+          "sha256": null
+        },
+        {
+          "uri": "code/run_sorting_sweep.sh#L48",
+          "description": "WV=/data/<user>/... with no fallback, undocumented",
           "sha256": null
         }
       ],
-      "source": "judgement"
+      "source": "judgement",
+      "flags": []
     },
     "stamped-checklist:must/012": {
       "value": "no",
@@ -323,20 +289,31 @@
           "uri": "README.md#Reproducing",
           "description": "uv pip install with unpinned extras",
           "sha256": null
-        },
-        {
-          "uri": "probe:env-spec-tracked",
-          "description": "no lockfile, container definition or registration tracked in this object",
-          "sha256": null
         }
       ],
-      "source": "judgement"
+      "source": "judgement",
+      "flags": []
     },
     "stamped-checklist:must/013": {
       "value": "no",
-      "reason": "No environment specification in this object; it may be inside the module(s) that are not installed here: code/compression-comparisons-tools, sourcedata/aind-ephys-compression.",
+      "reason": "No specification in this object; it may be inside the module(s) not installed here: code/compression-comparisons-tools, sourcedata/aind-ephys-compression.",
       "status": "partial",
       "evidence": [
+        {
+          "uri": "code/run_sorting_loop.sh#L20",
+          "description": "requires a tool to be installed on the host already: echo \"Install with:\" >&2",
+          "sha256": null
+        },
+        {
+          "uri": "code/run_sorting_sweep.sh#L36",
+          "description": "requires datalad to be installed on the host already: DATALAD_VERSION=\"$(datalad --version 2>&1 | awk '{print $NF}')\"",
+          "sha256": null
+        },
+        {
+          "uri": "code/run_sweep.sh#L34",
+          "description": "requires a tool to be installed on the host already: echo \"Install with:\" >&2",
+          "sha256": null
+        },
         {
           "uri": "code/compression-comparisons-tools",
           "description": "linked module, not installed: cannot be read",
@@ -348,25 +325,27 @@
           "sha256": null
         }
       ],
-      "source": "probe:env-spec-tracked"
+      "source": "probe:env-spec-tracked",
+      "flags": []
     },
     "stamped-checklist:must/014": {
       "value": "no",
-      "reason": "No environment specification exists here to update, and no process for updating one is documented; the pin guard covers the tool commit, not the environment.",
-      "status": "unmet",
+      "reason": "A tracked update process exists for the pins (16 'Pin the tool to ...' commits), but not for an environment specification, because the object has none. Same sentence as should/008.",
+      "status": "partial",
       "evidence": [
         {
-          "uri": "README.md",
-          "description": "the venv is rebuilt by hand after checking out the tool commit",
+          "uri": "git log --grep='Pin the tool'",
+          "description": "16 commits moving the recorded tool pin",
           "sha256": null
         },
         {
           "uri": ".gitignore",
-          "description": "envs/ is not tracked",
+          "description": "no spec to update: envs/ untracked",
           "sha256": null
         }
       ],
-      "source": "judgement"
+      "source": "judgement",
+      "flags": []
     },
     "stamped-checklist:must/015": {
       "value": "no",
@@ -424,24 +403,33 @@
           "sha256": null
         }
       ],
-      "source": "probe:run-env-linked"
+      "source": "probe:run-env-linked",
+      "flags": []
     },
     "stamped-checklist:must/016": {
       "value": "no",
-      "reason": "1 of 2 linked module(s) do not resolve elsewhere: code/compression-comparisons-tools url=../.. \u2014 relative url: resolves only next to this superdataset",
+      "reason": "Nothing to obtain: no lockfile, image or frozen manifest is published anywhere, and the documented route rebuilds from host tools. Probe hedged on the uninstalled modules; the scripts settle it.",
       "status": "unmet",
       "evidence": [
         {
-          "uri": ".gitmodules",
-          "description": "code/compression-comparisons-tools: url=../.. \u2014 relative url: resolves only next to this superdataset",
+          "uri": "code/run_sweep.sh#L27-L40",
+          "description": "datalad built from a commit, expected on PATH",
+          "sha256": null
+        },
+        {
+          "uri": "code/run_sweep.sh#L84",
+          "description": "wavpack taken from a host directory",
           "sha256": null
         }
       ],
-      "source": "probe:subdatasets-resolvable"
+      "source": "probe:env-spec-tracked+judgement",
+      "flags": [
+        "probe-overridden"
+      ]
     },
     "stamped-checklist:must/017": {
       "value": "no",
-      "reason": "README says how to build the environment, but there is no specification to obtain: no lockfile, image or frozen manifest is published with the object.",
+      "reason": "README's 'Reproducing' gives runnable uv/cmake steps and the install-after-pin rule, but there is no specification to obtain, so the documentation cannot point at one.",
       "status": "partial",
       "evidence": [
         {
@@ -450,11 +438,12 @@
           "sha256": null
         }
       ],
-      "source": "judgement"
+      "source": "judgement",
+      "flags": []
     },
     "stamped-checklist:should/001": {
       "value": "yes",
-      "reason": "git plus git-annex through DataLad across the superdataset and both linked modules.",
+      "reason": "git plus git-annex through DataLad across the superdataset and both linked modules; 13407 annexed pointers and no second system.",
       "status": "met",
       "evidence": [
         {
@@ -468,7 +457,8 @@
           "sha256": null
         }
       ],
-      "source": "judgement"
+      "source": "judgement",
+      "flags": []
     },
     "stamped-checklist:should/002": {
       "value": "no",
@@ -481,39 +471,53 @@
           "sha256": null
         }
       ],
-      "source": "probe:ci-present"
+      "source": "probe:ci-present",
+      "flags": []
     },
     "stamped-checklist:should/003": {
-      "value": null,
-      "reason": "2 of 2 module(s) are not installed here, so their state cannot be read: code/compression-comparisons-tools, sourcedata/aind-ephys-compression",
-      "status": "not-checked",
+      "value": "yes",
+      "reason": "3 kinds of component live in distinct places: inputs in sourcedata, sourcedata/aind-ephys-compression; code in code; derived in derivatives",
+      "status": "met",
       "evidence": [
         {
-          "uri": "git submodule status",
-          "description": "code/compression-comparisons-tools not initialized",
+          "uri": "sourcedata",
+          "description": "inputs module",
           "sha256": null
         },
         {
-          "uri": "git submodule status",
-          "description": "sourcedata/aind-ephys-compression not initialized",
+          "uri": "sourcedata/aind-ephys-compression",
+          "description": "inputs module",
+          "sha256": null
+        },
+        {
+          "uri": "code",
+          "description": "code module",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives",
+          "description": "derived module",
           "sha256": null
         }
       ],
-      "source": "probe:inputs-untouched"
+      "source": "probe:modules-separated",
+      "flags": []
     },
     "stamped-checklist:should/009": {
       "value": null,
-      "reason": "N/A: every component is public (AIND open data, MIT code); there are no restricted data or software to isolate.",
+      "reason": "N/A, empty subject: every component is public (AIND open data on the AWS registry, MIT code), so there are no restricted data or software to isolate.",
       "status": "not-applicable",
       "evidence": [],
-      "source": "judgement"
+      "source": "judgement",
+      "flags": []
     },
     "stamped-checklist:should/004": {
       "value": null,
-      "reason": "Nothing in the object records a fresh-environment rerun, and attempting one here needs 523 GB of inputs and a GPU. fresh_rerun.py was not run.",
+      "reason": "Nothing in the object records a fresh-environment rerun, and attempting one needs 523 GB of input and a GPU. fresh_rerun.py was not run.",
       "status": "not-checked",
       "evidence": [],
-      "source": "judgement"
+      "source": "judgement",
+      "flags": []
     },
     "stamped-checklist:should/005": {
       "value": "no",
@@ -531,7 +535,8 @@
           "sha256": null
         }
       ],
-      "source": "judgement"
+      "source": "judgement",
+      "flags": []
     },
     "stamped-checklist:should/006": {
       "value": "no",
@@ -544,11 +549,12 @@
           "sha256": null
         }
       ],
-      "source": "probe:ci-present"
+      "source": "probe:ci-present",
+      "flags": []
     },
     "stamped-checklist:should/007": {
       "value": "no",
-      "reason": "No environment artifact is archived with the object: the venv is gitignored and no container image or binary is kept.",
+      "reason": "No environment artifact is archived with the object: the venv is gitignored and no container image or built binary is kept.",
       "status": "unmet",
       "evidence": [
         {
@@ -562,20 +568,22 @@
           "sha256": null
         }
       ],
-      "source": "judgement"
+      "source": "judgement",
+      "flags": []
     },
     "stamped-checklist:should/008": {
       "value": "no",
-      "reason": "Same gap as must/014: no tracked environment specification, so no updates to it are tracked either.",
-      "status": "unmet",
+      "reason": "Word-for-word the same question as must/014, at a different level; answered from the same evidence. The pins have a tracked update process, the absent environment spec cannot.",
+      "status": "partial",
       "evidence": [
         {
-          "uri": "README.md",
-          "description": "environment built by hand per tool commit",
+          "uri": "git log --grep='Pin the tool'",
+          "description": "16 commits moving the recorded tool pin",
           "sha256": null
         }
       ],
-      "source": "judgement"
+      "source": "judgement",
+      "flags": []
     },
     "stamped-checklist:may/001": {
       "value": "yes",
@@ -588,11 +596,12 @@
           "sha256": null
         }
       ],
-      "source": "probe:subdatasets-resolvable"
+      "source": "probe:subdatasets-resolvable",
+      "flags": []
     },
     "stamped-checklist:may/002": {
       "value": "yes",
-      "reason": "The modular structure is documented twice: the README's Layout section and dataset_description.json's Layout and SourceDatasets fields.",
+      "reason": "The modular structure is documented twice: the README's Layout section and dataset_description.json's Layout, SourceDatasets and GeneratedBy fields.",
       "status": "met",
       "evidence": [
         {
@@ -606,16 +615,17 @@
           "sha256": null
         }
       ],
-      "source": "judgement"
+      "source": "judgement",
+      "flags": []
     },
     "stamped-checklist:may/003": {
       "value": "yes",
-      "reason": "Modules update independently: the tool submodule is pinned and run_sweep.sh refuses a drifted or dirty checkout; sourcedata is never modified.",
+      "reason": "The tool boundary is enforced rather than declared: run_sweep.sh refuses a drifted or dirty tool checkout, and sourcedata is documented as never modified.",
       "status": "met",
       "evidence": [
         {
-          "uri": "README.md#Layout",
-          "description": "'run_sweep.sh refuses to start otherwise'",
+          "uri": "code/run_sweep.sh#L75-L82",
+          "description": "refuses a dirty or drifted tool checkout",
           "sha256": null
         },
         {
@@ -624,11 +634,12 @@
           "sha256": null
         }
       ],
-      "source": "judgement"
+      "source": "judgement",
+      "flags": []
     },
     "stamped-checklist:may/004": {
       "value": "yes",
-      "reason": "Composition is by git submodules and datalad clone/get, with the exact commands given.",
+      "reason": "Composition is git submodules under DataLad, with the exact clone and get commands given in the README.",
       "status": "met",
       "evidence": [
         {
@@ -637,11 +648,12 @@
           "sha256": null
         }
       ],
-      "source": "judgement"
+      "source": "judgement",
+      "flags": []
     },
     "stamped-checklist:may/005": {
       "value": "yes",
-      "reason": "Navigation is documented: the Layout sections plus a README in each derivatives/reports-* directory.",
+      "reason": "Navigation is documented at two levels: the Layout sections, and a README in each derivatives/reports-* directory.",
       "status": "met",
       "evidence": [
         {
@@ -650,7 +662,8 @@
           "sha256": null
         }
       ],
-      "source": "judgement"
+      "source": "judgement",
+      "flags": []
     }
   },
   "schema_version": "0.2.0",
@@ -689,6 +702,80 @@
           "sha256": null
         }
       ]
+    },
+    {
+      "key": "clone-weight",
+      "status": "partial",
+      "reason": "22 text blob(s) exceed 10 MiB (239 MiB in total, largest derivatives/compbench-2026-08-22-paper-real-np1-8-general/aind-634569-lsbbp__blosc-zlib-level_9-shuffle_byte-chunk1s/duct-usage.jsonl) \u2014 every clone carries them in full. Not a must/005 defect\u2026",
+      "evidence": [
+        {
+          "uri": "derivatives/compbench-2026-08-22-paper-real-np1-8-general/aind-634569-lsbbp__blosc-zlib-level_9-shuffle_byte-chunk1s/duct-usage.jsonl",
+          "description": "12087127 bytes of text in a git blob",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-22-paper-real-np1-8-general/aind-634569-lsbbp__gzip-level_9-shuffle_byte-chunk1s/duct-usage.jsonl",
+          "description": "12050356 bytes of text in a git blob",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-22-paper-real-np1-8-general/aind-634568-lsbbp__gzip-level_9-shuffle_byte-chunk1s/duct-usage.jsonl",
+          "description": "11828199 bytes of text in a git blob",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-22-paper-real-np1-8-general/aind-634569-bp__gzip-level_9-shuffle_byte-chunk1s/duct-usage.jsonl",
+          "description": "11824763 bytes of text in a git blob",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-25-gate-fig2-corrected/aind-634568-lsb__gzip-level_9-shuffle_byte-chunk1s/duct-usage.jsonl",
+          "description": "11770455 bytes of text in a git blob",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-22-paper-real-np1-8-general/aind-634568-lsb__blosc-zlib-level_9-shuffle_byte-chunk1s/duct-usage.jsonl",
+          "description": "11733340 bytes of text in a git blob",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-22-paper-real-np1-8-general/aind-634569-lsbbp__zlib-level_9-shuffle_byte-chunk1s/duct-usage.jsonl",
+          "description": "11667796 bytes of text in a git blob",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-22-paper-real-np1-8-general/aind-634568-bp__gzip-level_9-shuffle_byte-chunk1s/duct-usage.jsonl",
+          "description": "11522315 bytes of text in a git blob",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-22-paper-real-np1-8-general/aind-634568-lsbbp__blosc-zlib-level_9-shuffle_byte-chunk1s/duct-usage.jsonl",
+          "description": "11504796 bytes of text in a git blob",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-22-paper-real-np1-8-general/aind-634569-bp__zlib-level_9-shuffle_byte-chunk1s/duct-usage.jsonl",
+          "description": "11450127 bytes of text in a git blob",
+          "sha256": null
+        }
+      ]
+    },
+    {
+      "key": "inputs-untouched",
+      "status": "not-checked",
+      "reason": "2 of 2 module(s) are not installed here, so their state cannot be read: code/compression-comparisons-tools, sourcedata/aind-ephys-compression",
+      "evidence": [
+        {
+          "uri": "git submodule status",
+          "description": "code/compression-comparisons-tools not initialized",
+          "sha256": null
+        },
+        {
+          "uri": "git submodule status",
+          "description": "sourcedata/aind-ephys-compression not initialized",
+          "sha256": null
+        }
+      ]
     }
   ],
   "object": {
@@ -699,12 +786,12 @@
   },
   "assessor": {
     "skill": "assess-alignment-with-stamped-principles",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "harness": "claude-code (cloud session)",
     "model": "claude-opus-5[1m]",
     "date": "2026-10-13",
     "dependencies": [
-      "stamped-conventions@0.1.0"
+      "stamped-conventions@0.2.0"
     ]
   },
   "scope": "Committed state of the superdataset at the commit above. The two linked modules were not installed, so their contents were not read; no container was pulled and no rerun attempted."
