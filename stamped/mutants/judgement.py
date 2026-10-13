@@ -43,17 +43,31 @@ from mutate import git  # noqa: E402  (same commit identity and env hygiene)
 
 # --- injectors -------------------------------------------------------------
 
-def readme_wrong_make_target(root: pathlib.Path) -> str:
-    """The documented command names a target the Makefile does not have."""
+def readme_misdescribes_target(root: pathlib.Path) -> str:
+    """The documented command exists, and does not do what the prose says.
+
+    `readme-wrong-make-target` used to live here, until a blind run pointed out
+    that comparing the README's `make <target>` against the Makefile's targets
+    is mechanical; it is now a scripted mutant. What remains judgement is prose
+    that names a *real* target and describes it wrongly, which no name lookup
+    catches.
+    """
     path = root / "README.md"
     text = path.read_text()
-    text = text.replace("make all          # joins the tables, then draws the figure",
-                        "make brain-volumes   # joins the tables, then draws the figure")
-    text = text.replace("make all\n```\n\nOutputs land", "make brain-volumes\n```\n\nOutputs land")
+    text = text.replace("""```console
+make all          # joins the tables, then draws the figure
+```""", """```console
+make all          # fetches the input dataset, joins the tables, draws the figure,
+                  # and writes the brain-mask volumes for every session
+```""")
+    text = text.replace("Outputs land in `results/` and `figures/`",
+                        "`make all` also installs the environment and fetches the inputs, so the "
+                        "clone above is the only manual step. Outputs land in `results/` and `figures/`")
     path.write_text(text)
     git(root, "add", "README.md")
-    git(root, "commit", "-q", "-m", "name the sweep target in the README")
-    return "README tells the reader to run `make brain-volumes`, which the Makefile does not define"
+    git(root, "commit", "-q", "-m", "describe what the entry point does")
+    return ("README says `make all` fetches the inputs, installs the environment and computes brain-mask "
+            "volumes; the target does none of those three things")
 
 
 def readme_platform_specific_steps(root: pathlib.Path) -> str:
@@ -172,14 +186,15 @@ def dataset_description_contradicts_layout(root: pathlib.Path) -> str:
 # --- the catalogue ---------------------------------------------------------
 
 JUDGEMENT_MUTANTS: dict[str, dict] = {
-    "readme-wrong-make-target": {
-        "apply": readme_wrong_make_target,
-        "flag_any": ["stamped-checklist:must/007", "stamped-checklist:must/008"],
-        "mention_any": ["brain-volumes"],
+    "readme-misdescribes-target": {
+        "apply": readme_misdescribes_target,
+        "flag_any": ["stamped-checklist:must/007", "stamped-checklist:must/008",
+                     "stamped-checklist:must/012"],
+        "mention_any": ["fetch", "install", "brain-mask", "does not", "claims"],
         "stay_met": ["stamped-checklist:must/004", "stamped-checklist:must/009",
                      "stamped-checklist:must/005"],
-        "tests": "A1: do the instructions actually run? The probe sees a README with a usage "
-                 "section and a Makefile with targets, and is right about both.",
+        "tests": "A1: the command exists and the description of it is false. Name lookup cannot "
+                 "catch this; only reading the Makefile against the prose can.",
     },
     "readme-platform-specific-steps": {
         "apply": readme_platform_specific_steps,

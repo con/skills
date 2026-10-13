@@ -1,0 +1,62 @@
+{
+  "mutants": {
+    "dataset-description-contradicts-layout": {
+      "scored": false,
+      "why": "no response JSON in the run's outdir"
+    },
+    "readme-claims-absent-container": {
+      "scored": true,
+      "detected": true,
+      "noticed": true,
+      "named": [
+        "neurodesk",
+        "repronim/containers"
+      ],
+      "flagged": {
+        "stamped-checklist:must/015": "met",
+        "stamped-checklist:must/017": "unmet",
+        "stamped-checklist:must/012": "unmet",
+        "stamped-checklist:must/003": "unmet"
+      },
+      "collateral": {},
+      "injected": "readme-claims-absent-container: README promises a `neurodesk-freesurfer` container from ///repronim/containers that is registered nowhere in the object, while the tracked registration names another image",
+      "response": "/tmp/claude-1000/-home-yoh-proj-CON-skills/06cf38e7-2332-4b50-89cf-572cc5e2ab24/scratchpad/jcal/readme-claims-absent-container/out/2026-10-13-response.json"
+    },
+    "readme-host-path-in-instructions": {
+      "scored": false,
+      "why": "no response JSON in the run's outdir"
+    },
+    "readme-platform-specific-steps": {
+      "scored": true,
+      "detected": true,
+      "noticed": true,
+      "named": [
+        "brew",
+        "sysctl",
+        "macOS",
+        "sed -i"
+      ],
+      "flagged": {
+        "stamped-checklist:must/011": "unmet",
+        "stamped-checklist:must/012": "partial",
+        "stamped-checklist:must/007": "met"
+      },
+      "collateral": {},
+      "injected": "readme-platform-specific-steps: the documented install uses Homebrew, BSD `sed -i ''` and `sysctl -n hw.ncpu`: it runs on one developer's macOS and nowhere else",
+      "response": "/tmp/claude-1000/-home-yoh-proj-CON-skills/06cf38e7-2332-4b50-89cf-572cc5e2ab24/scratchpad/jcal/readme-platform-specific-steps/out/2026-10-13-response.json"
+    },
+    "readme-steps-out-of-order": {
+      "scored": false,
+      "why": "no response JSON in the run's outdir"
+    },
+    "readme-wrong-make-target": {
+      "scored": false,
+      "why": "retired from the judgement set (the defect became script-catchable)"
+    },
+    "readme-wrong-tool": {
+      "scored": false,
+      "why": "no response JSON in the run's outdir"
+    }
+  },
+  "detection": "2/2"
+}

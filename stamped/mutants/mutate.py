@@ -175,6 +175,25 @@ def relative_subdataset_url(root: pathlib.Path) -> str:
     return ".gitmodules points the input module at ../.., which resolves only here"
 
 
+def readme_wrong_make_target(root: pathlib.Path) -> str:
+    """The documented command names a target the Makefile does not have.
+
+    Promoted from a judgement mutant after a blind run observed that
+    `entry-point` already had both the README's commands and the Makefile's
+    targets and never compared them: a defect a script can catch belongs in
+    the cheap half.
+    """
+    path = root / "README.md"
+    text = path.read_text()
+    text = text.replace("make all          # joins the tables, then draws the figure",
+                        "make brain-volumes   # joins the tables, then draws the figure")
+    text = text.replace("make all\n```\n\nOutputs land", "make brain-volumes\n```\n\nOutputs land")
+    path.write_text(text)
+    git(root, "add", "README.md")
+    git(root, "commit", "-q", "-m", "name the sweep target in the README")
+    return "README tells the reader to run `make brain-volumes`, which the Makefile does not define"
+
+
 def readme_reproduce_removed(root: pathlib.Path) -> str:
     """Instructions that no longer say how to run anything."""
     path = root / "README.md"
@@ -237,6 +256,11 @@ MUTANTS: dict[str, dict] = {
         "apply": relative_subdataset_url,
         "expect": {"stamped-checklist:must/002": "unmet"},
         "probe": "subdatasets-resolvable",
+    },
+    "readme-wrong-make-target": {
+        "apply": readme_wrong_make_target,
+        "expect": {"stamped-checklist:must/007": "partial"},
+        "probe": "entry-point",
     },
     "readme-reproduce-removed": {
         "apply": readme_reproduce_removed,
