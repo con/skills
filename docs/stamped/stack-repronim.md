@@ -1,6 +1,6 @@
 # ReproNim stack reference (draft)
 
-Draft of `create-repronim-stamped-project/references/stack-repronim.md`, to be moved there in phase 4 of [PLAN.md](PLAN.md#7-roadmap).
+Draft of `create-repronim-stamped-project/references/stack-repronim.md`, to be moved there in phase 4 of [PLAN.md](PLAN.md#6-roadmap).
 `create-repronim-stamped-project` reads it and turns the user's PROMPT into PROMPT-WITH-REPRONIM-SPECIFICS for the generic `create-stamped-project`.
 It describes properties first and ReproNim tools as the way this stack satisfies them; the generic skills stay tool-agnostic.
 

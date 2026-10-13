@@ -6,26 +6,24 @@ Companion to [PLAN.md](PLAN.md); the talks are in [con/talks#33](https://github.
 
 Deck: `2026-reproAI-MIT-STAMPED.html`.
 It already makes the argument this collection backs up:
-
 - slide #/4/4, "a skill is a research object";
 - the #/6/7 con/skills table;
 - Monday checklist item 6, "push one skill upstream".
 
-A realistic slice in the days left:
+What fits in the days left:
 
-1. **One slide** with the collection (the [PLAN §4.1](PLAN.md#41-layering) diagram) and the development cycle ([PLAN §6](PLAN.md#6-development-cycle) diagram).
+1. **One slide** with the skills and their layering ([PLAN §3](PLAN.md#3-layering-and-layout)) and the evaluation loop ([evals.md §1](evals.md#1-loop)).
    It replaces a SKIP CANDIDATE such as #/6/5, so the deck does not grow.
-2. **Stretch:** `assess-stamped` (con/skills#23) run on compression-comparisons-t261-study.
-   It should report must/002 and must/016 as `no` for the subdataset `url = ../..`, the same finding the "So I tried to `rerun` it" slide reports by hand.
-   A checklist link needs the format-3 converter, which #23 defers.
-3. **Further stretch:** R0 in `bare` / `pointer` / `skill` conditions, one repeat each, shown as a three-row table.
+2. **Optional, labelled "uncalibrated demo, hand-run":** #23's `assess-stamped` on compression-comparisons-t261-study.
+   It should report must/002 and must/016 as `no` for the subdataset `url = ../..`, the finding the "So I tried to `rerun` it" slide reports by hand.
+   The assessor is not calibrated yet (evals.md §7), so this is an illustration, not a result.
 
 Small fix noticed in passing: the appendix P+E slide uses `-n repronim-mriqc`, but the registered name is `bids-mriqc`.
 
 ## US-RSE'26
 
 Deck: `2026-usrse-con-talk.html`.
-This is where the con/cierge#52 demo belongs: a vanilla run against a ReproNim-STAMPED skill run, both recorded.
-It needs phases 2–4 of the plan, or at least R1 working.
+The con/cierge#52 demo belongs here: a vanilla run against a ReproNim-STAMPED skill run, both recorded.
+It needs phases 2–4 of the plan, or at least R1 graded as in evals.md.
 
 Deck edits happen on the `2026-usrse-con-talk` branch only after the speaker confirms what goes in.
