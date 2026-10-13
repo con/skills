@@ -17,6 +17,7 @@ here, beside the mutants they complement.
 
 ```
 conditions/pointer-CLAUDE.md   the `pointer` baseline, verbatim from the issue
+harness/blind_run.py           snapshot a skill + render the subagent prompt; diff what comes back
 fixtures/make_r0_object.py     builds a known-good R0 object (plain git; no datalad or network)
 mutants/mutate.py              one injected defect each, with the items it should flip
 harness/calibrate.py           fixture + mutants -> per-item sensitivity, false-unmet rate
@@ -26,6 +27,44 @@ harness/aggregate.py           grading files -> iteration report (always with de
 use-cases/<id>/                prompt, use_case.yaml, rubric.yaml, oracle/
 tests/                         pytest over the probes, the mutants and the encoder
 ```
+
+## The core test: hand the skill to a stranger
+
+A skill is instructions for somebody else, so the only real test is a **fresh,
+blind subagent** given the skill snapshot and a concrete scope — a repository
+to work on, a PROMPT to carry out, or both — and nothing else. The authoring
+session walking through its own procedure proves nothing. This is the
+repo-wide rule in [`../../AGENTS.md`](../../AGENTS.md); `../../docs/stamped/PLAN.md`
+§6.2 has the detail.
+
+```console
+# 1. snapshot the skill outside the repo and render the prompt
+python3 evals/stamped/harness/blind_run.py prepare \
+    --skill assess-alignment-with-stamped-principles \
+    --object ~/scratch/compression-comparisons-t261-study \
+    --workdir ~/scratch/blind-1
+
+# 2. paste the printed prompt into a fresh subagent (the orchestrating session
+#    spawns it; the script deliberately does not, so the same prompt can be
+#    replayed by hand or on another model)
+
+# 3. diff its answers against the reference, per item
+python3 evals/stamped/harness/blind_run.py compare \
+    ~/scratch/blind-1/out/response.json \
+    evals/stamped/gold/compression-comparisons-t261-study/response.json
+```
+
+The prompt it renders carries the three clauses that make the run worth
+anything: write outputs outside the target, the user is unavailable so
+assumptions must be labelled, and **do not read con/skills** — `gold/` holds
+the answer and a helpful agent will find it. It also asks the subagent for its
+**friction**: every place the wording was ambiguous, missing or contradictory,
+quoting the text at fault. That half is usually more valuable than the
+verdicts.
+
+Each difference and each friction item gets a classification — skill wording,
+missing artifact, harness fault, model limit, or a defect in the reference —
+and only the first two change the skill.
 
 ## The loop, in commands
 
@@ -64,6 +103,10 @@ python3 evals/stamped/harness/aggregate.py --glob '/scratch/stamped/iter-1/**/gr
   no single score.
 - **A lesson requires a regression artifact.** When a run exposes a gap, add a
   mutant, a probe or a use case first; prose in a `SKILL.md` is the last resort.
+- **The scripts are the fast half, not the test.** The probes make the
+  mechanical part cheap, repeatable and identical between the skill and its
+  graders, and they tell a reading agent which items deserve its judgement. A
+  passing probe suite says nothing about whether anyone can follow the skill.
 - **Hold-outs stay out of the inner loop** (R5, and one ReproNim variant), so
   the skills are not tuned to these fixtures.
 
