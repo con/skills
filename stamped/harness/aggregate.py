@@ -118,7 +118,12 @@ def markdown(report: dict) -> str:
         lines += ["", "## T1 / T2 disagreements (for the human to settle)", ""]
         for row in report["disagreements"]:
             lines.append(f"- `{row['item']}`: probes say **{row['t1']}**, the blind assessor says **{row['t2']}** — {row['run']}")
-    lines += ["", "Rates are numerator/denominator; `not-checked` is never folded into a failure."]
+    lines += ["", "Rates are numerator/denominator; `not-checked` is never folded into a failure.",
+              "",
+              "**Raw counts only, no significance claims.** Repeats are independent per arm, not "
+              "paired; with three repeats even 3/3 against 0/3 is only p ≈ 0.1 (two-sided Fisher). "
+              "Per-iteration numbers are smoke thresholds, and a release claim needs the benchmark "
+              "(about 10 repeats per arm)."]
     return "\n".join(lines) + "\n"
 
 

@@ -21,6 +21,18 @@ import pathlib
 import subprocess
 import sys
 
+# The exact columns ds007116 ships, verified against
+# derivatives/freesurfer-post/sub-138950/sub-138950_ses-1_desc-FreeSurfer_qc.tsv.
+# Naming them beats guessing: a run that picks `mask_maskvol` or
+# `supratentorialvol` is answering a different question, and a fuzzy match
+# would score it as correct.
+EXACT = {
+    "volume": "brainseg_brainsegvol",
+    "gray": "totalgray_totalgrayvol",
+    "white": "cerebralwhitematter_cerebralwhitemattervol",
+    "etiv": "estimatedtotalintracranialvol_etiv",
+    "age": "age",
+}
 AGE_KEYS = ("age", "age_years", "session_age", "age_at_scan", "scan_age")
 VOLUME_KEYS = ("brain", "volume", "etiv", "brainseg", "tiv", "icv", "brainvol")
 RATIO_KEYS = ("ratio", "gm_wm", "gmwm", "gm/wm")
@@ -33,7 +45,12 @@ def tracked(root: pathlib.Path) -> list[str]:
     return [p for p in out.stdout.split("\0") if p]
 
 
-def _match(fieldnames: list[str], keys: tuple[str, ...]) -> str | None:
+def _match(fieldnames: list[str], keys: tuple[str, ...], exact: str | None = None) -> str | None:
+    """The exact column if the product kept it, else the first plausible one."""
+    if exact:
+        for name in fieldnames:
+            if name.lower() == exact:
+                return name
     for name in fieldnames:
         lowered = name.lower()
         if any(key in lowered for key in keys):
@@ -90,8 +107,8 @@ def main(argv: list[str] | None = None) -> int:
             rows, fields = _read_table(root / relpath)
         except (OSError, csv.Error):
             continue
-        age_key = _match(fields, AGE_KEYS)
-        vol_key = _match(fields, VOLUME_KEYS)
+        age_key = _match(fields, AGE_KEYS, EXACT["age"])
+        vol_key = _match(fields, VOLUME_KEYS, EXACT["volume"])
         if not age_key or not vol_key:
             continue
         pairs = []
@@ -102,8 +119,12 @@ def main(argv: list[str] | None = None) -> int:
                 continue
             pairs.append((age, volume))
         if best is None or len(pairs) > len(best["pairs"]):
+            ratio_key = _match(fields, RATIO_KEYS)
+            gray_key = _match(fields, ("gray", "gm"), EXACT["gray"])
+            white_key = _match(fields, ("white", "wm"), EXACT["white"])
             best = {"path": relpath, "age_key": age_key, "volume_key": vol_key,
-                    "ratio_key": _match(fields, RATIO_KEYS), "rows": len(rows), "pairs": pairs}
+                    "ratio_key": ratio_key, "gray_key": gray_key, "white_key": white_key,
+                    "rows": len(rows), "pairs": pairs}
 
     report: dict = {
         "object": str(root),
@@ -127,8 +148,9 @@ def main(argv: list[str] | None = None) -> int:
         correlation = report["correlation_age_volume"]
         if correlation is not None and correlation <= 0:
             findings.append(f"brain volume does not grow with age (r={correlation:.2f})")
-        if not best["ratio_key"]:
-            findings.append("no GM/WM ratio column in the product table")
+        if not best["ratio_key"] and not (best["gray_key"] and best["white_key"]):
+            findings.append("no GM/WM ratio in the product table, and no grey and white columns "
+                            "to compute one from")
         if not figures:
             findings.append("no non-empty figure outside the input modules")
         if args.forbid_shipped_as_result:

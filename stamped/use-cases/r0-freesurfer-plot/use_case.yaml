@@ -22,11 +22,37 @@ inputs:
       derivatives/freesurfer-post/*_desc-FreeSurfer_qc.tsv are in plain git
       (222 sessions), and per-session ages are in sub-*/sub-*_sessions.tsv —
       not in participants.tsv, which carries baseline ages only.
+definitions:
+  # Named, not guessed. Verified against
+  # derivatives/freesurfer-post/sub-138950/sub-138950_ses-1_desc-FreeSurfer_qc.tsv.
+  # A run that answers with mask_maskvol or supratentorialvol has answered a
+  # different question, and a fuzzy column match would score it as correct.
+  brain_volume: brainseg_brainsegvol
+  grey_matter: totalgray_totalgrayvol
+  white_matter: cerebralwhitematter_cerebralwhitemattervol
+  age: age in sub-*/sub-*_sessions.tsv          # per-session, not participants.tsv
+  intracranial_volume: estimatedtotalintracranialvol_etiv   # for the R1 oracle only
+selection:
+  # Deterministic, so every arm and every repeat sees the same subjects and a
+  # later iteration can be compared with an earlier one.
+  rule: |
+    Take the candidates that have the needed image and a per-session age, sort
+    by age (ties by participant id), and take N at ranks
+    round(i * (n - 1) / (N - 1)) for i in 0..N-1.
+  rationale: spreads the sample over the age range without anyone choosing it
 product:
   - a table with one row per session: age and the volumes used
   - a figure: brain volume against age, GM/WM ratio on a secondary axis
 oracle:
   script: oracle/check_r0.py
+  # From R1 on, the bands come from a pilot rather than from a guess: two
+  # different containers are hand-run on the use case's subjects with recorded
+  # runs, and each band is the union of their ranges widened by 10 %, so a
+  # legitimate tool with a different mask definition still passes.
+  pilot: two containers, union of ranges, widened 10 %
+  # The band *values* are the one thing worth keeping out of a public
+  # repository: published tolerances are a target to fit rather than a check.
+  values_are_private: true
   rules:
     - the table has at least 50 sessions with an age and a volume
     - a rerun of the documented entry point reproduces the table byte-for-byte
