@@ -8,6 +8,7 @@ software project maintenance, triage, and automation.
 | Skill | Description |
 |-------|-------------|
 | [analyze-duplicates](analyze-duplicates/) | Detect code and documentation duplication using jscpd, generate a Markdown report with collapsible `<details>` sections (suitable for GitHub/Gitea issues), and propose a mediation plan with refactoring strategies. |
+| [assess-alignment-with-stamped-principles](assess-alignment-with-stamped-principles/) | Assess a project, dataset or analysis against the [STAMPED principles](https://github.com/stamped-principles/stamped-paper) and leave a filled checklist behind: a dated report, a response JSON with per-item evidence, and a link that opens the answers in the [checklist app](https://checklist.stamped-principles.org/). Read-only; ships eleven scripted probes over committed state. |
 | [github-project-status](github-project-status/) | Assess whether a GitHub project is healthy, in maintenance mode, stagnant, or abandoned. Checks commits, releases, issues, PRs, forks, and package registries to produce a structured status report. |
 | [introduce-codespell](introduce-codespell/) | Add [codespell](https://github.com/codespell-project/codespell) spell-checking to a project end-to-end: config, GitHub Actions workflow, pre-commit hook, exclusion tuning, ambiguous-typo review, and automated fixes via `datalad run`. |
 | [introduce-git-bug](introduce-git-bug/) | Set up [git-bug](https://github.com/git-bug/git-bug) distributed issue tracking: configure GitHub bridge, sync issues, push `refs/bugs/*`, and document the workflow in DEVELOPMENT.md / CLAUDE.md. |
@@ -17,6 +18,7 @@ software project maintenance, triage, and automation.
 | [pr-review-update](pr-review-update/) | Scan an [improveit-dashboard](https://github.com/yarikoptic/improveit-dashboard) for PRs awaiting your response, assess confidence, auto-rebase codespell PRs, and produce copy-paste-ready push commands. |
 | [scan-projects](scan-projects/) | Walk subdirectories of git repos, collect metadata (language, license, commit dates, remote URL), and generate concise LLM-produced summaries into a `projects.tsv` file. Ships with helper scripts for batch updates. |
 | [setup-chromatic](setup-chromatic/) | Set up [Chromatic](https://www.chromatic.com) visual regression testing for a web app with two feeds: Storybook stories (component states) and Playwright snapshots (whole-page states, several viewports). Covers configs, two GitHub Actions workflows, two Chromatic projects, and the README section explaining them. |
+| [stamped-conventions](stamped-conventions/) | Shared conventions for the STAMPED skills (not invoked directly): the checklist pinned at 0.3.1 with a vendoring lock, the verdict vocabulary, the response/report format and its URL encoder, project kinds, and the per-stack references. |
 | [tinuous-analyzer](tinuous-analyzer/) | Analyze CI log collections gathered by [con/tinuous](https://github.com/con/tinuous/) to pinpoint when a test started failing, diff environment/dependency changes between passing and failing runs, and recommend investigation steps. |
 
 ## Installation
@@ -63,6 +65,20 @@ Edit the defaults in `pr-feedback-review/SKILL.md` to match your setup.
 
 The remaining skills use runtime discovery (e.g., `git remote -v`,
 `gh auth status`) and do not require pre-configuration.
+
+## Tests
+
+Structural lint of every skill, and the STAMPED probe tests and mutant
+calibration:
+
+```console
+tox -e validate        # frontmatter, size budgets, duplicate blocks, bundled Python
+tox -e stamped-evals   # pytest over the probes + the defect-mutant calibration
+```
+
+Tests live outside the skill directories, under
+[`evals/`](evals/stamped/README.md), so a skill ships its instructions and
+scripts without its test suite.
 
 ## Repo-wide conventions
 

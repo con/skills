@@ -7,6 +7,7 @@ on:
       - '*/SKILL.md'
       - '*/**.py'
       - 'ci/validate_skills.py'
+      - 'evals/**'
       - 'tox.ini'
       - '.github/workflows/validate.yml'
   push:
@@ -15,6 +16,7 @@ on:
       - '*/SKILL.md'
       - '*/**.py'
       - 'ci/validate_skills.py'
+      - 'evals/**'
   workflow_dispatch:
 
 concurrency:
@@ -41,3 +43,9 @@ jobs:
 
       - name: Validate all skills
         run: tox -e validate
+
+      # The STAMPED assessor grades the other skills, so its scripted half is
+      # calibrated against the defect mutants on every change: full
+      # sensitivity, no false `unmet` on the known-good fixture.
+      - name: STAMPED probe tests and mutant calibration
+        run: tox -e stamped-evals

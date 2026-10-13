@@ -4,6 +4,7 @@ version: 0.1.0
 description: Shared conventions for the STAMPED skills (assess-, align-, create-, create-repronim-, do-full-research-loop, self-assess-alignment-with-stamped-principles) — the pinned checklist 0.3.1 and its vendored JSON, the verdict vocabulary, the response/report format and its checklist-app URL encoding, the provenance stamp, project kinds and their emphasis, and the per-stack references. Not invoked directly. Use when a STAMPED skill tells you to read it, or when asked what the STAMPED skills agree on.
 allowed-tools: Read, Bash
 user-invocable: false
+max-lines: 150
 ---
 
 # STAMPED conventions
