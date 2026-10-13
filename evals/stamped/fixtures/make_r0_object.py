@@ -148,12 +148,17 @@ def main() -> int:
     ap.add_argument("--output", type=pathlib.Path, required=True)
     args = ap.parse_args()
     rows = []
-    for qc in sorted(args.input.glob("derivatives/freesurfer-post/*_qc.tsv")):
+    for qc in sorted(args.input.glob("derivatives/freesurfer-post/**/*_qc.tsv")):
         with qc.open() as fh:
             rows.extend(dict(row) for row in csv.DictReader(fh, delimiter="\\t"))
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with args.output.open("w", newline="") as fh:
-        writer = csv.DictWriter(fh, fieldnames=["session_id", "age", "brainseg", "gm_wm_ratio"], delimiter="\\t")
+        writer = csv.DictWriter(
+            fh,
+            fieldnames=["session_id", "age", "brainseg_brainsegvol", "totalgray_totalgrayvol",
+                        "cerebralwhitematter_cerebralwhitemattervol"],
+            delimiter="\\t",
+        )
         writer.writeheader()
         writer.writerows(rows)
     return 0
@@ -185,8 +190,13 @@ def main() -> int:
 if __name__ == "__main__":
     raise SystemExit(main())
 ''',
-    "results/volumes.tsv": "session_id\tage\tbrainseg\tgm_wm_ratio\n"
-    "ses-1\t9.1\t1150000\t1.21\nses-2\t12.4\t1210000\t1.18\nses-3\t17.8\t1265000\t1.12\n",
+    "results/volumes.tsv": (
+        "session_id\tage\tbrainseg_brainsegvol\ttotalgray_totalgrayvol"
+        "\tcerebralwhitematter_cerebralwhitemattervol\n"
+        "ses-1\t9.1\t1150000\t640000\t510000\n"
+        "ses-2\t12.4\t1210000\t655000\t545000\n"
+        "ses-3\t17.8\t1265000\t648000\t585000\n"
+    ),
     "figures/brain-volume-vs-age.png": "PNG-placeholder:3",
     "LICENSE": "MIT License\n\nCopyright (c) 2026 STAMPED fixture\n",
     ".github/workflows/rerun.yml": """name: rerun
@@ -329,8 +339,13 @@ def build(root: pathlib.Path, input_remote: str) -> None:
         git(inputs, "config", "user.email", ENV["GIT_AUTHOR_EMAIL"])
         write(inputs, "dataset_description.json",
               json.dumps({"Name": "ds007116 (stand-in)", "BIDSVersion": "1.11.0", "License": "CC0"}, indent=2) + "\n")
-        write(inputs, "derivatives/freesurfer-post/ses-1_desc-FreeSurfer_qc.tsv",
-              "session_id\tage\tbrainseg\tgm_wm_ratio\nses-1\t9.1\t1150000\t1.21\n")
+        # The real dataset nests one directory per subject and uses FreeSurfer's
+        # own column names; the stand-in mirrors both, so a run that works here
+        # works there (verified against ds007116's own qc.tsv).
+        header = ("session_id\tage\tbrainseg_brainsegvol\ttotalgray_totalgrayvol"
+                  "\tcerebralwhitematter_cerebralwhitemattervol\n")
+        write(inputs, "derivatives/freesurfer-post/sub-1000/sub-1000_ses-1_desc-FreeSurfer_qc.tsv",
+              header + "ses-1\t9.1\t1150000\t640000\t510000\n")
         git(inputs, "add", "-A")
         git(inputs, "commit", "-q", "-m", "ds007116 stand-in: shipped FreeSurfer tables")
 

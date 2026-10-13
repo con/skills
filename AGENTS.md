@@ -13,11 +13,17 @@ the SKILL.md does not repeat them verbatim.
 
 ## Respect upstream PR conventions when preparing a pull request
 
-Any skill that prepares a pull request (currently:
+Any skill that prepares a pull request **for another project** (currently:
 `introduce-codespell`, `introduce-git-bug`, `introduce-reuse-compliance`,
 plus any future skill that does the same) MUST, before drafting the PR
 body and BEFORE handing the user a `gh pr create` / push command, perform
 the steps below and report the result to the user.
+
+For a PR **against con/skills itself** this section does not apply: this
+repository has no PR template and no contributing guide. What a PR here
+owes instead is `tox -e validate` and `tox -e stamped-evals` passing, a
+README table row for every skill added, and a `version:` in the
+frontmatter of every skill it touches.
 
 ### 1. Look for a PR description template
 

@@ -17,7 +17,7 @@ In rough order of how hard it is to find:
 3. **Score a structured product** — 31 item verdicts, their evidence, and whether
    the report names the specific defect — not a text-similarity metric.
 4. **Several models, including local ones**, because the skills must not assume
-   frontier judgement (§6.4 of the plan).
+   frontier judgement ([evals.md §4](evals.md#4-conditions)).
 5. **Aggregate with denominators**, per item and per principle, never one score.
 6. **Human review of transcripts**, because the friction report is half the point.
 
@@ -45,7 +45,7 @@ assessor is the test suite.
    No framework models "a filled STAMPED checklist", and `stamped-conventions` is
    where that lives.
 2. **Adopt `pytest-evals` now**, for the aggregation layer: one eval case per
-   (mutant × model), one analysis test asserting the done criteria of §6.10. Cheap,
+   (mutant × model), one analysis test asserting the done criteria of [evals.md §10](evals.md#10-done-criteria). Cheap,
    reversible, and it keeps `tox -e stamped-evals` as the single entry point.
 3. **Adopt Inspect AI at phase 3**, when the outer loop needs containers per run and
    more than one model tier. Map our pieces onto its vocabulary:
