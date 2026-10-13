@@ -11,6 +11,7 @@ skill ships its instructions and its scripts, not its test suite.
 from __future__ import annotations
 
 import json
+import os
 import pathlib
 import shutil
 import subprocess
@@ -178,3 +179,55 @@ def test_unknown_item_id_is_refused():
     }
     problems = validate(response, checklist)
     assert any("unknown item ids" in p for p in problems)
+
+
+def _tiny_reproducible_object(root: pathlib.Path) -> pathlib.Path:
+    """A git repository whose documented entry point re-creates its output."""
+    root.mkdir(parents=True, exist_ok=True)
+    (root / "Makefile").write_text("all: results.tsv\nresults.tsv:\n\tprintf 'a\\tb\\n1\\t2\\n' > $@\n")
+    (root / "results.tsv").write_text("a\tb\n1\t2\n")
+    (root / "README.md").write_text("# demo\n\n## Usage\n\n`make all`\n")
+    env = {
+        **os.environ,
+        "GIT_AUTHOR_NAME": "fixture", "GIT_AUTHOR_EMAIL": "fixture@example.org",
+        "GIT_COMMITTER_NAME": "fixture", "GIT_COMMITTER_EMAIL": "fixture@example.org",
+    }
+    for cmd in (["git", "init", "-q", "-b", "main"], ["git", "add", "-A"],
+                ["git", "commit", "-q", "-m", "demo"]):
+        subprocess.run(cmd, cwd=root, env=env, check=True, capture_output=True)
+    return root
+
+
+def test_fresh_rerun_reproduces_a_reproducible_object(tmp_path):
+    source = _tiny_reproducible_object(tmp_path / "source")
+    report = tmp_path / "fresh-rerun.json"
+    subprocess.run(
+        [sys.executable, str(ASSESS / "scripts" / "fresh_rerun.py"), "--path", str(source),
+         "--entry", "rm -f results.tsv && make all", "--outputs", "*.tsv",
+         "--workdir", str(tmp_path / "work"), "-o", str(report)],
+        check=True, capture_output=True,
+    )
+    result = json.loads(report.read_text())
+    assert result["status"] == "met", result["reason"]
+    assert result["comparison"]["identical"] == ["results.tsv"]
+
+
+def test_fresh_rerun_reports_a_difference_as_such(tmp_path):
+    source = _tiny_reproducible_object(tmp_path / "drifting")
+    # The entry point writes something else: the object does not reproduce.
+    (source / "Makefile").write_text("all: results.tsv\nresults.tsv:\n\tprintf 'a\\tb\\n9\\t9\\n' > $@\n")
+    subprocess.run(["git", "commit", "-qam", "drift"], cwd=source, check=True, capture_output=True,
+                   env={**os.environ, "GIT_AUTHOR_NAME": "fixture",
+                        "GIT_AUTHOR_EMAIL": "fixture@example.org",
+                        "GIT_COMMITTER_NAME": "fixture",
+                        "GIT_COMMITTER_EMAIL": "fixture@example.org"})
+    report = tmp_path / "fresh-rerun-2.json"
+    subprocess.run(
+        [sys.executable, str(ASSESS / "scripts" / "fresh_rerun.py"), "--path", str(source),
+         "--entry", "rm -f results.tsv && make all", "--outputs", "*.tsv",
+         "--workdir", str(tmp_path / "work2"), "-o", str(report)],
+        check=True, capture_output=True,
+    )
+    result = json.loads(report.read_text())
+    assert result["status"] in {"unmet", "partial"}, result
+    assert result["comparison"]["differing"] == ["results.tsv"]
