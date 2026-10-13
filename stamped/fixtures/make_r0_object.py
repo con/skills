@@ -94,6 +94,19 @@ matplotlib==3.9.2
 pandas==2.2.3
 """,
     "code/requirements.in": "matplotlib\npandas\n",
+    # The image the run records name. A real object holds a built container
+    # here (or an annexed pointer to one); the fixture needs the path to exist
+    # so that the records it carries are self-consistent — a blind run on a
+    # smaller model caught the earlier version claiming an image that was never
+    # created, which is a defect in the fixture, not in the object under test.
+    "code/containers/plotting.sif.README": (
+        "The run records in this object's history reference\n"
+        "`code/containers/plotting.sif`, pinned by digest in `../containers.json`.\n"
+        "In the fixture the image itself is not shipped (it would be ~200 MB);\n"
+        "`plotting.sif` beside this file is a placeholder of a few bytes so that\n"
+        "every path a run record names exists.\n"
+    ),
+    "code/containers/plotting.sif": "apptainer-image-placeholder\n",
     "code/containers.json": json.dumps(
         {
             "containers": {
