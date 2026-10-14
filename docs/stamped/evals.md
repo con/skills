@@ -197,6 +197,41 @@ Variance is reported, not hidden.
   Optionally, Entire (`entire enable`) for commit-linked checkpoints, as cierge#52 proposes.
   Its redaction is best-effort, so it is used only on public-data use cases.
 
+## 5.1 What the host has to allow
+
+Checked on typhon, 2026-10-14, inside the project's rootless-podman session.
+What works there, and what does not, because R1 turns on it:
+
+| | |
+|---|---|
+| CPU, memory, disk | 32 cores, 1 TB RAM, 234 GB free — ample for R1–R3 |
+| **GPU** | absent, and **not needed**: `3dSkullStrip` and `bet` are CPU-only, and SynthStrip's `--gpu` is optional (~1–2 min per subject on CPU). Only FastSurfer, or SynthSeg at R4 scale, would want one |
+| `datalad`, `git-annex`, `apptainer` | present (1.7.1, 10.20260717, 1.4.5) |
+| `///repronim/containers` | reachable **through the GitHub mirror** (`https://github.com/ReproNim/containers`); `datasets.datalad.org` resolves but refuses the connection from the session's network namespace |
+| container images | fetchable: `neurodesk-synthstrip--8.2.0.simg` (516 MB) came down from the neurodesk web mirror, which git-annex knows as a second source |
+| R1 inputs | fetchable: a real T1w (`sub-138950_ses-1_rec-normrefaced_run-01_T1w.nii.gz`, 8.4 MB) via `datalad get` |
+| **running a container** | **blocked** without extra privileges — see below |
+
+Apptainer inside a rootless-podman session fails three ways, all for want of
+privileges, and all three have to be fixed together:
+
+```console
+$ apptainer exec …neurodesk-synthstrip--8.2.0.simg mri_synthstrip --help
+FATAL: image driver squashfuse_ll … fuse: device not found, try 'modprobe fuse' first
+$ apptainer build --sandbox …          # the userspace unpack fallback
+FATAL: can't mount proc filesystem to /proc: operation not permitted
+$ which unsquashfs                     # …and there is no third way
+```
+
+What unblocks it: `--device=/dev/fuse`, `--cap-add=SYS_ADMIN`,
+`seccomp=unconfined` (for `clone(CLONE_NEWUSER)`), `apparmor=unconfined` (for
+the nested `/proc`), and `label=disable` where SELinux is on. Plus a persistent
+volume for `APPTAINER_CACHEDIR`: images are 0.5–9 GB each and the container
+overlay does not survive a restart.
+**If those privileges are not acceptable**, the outer loop runs from a plain
+shell on the host instead — which is what §5 always intended, and the inner
+loop stays on R0 and on `assess` runs over existing objects.
+
 ## 6 Grading
 
 **T1: scripted probes.**
