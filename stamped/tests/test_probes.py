@@ -308,3 +308,52 @@ def test_skill_states_the_coverage_it_actually_has(clean):
         f"SKILL.md says {stated_should} SHOULD, probes answer {answered['should']}"
     )
     assert stated_total == sum(1 for i in checklist.items if i["level"] == "must")
+
+
+# The guards create-stamped-project installs are artifacts, so they are tested
+# like artifacts: on the clean fixture they pass, on a mutant they fail.
+TEMPLATES = REPO / "create-stamped-project" / "templates"
+
+
+def test_preflight_passes_on_the_clean_fixture(clean):
+    out = subprocess.run(["sh", str(TEMPLATES / "preflight.sh")], cwd=clean,
+                         capture_output=True, text=True)
+    assert out.returncode == 0, out.stdout + out.stderr
+
+
+@pytest.mark.parametrize("name", ["abs-path-in-script", "relative-subdataset-url", "untracked-figure"])
+def test_preflight_refuses_a_mutant(clean, tmp_path, name):
+    target = tmp_path / name
+    shutil.copytree(clean, target, symlinks=True)
+    subprocess.run([sys.executable, str(EVALS / "mutants" / "mutate.py"), "apply", name, str(target)],
+                   check=True, capture_output=True)
+    out = subprocess.run(["sh", str(TEMPLATES / "preflight.sh")], cwd=target,
+                         capture_output=True, text=True)
+    assert out.returncode == 1, f"preflight passed on {name}: {out.stdout}"
+
+
+def test_run_guard_refuses_an_outside_commit(tmp_path):
+    """And allows the run's own commit, which is the whole difficulty."""
+    repo = tmp_path / "guarded"
+    repo.mkdir()
+    env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@e.org",
+           "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@e.org"}
+    subprocess.run(["git", "init", "-q", "-b", "main"], cwd=repo, check=True, env=env)
+    hook = repo / ".git" / "hooks" / "pre-commit"
+    hook.write_bytes((TEMPLATES / "pre-commit-run-guard").read_bytes())
+    hook.chmod(0o755)
+    (repo / "f").write_text("x\n")
+    subprocess.run(["git", "add", "f"], cwd=repo, check=True, env=env)
+    subprocess.run(["git", "commit", "-qm", "first"], cwd=repo, check=True, env=env)
+
+    (repo / ".datalad-run-in-flight").touch()
+    (repo / "f").write_text("y\n")
+    subprocess.run(["git", "add", "f"], cwd=repo, check=True, env=env)
+    blocked = subprocess.run(["git", "commit", "-qm", "outside"], cwd=repo,
+                             capture_output=True, text=True, env=env)
+    assert blocked.returncode != 0, "the guard let an outside commit through"
+    assert "run is in flight" in blocked.stderr
+
+    allowed = subprocess.run(["git", "commit", "-qm", "the run's own"], cwd=repo,
+                             capture_output=True, text=True, env={**env, "IN_FLIGHT_OK": "1"})
+    assert allowed.returncode == 0, allowed.stderr
