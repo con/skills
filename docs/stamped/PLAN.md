@@ -418,6 +418,8 @@ What exists in con/skills as of 2026-10-13, on branch `claude/ecstatic-cerf-nh4j
 
 - **`stamped-conventions/` 0.2.0** — the five references, the checklist vendored at `v0.3.1` (`af259ba`) with a `lock.json` carrying tag, commit and sha256, `vendor_checklist.py` (`--check` verifies the files against the lock) and `encode_response.py` (`items`, `validate`, `encode`, `decode`, `template`).
   The encoder is the only writer of an app URL, and `decode` is what turns a checklist a person filled in the web app into reference answers.
+- **`create-stamped-project/` 0.1.0, `align-with-stamped-principles/` 0.1.0 and `do-full-research-loop/` 0.1.0** — the three skills R0 exercises, with the guards shipped as templates rather than described: `pre-commit-run-guard` (refuses a commit while a recorded run is in flight, and allows the run's own), `run-recorded.sh` (sets the marker, refuses a dirty tree, falls back to a plain recorded commit without datalad) and `preflight.sh` (eight checks, each naming the checklist item it protects).
+  All three guards are tested: `preflight.sh` passes on the clean fixture and refuses three mutants; the hook refuses an outside commit and admits `IN_FLIGHT_OK=1`.
 - **`assess-alignment-with-stamped-principles/` 0.2.0** — the skill, thirteen probes in `scripts/probes/`, `scripts/run_probes.py` (which also writes a draft response JSON) and `scripts/fresh_rerun.py`.
   The probes answer **11 of the 17 MUST items**, 2 SHOULD items and may/001 from committed state; the other six MUST items are judgement, listed in the skill.
   Three probes answer no checklist item and are reported as extras: `license-declared`, `clone-weight` and `inputs-untouched`.

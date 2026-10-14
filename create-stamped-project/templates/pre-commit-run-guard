@@ -1,0 +1,37 @@
+#!/bin/sh
+# Refuse a commit while a recorded run is in flight.
+#
+# Install:  cp this to .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+#           (or add it to .pre-commit-config.yaml as a local hook)
+#
+# Why this exists: a commit that lands inside a `datalad run` window makes the
+# run fail with "command created commits that include files not declared as
+# --output", and a workflow engine then deletes the *completed* outputs of that
+# cell. In the project this guard comes from, that cost finished compute three
+# times before the cause was found.
+#
+# How it works: the wrapper that starts a recorded run (`run-recorded.sh`)
+# creates the marker below and exports IN_FLIGHT_OK=1 for its own children, so
+# the run's own commit passes while a commit from any other shell is refused.
+set -eu
+
+MARKER=".datalad-run-in-flight"
+
+if [ -e "$MARKER" ] && [ "${IN_FLIGHT_OK:-}" != "1" ]; then
+    printf 'refusing to commit: a recorded run is in flight (%s exists).\n' "$MARKER" >&2
+    printf '\n' >&2
+    printf 'A commit on this branch now lands inside that run and can destroy its\n' >&2
+    printf 'completed outputs. Options:\n' >&2
+    printf '  * wait for the run to finish (it commits its own result);\n' >&2
+    printf '  * write to a gitignored scratch directory instead;\n' >&2
+    printf '  * if you are certain no run is active, remove %s.\n' "$MARKER" >&2
+    exit 1
+fi
+
+# A second, cheaper check: datalad leaves this behind mid-run.
+if [ -d ".git/datalad" ] && [ -e ".git/datalad/.run-in-progress" ] && [ "${IN_FLIGHT_OK:-}" != "1" ]; then
+    printf 'refusing to commit: datalad reports a run in progress.\n' >&2
+    exit 1
+fi
+
+exit 0

@@ -159,6 +159,7 @@ Across rungs:
 | `bare` | The use-case prompt only | The floor |
 | `pointer` | Prompt + @asmacdo's `CLAUDE.md` STAMPED snippet from the issue, verbatim | Today's practice: the bar a skill must clear |
 | `skill@vN`, implicit | Skills installed; the prompt does not mention them | Does the description trigger? |
+| | | **Inner-loop caveat:** a subagent has no slash-command dispatcher, so "implicit" here means the skills are on disk under `.claude/skills/` and the run is told it may use what it finds. Real trigger-phrase behaviour needs the outer loop, and the inner loop's implicit numbers are indicative only. |
 | `skill@vN`, explicit | Skills installed; the prompt invokes `/create-…` or `/do-full-research-loop` | Does the procedure work? |
 | `skill@vN-1` | The previous version | Regressions |
 
