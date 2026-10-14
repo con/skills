@@ -45,6 +45,36 @@ def tracked(root: pathlib.Path) -> list[str]:
     return [p for p in out.stdout.split("\0") if p]
 
 
+def module_paths(root: pathlib.Path) -> list[str]:
+    out = subprocess.run(["git", "submodule", "status", "--recursive"], cwd=str(root),
+                         capture_output=True, text=True)
+    paths = []
+    for line in out.stdout.splitlines():
+        parts = line[1:].strip().split()
+        if len(parts) >= 2:
+            paths.append(parts[1])
+    return paths
+
+
+def product_inside_a_module(root: pathlib.Path) -> list[str]:
+    """Tables that live inside an input module rather than in the object.
+
+    A live R0 run put its whole product there, and the oracle said "no product":
+    true of the object, and unhelpful about what happened.
+    """
+    found = []
+    for path in module_paths(root):
+        sub = root / path
+        if not (sub / ".git").exists():
+            continue
+        out = subprocess.run(["git", "log", "--format=", "--name-only", "HEAD", "--not", "--remotes"],
+                             cwd=str(sub), capture_output=True, text=True)
+        for name in out.stdout.splitlines():
+            if name.strip().endswith((".tsv", ".csv")):
+                found.append(f"{path}/{name.strip()}")
+    return sorted(set(found))
+
+
 def _match(fieldnames: list[str], keys: tuple[str, ...], exact: str | None = None) -> str | None:
     """The exact column if the product kept it, else the first plausible one."""
     if exact:
@@ -133,8 +163,19 @@ def main(argv: list[str] | None = None) -> int:
         "product": {k: v for k, v in (best or {}).items() if k != "pairs"},
     }
     if best is None:
-        report.update(status="unmet", reason="No tracked table carries both an age and a volume column.")
-        findings.append("no product table")
+        inside = product_inside_a_module(root)
+        if inside:
+            report["product_inside_module"] = inside
+            report.update(
+                status="unmet",
+                reason=(f"The product is inside an input module, not in the object: {inside[0]} "
+                        f"({len(inside)} file(s)). Nothing in the object itself carries the result."),
+            )
+            findings.append("product written into an input module")
+        else:
+            report.update(status="unmet",
+                          reason="No tracked table carries both an age and a volume column.")
+            findings.append("no product table")
     else:
         ages = [a for a, _ in best["pairs"]]
         volumes = [v for _, v in best["pairs"]]
