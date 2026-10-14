@@ -1,0 +1,717 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:con-skills:research-assessment:0.1.0",
+  "title": "Portable research assessment envelope (experimental)",
+  "description": "Independent scientific and research-object criteria; not an official STAMPED standard or proof of correctness.",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "0.1.0"
+    },
+    "assessment_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": [
+        "in_progress",
+        "finalized"
+      ]
+    },
+    "outcome": {
+      "enum": [
+        "completed",
+        "partial",
+        "failed",
+        "blocked",
+        "not_started"
+      ]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "task": {
+      "type": "object",
+      "properties": {
+        "question": {
+          "type": "string",
+          "minLength": 1
+        },
+        "audience": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "assumptions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0
+        }
+      },
+      "required": [
+        "question",
+        "audience",
+        "source",
+        "assumptions"
+      ],
+      "additionalProperties": false
+    },
+    "object": {
+      "type": "object",
+      "properties": {
+        "boundary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "snapshot": {
+          "$ref": "#/$defs/source"
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/source"
+          },
+          "minItems": 0
+        },
+        "dirty_snapshot": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/source"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "boundary",
+        "snapshot",
+        "components",
+        "dirty_snapshot"
+      ],
+      "additionalProperties": false
+    },
+    "assessor": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "agent",
+            "human",
+            "tool"
+          ]
+        },
+        "model": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "runtime": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reasoning_effort": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "kind"
+      ],
+      "additionalProperties": false
+    },
+    "instrument": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        }
+      },
+      "required": [
+        "name",
+        "version",
+        "source"
+      ],
+      "additionalProperties": false
+    },
+    "rubric": {
+      "$ref": "#/$defs/source"
+    },
+    "references": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/source"
+      },
+      "minItems": 1
+    },
+    "conditions": {
+      "type": "object",
+      "properties": {
+        "tools": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0
+        },
+        "permissions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0
+        },
+        "environment": {
+          "type": "string",
+          "minLength": 1
+        },
+        "access_context": {
+          "type": "string",
+          "minLength": 1
+        },
+        "assistance": {
+          "type": "string",
+          "minLength": 1
+        },
+        "budget": {
+          "type": "string",
+          "minLength": 1
+        },
+        "collection_coverage": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "tools",
+        "permissions",
+        "environment",
+        "access_context",
+        "assistance",
+        "budget",
+        "collection_coverage"
+      ],
+      "additionalProperties": false
+    },
+    "science": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/criterion"
+      },
+      "minItems": 1
+    },
+    "research_object": {
+      "type": "object",
+      "properties": {
+        "S": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/criterion"
+          },
+          "minItems": 1
+        },
+        "T": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/criterion"
+          },
+          "minItems": 1
+        },
+        "A": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/criterion"
+          },
+          "minItems": 1
+        },
+        "M": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/criterion"
+          },
+          "minItems": 1
+        },
+        "P": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/criterion"
+          },
+          "minItems": 1
+        },
+        "E": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/criterion"
+          },
+          "minItems": 1
+        },
+        "D": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/criterion"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "S",
+        "T",
+        "A",
+        "M",
+        "P",
+        "E",
+        "D"
+      ],
+      "additionalProperties": false
+    },
+    "metrics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "value": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "unit": {
+            "type": "string",
+            "minLength": 1
+          },
+          "scope": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/source"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "value",
+          "unit",
+          "scope",
+          "source"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    },
+    "interventions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "minLength": 1
+          },
+          "actor": {
+            "type": "string",
+            "minLength": 1
+          },
+          "timing": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/source"
+            },
+            "minItems": 0
+          }
+        },
+        "required": [
+          "description",
+          "actor",
+          "timing",
+          "evidence"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 0
+    },
+    "comparison": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "$ref": "#/$defs/source"
+        },
+        "group_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "arm": {
+          "type": "string",
+          "minLength": 1
+        },
+        "treatment": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/source"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "shared_infrastructure": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0
+        },
+        "isolation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "deviations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0
+        }
+      },
+      "required": [
+        "protocol",
+        "group_id",
+        "arm",
+        "treatment",
+        "shared_infrastructure",
+        "isolation",
+        "deviations"
+      ],
+      "additionalProperties": false
+    },
+    "supersedes": {
+      "type": "string",
+      "minLength": 1
+    },
+    "review_records": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/source"
+      },
+      "minItems": 0
+    }
+  },
+  "required": [
+    "schema_version",
+    "assessment_id",
+    "run_id",
+    "status",
+    "outcome",
+    "created_at",
+    "task",
+    "object",
+    "assessor",
+    "instrument",
+    "rubric",
+    "references",
+    "conditions",
+    "science",
+    "research_object",
+    "metrics",
+    "interventions",
+    "limitations",
+    "review_records"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "source": {
+      "type": "object",
+      "properties": {
+        "uri": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "role": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "uri",
+        "role"
+      ],
+      "additionalProperties": false,
+      "anyOf": [
+        {
+          "required": [
+            "revision"
+          ]
+        },
+        {
+          "required": [
+            "sha256"
+          ]
+        }
+      ]
+    },
+    "evidence": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "producer": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "direct_observation",
+            "agent_assertion",
+            "human_assertion",
+            "tool_record"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "source",
+        "description",
+        "producer",
+        "kind"
+      ],
+      "additionalProperties": false
+    },
+    "observation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "activity": {
+          "enum": [
+            "inspect",
+            "resolve",
+            "retrieve",
+            "construct",
+            "execute",
+            "compare",
+            "independent_reproduce"
+          ]
+        },
+        "status": {
+          "enum": [
+            "completed",
+            "blocked",
+            "not_attempted"
+          ]
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          },
+          "minItems": 0
+        },
+        "barrier": {
+          "type": "string",
+          "minLength": 1
+        },
+        "elapsed_seconds": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "activity",
+        "status",
+        "description",
+        "evidence"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "blocked"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "barrier"
+            ]
+          }
+        }
+      ]
+    },
+    "criterion": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1
+        },
+        "priority": {
+          "enum": [
+            "essential",
+            "important",
+            "supporting",
+            "out_of_scope"
+          ]
+        },
+        "priority_rationale": {
+          "type": "string",
+          "minLength": 1
+        },
+        "direction": {
+          "enum": [
+            "maximize",
+            "balance",
+            "preserve"
+          ]
+        },
+        "checklist_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0
+        },
+        "required_activities": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "inspect",
+              "resolve",
+              "retrieve",
+              "construct",
+              "execute",
+              "compare",
+              "independent_reproduce"
+            ]
+          },
+          "minItems": 1
+        },
+        "observations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/observation"
+          },
+          "minItems": 1
+        },
+        "judgment": {
+          "enum": [
+            "demonstrated",
+            "partial",
+            "not_demonstrated",
+            "unknown",
+            "not_applicable"
+          ]
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "id",
+        "target",
+        "priority",
+        "priority_rationale",
+        "direction",
+        "required_activities",
+        "observations",
+        "judgment",
+        "rationale"
+      ],
+      "additionalProperties": false
+    }
+  }
+}
