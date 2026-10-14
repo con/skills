@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "session_id": "01a13c60-1063-7be3-8eab-fb5df54cb12b",
+  "task_id": null,
+  "project_id": "stamped-ai-research-1a4f32cddd534402",
+  "project_root": "/Users/johnlee/code/CON/stamped-ai-research",
+  "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+  "started_at": "2026-10-14T21:54:45.523510+00:00",
+  "git_commit": "608921b3eab730880e6339d82b3a013accf550d4",
+  "git_dirty": true,
+  "duct_executable": "/Users/johnlee/.local/bin/duct"
+}

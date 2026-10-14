@@ -1,7 +1,6 @@
 # CON Skills
 
-A collection of [Claude Code Agent Skills](https://agentskills.io/) for
-software project maintenance, triage, and automation.
+A collection of [Claude Code Agent Skills](https://agentskills.io/) for software project maintenance, triage, and automation.
 
 ## Included Skills
 
@@ -22,23 +21,36 @@ software project maintenance, triage, and automation.
 | [setup-chromatic](setup-chromatic/) | Set up [Chromatic](https://www.chromatic.com) visual regression testing for a web app with two feeds: Storybook stories (component states) and Playwright snapshots (whole-page states, several viewports). Covers configs, two GitHub Actions workflows, two Chromatic projects, and the README section explaining them. |
 | [tinuous-analyzer](tinuous-analyzer/) | Analyze CI log collections gathered by [con/tinuous](https://github.com/con/tinuous/) to pinpoint when a test started failing, diff environment/dependency changes between passing and failing runs, and recommend investigation steps. |
 
+## STAMPED research skills (experimental)
+
+These five version `0.1.0` skills separate research-object assessment, improvement, creation, and study execution.
+The core is tool-neutral; ReproNim choices belong to its adapter.
+
+| Skill | Scope |
+| --- | --- |
+| [assess-alignment-with-stamped-principles](assess-alignment-with-stamped-principles/) | Inspect an existing object and retain criterion-level evidence, judgments, and checklist responses. |
+| [align-with-stamped-principles](align-with-stamped-principles/) | Improve an existing object through scoped changes and before/after assessment. |
+| [create-stamped-project](create-stamped-project/) | Establish a new research object's boundaries, components, environment, and executable workflow. |
+| [create-repronim-stamped-project](create-repronim-stamped-project/) | Apply a ReproNim-oriented creation adapter with BIDS, data-versioning, and execution choices. |
+| [do-full-research-loop](do-full-research-loop/) | Carry a specified study through analysis, scientific checks, replay, reporting, and assessment. |
+
+The [pinned study and complete skill-development records](docs/stamped-study/README.md) describe three exploratory pairs in preconfigured projects.
+They test additional procedural guidance, not from-empty creation, every skill workflow, HPC, or an imaging pipeline.
+Numerical checks and direct command replay passed on the pinned data, while dependency, native DataLad replay, and one screening-contract failure remain visible.
+No efficacy advantage or complete APM installation contract is established.
+
 ## Installation
 
-Copy or symlink the desired skill directories into `~/.claude/skills/`, or
-point your Claude Code configuration to this repository.
+Copy or symlink the desired skill directories into `~/.claude/skills/`, or point your Claude Code configuration to this repository.
 
 ## Configuration
 
-Some skills require user-specific configuration. Following the
-[Agent Skills specification](https://agentskills.io/specification),
-configuration is handled via documented variables in each skill's
-`SKILL.md` rather than environment variables or config files — the
-Claude agent reads these values and substitutes them at runtime.
+Some skills require user-specific configuration.
+Following the [Agent Skills specification](https://agentskills.io/specification), configuration is handled via documented variables in each skill's `SKILL.md` rather than environment variables or config files — the Claude agent reads these values and substitutes them at runtime.
 
 ### pr-review-update
 
-This skill has a `## Configuration` section at the top of its `SKILL.md`
-with the following variables:
+This skill has a `## Configuration` section at the top of its `SKILL.md` with the following variables:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -51,8 +63,7 @@ Edit the defaults in `pr-review-update/SKILL.md` to match your setup.
 
 ### pr-feedback-review
 
-This skill has a `## Configuration` section at the top of its `SKILL.md`
-with the following variables:
+This skill has a `## Configuration` section at the top of its `SKILL.md` with the following variables:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -64,15 +75,11 @@ Edit the defaults in `pr-feedback-review/SKILL.md` to match your setup.
 
 ### Other skills
 
-The remaining skills use runtime discovery (e.g., `git remote -v`,
-`gh auth status`) and do not require pre-configuration.
+The remaining skills use runtime discovery (e.g., `git remote -v`, `gh auth status`) and do not require pre-configuration.
 
 ## Repo-wide conventions
 
-See [`AGENTS.md`](AGENTS.md) (alias `CLAUDE.md`) for cross-cutting rules
-that apply to every skill in this collection — most notably the rule
-that any skill preparing a pull request must respect the upstream
-project's `PULL_REQUEST_TEMPLATE.md` and `CONTRIBUTING.md`.
+See [`AGENTS.md`](AGENTS.md) (alias `CLAUDE.md`) for cross-cutting rules that apply to every skill in this collection — most notably the rule that any skill preparing a pull request must respect the upstream project's `PULL_REQUEST_TEMPLATE.md` and `CONTRIBUTING.md`.
 
 ## License
 

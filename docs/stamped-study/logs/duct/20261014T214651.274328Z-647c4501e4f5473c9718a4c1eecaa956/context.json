@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "session_id": "01a13c61-8f14-70a2-bade-f4699090bdf7",
+  "task_id": null,
+  "project_id": "skills-workshop-cff63cdda9b81ef6",
+  "project_root": "/Users/johnlee/code/CON/skills-workshop",
+  "working_directory": "/Users/johnlee/code/CON/skills-workshop",
+  "started_at": "2026-10-14T21:46:51.274328+00:00",
+  "git_commit": "f12bc089c6f0cab4f04f1fd2f740d36d199aa7e0",
+  "git_dirty": false,
+  "duct_executable": "/Users/johnlee/.local/bin/duct"
+}

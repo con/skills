@@ -1,0 +1,1321 @@
+{
+  "schema_version": 1,
+  "created_at_utc": "2026-10-14T23:17:55.260079+00:00",
+  "module": "STAMPED skill development and documentation",
+  "path_base": "skills repository root",
+  "native_session_id": "01a13c62-f9f4-7f12-a39c-6d7884eb50fa",
+  "historical_treatment_bundle": {
+    "repository": "/Users/johnlee/code/CON/stamped-ai-research/skills",
+    "commit": "8f3acaa4a7c353b6c8ea6928c278478f95328fc5",
+    "skills": {
+      "align-with-stamped-principles": {
+        "path": "align-with-stamped-principles",
+        "tree_sha256": "786a9e25a6b3e08634b3a4511171684ee19166c6b8609657d4212c8e816876e4"
+      },
+      "assess-alignment-with-stamped-principles": {
+        "path": "assess-alignment-with-stamped-principles",
+        "tree_sha256": "a8e26ff0e8583d107dad32e97116e921cd61e0b22acd157a7bc02e2dca1c2d16"
+      },
+      "create-repronim-stamped-project": {
+        "path": "create-repronim-stamped-project",
+        "tree_sha256": "0ccb9d4c96e38b6a90fbdd0a3597a9052430c3d6fe523a49a36ab52e7f09bf66"
+      },
+      "create-stamped-project": {
+        "path": "create-stamped-project",
+        "tree_sha256": "5b8a171b3853d427c3edda0ce867376a6d3f6fefd5c20775d65e6b690cc2e7a9"
+      },
+      "do-full-research-loop": {
+        "path": "do-full-research-loop",
+        "tree_sha256": "a398909d20dd7ff914f06f5c9f367909bc4c237ef42a7b582ba2aa75c2501315"
+      }
+    }
+  },
+  "handoff": {
+    "path": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/native-finalize-inputs.json",
+    "sha256": "b5d63ef3a0fe6cbcc107f188267f1a4e7f9ba32a40e2e614b3d6293dfc20bd8f",
+    "all_six_arms_stopped": true,
+    "evidence": "Coordinator handoff records six completed outcomes with finish timestamps."
+  },
+  "study_input_identities": [
+    {
+      "path": "research/REPORT.md",
+      "sha256": "afd5b9bf1ade42b2523ab396ce1c5635b9c73cefdfb38105aef81c9ed3df4bc6",
+      "bytes": 22378
+    },
+    {
+      "path": "research/skill-drafts/design-and-validation.md",
+      "sha256": "f87e1bde6a399df335750c9ce8577a505cda1d77637480bfadf39e8a5399c70a",
+      "bytes": 8203
+    },
+    {
+      "path": "research/skill-candidates/REVIEW.md",
+      "sha256": "a36712e7af2ecf38372eba2400abb1ed05dd04f69b7d4810d5f6684d5603d9df",
+      "bytes": 15267
+    },
+    {
+      "path": "research/mixed-gambles-design/evaluator/conventional-datalad-note.md",
+      "sha256": "ff76e5c262dbaf1b37329bf5fa270b2b043bd1aee8e8d59f5890f6077eb64a19",
+      "bytes": 5138
+    },
+    {
+      "path": "research/logs/log-export-plan-02.json",
+      "sha256": "7d23aa77215b2b005d8c83d3c21a365a46b757f7166f98773818ec44f1dbfcf2",
+      "bytes": 313782
+    },
+    {
+      "path": "research/logs/log-export-report-02.json",
+      "sha256": "b2c9a285ecb94b4c88b228822f60cb5718f0cc2d1452176fee3dc5a7615fd9ff",
+      "bytes": 252496
+    },
+    {
+      "path": ".setup/mixed-stage01-manifest.json",
+      "sha256": "9d957b9f036dbcd82d08a29c2181688c3f8ecf3c2cf9981724f042fc5bdaebfc",
+      "bytes": 26222
+    },
+    {
+      "path": "research/mixed-gambles-design/evaluator/stage-01/assessment.json",
+      "sha256": "7481c0a07ab8ee82dd13ef124666ff6deb017700887f43a977636bf6e7b5fce0",
+      "bytes": 23752
+    },
+    {
+      "path": "research/mixed-gambles-design/evaluator/stage-01/review.md",
+      "sha256": "d7a6fd24688ee58d843fc98a8ca9dca57fd0b03ae0c6a6bc8c16f78cb531829d",
+      "bytes": 3983
+    },
+    {
+      "path": "research/mixed-gambles-design/evaluator/stage-01/pair-review.json",
+      "sha256": "95cd955f3ef038fd6a188fab37bc03f41a8907b83badfb660e0ada88b879ad6f",
+      "bytes": 927
+    },
+    {
+      "path": "research/mixed-gambles-design/evaluator/stage-02/assessment.json",
+      "sha256": "be41ba2194ae4afa4ef063e9906ff1d9481d52676320605567b2f623382bb691",
+      "bytes": 24413
+    },
+    {
+      "path": "research/mixed-gambles-design/evaluator/stage-02/review.md",
+      "sha256": "dfaa55ea4fed3620d9ddb767cba49cd251e16e20a149d37a28f3c7a8666fac6b",
+      "bytes": 3521
+    },
+    {
+      "path": "research/mixed-gambles-design/evaluator/stage-02/pair-review.json",
+      "sha256": "47b7eacd5ac40970375bc4c9568e27e2583cc430869f0e202fecb082dbbb66ce",
+      "bytes": 951
+    },
+    {
+      "path": "research/mixed-gambles-design/evaluator/stage-03/assessment.json",
+      "sha256": "3617219d7e21ec949cabb7ee8a9e554b37df2f7972d843277b6d6e014cc0d0f5",
+      "bytes": 33318
+    },
+    {
+      "path": "research/mixed-gambles-design/evaluator/stage-03/review.md",
+      "sha256": "3d4f253c5585be2169c16ee9fdffadd16e5ee6a91dc83375d8db59bba2d75719",
+      "bytes": 7182
+    },
+    {
+      "path": "research/mixed-gambles-design/evaluator/stage-03/pair-review.json",
+      "sha256": "8fa644b275bbd1906fc823f45477fb5c09503d7a939c468a0cfdfc20ae3d63be",
+      "bytes": 1100
+    },
+    {
+      "path": ".setup/mixed-stage03-manifest.json",
+      "sha256": "44fd552142fc73e1103cfe0e03e5672a276eee2adcff761ee2ffd86210b5c971",
+      "bytes": 35482
+    }
+  ],
+  "coordinator_publication": {
+    "repository": "https://github.com/leej3/stamped-ai-research",
+    "branch": "codex/stamped-poster-study",
+    "status": "Checked study inputs are local handoff bytes; their final publication/retrieval remains coordinator work."
+  },
+  "counts": {
+    "captures": 18,
+    "files": 90,
+    "bytes": 291226,
+    "plan_02_captures": 17,
+    "later_completed_captures": 1,
+    "nonzero_exit_captures": 2,
+    "missing_streams": 0,
+    "empty_streams": 8
+  },
+  "boundaries": [
+    "Every existing file in the completed intermediate skill-development duct exports is preserved byte-for-byte, including failed attempts, empty streams, metadata and resource samples.",
+    "No stdin was captured or reconstructed.",
+    "Local duct resource samples describe monitored local processes, not remote model compute.",
+    "The running outer native documentation invocation is not included or complete; the coordinator will export it after stop in a separate curation commit.",
+    "Native transcripts, user configuration, credentials, raw source retrieval trees and private Workshop memory are outside this delivery."
+  ],
+  "captures": [
+    {
+      "capture_id": "20261014T214543.724426Z-71868ac250a144cdb3315ed92a498ee8",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/skills-workshop-cff63cdda9b81ef6/20261014T214543.724426Z-71868ac250a144cdb3315ed92a498ee8",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214543.724426Z-71868ac250a144cdb3315ed92a498ee8",
+      "final_directory": "docs/stamped-study/logs/duct/20261014T214543.724426Z-71868ac250a144cdb3315ed92a498ee8",
+      "export_plan_02_coverage": true,
+      "verification": "Matches plan 02, report 02, central source and intermediate export.",
+      "exit_code": 0,
+      "started_at_unix": 1792014343.927935,
+      "finished_at_unix": 1792014344.851684,
+      "streams": {
+        "stdout": {
+          "path": "docs/stamped-study/logs/duct/20261014T214543.724426Z-71868ac250a144cdb3315ed92a498ee8/run_stdout",
+          "status": "present"
+        },
+        "stderr": {
+          "path": "docs/stamped-study/logs/duct/20261014T214543.724426Z-71868ac250a144cdb3315ed92a498ee8/run_stderr",
+          "status": "present"
+        }
+      },
+      "missing_named_outputs_at_source": [],
+      "empty_files": [],
+      "stdin": "not captured; no file invented"
+    },
+    {
+      "capture_id": "20261014T214543.724426Z-9a80ab30d1a249c1a879564b1efc6a21",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/skills-workshop-cff63cdda9b81ef6/20261014T214543.724426Z-9a80ab30d1a249c1a879564b1efc6a21",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214543.724426Z-9a80ab30d1a249c1a879564b1efc6a21",
+      "final_directory": "docs/stamped-study/logs/duct/20261014T214543.724426Z-9a80ab30d1a249c1a879564b1efc6a21",
+      "export_plan_02_coverage": true,
+      "verification": "Matches plan 02, report 02, central source and intermediate export.",
+      "exit_code": 0,
+      "started_at_unix": 1792014343.928107,
+      "finished_at_unix": 1792014344.258948,
+      "streams": {
+        "stdout": {
+          "path": "docs/stamped-study/logs/duct/20261014T214543.724426Z-9a80ab30d1a249c1a879564b1efc6a21/run_stdout",
+          "status": "present"
+        },
+        "stderr": {
+          "path": "docs/stamped-study/logs/duct/20261014T214543.724426Z-9a80ab30d1a249c1a879564b1efc6a21/run_stderr",
+          "status": "present"
+        }
+      },
+      "missing_named_outputs_at_source": [],
+      "empty_files": [],
+      "stdin": "not captured; no file invented"
+    },
+    {
+      "capture_id": "20261014T214651.274328Z-12c8243dd5744d78a7cee0bcd1742ba9",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/skills-workshop-cff63cdda9b81ef6/20261014T214651.274328Z-12c8243dd5744d78a7cee0bcd1742ba9",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214651.274328Z-12c8243dd5744d78a7cee0bcd1742ba9",
+      "final_directory": "docs/stamped-study/logs/duct/20261014T214651.274328Z-12c8243dd5744d78a7cee0bcd1742ba9",
+      "export_plan_02_coverage": true,
+      "verification": "Matches plan 02, report 02, central source and intermediate export.",
+      "exit_code": 0,
+      "started_at_unix": 1792014411.458625,
+      "finished_at_unix": 1792014411.758399,
+      "streams": {
+        "stdout": {
+          "path": "docs/stamped-study/logs/duct/20261014T214651.274328Z-12c8243dd5744d78a7cee0bcd1742ba9/run_stdout",
+          "status": "present"
+        },
+        "stderr": {
+          "path": "docs/stamped-study/logs/duct/20261014T214651.274328Z-12c8243dd5744d78a7cee0bcd1742ba9/run_stderr",
+          "status": "present"
+        }
+      },
+      "missing_named_outputs_at_source": [],
+      "empty_files": [],
+      "stdin": "not captured; no file invented"
+    },
+    {
+      "capture_id": "20261014T214651.274328Z-647c4501e4f5473c9718a4c1eecaa956",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/skills-workshop-cff63cdda9b81ef6/20261014T214651.274328Z-647c4501e4f5473c9718a4c1eecaa956",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214651.274328Z-647c4501e4f5473c9718a4c1eecaa956",
+      "final_directory": "docs/stamped-study/logs/duct/20261014T214651.274328Z-647c4501e4f5473c9718a4c1eecaa956",
+      "export_plan_02_coverage": true,
+      "verification": "Matches plan 02, report 02, central source and intermediate export.",
+      "exit_code": 0,
+      "started_at_unix": 1792014411.4590452,
+      "finished_at_unix": 1792014412.268969,
+      "streams": {
+        "stdout": {
+          "path": "docs/stamped-study/logs/duct/20261014T214651.274328Z-647c4501e4f5473c9718a4c1eecaa956/run_stdout",
+          "status": "present"
+        },
+        "stderr": {
+          "path": "docs/stamped-study/logs/duct/20261014T214651.274328Z-647c4501e4f5473c9718a4c1eecaa956/run_stderr",
+          "status": "present"
+        }
+      },
+      "missing_named_outputs_at_source": [],
+      "empty_files": [],
+      "stdin": "not captured; no file invented"
+    },
+    {
+      "capture_id": "20261014T214651.274328Z-cae7b1ace90f44f798dcc6f079512e27",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/skills-workshop-cff63cdda9b81ef6/20261014T214651.274328Z-cae7b1ace90f44f798dcc6f079512e27",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214651.274328Z-cae7b1ace90f44f798dcc6f079512e27",
+      "final_directory": "docs/stamped-study/logs/duct/20261014T214651.274328Z-cae7b1ace90f44f798dcc6f079512e27",
+      "export_plan_02_coverage": true,
+      "verification": "Matches plan 02, report 02, central source and intermediate export.",
+      "exit_code": 0,
+      "started_at_unix": 1792014411.458626,
+      "finished_at_unix": 1792014425.8139489,
+      "streams": {
+        "stdout": {
+          "path": "docs/stamped-study/logs/duct/20261014T214651.274328Z-cae7b1ace90f44f798dcc6f079512e27/run_stdout",
+          "status": "present"
+        },
+        "stderr": {
+          "path": "docs/stamped-study/logs/duct/20261014T214651.274328Z-cae7b1ace90f44f798dcc6f079512e27/run_stderr",
+          "status": "present"
+        }
+      },
+      "missing_named_outputs_at_source": [],
+      "empty_files": [],
+      "stdin": "not captured; no file invented"
+    },
+    {
+      "capture_id": "20261014T214651.274334Z-0b5fab69cde540ae854d47d080648809",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/skills-workshop-cff63cdda9b81ef6/20261014T214651.274334Z-0b5fab69cde540ae854d47d080648809",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214651.274334Z-0b5fab69cde540ae854d47d080648809",
+      "final_directory": "docs/stamped-study/logs/duct/20261014T214651.274334Z-0b5fab69cde540ae854d47d080648809",
+      "export_plan_02_coverage": true,
+      "verification": "Matches plan 02, report 02, central source and intermediate export.",
+      "exit_code": 0,
+      "started_at_unix": 1792014411.459361,
+      "finished_at_unix": 1792014416.3969011,
+      "streams": {
+        "stdout": {
+          "path": "docs/stamped-study/logs/duct/20261014T214651.274334Z-0b5fab69cde540ae854d47d080648809/run_stdout",
+          "status": "present"
+        },
+        "stderr": {
+          "path": "docs/stamped-study/logs/duct/20261014T214651.274334Z-0b5fab69cde540ae854d47d080648809/run_stderr",
+          "status": "present"
+        }
+      },
+      "missing_named_outputs_at_source": [],
+      "empty_files": [],
+      "stdin": "not captured; no file invented"
+    },
+    {
+      "capture_id": "20261014T214716.596069Z-a039be5342bc48d2b1dd64d09ab01cb3",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T214716.596069Z-a039be5342bc48d2b1dd64d09ab01cb3",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214716.596069Z-a039be5342bc48d2b1dd64d09ab01cb3",
+      "final_directory": "docs/stamped-study/logs/duct/20261014T214716.596069Z-a039be5342bc48d2b1dd64d09ab01cb3",
+      "export_plan_02_coverage": true,
+      "verification": "Matches plan 02, report 02, central source and intermediate export.",
+      "exit_code": 0,
+      "started_at_unix": 1792014436.6943989,
+      "finished_at_unix": 1792014438.597143,
+      "streams": {
+        "stdout": {
+          "path": "docs/stamped-study/logs/duct/20261014T214716.596069Z-a039be5342bc48d2b1dd64d09ab01cb3/run_stdout",
+          "status": "present"
+        },
+        "stderr": {
+          "path": "docs/stamped-study/logs/duct/20261014T214716.596069Z-a039be5342bc48d2b1dd64d09ab01cb3/run_stderr",
+          "status": "empty"
+        }
+      },
+      "missing_named_outputs_at_source": [],
+      "empty_files": [
+        "run_stderr"
+      ],
+      "stdin": "not captured; no file invented"
+    },
+    {
+      "capture_id": "20261014T214744.869362Z-24ed2bf3b94e4879b8b4d45ac1133da8",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T214744.869362Z-24ed2bf3b94e4879b8b4d45ac1133da8",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214744.869362Z-24ed2bf3b94e4879b8b4d45ac1133da8",
+      "final_directory": "docs/stamped-study/logs/duct/20261014T214744.869362Z-24ed2bf3b94e4879b8b4d45ac1133da8",
+      "export_plan_02_coverage": true,
+      "verification": "Matches plan 02, report 02, central source and intermediate export.",
+      "exit_code": 0,
+      "started_at_unix": 1792014464.993233,
+      "finished_at_unix": 1792014466.303724,
+      "streams": {
+        "stdout": {
+          "path": "docs/stamped-study/logs/duct/20261014T214744.869362Z-24ed2bf3b94e4879b8b4d45ac1133da8/run_stdout",
+          "status": "present"
+        },
+        "stderr": {
+          "path": "docs/stamped-study/logs/duct/20261014T214744.869362Z-24ed2bf3b94e4879b8b4d45ac1133da8/run_stderr",
+          "status": "empty"
+        }
+      },
+      "missing_named_outputs_at_source": [],
+      "empty_files": [
+        "run_stderr"
+      ],
+      "stdin": "not captured; no file invented"
+    },
+    {
+      "capture_id": "20261014T214801.681185Z-69a2547530b24a6684005e97311787a0",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T214801.681185Z-69a2547530b24a6684005e97311787a0",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214801.681185Z-69a2547530b24a6684005e97311787a0",
+      "final_directory": "docs/stamped-study/logs/duct/20261014T214801.681185Z-69a2547530b24a6684005e97311787a0",
+      "export_plan_02_coverage": true,
+      "verification": "Matches plan 02, report 02, central source and intermediate export.",
+      "exit_code": 0,
+      "started_at_unix": 1792014481.768078,
+      "finished_at_unix": 1792014495.4205709,
+      "streams": {
+        "stdout": {
+          "path": "docs/stamped-study/logs/duct/20261014T214801.681185Z-69a2547530b24a6684005e97311787a0/run_stdout",
+          "status": "present"
+        },
+        "stderr": {
+          "path": "docs/stamped-study/logs/duct/20261014T214801.681185Z-69a2547530b24a6684005e97311787a0/run_stderr",
+          "status": "present"
+        }
+      },
+      "missing_named_outputs_at_source": [],
+      "empty_files": [],
+      "stdin": "not captured; no file invented"
+    },
+    {
+      "capture_id": "20261014T214845.829354Z-ffad117679714978baeb5c05ca24e47d",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T214845.829354Z-ffad117679714978baeb5c05ca24e47d",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214845.829354Z-ffad117679714978baeb5c05ca24e47d",
+      "final_directory": "docs/stamped-study/logs/duct/20261014T214845.829354Z-ffad117679714978baeb5c05ca24e47d",
+      "export_plan_02_coverage": true,
+      "verification": "Matches plan 02, report 02, central source and intermediate export.",
+      "exit_code": 0,
+      "started_at_unix": 1792014525.923881,
+      "finished_at_unix": 1792014571.408111,
+      "streams": {
+        "stdout": {
+          "path": "docs/stamped-study/logs/duct/20261014T214845.829354Z-ffad117679714978baeb5c05ca24e47d/run_stdout",
+          "status": "present"
+        },
+        "stderr": {
+          "path": "docs/stamped-study/logs/duct/20261014T214845.829354Z-ffad117679714978baeb5c05ca24e47d/run_stderr",
+          "status": "present"
+        }
+      },
+      "missing_named_outputs_at_source": [],
+      "empty_files": [],
+      "stdin": "not captured; no file invented"
+    },
+    {
+      "capture_id": "20261014T214923.863236Z-688e39f7ac344e18a4425f8aa077ea63",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T214923.863236Z-688e39f7ac344e18a4425f8aa077ea63",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214923.863236Z-688e39f7ac344e18a4425f8aa077ea63",
+      "final_directory": "docs/stamped-study/logs/duct/20261014T214923.863236Z-688e39f7ac344e18a4425f8aa077ea63",
+      "export_plan_02_coverage": true,
+      "verification": "Matches plan 02, report 02, central source and intermediate export.",
+      "exit_code": 1,
+      "started_at_unix": 1792014563.961202,
+      "finished_at_unix": 1792014564.7176058,
+      "streams": {
+        "stdout": {
+          "path": "docs/stamped-study/logs/duct/20261014T214923.863236Z-688e39f7ac344e18a4425f8aa077ea63/run_stdout",
+          "status": "empty"
+        },
+        "stderr": {
+          "path": "docs/stamped-study/logs/duct/20261014T214923.863236Z-688e39f7ac344e18a4425f8aa077ea63/run_stderr",
+          "status": "present"
+        }
+      },
+      "missing_named_outputs_at_source": [],
+      "empty_files": [
+        "run_stdout"
+      ],
+      "stdin": "not captured; no file invented"
+    },
+    {
+      "capture_id": "20261014T215027.128095Z-37d06d249f4c42fd9fa059d02e59719d",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T215027.128095Z-37d06d249f4c42fd9fa059d02e59719d",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T215027.128095Z-37d06d249f4c42fd9fa059d02e59719d",
+      "final_directory": "docs/stamped-study/logs/duct/20261014T215027.128095Z-37d06d249f4c42fd9fa059d02e59719d",
+      "export_plan_02_coverage": true,
+      "verification": "Matches plan 02, report 02, central source and intermediate export.",
+      "exit_code": 0,
+      "started_at_unix": 1792014627.227988,
+      "finished_at_unix": 1792014669.007605,
+      "streams": {
+        "stdout": {
+          "path": "docs/stamped-study/logs/duct/20261014T215027.128095Z-37d06d249f4c42fd9fa059d02e59719d/run_stdout",
+          "status": "present"
+        },
+        "stderr": {
+          "path": "docs/stamped-study/logs/duct/20261014T215027.128095Z-37d06d249f4c42fd9fa059d02e59719d/run_stderr",
+          "status": "present"
+        }
+      },
+      "missing_named_outputs_at_source": [],
+      "empty_files": [],
+      "stdin": "not captured; no file invented"
+    },
+    {
+      "capture_id": "20261014T215348.835940Z-8aa0c6ab98bf489ca0f2370ac3c66405",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T215348.835940Z-8aa0c6ab98bf489ca0f2370ac3c66405",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T215348.835940Z-8aa0c6ab98bf489ca0f2370ac3c66405",
+      "final_directory": "docs/stamped-study/logs/duct/20261014T215348.835940Z-8aa0c6ab98bf489ca0f2370ac3c66405",
+      "export_plan_02_coverage": true,
+      "verification": "Matches plan 02, report 02, central source and intermediate export.",
+      "exit_code": 0,
+      "started_at_unix": 1792014828.915881,
+      "finished_at_unix": 1792014829.1227908,
+      "streams": {
+        "stdout": {
+          "path": "docs/stamped-study/logs/duct/20261014T215348.835940Z-8aa0c6ab98bf489ca0f2370ac3c66405/run_stdout",
+          "status": "present"
+        },
+        "stderr": {
+          "path": "docs/stamped-study/logs/duct/20261014T215348.835940Z-8aa0c6ab98bf489ca0f2370ac3c66405/run_stderr",
+          "status": "empty"
+        }
+      },
+      "missing_named_outputs_at_source": [],
+      "empty_files": [
+        "run_stderr"
+      ],
+      "stdin": "not captured; no file invented"
+    },
+    {
+      "capture_id": "20261014T215349.271770Z-26befe5641e5461386717ccd9487d497",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T215349.271770Z-26befe5641e5461386717ccd9487d497",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T215349.271770Z-26befe5641e5461386717ccd9487d497",
+      "final_directory": "docs/stamped-study/logs/duct/20261014T215349.271770Z-26befe5641e5461386717ccd9487d497",
+      "export_plan_02_coverage": true,
+      "verification": "Matches plan 02, report 02, central source and intermediate export.",
+      "exit_code": 0,
+      "started_at_unix": 1792014829.357368,
+      "finished_at_unix": 1792014829.394783,
+      "streams": {
+        "stdout": {
+          "path": "docs/stamped-study/logs/duct/20261014T215349.271770Z-26befe5641e5461386717ccd9487d497/run_stdout",
+          "status": "present"
+        },
+        "stderr": {
+          "path": "docs/stamped-study/logs/duct/20261014T215349.271770Z-26befe5641e5461386717ccd9487d497/run_stderr",
+          "status": "empty"
+        }
+      },
+      "missing_named_outputs_at_source": [],
+      "empty_files": [
+        "run_stderr"
+      ],
+      "stdin": "not captured; no file invented"
+    },
+    {
+      "capture_id": "20261014T215349.549016Z-911a70f169f34baebf086aa8f0bc4f49",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T215349.549016Z-911a70f169f34baebf086aa8f0bc4f49",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T215349.549016Z-911a70f169f34baebf086aa8f0bc4f49",
+      "final_directory": "docs/stamped-study/logs/duct/20261014T215349.549016Z-911a70f169f34baebf086aa8f0bc4f49",
+      "export_plan_02_coverage": true,
+      "verification": "Matches plan 02, report 02, central source and intermediate export.",
+      "exit_code": 1,
+      "started_at_unix": 1792014829.638653,
+      "finished_at_unix": 1792014829.6635818,
+      "streams": {
+        "stdout": {
+          "path": "docs/stamped-study/logs/duct/20261014T215349.549016Z-911a70f169f34baebf086aa8f0bc4f49/run_stdout",
+          "status": "present"
+        },
+        "stderr": {
+          "path": "docs/stamped-study/logs/duct/20261014T215349.549016Z-911a70f169f34baebf086aa8f0bc4f49/run_stderr",
+          "status": "empty"
+        }
+      },
+      "missing_named_outputs_at_source": [],
+      "empty_files": [
+        "run_stderr",
+        "run_usage.jsonl"
+      ],
+      "stdin": "not captured; no file invented"
+    },
+    {
+      "capture_id": "20261014T215419.894544Z-523fd686cfd142708ecee458c3788454",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T215419.894544Z-523fd686cfd142708ecee458c3788454",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T215419.894544Z-523fd686cfd142708ecee458c3788454",
+      "final_directory": "docs/stamped-study/logs/duct/20261014T215419.894544Z-523fd686cfd142708ecee458c3788454",
+      "export_plan_02_coverage": true,
+      "verification": "Matches plan 02, report 02, central source and intermediate export.",
+      "exit_code": 0,
+      "started_at_unix": 1792014859.998524,
+      "finished_at_unix": 1792014860.055498,
+      "streams": {
+        "stdout": {
+          "path": "docs/stamped-study/logs/duct/20261014T215419.894544Z-523fd686cfd142708ecee458c3788454/run_stdout",
+          "status": "present"
+        },
+        "stderr": {
+          "path": "docs/stamped-study/logs/duct/20261014T215419.894544Z-523fd686cfd142708ecee458c3788454/run_stderr",
+          "status": "empty"
+        }
+      },
+      "missing_named_outputs_at_source": [],
+      "empty_files": [
+        "run_stderr"
+      ],
+      "stdin": "not captured; no file invented"
+    },
+    {
+      "capture_id": "20261014T215445.523510Z-d3b4fe993200437a816d2821063db8a6",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T215445.523510Z-d3b4fe993200437a816d2821063db8a6",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T215445.523510Z-d3b4fe993200437a816d2821063db8a6",
+      "final_directory": "docs/stamped-study/logs/duct/20261014T215445.523510Z-d3b4fe993200437a816d2821063db8a6",
+      "export_plan_02_coverage": true,
+      "verification": "Matches plan 02, report 02, central source and intermediate export.",
+      "exit_code": 0,
+      "started_at_unix": 1792014885.626525,
+      "finished_at_unix": 1792014995.415189,
+      "streams": {
+        "stdout": {
+          "path": "docs/stamped-study/logs/duct/20261014T215445.523510Z-d3b4fe993200437a816d2821063db8a6/run_stdout",
+          "status": "present"
+        },
+        "stderr": {
+          "path": "docs/stamped-study/logs/duct/20261014T215445.523510Z-d3b4fe993200437a816d2821063db8a6/run_stderr",
+          "status": "present"
+        }
+      },
+      "missing_named_outputs_at_source": [],
+      "empty_files": [],
+      "stdin": "not captured; no file invented"
+    },
+    {
+      "capture_id": "20261014T230900.378834Z-e531da85ee844eb8a9c7b79d79f9f5c9",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T230900.378834Z-e531da85ee844eb8a9c7b79d79f9f5c9",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T230900.378834Z-e531da85ee844eb8a9c7b79d79f9f5c9",
+      "final_directory": "docs/stamped-study/logs/duct/20261014T230900.378834Z-e531da85ee844eb8a9c7b79d79f9f5c9",
+      "export_plan_02_coverage": false,
+      "verification": "Completed later stage-three provenance audit; absent from plan/report 02. Central source from retained run_info.json matches intermediate export exactly.",
+      "exit_code": 0,
+      "started_at_unix": 1792019340.5453691,
+      "finished_at_unix": 1792019340.877631,
+      "streams": {
+        "stdout": {
+          "path": "docs/stamped-study/logs/duct/20261014T230900.378834Z-e531da85ee844eb8a9c7b79d79f9f5c9/run_stdout",
+          "status": "present"
+        },
+        "stderr": {
+          "path": "docs/stamped-study/logs/duct/20261014T230900.378834Z-e531da85ee844eb8a9c7b79d79f9f5c9/run_stderr",
+          "status": "empty"
+        }
+      },
+      "missing_named_outputs_at_source": [],
+      "empty_files": [
+        "run_stderr"
+      ],
+      "stdin": "not captured; no file invented"
+    }
+  ],
+  "files": [
+    {
+      "capture_id": "20261014T214543.724426Z-71868ac250a144cdb3315ed92a498ee8",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/skills-workshop-cff63cdda9b81ef6/20261014T214543.724426Z-71868ac250a144cdb3315ed92a498ee8/context.json",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214543.724426Z-71868ac250a144cdb3315ed92a498ee8/context.json",
+      "path": "docs/stamped-study/logs/duct/20261014T214543.724426Z-71868ac250a144cdb3315ed92a498ee8/context.json",
+      "sha256": "e19f48cd4b199dfe8011bd20c8e4b9d112781c277eab0ae71ebade074263d1b9",
+      "bytes": 469
+    },
+    {
+      "capture_id": "20261014T214543.724426Z-71868ac250a144cdb3315ed92a498ee8",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/skills-workshop-cff63cdda9b81ef6/20261014T214543.724426Z-71868ac250a144cdb3315ed92a498ee8/run_info.json",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214543.724426Z-71868ac250a144cdb3315ed92a498ee8/run_info.json",
+      "path": "docs/stamped-study/logs/duct/20261014T214543.724426Z-71868ac250a144cdb3315ed92a498ee8/run_info.json",
+      "sha256": "5cbb318cd30431b7a67ba2187829007298bce5ec4919690db5a4b243f2f76e99",
+      "bytes": 2230
+    },
+    {
+      "capture_id": "20261014T214543.724426Z-71868ac250a144cdb3315ed92a498ee8",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/skills-workshop-cff63cdda9b81ef6/20261014T214543.724426Z-71868ac250a144cdb3315ed92a498ee8/run_stderr",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214543.724426Z-71868ac250a144cdb3315ed92a498ee8/run_stderr",
+      "path": "docs/stamped-study/logs/duct/20261014T214543.724426Z-71868ac250a144cdb3315ed92a498ee8/run_stderr",
+      "sha256": "7c38675ec1ff5ee0a18976ac5b191f93706796737fa3267b5759e55af99f77fb",
+      "bytes": 71
+    },
+    {
+      "capture_id": "20261014T214543.724426Z-71868ac250a144cdb3315ed92a498ee8",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/skills-workshop-cff63cdda9b81ef6/20261014T214543.724426Z-71868ac250a144cdb3315ed92a498ee8/run_stdout",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214543.724426Z-71868ac250a144cdb3315ed92a498ee8/run_stdout",
+      "path": "docs/stamped-study/logs/duct/20261014T214543.724426Z-71868ac250a144cdb3315ed92a498ee8/run_stdout",
+      "sha256": "b203915c8ae56604283bbb70f9fa61d0c6e0266352ff497692c20d83e13a0129",
+      "bytes": 876
+    },
+    {
+      "capture_id": "20261014T214543.724426Z-71868ac250a144cdb3315ed92a498ee8",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/skills-workshop-cff63cdda9b81ef6/20261014T214543.724426Z-71868ac250a144cdb3315ed92a498ee8/run_usage.jsonl",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214543.724426Z-71868ac250a144cdb3315ed92a498ee8/run_usage.jsonl",
+      "path": "docs/stamped-study/logs/duct/20261014T214543.724426Z-71868ac250a144cdb3315ed92a498ee8/run_usage.jsonl",
+      "sha256": "227a13bbf962cfcaa802e3bf10cbc23858fd0ade75b0eb2dc61bc874e6ba76dd",
+      "bytes": 447
+    },
+    {
+      "capture_id": "20261014T214543.724426Z-9a80ab30d1a249c1a879564b1efc6a21",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/skills-workshop-cff63cdda9b81ef6/20261014T214543.724426Z-9a80ab30d1a249c1a879564b1efc6a21/context.json",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214543.724426Z-9a80ab30d1a249c1a879564b1efc6a21/context.json",
+      "path": "docs/stamped-study/logs/duct/20261014T214543.724426Z-9a80ab30d1a249c1a879564b1efc6a21/context.json",
+      "sha256": "e19f48cd4b199dfe8011bd20c8e4b9d112781c277eab0ae71ebade074263d1b9",
+      "bytes": 469
+    },
+    {
+      "capture_id": "20261014T214543.724426Z-9a80ab30d1a249c1a879564b1efc6a21",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/skills-workshop-cff63cdda9b81ef6/20261014T214543.724426Z-9a80ab30d1a249c1a879564b1efc6a21/run_info.json",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214543.724426Z-9a80ab30d1a249c1a879564b1efc6a21/run_info.json",
+      "path": "docs/stamped-study/logs/duct/20261014T214543.724426Z-9a80ab30d1a249c1a879564b1efc6a21/run_info.json",
+      "sha256": "fffa4852f0640694d5ccaadea6df9112140c175aed01c6ce020abb79221f8215",
+      "bytes": 2218
+    },
+    {
+      "capture_id": "20261014T214543.724426Z-9a80ab30d1a249c1a879564b1efc6a21",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/skills-workshop-cff63cdda9b81ef6/20261014T214543.724426Z-9a80ab30d1a249c1a879564b1efc6a21/run_stderr",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214543.724426Z-9a80ab30d1a249c1a879564b1efc6a21/run_stderr",
+      "path": "docs/stamped-study/logs/duct/20261014T214543.724426Z-9a80ab30d1a249c1a879564b1efc6a21/run_stderr",
+      "sha256": "9b2c049bc4103cbf1abd40d05f99a9b639aba5ffbe6e09a6d7475b81802b45a4",
+      "bytes": 73
+    },
+    {
+      "capture_id": "20261014T214543.724426Z-9a80ab30d1a249c1a879564b1efc6a21",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/skills-workshop-cff63cdda9b81ef6/20261014T214543.724426Z-9a80ab30d1a249c1a879564b1efc6a21/run_stdout",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214543.724426Z-9a80ab30d1a249c1a879564b1efc6a21/run_stdout",
+      "path": "docs/stamped-study/logs/duct/20261014T214543.724426Z-9a80ab30d1a249c1a879564b1efc6a21/run_stdout",
+      "sha256": "6e080b179ccce88b3a740440e133f0bcff3f77dfc98e2e91aca2338bbd56596a",
+      "bytes": 96
+    },
+    {
+      "capture_id": "20261014T214543.724426Z-9a80ab30d1a249c1a879564b1efc6a21",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/skills-workshop-cff63cdda9b81ef6/20261014T214543.724426Z-9a80ab30d1a249c1a879564b1efc6a21/run_usage.jsonl",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214543.724426Z-9a80ab30d1a249c1a879564b1efc6a21/run_usage.jsonl",
+      "path": "docs/stamped-study/logs/duct/20261014T214543.724426Z-9a80ab30d1a249c1a879564b1efc6a21/run_usage.jsonl",
+      "sha256": "1abb3fd85785348c480b16211ab2874499ef39d5ac81c304b310852368a16d09",
+      "bytes": 449
+    },
+    {
+      "capture_id": "20261014T214651.274328Z-12c8243dd5744d78a7cee0bcd1742ba9",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/skills-workshop-cff63cdda9b81ef6/20261014T214651.274328Z-12c8243dd5744d78a7cee0bcd1742ba9/context.json",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214651.274328Z-12c8243dd5744d78a7cee0bcd1742ba9/context.json",
+      "path": "docs/stamped-study/logs/duct/20261014T214651.274328Z-12c8243dd5744d78a7cee0bcd1742ba9/context.json",
+      "sha256": "a678c635d36347677dda4dc9ae6cede15dbb682f768ffe5b0427c105decbc8bf",
+      "bytes": 469
+    },
+    {
+      "capture_id": "20261014T214651.274328Z-12c8243dd5744d78a7cee0bcd1742ba9",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/skills-workshop-cff63cdda9b81ef6/20261014T214651.274328Z-12c8243dd5744d78a7cee0bcd1742ba9/run_info.json",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214651.274328Z-12c8243dd5744d78a7cee0bcd1742ba9/run_info.json",
+      "path": "docs/stamped-study/logs/duct/20261014T214651.274328Z-12c8243dd5744d78a7cee0bcd1742ba9/run_info.json",
+      "sha256": "fe2093c71228feabfc5eb6438ec28626a8676abda9f7ea65f90dc9198737b430",
+      "bytes": 2238
+    },
+    {
+      "capture_id": "20261014T214651.274328Z-12c8243dd5744d78a7cee0bcd1742ba9",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/skills-workshop-cff63cdda9b81ef6/20261014T214651.274328Z-12c8243dd5744d78a7cee0bcd1742ba9/run_stderr",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214651.274328Z-12c8243dd5744d78a7cee0bcd1742ba9/run_stderr",
+      "path": "docs/stamped-study/logs/duct/20261014T214651.274328Z-12c8243dd5744d78a7cee0bcd1742ba9/run_stderr",
+      "sha256": "9b2c049bc4103cbf1abd40d05f99a9b639aba5ffbe6e09a6d7475b81802b45a4",
+      "bytes": 73
+    },
+    {
+      "capture_id": "20261014T214651.274328Z-12c8243dd5744d78a7cee0bcd1742ba9",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/skills-workshop-cff63cdda9b81ef6/20261014T214651.274328Z-12c8243dd5744d78a7cee0bcd1742ba9/run_stdout",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214651.274328Z-12c8243dd5744d78a7cee0bcd1742ba9/run_stdout",
+      "path": "docs/stamped-study/logs/duct/20261014T214651.274328Z-12c8243dd5744d78a7cee0bcd1742ba9/run_stdout",
+      "sha256": "6e080b179ccce88b3a740440e133f0bcff3f77dfc98e2e91aca2338bbd56596a",
+      "bytes": 96
+    },
+    {
+      "capture_id": "20261014T214651.274328Z-12c8243dd5744d78a7cee0bcd1742ba9",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/skills-workshop-cff63cdda9b81ef6/20261014T214651.274328Z-12c8243dd5744d78a7cee0bcd1742ba9/run_usage.jsonl",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214651.274328Z-12c8243dd5744d78a7cee0bcd1742ba9/run_usage.jsonl",
+      "path": "docs/stamped-study/logs/duct/20261014T214651.274328Z-12c8243dd5744d78a7cee0bcd1742ba9/run_usage.jsonl",
+      "sha256": "909a67ee2aab66d6732d352179b6f42e67d4eb17c0c818aa7b5fd2787bb7edf7",
+      "bytes": 452
+    },
+    {
+      "capture_id": "20261014T214651.274328Z-647c4501e4f5473c9718a4c1eecaa956",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/skills-workshop-cff63cdda9b81ef6/20261014T214651.274328Z-647c4501e4f5473c9718a4c1eecaa956/context.json",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214651.274328Z-647c4501e4f5473c9718a4c1eecaa956/context.json",
+      "path": "docs/stamped-study/logs/duct/20261014T214651.274328Z-647c4501e4f5473c9718a4c1eecaa956/context.json",
+      "sha256": "a678c635d36347677dda4dc9ae6cede15dbb682f768ffe5b0427c105decbc8bf",
+      "bytes": 469
+    },
+    {
+      "capture_id": "20261014T214651.274328Z-647c4501e4f5473c9718a4c1eecaa956",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/skills-workshop-cff63cdda9b81ef6/20261014T214651.274328Z-647c4501e4f5473c9718a4c1eecaa956/run_info.json",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214651.274328Z-647c4501e4f5473c9718a4c1eecaa956/run_info.json",
+      "path": "docs/stamped-study/logs/duct/20261014T214651.274328Z-647c4501e4f5473c9718a4c1eecaa956/run_info.json",
+      "sha256": "bbbf1b14c64e2929762e25d21d948126a38097ed8ccb3d1dcada5df165351551",
+      "bytes": 2238
+    },
+    {
+      "capture_id": "20261014T214651.274328Z-647c4501e4f5473c9718a4c1eecaa956",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/skills-workshop-cff63cdda9b81ef6/20261014T214651.274328Z-647c4501e4f5473c9718a4c1eecaa956/run_stderr",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214651.274328Z-647c4501e4f5473c9718a4c1eecaa956/run_stderr",
+      "path": "docs/stamped-study/logs/duct/20261014T214651.274328Z-647c4501e4f5473c9718a4c1eecaa956/run_stderr",
+      "sha256": "7c38675ec1ff5ee0a18976ac5b191f93706796737fa3267b5759e55af99f77fb",
+      "bytes": 71
+    },
+    {
+      "capture_id": "20261014T214651.274328Z-647c4501e4f5473c9718a4c1eecaa956",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/skills-workshop-cff63cdda9b81ef6/20261014T214651.274328Z-647c4501e4f5473c9718a4c1eecaa956/run_stdout",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214651.274328Z-647c4501e4f5473c9718a4c1eecaa956/run_stdout",
+      "path": "docs/stamped-study/logs/duct/20261014T214651.274328Z-647c4501e4f5473c9718a4c1eecaa956/run_stdout",
+      "sha256": "b203915c8ae56604283bbb70f9fa61d0c6e0266352ff497692c20d83e13a0129",
+      "bytes": 876
+    },
+    {
+      "capture_id": "20261014T214651.274328Z-647c4501e4f5473c9718a4c1eecaa956",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/skills-workshop-cff63cdda9b81ef6/20261014T214651.274328Z-647c4501e4f5473c9718a4c1eecaa956/run_usage.jsonl",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214651.274328Z-647c4501e4f5473c9718a4c1eecaa956/run_usage.jsonl",
+      "path": "docs/stamped-study/logs/duct/20261014T214651.274328Z-647c4501e4f5473c9718a4c1eecaa956/run_usage.jsonl",
+      "sha256": "1b47d39a01d1228be46d12b64dbf243cb764a2f083da796db66b5134b15ecf9e",
+      "bytes": 450
+    },
+    {
+      "capture_id": "20261014T214651.274328Z-cae7b1ace90f44f798dcc6f079512e27",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/skills-workshop-cff63cdda9b81ef6/20261014T214651.274328Z-cae7b1ace90f44f798dcc6f079512e27/context.json",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214651.274328Z-cae7b1ace90f44f798dcc6f079512e27/context.json",
+      "path": "docs/stamped-study/logs/duct/20261014T214651.274328Z-cae7b1ace90f44f798dcc6f079512e27/context.json",
+      "sha256": "a678c635d36347677dda4dc9ae6cede15dbb682f768ffe5b0427c105decbc8bf",
+      "bytes": 469
+    },
+    {
+      "capture_id": "20261014T214651.274328Z-cae7b1ace90f44f798dcc6f079512e27",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/skills-workshop-cff63cdda9b81ef6/20261014T214651.274328Z-cae7b1ace90f44f798dcc6f079512e27/run_info.json",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214651.274328Z-cae7b1ace90f44f798dcc6f079512e27/run_info.json",
+      "path": "docs/stamped-study/logs/duct/20261014T214651.274328Z-cae7b1ace90f44f798dcc6f079512e27/run_info.json",
+      "sha256": "dfe432d20459063b53739061f4b541cd6e6f01b3887774e99bb6c2faa433cd57",
+      "bytes": 2367
+    },
+    {
+      "capture_id": "20261014T214651.274328Z-cae7b1ace90f44f798dcc6f079512e27",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/skills-workshop-cff63cdda9b81ef6/20261014T214651.274328Z-cae7b1ace90f44f798dcc6f079512e27/run_stderr",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214651.274328Z-cae7b1ace90f44f798dcc6f079512e27/run_stderr",
+      "path": "docs/stamped-study/logs/duct/20261014T214651.274328Z-cae7b1ace90f44f798dcc6f079512e27/run_stderr",
+      "sha256": "6d6288e5efe0d9c98b31bced786864f335d4a7ca818a6496280f59c2e002af14",
+      "bytes": 942
+    },
+    {
+      "capture_id": "20261014T214651.274328Z-cae7b1ace90f44f798dcc6f079512e27",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/skills-workshop-cff63cdda9b81ef6/20261014T214651.274328Z-cae7b1ace90f44f798dcc6f079512e27/run_stdout",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214651.274328Z-cae7b1ace90f44f798dcc6f079512e27/run_stdout",
+      "path": "docs/stamped-study/logs/duct/20261014T214651.274328Z-cae7b1ace90f44f798dcc6f079512e27/run_stdout",
+      "sha256": "73d4ca1420f56f7f542e0b072e4b14c0c361517171afdd48766b4cfbeaa5c144",
+      "bytes": 16717
+    },
+    {
+      "capture_id": "20261014T214651.274328Z-cae7b1ace90f44f798dcc6f079512e27",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/skills-workshop-cff63cdda9b81ef6/20261014T214651.274328Z-cae7b1ace90f44f798dcc6f079512e27/run_usage.jsonl",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214651.274328Z-cae7b1ace90f44f798dcc6f079512e27/run_usage.jsonl",
+      "path": "docs/stamped-study/logs/duct/20261014T214651.274328Z-cae7b1ace90f44f798dcc6f079512e27/run_usage.jsonl",
+      "sha256": "5d69fcb5ed963f70e935c34f12f818a7f46e8e4764c5851e8f8677a865fdc671",
+      "bytes": 2456
+    },
+    {
+      "capture_id": "20261014T214651.274334Z-0b5fab69cde540ae854d47d080648809",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/skills-workshop-cff63cdda9b81ef6/20261014T214651.274334Z-0b5fab69cde540ae854d47d080648809/context.json",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214651.274334Z-0b5fab69cde540ae854d47d080648809/context.json",
+      "path": "docs/stamped-study/logs/duct/20261014T214651.274334Z-0b5fab69cde540ae854d47d080648809/context.json",
+      "sha256": "2f6120c49e77d2be3a29528d957edb189ab7c343b97f25f52f203044bb669e0e",
+      "bytes": 469
+    },
+    {
+      "capture_id": "20261014T214651.274334Z-0b5fab69cde540ae854d47d080648809",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/skills-workshop-cff63cdda9b81ef6/20261014T214651.274334Z-0b5fab69cde540ae854d47d080648809/run_info.json",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214651.274334Z-0b5fab69cde540ae854d47d080648809/run_info.json",
+      "path": "docs/stamped-study/logs/duct/20261014T214651.274334Z-0b5fab69cde540ae854d47d080648809/run_info.json",
+      "sha256": "b959e5360160fd8864445f86dacff0ab0352b4eb082226d705decbc2c7fbe3be",
+      "bytes": 2250
+    },
+    {
+      "capture_id": "20261014T214651.274334Z-0b5fab69cde540ae854d47d080648809",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/skills-workshop-cff63cdda9b81ef6/20261014T214651.274334Z-0b5fab69cde540ae854d47d080648809/run_stderr",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214651.274334Z-0b5fab69cde540ae854d47d080648809/run_stderr",
+      "path": "docs/stamped-study/logs/duct/20261014T214651.274334Z-0b5fab69cde540ae854d47d080648809/run_stderr",
+      "sha256": "0125a8e4c6721bc4fc527c21a9e221773279a84b6df4b48ca36626f1fe547745",
+      "bytes": 93
+    },
+    {
+      "capture_id": "20261014T214651.274334Z-0b5fab69cde540ae854d47d080648809",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/skills-workshop-cff63cdda9b81ef6/20261014T214651.274334Z-0b5fab69cde540ae854d47d080648809/run_stdout",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214651.274334Z-0b5fab69cde540ae854d47d080648809/run_stdout",
+      "path": "docs/stamped-study/logs/duct/20261014T214651.274334Z-0b5fab69cde540ae854d47d080648809/run_stdout",
+      "sha256": "f4609d78a59aa41616a50fee910b3ebc9e60b7c8b0bbb9884d31afd8f4cb7973",
+      "bytes": 1623
+    },
+    {
+      "capture_id": "20261014T214651.274334Z-0b5fab69cde540ae854d47d080648809",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/skills-workshop-cff63cdda9b81ef6/20261014T214651.274334Z-0b5fab69cde540ae854d47d080648809/run_usage.jsonl",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214651.274334Z-0b5fab69cde540ae854d47d080648809/run_usage.jsonl",
+      "path": "docs/stamped-study/logs/duct/20261014T214651.274334Z-0b5fab69cde540ae854d47d080648809/run_usage.jsonl",
+      "sha256": "6f34eef520743755373c9da8f0c43b04e192d2a1ade251e4fde8b5d2c123da8a",
+      "bytes": 3205
+    },
+    {
+      "capture_id": "20261014T214716.596069Z-a039be5342bc48d2b1dd64d09ab01cb3",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T214716.596069Z-a039be5342bc48d2b1dd64d09ab01cb3/context.json",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214716.596069Z-a039be5342bc48d2b1dd64d09ab01cb3/context.json",
+      "path": "docs/stamped-study/logs/duct/20261014T214716.596069Z-a039be5342bc48d2b1dd64d09ab01cb3/context.json",
+      "sha256": "ae3f121d800adde29d3c76a87807b1479d8d59504603d68ac523c0ca1e6d1d5a",
+      "bytes": 480
+    },
+    {
+      "capture_id": "20261014T214716.596069Z-a039be5342bc48d2b1dd64d09ab01cb3",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T214716.596069Z-a039be5342bc48d2b1dd64d09ab01cb3/run_info.json",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214716.596069Z-a039be5342bc48d2b1dd64d09ab01cb3/run_info.json",
+      "path": "docs/stamped-study/logs/duct/20261014T214716.596069Z-a039be5342bc48d2b1dd64d09ab01cb3/run_info.json",
+      "sha256": "e33c2016ee53c0da636eafaaaa2c99f0f9563b51d1fd362edb09f35d193256dd",
+      "bytes": 2345
+    },
+    {
+      "capture_id": "20261014T214716.596069Z-a039be5342bc48d2b1dd64d09ab01cb3",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T214716.596069Z-a039be5342bc48d2b1dd64d09ab01cb3/run_stderr",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214716.596069Z-a039be5342bc48d2b1dd64d09ab01cb3/run_stderr",
+      "path": "docs/stamped-study/logs/duct/20261014T214716.596069Z-a039be5342bc48d2b1dd64d09ab01cb3/run_stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "capture_id": "20261014T214716.596069Z-a039be5342bc48d2b1dd64d09ab01cb3",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T214716.596069Z-a039be5342bc48d2b1dd64d09ab01cb3/run_stdout",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214716.596069Z-a039be5342bc48d2b1dd64d09ab01cb3/run_stdout",
+      "path": "docs/stamped-study/logs/duct/20261014T214716.596069Z-a039be5342bc48d2b1dd64d09ab01cb3/run_stdout",
+      "sha256": "f1f01118941fe166a6aa41fc9975a2bf87ce75bfc18d027f21c1747888e08579",
+      "bytes": 5665
+    },
+    {
+      "capture_id": "20261014T214716.596069Z-a039be5342bc48d2b1dd64d09ab01cb3",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T214716.596069Z-a039be5342bc48d2b1dd64d09ab01cb3/run_usage.jsonl",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214716.596069Z-a039be5342bc48d2b1dd64d09ab01cb3/run_usage.jsonl",
+      "path": "docs/stamped-study/logs/duct/20261014T214716.596069Z-a039be5342bc48d2b1dd64d09ab01cb3/run_usage.jsonl",
+      "sha256": "bcbda9bf1538fc3d15f5afc8d2fcb1314967e4062c563e3245d22802093d1a6f",
+      "bytes": 1183
+    },
+    {
+      "capture_id": "20261014T214744.869362Z-24ed2bf3b94e4879b8b4d45ac1133da8",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T214744.869362Z-24ed2bf3b94e4879b8b4d45ac1133da8/context.json",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214744.869362Z-24ed2bf3b94e4879b8b4d45ac1133da8/context.json",
+      "path": "docs/stamped-study/logs/duct/20261014T214744.869362Z-24ed2bf3b94e4879b8b4d45ac1133da8/context.json",
+      "sha256": "17344ba0641b4ba54b7de3993c49df102cc8ef569761ec07441ea9999f4b0add",
+      "bytes": 480
+    },
+    {
+      "capture_id": "20261014T214744.869362Z-24ed2bf3b94e4879b8b4d45ac1133da8",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T214744.869362Z-24ed2bf3b94e4879b8b4d45ac1133da8/run_info.json",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214744.869362Z-24ed2bf3b94e4879b8b4d45ac1133da8/run_info.json",
+      "path": "docs/stamped-study/logs/duct/20261014T214744.869362Z-24ed2bf3b94e4879b8b4d45ac1133da8/run_info.json",
+      "sha256": "220387e12368a9a77eaa77f95d8cdf184443af72fb53cd772e63909b2b66bd54",
+      "bytes": 2370
+    },
+    {
+      "capture_id": "20261014T214744.869362Z-24ed2bf3b94e4879b8b4d45ac1133da8",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T214744.869362Z-24ed2bf3b94e4879b8b4d45ac1133da8/run_stderr",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214744.869362Z-24ed2bf3b94e4879b8b4d45ac1133da8/run_stderr",
+      "path": "docs/stamped-study/logs/duct/20261014T214744.869362Z-24ed2bf3b94e4879b8b4d45ac1133da8/run_stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "capture_id": "20261014T214744.869362Z-24ed2bf3b94e4879b8b4d45ac1133da8",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T214744.869362Z-24ed2bf3b94e4879b8b4d45ac1133da8/run_stdout",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214744.869362Z-24ed2bf3b94e4879b8b4d45ac1133da8/run_stdout",
+      "path": "docs/stamped-study/logs/duct/20261014T214744.869362Z-24ed2bf3b94e4879b8b4d45ac1133da8/run_stdout",
+      "sha256": "e4efce9bebb1ca8c6f065dab6976a14554802d641332ebbb511215b920e30d69",
+      "bytes": 2318
+    },
+    {
+      "capture_id": "20261014T214744.869362Z-24ed2bf3b94e4879b8b4d45ac1133da8",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T214744.869362Z-24ed2bf3b94e4879b8b4d45ac1133da8/run_usage.jsonl",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214744.869362Z-24ed2bf3b94e4879b8b4d45ac1133da8/run_usage.jsonl",
+      "path": "docs/stamped-study/logs/duct/20261014T214744.869362Z-24ed2bf3b94e4879b8b4d45ac1133da8/run_usage.jsonl",
+      "sha256": "5ed129bc92d7f5ae3cf0a22e9e448c5f00f521d5f88e99f3202e039d4af0bee2",
+      "bytes": 1194
+    },
+    {
+      "capture_id": "20261014T214801.681185Z-69a2547530b24a6684005e97311787a0",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T214801.681185Z-69a2547530b24a6684005e97311787a0/context.json",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214801.681185Z-69a2547530b24a6684005e97311787a0/context.json",
+      "path": "docs/stamped-study/logs/duct/20261014T214801.681185Z-69a2547530b24a6684005e97311787a0/context.json",
+      "sha256": "f3c76f963b35039c86472fab32ab056e2372636068192a1791fd3e88fd16a12a",
+      "bytes": 480
+    },
+    {
+      "capture_id": "20261014T214801.681185Z-69a2547530b24a6684005e97311787a0",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T214801.681185Z-69a2547530b24a6684005e97311787a0/run_info.json",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214801.681185Z-69a2547530b24a6684005e97311787a0/run_info.json",
+      "path": "docs/stamped-study/logs/duct/20261014T214801.681185Z-69a2547530b24a6684005e97311787a0/run_info.json",
+      "sha256": "d67a71cf7defba2c098d2ed13695fd56bf41d1ed1abaec308f262616b8868cdc",
+      "bytes": 2559
+    },
+    {
+      "capture_id": "20261014T214801.681185Z-69a2547530b24a6684005e97311787a0",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T214801.681185Z-69a2547530b24a6684005e97311787a0/run_stderr",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214801.681185Z-69a2547530b24a6684005e97311787a0/run_stderr",
+      "path": "docs/stamped-study/logs/duct/20261014T214801.681185Z-69a2547530b24a6684005e97311787a0/run_stderr",
+      "sha256": "fd20e6aa2dab880d8d04bd9cf85d31c2686f871719ae32c4a315063c435d5d10",
+      "bytes": 2329
+    },
+    {
+      "capture_id": "20261014T214801.681185Z-69a2547530b24a6684005e97311787a0",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T214801.681185Z-69a2547530b24a6684005e97311787a0/run_stdout",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214801.681185Z-69a2547530b24a6684005e97311787a0/run_stdout",
+      "path": "docs/stamped-study/logs/duct/20261014T214801.681185Z-69a2547530b24a6684005e97311787a0/run_stdout",
+      "sha256": "a2d60b6a09eba6fe2ee27a2b73242e657a2b7c75c7712ab2a9a9b86001c541a1",
+      "bytes": 2666
+    },
+    {
+      "capture_id": "20261014T214801.681185Z-69a2547530b24a6684005e97311787a0",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T214801.681185Z-69a2547530b24a6684005e97311787a0/run_usage.jsonl",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214801.681185Z-69a2547530b24a6684005e97311787a0/run_usage.jsonl",
+      "path": "docs/stamped-study/logs/duct/20261014T214801.681185Z-69a2547530b24a6684005e97311787a0/run_usage.jsonl",
+      "sha256": "f6c851f56e927a6e9cf2e45c712b23f8442d62cb2019f1d21c8b0e24dfea308d",
+      "bytes": 2544
+    },
+    {
+      "capture_id": "20261014T214845.829354Z-ffad117679714978baeb5c05ca24e47d",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T214845.829354Z-ffad117679714978baeb5c05ca24e47d/context.json",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214845.829354Z-ffad117679714978baeb5c05ca24e47d/context.json",
+      "path": "docs/stamped-study/logs/duct/20261014T214845.829354Z-ffad117679714978baeb5c05ca24e47d/context.json",
+      "sha256": "6e1826e465dc9e3cce4e65b4a2498d2d6317edeb4ac438a3bc52760a85ce14b4",
+      "bytes": 480
+    },
+    {
+      "capture_id": "20261014T214845.829354Z-ffad117679714978baeb5c05ca24e47d",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T214845.829354Z-ffad117679714978baeb5c05ca24e47d/run_info.json",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214845.829354Z-ffad117679714978baeb5c05ca24e47d/run_info.json",
+      "path": "docs/stamped-study/logs/duct/20261014T214845.829354Z-ffad117679714978baeb5c05ca24e47d/run_info.json",
+      "sha256": "c51c1836d50373889c1cb4334bc9216c4f53d818dce01c9b3f65dc3d3a49366e",
+      "bytes": 2665
+    },
+    {
+      "capture_id": "20261014T214845.829354Z-ffad117679714978baeb5c05ca24e47d",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T214845.829354Z-ffad117679714978baeb5c05ca24e47d/run_stderr",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214845.829354Z-ffad117679714978baeb5c05ca24e47d/run_stderr",
+      "path": "docs/stamped-study/logs/duct/20261014T214845.829354Z-ffad117679714978baeb5c05ca24e47d/run_stderr",
+      "sha256": "2f77e6a57710585525808465d5163a36eb0ea25f45f6c4cad6f584a6fc93d8a7",
+      "bytes": 2329
+    },
+    {
+      "capture_id": "20261014T214845.829354Z-ffad117679714978baeb5c05ca24e47d",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T214845.829354Z-ffad117679714978baeb5c05ca24e47d/run_stdout",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214845.829354Z-ffad117679714978baeb5c05ca24e47d/run_stdout",
+      "path": "docs/stamped-study/logs/duct/20261014T214845.829354Z-ffad117679714978baeb5c05ca24e47d/run_stdout",
+      "sha256": "e074253871a19620bbecaf30c6e50a42ff4604d53d0c5eacc84ae6cdadeda470",
+      "bytes": 24130
+    },
+    {
+      "capture_id": "20261014T214845.829354Z-ffad117679714978baeb5c05ca24e47d",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T214845.829354Z-ffad117679714978baeb5c05ca24e47d/run_usage.jsonl",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214845.829354Z-ffad117679714978baeb5c05ca24e47d/run_usage.jsonl",
+      "path": "docs/stamped-study/logs/duct/20261014T214845.829354Z-ffad117679714978baeb5c05ca24e47d/run_usage.jsonl",
+      "sha256": "450206716f5ea0f55c6480e93f2c0bb3c94c8ad1fede9d52594976415fc58b8b",
+      "bytes": 2443
+    },
+    {
+      "capture_id": "20261014T214923.863236Z-688e39f7ac344e18a4425f8aa077ea63",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T214923.863236Z-688e39f7ac344e18a4425f8aa077ea63/context.json",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214923.863236Z-688e39f7ac344e18a4425f8aa077ea63/context.json",
+      "path": "docs/stamped-study/logs/duct/20261014T214923.863236Z-688e39f7ac344e18a4425f8aa077ea63/context.json",
+      "sha256": "b252cc1c07207795ed772058b6749738c9e8d30f4d8d82032799e8dcd69ebafc",
+      "bytes": 480
+    },
+    {
+      "capture_id": "20261014T214923.863236Z-688e39f7ac344e18a4425f8aa077ea63",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T214923.863236Z-688e39f7ac344e18a4425f8aa077ea63/run_info.json",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214923.863236Z-688e39f7ac344e18a4425f8aa077ea63/run_info.json",
+      "path": "docs/stamped-study/logs/duct/20261014T214923.863236Z-688e39f7ac344e18a4425f8aa077ea63/run_info.json",
+      "sha256": "fbc8ac01344e178416a98ce0f523fe046f74c5f07e0d8384e5330e5eae2a03da",
+      "bytes": 2647
+    },
+    {
+      "capture_id": "20261014T214923.863236Z-688e39f7ac344e18a4425f8aa077ea63",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T214923.863236Z-688e39f7ac344e18a4425f8aa077ea63/run_stderr",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214923.863236Z-688e39f7ac344e18a4425f8aa077ea63/run_stderr",
+      "path": "docs/stamped-study/logs/duct/20261014T214923.863236Z-688e39f7ac344e18a4425f8aa077ea63/run_stderr",
+      "sha256": "b7527e0d9b67b40d922ec4de6bd920b1bd43d065dbcb5e59f7f83e8564bd2c72",
+      "bytes": 797
+    },
+    {
+      "capture_id": "20261014T214923.863236Z-688e39f7ac344e18a4425f8aa077ea63",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T214923.863236Z-688e39f7ac344e18a4425f8aa077ea63/run_stdout",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214923.863236Z-688e39f7ac344e18a4425f8aa077ea63/run_stdout",
+      "path": "docs/stamped-study/logs/duct/20261014T214923.863236Z-688e39f7ac344e18a4425f8aa077ea63/run_stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "capture_id": "20261014T214923.863236Z-688e39f7ac344e18a4425f8aa077ea63",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T214923.863236Z-688e39f7ac344e18a4425f8aa077ea63/run_usage.jsonl",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T214923.863236Z-688e39f7ac344e18a4425f8aa077ea63/run_usage.jsonl",
+      "path": "docs/stamped-study/logs/duct/20261014T214923.863236Z-688e39f7ac344e18a4425f8aa077ea63/run_usage.jsonl",
+      "sha256": "8c7654a21bf299cdead0cefb8587f17b737eb875d52e41eaa33cbc89f4fa6330",
+      "bytes": 664
+    },
+    {
+      "capture_id": "20261014T215027.128095Z-37d06d249f4c42fd9fa059d02e59719d",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T215027.128095Z-37d06d249f4c42fd9fa059d02e59719d/context.json",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T215027.128095Z-37d06d249f4c42fd9fa059d02e59719d/context.json",
+      "path": "docs/stamped-study/logs/duct/20261014T215027.128095Z-37d06d249f4c42fd9fa059d02e59719d/context.json",
+      "sha256": "6c0268b0adef432159ad5e317a9710bca05d447baa1af0b871aaf662d486261c",
+      "bytes": 480
+    },
+    {
+      "capture_id": "20261014T215027.128095Z-37d06d249f4c42fd9fa059d02e59719d",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T215027.128095Z-37d06d249f4c42fd9fa059d02e59719d/run_info.json",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T215027.128095Z-37d06d249f4c42fd9fa059d02e59719d/run_info.json",
+      "path": "docs/stamped-study/logs/duct/20261014T215027.128095Z-37d06d249f4c42fd9fa059d02e59719d/run_info.json",
+      "sha256": "80d6a760716361414da3790c00a1c4674b61bccd51fc934bbd048adc4eb808fe",
+      "bytes": 2700
+    },
+    {
+      "capture_id": "20261014T215027.128095Z-37d06d249f4c42fd9fa059d02e59719d",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T215027.128095Z-37d06d249f4c42fd9fa059d02e59719d/run_stderr",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T215027.128095Z-37d06d249f4c42fd9fa059d02e59719d/run_stderr",
+      "path": "docs/stamped-study/logs/duct/20261014T215027.128095Z-37d06d249f4c42fd9fa059d02e59719d/run_stderr",
+      "sha256": "d29438d874b2af8ab0a89fba09c5c280ccaf07bcf1c26bde15abafd7a697ad06",
+      "bytes": 2513
+    },
+    {
+      "capture_id": "20261014T215027.128095Z-37d06d249f4c42fd9fa059d02e59719d",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T215027.128095Z-37d06d249f4c42fd9fa059d02e59719d/run_stdout",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T215027.128095Z-37d06d249f4c42fd9fa059d02e59719d/run_stdout",
+      "path": "docs/stamped-study/logs/duct/20261014T215027.128095Z-37d06d249f4c42fd9fa059d02e59719d/run_stdout",
+      "sha256": "9b912311e2123752a751328f70424a3b9a038fb9526089de656845e17c7d1635",
+      "bytes": 9479
+    },
+    {
+      "capture_id": "20261014T215027.128095Z-37d06d249f4c42fd9fa059d02e59719d",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T215027.128095Z-37d06d249f4c42fd9fa059d02e59719d/run_usage.jsonl",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T215027.128095Z-37d06d249f4c42fd9fa059d02e59719d/run_usage.jsonl",
+      "path": "docs/stamped-study/logs/duct/20261014T215027.128095Z-37d06d249f4c42fd9fa059d02e59719d/run_usage.jsonl",
+      "sha256": "2c975756afe347014bd8ba0cb64af38e7870fdcf89c559a086ede089faaf7a83",
+      "bytes": 2677
+    },
+    {
+      "capture_id": "20261014T215348.835940Z-8aa0c6ab98bf489ca0f2370ac3c66405",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T215348.835940Z-8aa0c6ab98bf489ca0f2370ac3c66405/context.json",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T215348.835940Z-8aa0c6ab98bf489ca0f2370ac3c66405/context.json",
+      "path": "docs/stamped-study/logs/duct/20261014T215348.835940Z-8aa0c6ab98bf489ca0f2370ac3c66405/context.json",
+      "sha256": "7eb372e48eb3c68f2a0481cb5197b9a07b9f67e6b42c88c72420a41bc414e7a9",
+      "bytes": 480
+    },
+    {
+      "capture_id": "20261014T215348.835940Z-8aa0c6ab98bf489ca0f2370ac3c66405",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T215348.835940Z-8aa0c6ab98bf489ca0f2370ac3c66405/run_info.json",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T215348.835940Z-8aa0c6ab98bf489ca0f2370ac3c66405/run_info.json",
+      "path": "docs/stamped-study/logs/duct/20261014T215348.835940Z-8aa0c6ab98bf489ca0f2370ac3c66405/run_info.json",
+      "sha256": "ed0e05d1dc9e0f8bad275791d23b93ff037ea6afa9e0db6af59b04f9cafe063d",
+      "bytes": 2469
+    },
+    {
+      "capture_id": "20261014T215348.835940Z-8aa0c6ab98bf489ca0f2370ac3c66405",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T215348.835940Z-8aa0c6ab98bf489ca0f2370ac3c66405/run_stderr",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T215348.835940Z-8aa0c6ab98bf489ca0f2370ac3c66405/run_stderr",
+      "path": "docs/stamped-study/logs/duct/20261014T215348.835940Z-8aa0c6ab98bf489ca0f2370ac3c66405/run_stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "capture_id": "20261014T215348.835940Z-8aa0c6ab98bf489ca0f2370ac3c66405",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T215348.835940Z-8aa0c6ab98bf489ca0f2370ac3c66405/run_stdout",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T215348.835940Z-8aa0c6ab98bf489ca0f2370ac3c66405/run_stdout",
+      "path": "docs/stamped-study/logs/duct/20261014T215348.835940Z-8aa0c6ab98bf489ca0f2370ac3c66405/run_stdout",
+      "sha256": "a59aedf10515203a8d845d6c62efcde77fd8e5c28b3326f7b322cbd127447224",
+      "bytes": 674
+    },
+    {
+      "capture_id": "20261014T215348.835940Z-8aa0c6ab98bf489ca0f2370ac3c66405",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T215348.835940Z-8aa0c6ab98bf489ca0f2370ac3c66405/run_usage.jsonl",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T215348.835940Z-8aa0c6ab98bf489ca0f2370ac3c66405/run_usage.jsonl",
+      "path": "docs/stamped-study/logs/duct/20261014T215348.835940Z-8aa0c6ab98bf489ca0f2370ac3c66405/run_usage.jsonl",
+      "sha256": "ac980b9f5d7164551e2b1043ac7531605b3d71fcff5355cbd10c7cdf898c35d0",
+      "bytes": 534
+    },
+    {
+      "capture_id": "20261014T215349.271770Z-26befe5641e5461386717ccd9487d497",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T215349.271770Z-26befe5641e5461386717ccd9487d497/context.json",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T215349.271770Z-26befe5641e5461386717ccd9487d497/context.json",
+      "path": "docs/stamped-study/logs/duct/20261014T215349.271770Z-26befe5641e5461386717ccd9487d497/context.json",
+      "sha256": "f1e2449761c7e1f9141ac2bdd5bf1f893505b911314f6d87176357a5d38a3ee6",
+      "bytes": 480
+    },
+    {
+      "capture_id": "20261014T215349.271770Z-26befe5641e5461386717ccd9487d497",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T215349.271770Z-26befe5641e5461386717ccd9487d497/run_info.json",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T215349.271770Z-26befe5641e5461386717ccd9487d497/run_info.json",
+      "path": "docs/stamped-study/logs/duct/20261014T215349.271770Z-26befe5641e5461386717ccd9487d497/run_info.json",
+      "sha256": "df1a08505cc2350ccf160a104220751502c352ca00a6525fd9e717154c847b74",
+      "bytes": 2945
+    },
+    {
+      "capture_id": "20261014T215349.271770Z-26befe5641e5461386717ccd9487d497",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T215349.271770Z-26befe5641e5461386717ccd9487d497/run_stderr",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T215349.271770Z-26befe5641e5461386717ccd9487d497/run_stderr",
+      "path": "docs/stamped-study/logs/duct/20261014T215349.271770Z-26befe5641e5461386717ccd9487d497/run_stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "capture_id": "20261014T215349.271770Z-26befe5641e5461386717ccd9487d497",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T215349.271770Z-26befe5641e5461386717ccd9487d497/run_stdout",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T215349.271770Z-26befe5641e5461386717ccd9487d497/run_stdout",
+      "path": "docs/stamped-study/logs/duct/20261014T215349.271770Z-26befe5641e5461386717ccd9487d497/run_stdout",
+      "sha256": "7c3755fd905f963434c2b88415f507f64dcb48df6edf891ee3615a4c1e25f08f",
+      "bytes": 1285
+    },
+    {
+      "capture_id": "20261014T215349.271770Z-26befe5641e5461386717ccd9487d497",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T215349.271770Z-26befe5641e5461386717ccd9487d497/run_usage.jsonl",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T215349.271770Z-26befe5641e5461386717ccd9487d497/run_usage.jsonl",
+      "path": "docs/stamped-study/logs/duct/20261014T215349.271770Z-26befe5641e5461386717ccd9487d497/run_usage.jsonl",
+      "sha256": "5de3cefb68bb852aa9b33aea110718c5a77fa316827310cb2bc1da1709916fa1",
+      "bytes": 780
+    },
+    {
+      "capture_id": "20261014T215349.549016Z-911a70f169f34baebf086aa8f0bc4f49",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T215349.549016Z-911a70f169f34baebf086aa8f0bc4f49/context.json",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T215349.549016Z-911a70f169f34baebf086aa8f0bc4f49/context.json",
+      "path": "docs/stamped-study/logs/duct/20261014T215349.549016Z-911a70f169f34baebf086aa8f0bc4f49/context.json",
+      "sha256": "7e4e98dfc5844e01433941eceb2c4202309519d4a97cc79f06131687b6471d8a",
+      "bytes": 480
+    },
+    {
+      "capture_id": "20261014T215349.549016Z-911a70f169f34baebf086aa8f0bc4f49",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T215349.549016Z-911a70f169f34baebf086aa8f0bc4f49/run_info.json",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T215349.549016Z-911a70f169f34baebf086aa8f0bc4f49/run_info.json",
+      "path": "docs/stamped-study/logs/duct/20261014T215349.549016Z-911a70f169f34baebf086aa8f0bc4f49/run_info.json",
+      "sha256": "a5a579069b3f5350472d28ff69b1ad0b9d6a3b6e94a428636b11ea10305ed136",
+      "bytes": 2608
+    },
+    {
+      "capture_id": "20261014T215349.549016Z-911a70f169f34baebf086aa8f0bc4f49",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T215349.549016Z-911a70f169f34baebf086aa8f0bc4f49/run_stderr",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T215349.549016Z-911a70f169f34baebf086aa8f0bc4f49/run_stderr",
+      "path": "docs/stamped-study/logs/duct/20261014T215349.549016Z-911a70f169f34baebf086aa8f0bc4f49/run_stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "capture_id": "20261014T215349.549016Z-911a70f169f34baebf086aa8f0bc4f49",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T215349.549016Z-911a70f169f34baebf086aa8f0bc4f49/run_stdout",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T215349.549016Z-911a70f169f34baebf086aa8f0bc4f49/run_stdout",
+      "path": "docs/stamped-study/logs/duct/20261014T215349.549016Z-911a70f169f34baebf086aa8f0bc4f49/run_stdout",
+      "sha256": "da16daa01965ee2f379fa57bb7f58f3c3b094d3574fba2beeaf68f8858db226e",
+      "bytes": 128
+    },
+    {
+      "capture_id": "20261014T215349.549016Z-911a70f169f34baebf086aa8f0bc4f49",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T215349.549016Z-911a70f169f34baebf086aa8f0bc4f49/run_usage.jsonl",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T215349.549016Z-911a70f169f34baebf086aa8f0bc4f49/run_usage.jsonl",
+      "path": "docs/stamped-study/logs/duct/20261014T215349.549016Z-911a70f169f34baebf086aa8f0bc4f49/run_usage.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "capture_id": "20261014T215419.894544Z-523fd686cfd142708ecee458c3788454",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T215419.894544Z-523fd686cfd142708ecee458c3788454/context.json",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T215419.894544Z-523fd686cfd142708ecee458c3788454/context.json",
+      "path": "docs/stamped-study/logs/duct/20261014T215419.894544Z-523fd686cfd142708ecee458c3788454/context.json",
+      "sha256": "ab95a9dfe156204687d240fe190d03a1e2db53d4eb496db6a3504183a0cae5f2",
+      "bytes": 480
+    },
+    {
+      "capture_id": "20261014T215419.894544Z-523fd686cfd142708ecee458c3788454",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T215419.894544Z-523fd686cfd142708ecee458c3788454/run_info.json",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T215419.894544Z-523fd686cfd142708ecee458c3788454/run_info.json",
+      "path": "docs/stamped-study/logs/duct/20261014T215419.894544Z-523fd686cfd142708ecee458c3788454/run_info.json",
+      "sha256": "0f9e65bd10abe9f4bd85a3cd69113422b15879fe415fd44f354d250c395440c1",
+      "bytes": 2403
+    },
+    {
+      "capture_id": "20261014T215419.894544Z-523fd686cfd142708ecee458c3788454",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T215419.894544Z-523fd686cfd142708ecee458c3788454/run_stderr",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T215419.894544Z-523fd686cfd142708ecee458c3788454/run_stderr",
+      "path": "docs/stamped-study/logs/duct/20261014T215419.894544Z-523fd686cfd142708ecee458c3788454/run_stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "capture_id": "20261014T215419.894544Z-523fd686cfd142708ecee458c3788454",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T215419.894544Z-523fd686cfd142708ecee458c3788454/run_stdout",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T215419.894544Z-523fd686cfd142708ecee458c3788454/run_stdout",
+      "path": "docs/stamped-study/logs/duct/20261014T215419.894544Z-523fd686cfd142708ecee458c3788454/run_stdout",
+      "sha256": "cca38eec8c3abc475bd3b216ee0a5ef7de38ed5363b341088402290e8f6d3e11",
+      "bytes": 253
+    },
+    {
+      "capture_id": "20261014T215419.894544Z-523fd686cfd142708ecee458c3788454",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T215419.894544Z-523fd686cfd142708ecee458c3788454/run_usage.jsonl",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T215419.894544Z-523fd686cfd142708ecee458c3788454/run_usage.jsonl",
+      "path": "docs/stamped-study/logs/duct/20261014T215419.894544Z-523fd686cfd142708ecee458c3788454/run_usage.jsonl",
+      "sha256": "4e3bbad96a864d88b1eea41a5933b99749d0062ff343aa7fc6c68886f71b6277",
+      "bytes": 492
+    },
+    {
+      "capture_id": "20261014T215445.523510Z-d3b4fe993200437a816d2821063db8a6",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T215445.523510Z-d3b4fe993200437a816d2821063db8a6/context.json",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T215445.523510Z-d3b4fe993200437a816d2821063db8a6/context.json",
+      "path": "docs/stamped-study/logs/duct/20261014T215445.523510Z-d3b4fe993200437a816d2821063db8a6/context.json",
+      "sha256": "0143b8193859c4b74d688e7130b895bc61e1f63b67b7cb4e8fcad2e2a3c5620d",
+      "bytes": 480
+    },
+    {
+      "capture_id": "20261014T215445.523510Z-d3b4fe993200437a816d2821063db8a6",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T215445.523510Z-d3b4fe993200437a816d2821063db8a6/run_info.json",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T215445.523510Z-d3b4fe993200437a816d2821063db8a6/run_info.json",
+      "path": "docs/stamped-study/logs/duct/20261014T215445.523510Z-d3b4fe993200437a816d2821063db8a6/run_info.json",
+      "sha256": "d770298ad751fbb962b426bb1e9b07dc78a2561321f82d0e6c985e76740bcaa7",
+      "bytes": 2735
+    },
+    {
+      "capture_id": "20261014T215445.523510Z-d3b4fe993200437a816d2821063db8a6",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T215445.523510Z-d3b4fe993200437a816d2821063db8a6/run_stderr",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T215445.523510Z-d3b4fe993200437a816d2821063db8a6/run_stderr",
+      "path": "docs/stamped-study/logs/duct/20261014T215445.523510Z-d3b4fe993200437a816d2821063db8a6/run_stderr",
+      "sha256": "d01c03ef4b9d7917766b671dcfba18b22625dccf02046e31ee5de6921234f045",
+      "bytes": 2881
+    },
+    {
+      "capture_id": "20261014T215445.523510Z-d3b4fe993200437a816d2821063db8a6",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T215445.523510Z-d3b4fe993200437a816d2821063db8a6/run_stdout",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T215445.523510Z-d3b4fe993200437a816d2821063db8a6/run_stdout",
+      "path": "docs/stamped-study/logs/duct/20261014T215445.523510Z-d3b4fe993200437a816d2821063db8a6/run_stdout",
+      "sha256": "500d990b27e23050ce7c35e3dfdf7f10fb117fdb4ad5ffa7d3a98d7f2420e865",
+      "bytes": 133794
+    },
+    {
+      "capture_id": "20261014T215445.523510Z-d3b4fe993200437a816d2821063db8a6",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T215445.523510Z-d3b4fe993200437a816d2821063db8a6/run_usage.jsonl",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T215445.523510Z-d3b4fe993200437a816d2821063db8a6/run_usage.jsonl",
+      "path": "docs/stamped-study/logs/duct/20261014T215445.523510Z-d3b4fe993200437a816d2821063db8a6/run_usage.jsonl",
+      "sha256": "49e0be0f02571b3803225db2d271aa649020879d4a2bc8ef4d534cd86d2e03d0",
+      "bytes": 4484
+    },
+    {
+      "capture_id": "20261014T230900.378834Z-e531da85ee844eb8a9c7b79d79f9f5c9",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T230900.378834Z-e531da85ee844eb8a9c7b79d79f9f5c9/context.json",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T230900.378834Z-e531da85ee844eb8a9c7b79d79f9f5c9/context.json",
+      "path": "docs/stamped-study/logs/duct/20261014T230900.378834Z-e531da85ee844eb8a9c7b79d79f9f5c9/context.json",
+      "sha256": "869613b0e73231373a73ed5f515b22c43ccd9e92ad0aa82afce4793ed15c9949",
+      "bytes": 480
+    },
+    {
+      "capture_id": "20261014T230900.378834Z-e531da85ee844eb8a9c7b79d79f9f5c9",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T230900.378834Z-e531da85ee844eb8a9c7b79d79f9f5c9/run_info.json",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T230900.378834Z-e531da85ee844eb8a9c7b79d79f9f5c9/run_info.json",
+      "path": "docs/stamped-study/logs/duct/20261014T230900.378834Z-e531da85ee844eb8a9c7b79d79f9f5c9/run_info.json",
+      "sha256": "c94018f5db7d88abee233c37f101efc7a095301fc55dc331df634140c9e2acf6",
+      "bytes": 2414
+    },
+    {
+      "capture_id": "20261014T230900.378834Z-e531da85ee844eb8a9c7b79d79f9f5c9",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T230900.378834Z-e531da85ee844eb8a9c7b79d79f9f5c9/run_stderr",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T230900.378834Z-e531da85ee844eb8a9c7b79d79f9f5c9/run_stderr",
+      "path": "docs/stamped-study/logs/duct/20261014T230900.378834Z-e531da85ee844eb8a9c7b79d79f9f5c9/run_stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "capture_id": "20261014T230900.378834Z-e531da85ee844eb8a9c7b79d79f9f5c9",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T230900.378834Z-e531da85ee844eb8a9c7b79d79f9f5c9/run_stdout",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T230900.378834Z-e531da85ee844eb8a9c7b79d79f9f5c9/run_stdout",
+      "path": "docs/stamped-study/logs/duct/20261014T230900.378834Z-e531da85ee844eb8a9c7b79d79f9f5c9/run_stdout",
+      "sha256": "9c28d67d6d7024bf7f19ffc59e0936f0298355191f557933849195d709cc2ce8",
+      "bytes": 454
+    },
+    {
+      "capture_id": "20261014T230900.378834Z-e531da85ee844eb8a9c7b79d79f9f5c9",
+      "central_source": "/Users/johnlee/.local/state/con-duct/projects/stamped-ai-research-1a4f32cddd534402/20261014T230900.378834Z-e531da85ee844eb8a9c7b79d79f9f5c9/run_usage.jsonl",
+      "intermediate_export": "/Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/logs/duct/20261014T230900.378834Z-e531da85ee844eb8a9c7b79d79f9f5c9/run_usage.jsonl",
+      "path": "docs/stamped-study/logs/duct/20261014T230900.378834Z-e531da85ee844eb8a9c7b79d79f9f5c9/run_usage.jsonl",
+      "sha256": "930c753c42fb6b0e16ff4125fcfbb659ae0a896fb72e3bb078e49e8c282e3e69",
+      "bytes": 495
+    }
+  ]
+}

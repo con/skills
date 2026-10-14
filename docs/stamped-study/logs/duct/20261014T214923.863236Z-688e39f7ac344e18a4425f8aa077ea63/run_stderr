@@ -1,0 +1,5 @@
+2026-10-14T21:49:24.130977Z  WARN codex_skills::interface: ignoring interface.icon_small: icon path with '..' must resolve under plugin assets/
+2026-10-14T21:49:24.131082Z  WARN codex_skills::interface: ignoring interface.icon_large: icon path with '..' must resolve under plugin assets/
+2026-10-14T21:49:24.134251Z ERROR codex_core::session::session: failed to initialize thread persistence: thread-store conflict: thread 01a13c62-f9f4-7f12-a39c-6d7884eb50fa already has an active writer
+2026-10-14T21:49:24.134351Z ERROR codex_core::session: Failed to create session: thread-store conflict: thread 01a13c62-f9f4-7f12-a39c-6d7884eb50fa already has an active writer
+Error: thread/resume: thread/resume failed: thread 01a13c62-f9f4-7f12-a39c-6d7884eb50fa already has an active writer (code -32600)

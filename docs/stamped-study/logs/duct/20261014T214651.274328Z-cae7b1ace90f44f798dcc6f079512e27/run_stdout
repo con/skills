@@ -1,0 +1,139 @@
+
+== memory ==
+skills-workshop: Coordinate source-agnostic skill recall, external discovery, APM-managed project installation, usage evidence, evaluation, and upstream contribution.
+  matched: stamped, reproducible in history
+  source: https://github.com/leej3/skills-workshop.git
+  source: https://github.com/leej3/skills-workshop.git
+  success [agent; unreviewed]: Fresh multi-provider discovery found a selective profiling alternative; native authoring supported the requested central-storage policy.
+  success [agent; unreviewed]: Cross-provider discovery found patch ownership and approval skills; full previews exposed repository-specific dependencies and deliberate-divergence skipping. Established DEP-3 patch practice plus pytest outcomes fit better than any single candidate.
+install-apm-skills: Install reusable APM skills with metadata-only downstream history and reproducible setup.
+  matched: reproducible in summary
+  source: https://github.com/con/skills.git
+  source: https://github.com/leej3/skills.git
+datalad-provenance: Design or review DataLad capture, save, run, and rerun workflows in Orinoco Lite; assess their recoverability using STAMPED principles. Use for supplied snapshots, recorded transformations, historical replay, or recomputation with updated software or data. Not an installation guide or an automatic …
+  matched: stamped in summary
+  source: https://github.com/ORINOCO-Lite/orinoco-lite-dev.git
+  success [agent; unreviewed]: Distinguished retained projection snapshots from an executed recoverable transformation; identified fresh-clone replay as the useful implementation check.
+  success [agent; unreviewed]: Kept the generated package manifest and lock as the default source of truth; only explicit overrides create a recorded package-update run. Guidance now distinguishes immutable identity from retained reachability.
+logo-design: Research-led SVG project mark design with visual metaphors and three distinct concepts
+  matched: research in summary
+  source: https://github.com/atypica-ai/logo-design-skill/tree/d0a24ba82431e1ad4e29fc3480c83fb8f0aa6ada/skills/logo-design
+organize-project-docs: Classify and organize repository documentation by audience, authority, and lifecycle.
+  matched: research in history
+  source: git@github.com:leej3/skills-workshop.git
+  source: https://github.com/ORINOCO-Lite/orinoco-lite-dev.git
+  success [agent; unreviewed]: Kept durable review guidance in the existing design principle instead of adding a parallel diff registry or temporary spec.
+  success [agent; unreviewed]: Concrete component names clarified the charter and active guidance without adding a glossary for an ambiguous aggregate.
+introduce-reuse-compliance: Introduce REUSE specification compliance with LICENSES, REUSE.toml, SPDX annotations, validation, pre-commit, and CI integration.
+  matched: assessment in history
+  source: https://github.com/con/skills.git
+  success [agent; unreviewed]: REUSE lint passed for all project files; external skills and datasets remain outside project license scope.
+  success [agent; unreviewed]: The skill provided the licensing assessment, REUSE structure, validation, pre-commit and CI integration, and scope-isolated staging guidance. The official pre-commit hook needed a project-local uvx wrapper because its cached Python environment was incompatible.
+asd-ste100: Rewrites ambiguous technical English with ASD-STE100-inspired structural rules while preserving meaning and uncertainty.
+  matched: research in history
+  source: https://github.com/danyuchn/asd-ste100-skill.git
+  success [agent; unreviewed]: Used stable account and listing terminology and short explanations while retaining provisional status and distinctions between alternative counting rules.
+  success [agent; unreviewed]: Used short sentences and stable terms for host accounts and listings while preserving uncertainty and the scope of each denominator.
+lessig-presentations: Create and review rapid visual talks whose speech and slides form synchronized rhetoric
+  matched: research in history, sources
+  source: https://github.com/leej3/research-object-with-ai.git
+  success [agent; unreviewed]: The combined skill kept the project in web-source mode, preserved content/layout alignment, and guided targeted browser verification; the project-specific sentinel and numbering conventions required refinement during use.
+  success [agent; unreviewed]: The skill provided concrete criteria for assessing rhetorical sequencing, synchronization, tempo variation, technical definitions, playfulness, recovery, and closure while keeping visual implementation concerns separate.
+skill-creator: Create or update a Codex skill with appropriately scoped instructions and any needed supporting resources.
+  matched: stamped in history
+  source: /Users/johnlee/.codex/skills/.system/skill-creator
+  success [agent; unreviewed]: Kept the policy edit scoped and validated the updated skill entrypoint.
+  success [agent; unreviewed]: Guidance kept storage policy and the portable helper together; integration checks covered exit codes, capture, and export integrity.
+
+== local ==
+relsa-severity-assessment: Multivariate severity assessment and humane endpoint prediction for laboratory animal studies using the RELSA (RELative Severity Assessment) score and ARIMA-based foRcast forecasting. Use when combining welfare readouts — body weight or weight loss, body temperature, clinical or nesting scores, bio…
+  matched: reproducible, research, assessment in content, description, name
+  scientific-agent-skills: upstreams/scientific-agent-skills/skills/relsa-severity-assessment (49c6e97775eaa18ba791bebe23162a70ae601c18)
+scientific-brainstorming: Facilitates evidence-aware scientific ideation with independent generation, structured discussion, explicit assumptions, transparent evaluation, adversarial review, and decision logs. Use for early-stage research brainstorming or prioritizing candidate directions; hand off empirical validation, stu…
+  matched: reproducible, research, assessment in content, description
+  scientific-agent-skills: upstreams/scientific-agent-skills/skills/scientific-brainstorming (49c6e97775eaa18ba791bebe23162a70ae601c18)
+scholar-evaluation: Provide qualitative-first, evidence-traceable developmental review of scholarly works and audit low-stakes research-assessment rubrics with optional local quality controls. Never use for ranking people or consequential decisions.
+  matched: research, assessment in content, description
+  scientific-agent-skills: upstreams/scientific-agent-skills/skills/scholar-evaluation (49c6e97775eaa18ba791bebe23162a70ae601c18)
+research-grants: Write competitive research proposals for NSF, NIH, DOE, DARPA, and Taiwan NSTC. Agency-specific formatting, review criteria, budget preparation, broader impacts, significance statements, innovation narratives, and compliance with submission requirements.
+  matched: research, assessment in content, description, name
+  scientific-agent-skills: upstreams/scientific-agent-skills/skills/research-grants (49c6e97775eaa18ba791bebe23162a70ae601c18)
+market-research-reports: Build evidence-traceable market research reports and assumption-driven market sizing or forecast scenarios. Use for market definition, industry and customer evidence, competitive landscapes, TAM/SAM/SOM reconciliation, forecast sensitivity, and auditable report scaffolds.
+  matched: reproducible, research in content, description, name
+  scientific-agent-skills: upstreams/scientific-agent-skills/skills/market-research-reports (49c6e97775eaa18ba791bebe23162a70ae601c18)
+neurokit2: Use NeuroKit2 to build or audit reproducible research workflows for physiological time-series preprocessing, event/interval analysis, multimodal alignment, variability, and complexity. Trigger when code imports neurokit2 or needs its current APIs, schemas, and method-aware validation—not for diagno…
+  matched: reproducible, research in content, description
+  scientific-agent-skills: upstreams/scientific-agent-skills/skills/neurokit2 (49c6e97775eaa18ba791bebe23162a70ae601c18)
+bulk-rnaseq: End-to-end bulk RNA-seq orchestrator — takes raw FASTQ reads through QC and trimming (FastQC, fastp/Trim Galore), alignment and quantification (STAR, Salmon, featureCounts), assembles a gene-level counts matrix, then hands off to differential expression (pydeseq2), pathway/GSEA enrichment (pathway-…
+  matched: reproducible, research in content, description
+  scientific-agent-skills: upstreams/scientific-agent-skills/skills/bulk-rnaseq (49c6e97775eaa18ba791bebe23162a70ae601c18)
+nextflow: Build, run, and debug Nextflow data pipelines and nf-core workflows end to end. Use whenever the user mentions Nextflow, nf-core, .nf files, nextflow.config, DSL2, processes/channels/operators, samplesheets, or wants to run a community pipeline (e.g. nf-core/rnaseq, nf-core/sarek), write or test a …
+  matched: reproducible, research in content, description
+  scientific-agent-skills: upstreams/scientific-agent-skills/skills/nextflow (49c6e97775eaa18ba791bebe23162a70ae601c18)
+paper-lookup: Search 18 scholarly APIs for papers, preprints, citations, open-access full text, repository records, and journal OA status, and return results with reproducible provenance. Covers PubMed, PMC, Europe PMC, bioRxiv, medRxiv, arXiv, OpenAlex, Crossref, Semantic Scholar, CORE, Unpaywall, OpenCitations…
+  matched: reproducible, research in content, description
+  scientific-agent-skills: upstreams/scientific-agent-skills/skills/paper-lookup (49c6e97775eaa18ba791bebe23162a70ae601c18)
+dnanexus-integration: Build and operate reproducible genomics workloads on DNAnexus with the dx CLI, dxpy, apps/applets, native workflows, dxCompiler, and Nextflow. Use for DNAnexus data transfers, dxapp.json development, execution monitoring, workflow import, and project automation.
+  matched: reproducible, research in content, description
+  scientific-agent-skills: upstreams/scientific-agent-skills/skills/dnanexus-integration (49c6e97775eaa18ba791bebe23162a70ae601c18)
+
+== installed ==
+skills-workshop: Coordinate systematic agent-skill discovery, native project skill creation, reusable dependency installation, cross-project recall, use tracking, evaluation, and upstream contribution. Use when asked to find or compare skills, create or manage a project's skills, install or audit reusable skills wi…
+  matched: reproducible, assessment in content
+  codex-user: /Users/johnlee/.codex/skills/skills-workshop (local/unpinned)
+entire-worktree-hooks: Set up Entire for a Codex project or worktree using its native workflow, reuse approved hook trust, and verify capture and dashboard visibility before research.
+  matched: research in content, description
+  codex-user: /Users/johnlee/.codex/skills/entire-worktree-hooks (local/unpinned)
+duct: Use con/duct for substantive project commands such as tests, builds, benchmarks, analyses, and batch jobs. Capture execution logs and resource usage in central per-project storage outside Git, inspect failures, and retain classified task captures in Workshop annex. Installed as part of Skills Works…
+  matched: assessment in content
+  codex-user: /Users/johnlee/.codex/skills/duct (local/unpinned)
+workshop-feedback: Collect schema-validated skill outcomes, keep sensitive details in a private overlay, and group exceptional lessons for improvement. Retain rich skill-use assessments and explicit conversation/log captures through Workshop annex.
+  matched: assessment in content
+  agent-standard: /Users/johnlee/.agents/skills/workshop-feedback (local/unpinned)
+apple-passwords: Use Apple Passwords and the user-installed APW CLI whenever a website or hosted service requires a password or token. Help save credentials once, retrieve the correct account privately, and supply credentials to browsers, Git, git-annex, or API clients across projects. Keep credential tooling and i…
+  matched: reproducible in content
+  codex-user: /Users/johnlee/.codex/skills/apple-passwords (local/unpinned)
+bids-app-builder: Build, adapt, test, document, and release containerized BIDS Apps from an existing pipeline or new analysis code. Use when creating a BIDS App, adapting a pipeline to the bids-apps/example template, implementing the standard BIDS Apps CLI, writing container/CI tests, or preparing a tagged BIDS App …
+  matched: reproducible in content
+  codex-user: /Users/johnlee/.codex/skills/bids-app-builder (local/unpinned)
+review-agent: Perform a read-only, defect-first review of a specified code change and return every actionable finding. Use when another agent delegates review of uncommitted changes, a base-branch diff, a commit, or custom review instructions.
+  matched: assessment in content
+  codex-user: /Users/johnlee/.codex/skills/.system/review-agent (local/unpinned)
+
+== asm ==
+deep-research
+  Universal deep research agent team. 13-agent pipeline for rigorous academic research on any topic. 8 modes: full research, quick brief, paper review, lit-review, fact-check, three-way literature scan, Socratic guided research dialogue, and systematic review with optional meta-analysis. Covers resea…
+  source: github:Imbad0202/academic-research-skills:skills/deep-research
+research-lookup
+  Look up current research and scientific information across three backends: fast web search via parallel-cli (default), the Parallel Chat API for deep multi-source synthesis, and Perplexity sonar-pro-search for scholarly paper searches. Automatically routes each query to the best backend and saves e…
+  source: github:K-Dense-AI/claude-scientific-skills:skills/research-lookup
+content-research-brief
+  Research trending topics, collect source articles, and generate a structured research brief for content creation. Stop writing from thin air — write from real sources. Use this skill when the user wants to research a topic before writing, collect sources for an article, create a research-backed con…
+  source: github:Affitor/affiliate-skills:skills/content/content-research-brief
+keyword-research
+  When the user wants to discover, evaluate, or prioritize App Store keywords. Also use when the user mentions "keyword research", "find keywords", "search volume", "keyword difficulty", "keyword ideas", or "what keywords should I target". For implementing keywords into metadata, see metadata-optimiz…
+  source: github:Eronred/aso-skills:skills/keyword-research
+research-ideation
+  This skill should be used when the user asks to "brainstorm research ideas", "use 5W1H framework", "identify research gaps", "conduct gap analysis", "start research project", "conduct literature review", "define research question", "select research method", "plan research", or mentions research pro…
+  source: github:Galaxy-Dawn/claude-scholar:skills/research-ideation
+market-research-reports
+  Generate comprehensive market research reports (50+ pages) in the style of top consulting firms (McKinsey, BCG, Gartner). Features professional LaTeX formatting, extensive visual generation with scientific-schematics and generate-image, deep integration with research-lookup for data gathering, and …
+  source: github:K-Dense-AI/claude-scientific-skills:skills/market-research-reports
+research-grants
+  Write competitive research proposals for NSF, NIH, DOE, DARPA, and Taiwan NSTC. Agency-specific formatting, review criteria, budget preparation, broader impacts, significance statements, innovation narratives, and compliance with submission requirements.
+  source: github:K-Dense-AI/claude-scientific-skills:skills/research-grants
+deep-research
+  Multi-source deep research using firecrawl and exa MCPs. Searches the web, synthesizes findings, and delivers cited reports with source attribution. Use when the user wants thorough research on any topic with evidence and citations.
+  source: github:affaan-m/everything-claude-code:skills/deep-research
+market-research
+  Conduct market research, competitive analysis, investor due diligence, and industry intelligence with source attribution and decision-oriented summaries. Use when the user wants market sizing, competitor comparisons, fund research, technology scans, or research that informs business decisions.
+  source: github:affaan-m/everything-claude-code:skills/market-research
+prediction-market-oracle-research
+  Research prediction markets as data sources or oracle signals for products, agents, dashboards, and corporate decision intelligence. Use for source-grounded analysis of market-implied probabilities, caveats, and integration patterns without investment advice.
+  source: github:affaan-m/everything-claude-code:skills/prediction-market-oracle-research
+
+== github ==
+No matches.
+
+== vercel ==
+No matches.

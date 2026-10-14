@@ -1,0 +1,16 @@
+Authority boundaries
+- apm: external project dependency manifest, lock, resolution, deployment, and audit
+  authority: external dependency state; 0.31.0
+- gh-skill: GitHub search, preview, source provenance, and publication
+  authority: discovery only in this workflow; gh version 2.97.0
+- asm: cross-provider catalog search and inspection
+  authority: discovery only in this workflow; npx package pinned to 2.14.0
+- vercel-skills: skills.sh and .well-known discovery
+  authority: discovery only in this workflow; npx package pinned to 1.5.22
+- workshop: source-agnostic recall, use evidence, ratings, evaluations, and contributions
+  authority: cross-project memory only; 0.1.0
+- node: runtime for pinned discovery CLIs
+  authority: runtime; v22.23.2
+
+Discovery tools never install into native or APM-managed project paths.
+Every delegated command is printed before it runs.

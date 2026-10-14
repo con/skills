@@ -1,0 +1,7 @@
+✨ Pixi task (workshop in default): python scripts/workshop.py find STAMPED reproducible research assessment
+[asm] runner=10.9.8; package=agent-skill-manager@2.14.0; read-only search of public providers; local memory is never included in the query; cwd=/Users/johnlee/code/CON/skills-workshop
+$ npx --yes agent-skill-manager@2.14.0 search 'STAMPED reproducible research assessment' --available --machine
+[github] runner=gh version 2.97.0; read-only search of public providers; local memory is never included in the query; cwd=/Users/johnlee/code/CON/skills-workshop
+$ gh skill search 'STAMPED reproducible research assessment' --limit 10 --json skillName,description,repo,path,namespace,stars
+[vercel] runner=10.9.8; package=skills@1.5.22; read-only search of public providers; local memory is never included in the query; cwd=/Users/johnlee/code/CON/skills-workshop
+$ npx --yes skills@1.5.22 find 'STAMPED reproducible research assessment'

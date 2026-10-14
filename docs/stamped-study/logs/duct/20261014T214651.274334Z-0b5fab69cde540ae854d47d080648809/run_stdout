@@ -1,0 +1,30 @@
+scientific-agent-skills (upstreams/scientific-agent-skills)
+  pinned:   49c6e97775eaa18ba791bebe23162a70ae601c18
+  fork:     1e5eeffbdad3749125afe7ab48a39694e27f181c (origin/main)
+  upstream: a1043ef544e3a100c28e70a736b6cf32554d0677 (upstream/main)
+  fork is 0 ahead / 55 behind upstream
+  affected: 0 bundle mappings, 0 materializations
+nipreps-skills-comm (upstreams/nipreps-skills-comm)
+  pinned:   695933c12af53ea0c2ad964cc5315b68681f5895
+  fork:     695933c12af53ea0c2ad964cc5315b68681f5895 (origin/main)
+  upstream: 887c953fc905edcb48bfd3ddd8515a85ab8647b0 (upstream/main)
+  fork is 0 ahead / 5 behind upstream
+  affected: 8 bundle mappings, 0 materializations
+con-skills (upstreams/con-skills)
+  pinned:   512e58d193d22a29ba37df26a25321b695890384
+  fork:     024dd90f9c512d654a9fd26bc0cc07f0f10f9d26 (origin/master)
+  upstream: 5ae48e98a1d7522d328d3573bdc014292b6ffa44 (upstream/master)
+  fork is 0 ahead / 12 behind upstream
+  affected: 4 bundle mappings, 0 materializations
+anthropic-skills (upstreams/anthropic-skills)
+  pinned:   33375500bcea98d610eb30ce10ac4e59b89c390d
+  fork:     dbd4588f9e1033efb41dad4bef2f7947c8993d44 (origin/main)
+  upstream: dbd4588f9e1033efb41dad4bef2f7947c8993d44 (upstream/main)
+  fork is 0 ahead / 0 behind upstream
+  affected: 0 bundle mappings, 0 materializations
+openai-skills (upstreams/openai-skills)
+  pinned:   49f948faa9258a0c61caceaf225e179651397431
+  fork:     49f948faa9258a0c61caceaf225e179651397431 (origin/main)
+  upstream: 49f948faa9258a0c61caceaf225e179651397431 (upstream/main)
+  fork is 0 ahead / 0 behind upstream
+  affected: 0 bundle mappings, 0 materializations

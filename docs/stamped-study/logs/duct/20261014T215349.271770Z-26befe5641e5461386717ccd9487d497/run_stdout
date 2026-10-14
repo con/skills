@@ -1,0 +1,18 @@
+
+⚠️  assess-alignment-with-stamped-principles
+  WARN  W002  /Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/assess-alignment-with-stamped-principles/SKILL.md  frontmatter missing recommended field 'allowed-tools'
+
+⚠️  align-with-stamped-principles
+  WARN  W002  /Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/align-with-stamped-principles/SKILL.md  frontmatter missing recommended field 'allowed-tools'
+
+⚠️  create-stamped-project
+  WARN  W002  /Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/create-stamped-project/SKILL.md  frontmatter missing recommended field 'allowed-tools'
+
+⚠️  create-repronim-stamped-project
+  WARN  W002  /Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/create-repronim-stamped-project/SKILL.md  frontmatter missing recommended field 'allowed-tools'
+
+⚠️  do-full-research-loop
+  WARN  W002  /Users/johnlee/code/CON/stamped-ai-research/research/skill-drafts/do-full-research-loop/SKILL.md  frontmatter missing recommended field 'allowed-tools'
+
+────────────────────────────────────────────────────────────
+Skills checked: 5  Errors: 0  Warnings: 5
