@@ -47,8 +47,9 @@ The aim is to make the agent **actually compute**: only R0 may take its result f
 Take the candidates with the needed image and a per-session age, sort by age (ties by participant id), and take N at ranks `round(i·(n−1)/(N−1))`.
 
 **Pilot protocol** (public; the resulting values are frozen in the private oracle before any reported run).
-- **What runs:** a one-off, before the first iteration, outside the per-iteration budget.
-  These are hand-run compute jobs, not agent sessions: two containers on each of R1 and R2, so four recorded runs.
+- **What runs:** hand-run compute jobs, not agent sessions, outside the per-iteration budget, with recorded runs:
+  - R1: SynthStrip and FSL `bet`, before the first iteration;
+  - R2: `neurodesk-synthseg` and `repronim-simple-workflow`, before R2's first iteration.
 - **Bands:** each band is the union of the two containers' ranges, widened by 10 %, so a legitimate tool with a different mask definition still passes.
 - **Ordering threshold:** the lower of the two containers' Spearman values, minus 0.1.
 
@@ -70,8 +71,6 @@ Take the candidates with the needed image and a per-session age, sort by age (ti
 - *Oracle:* checked against FreeSurfer `brainseg_brainsegvol` for the same sessions:
   - **magnitude:** each mask volume / `brainseg_brainsegvol` falls within the pilot band, which catches voxel counts and wrong units;
   - **ordering:** the Spearman correlation is at least the pilot's ordering threshold.
-
-  The pilot runs SynthStrip and FSL `bet`.
 - *Caveat:* the T1w images are refaced; that may affect skull stripping, and it is not a failure.
 
 **R2: tissue volumes.**
@@ -115,22 +114,16 @@ These scripts already call `claude -p` and check whether the skill is read.
   4. writes skill-creator's workspace layout, so its aggregation and viewer are reused.
 
   Runs are unattended.
-  The eval prompt stands in for the user's approvals: it states that the plan is approved, which is the one approval `do-full-research-loop` asks for.
-  Permissions are pre-granted only inside the throwaway container; without both, a run would stall waiting for approval.
+  The eval prompt pre-approves whatever the skill under test asks for (a plan, a layout, a command), and permissions are pre-granted only inside the throwaway container; without both, a run would stall.
+  These evals therefore do not exercise the hands-on, minimal-trust path ([PLAN §8](PLAN.md#8-decisions-and-open-questions) open question 1); that path needs its own check, for example a scripted user that approves or declines.
 - **What the sandbox can see.**
-  - The sandbox needs the network for data.
-    GitHub hosts both the datasets and the public con/skills repository, so a domain allow-list cannot hide the repository.
+  The sandbox needs the network for data, and the host that serves the data also serves the public con/skills repository.
   - **Public grader material is therefore assumed readable** by the agent: the prompts, this plan and the probes.
-    Only oracle values and hidden probes are secret, and they are mounted into the grader after the agent has finished.
+  - **Secret material** is the oracle values, rubrics, hidden probes and hold-out tasks.
+    It stays private (§9), and it is mounted into the grader only after the agent has finished.
   - Any fetch of con/skills or of the evals repository during a run is a process metric, and it marks the run as contaminated.
-    A contaminated run is excluded from the pass counts and repeated from the spare sessions (§10).
-- **Host tooling,** pinned and recorded under `evals/stamped/`:
-  - Apptainer;
-  - `datalad` (a release with the concurrent-run fix, gh-7899/#7901);
-  - `datalad-container`;
-  - `git-annex` (the PyPI wheel works);
-  - `con-duct`;
-  - the Claude CLI.
+    A contaminated run is excluded from the pass counts and repeated from the spare sessions (about 19 of 40, §10).
+- **Host tooling** is pinned and recorded under `evals/stamped/`.
 - **Recorded with every run:**
   - the Claude CLI version and model;
   - the container image digest;
@@ -162,9 +155,9 @@ Everything here comes from `evals/stamped/`, pinned at the harness commit, and n
 
   Read-only inspection of that directory is allowed, and is logged as a process metric.
 - **`fresh-rerun`:** the grader keeps a read-only source clone of the object.
-  The rerun (`datalad rerun` or the documented entry point, which executes agent-authored code) happens in a throwaway copy of it, in a fresh container that holds no credentials.
-  That container's network cannot exclude GitHub, which hosts the datasets.
-  The resulting TSVs are compared.
+  The rerun (`datalad rerun` or the documented entry point, which executes agent-authored code) happens in a throwaway copy of it, in a fresh container.
+  That container holds no credentials, no oracle values and no hidden probes, and its network cannot exclude GitHub, which hosts the datasets.
+  The resulting TSVs are compared outside it, by the grader.
 
 **Self-assessed** (reported separately): what `assess-stamped`, run by the agent inside the run, said about its own object.
 The gap between self-assessed and externally graded is itself a result.
@@ -239,7 +232,7 @@ Results go to `con/stamped-skills-evals` on the CON hub, **private first**:
 - Produced objects and transcripts go to a private namespace.
 - A maintainer promotes a run to public after a secret and path scan.
 - No run is pushed to the public repository until the private namespace exists.
-- Oracle values, rubrics, hidden probes and hold-out tasks stay private.
+- The secret material of §5 stays private.
 - Operational details (accounts, tokens, network access) are kept out of this public repository.
 
 ## 10. Budget and done criteria
@@ -260,6 +253,8 @@ R2 and release benchmarks are budgeted separately, with the maintainers' agreeme
 **How results are read.**
 - Each use case gets **side-by-side pass counts** (k of 3 per arm), for example `skill` 3/3 vs `pointer` 1/3 on R1.
   Raw counts only, with no significance claims.
+- Next to each count stands the number of contaminated and excluded runs for that arm.
+  Otherwise an arm that gets contaminated more often (`pointer`, which is told to look things up) would be silently advantaged.
   Repeats are independent per arm, not paired, and even 3/3 vs 0/3 is only p ≈ 0.1 (two-sided Fisher).
 - **Per-iteration gates are smoke thresholds.**
 - **v1.0 gates** use a release benchmark with about 10 repeats per arm on R1, the main use case.
@@ -273,5 +268,5 @@ R2 and release benchmarks are budgeted separately, with the maintainers' agreeme
   - never `yes` without cited evidence.
 - **create / align / do-full-research-loop:**
   - **smoke:** `skill` passes all externally graded checks in at least 2 of 3 repeats on R0 and R1;
-  - **v1.0:** on the R1 release benchmark, `skill`'s pass count exceeds `pointer`'s by a stated margin (2 of about 10 as a placeholder, still as raw counts), with no regression against vN-1;
+  - **v1.0:** on the R1 release benchmark, `skill`'s pass count is at least `pointer`'s + 2, capped at all repeats (a placeholder margin, still raw counts), with no regression against vN-1;
   - the maintainers sign off.

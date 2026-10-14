@@ -166,7 +166,7 @@ Several of them assume a stack (annex, `.datalad/`, run records), which a tool-a
   6. Independent review by a fresh agent.
   7. README write-up.
   8. Run `assess-stamped`, and fix its MUST `no`s.
-- **`self-assess-stamped`:**
+- **`self-assess-stamped`:** reuses `scan-projects` (its `projects.tsv`) for the project list, and #16's report conventions, including re-review of a previous report, for the aggregate report.
   1. List the pointed folders shallowly (one level), and confirm the selection with the user.
   2. Run `assess-stamped` on each.
   3. Aggregate recurring `no`s per principle and item.
@@ -199,7 +199,7 @@ The paper-vs-schema drift (S.2, M.3, D.3, T.4) goes upstream as an issue.
 ## 5. Development and evaluation
 
 See [evals.md](evals.md).
-In one line: `pointer` vs `pointer` + skills, on public prompts, graded outside the sandbox against private oracles, with raw pass counts per use case and the maintainers' review of each iteration.
+In one line: `pointer` vs `pointer` + skills, on public prompts, graded outside the sandbox ([evals.md §5–6](evals.md#5-runners)), with raw pass counts per use case and the maintainers' review of each iteration.
 
 ---
 
@@ -211,10 +211,11 @@ Skills stay at `0.x` until their criteria in [evals.md §10](evals.md#10-budget-
 con/skills has no PR template or contributing guide.
 The `AGENTS.md` PR rule applies to skills that prepare PRs for *other* projects.
 The real obligations are:
-- `tox -e validate` (`ci/validate_skills.py`) passes;
+- `tox -e validate` (`ci/validate_skills.py`) passes, with W002 expected ([§2](#2-design-principles) item 4);
 - a README table row for every skill added;
-- #16's "Skill versions" rule: top-level `version:`, and a new skill stays at `version: 0.1.0` while its introducing PR is open;
-- W002 (missing `allowed-tools`) is expected, per [§2](#2-design-principles) item 4.
+- #16's "Skill versions" rule: top-level `version:`, and a new skill stays at `version: 0.1.0` while its introducing PR is open.
+  It applies here because the STAMPED skills' reports record the version that produced them, which is the scope `AGENTS.md` sets.
+  The validator has no version check, so review enforces it.
 
 **Dependency:** #23, unmerged.
 
@@ -228,7 +229,8 @@ The real obligations are:
 - [ ] **Phase 2:**
   - `create-stamped-project`;
   - `evals/stamped/` with the R0/R1 prompts and the outer-loop runner;
-  - checks for the Python under `evals/`, choosing between a workflow path-filter entry alone (simplest) and ruff in its own tox env; `ci/validate_skills.py` stays skill-only;
+  - checks for the Python under `evals/`.
+    The workflow already triggers on `*/**.py`, but `tox -e validate` scans only skill directories, so `evals/` needs either a tox env running ruff or `py_compile` on it, or an extended validator;
   - first iterations.
 - [ ] **Phase 3:** `do-full-research-loop`; R1–R2.
 - [ ] **Phase 4:** `create-repronim-stamped-project` with [stack-repronim.md](stack-repronim.md); reconcile with con/cierge#52.
@@ -247,7 +249,7 @@ The real obligations are:
 ## 7. Risks
 
 - **Grading against itself.** Mitigated by the probe placement in [§3](#3-layering-and-layout) and the hidden probes ([evals.md §6](evals.md#6-grading)).
-- **Oracle leakage.** ds007116 ships the answers for R0–R2, so only R0 may use them as its result, and oracle values stay private.
+- **Oracle leakage.** ds007116 ships the answers for R0–R2, so only R0 may use them as its result; what stays secret is in [evals.md §5](evals.md#5-runners).
 - **Forking #23.** Two parallel assessors would drift; phase 1 is #23 itself.
 - **Unmerged dependency.** #23 may change before it lands; this plan follows it.
 - **Skill bloat.** Mitigated by W003 (on `SKILL.md` only, above 600 lines), `analyze-duplicates`, reasoning kept in `DESIGN.md`, and pruning each iteration.
