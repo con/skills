@@ -245,6 +245,29 @@ def outputs_into_inputs(root: pathlib.Path) -> str:
     return "the input module now carries this project's output, and differs from the recorded commit"
 
 
+def outputs_into_inputs_pointer_updated(root: pathlib.Path) -> str:
+    """Results committed inside the input module, with the pointer moved to follow.
+
+    What a live R0 run did on its first attempt: it wrote its scripts, table and
+    figure into the input dataset, committed them there, and committed the new
+    submodule pointer in the superdataset. Everything then *looks* clean — `git
+    status` is empty and the module is at the commit the superdataset records —
+    and a fresh clone of that recorded state is impossible, because the commit
+    is on no remote.
+    """
+    sub = root / "sourcedata" / "ds007116"
+    (sub / "code").mkdir(parents=True, exist_ok=True)
+    (sub / "code" / "aggregate.py").write_text("#!/usr/bin/env python3\n# joins the shipped tables\n")
+    (sub / "derivatives" / "brain-volume-vs-age.tsv").parent.mkdir(parents=True, exist_ok=True)
+    (sub / "derivatives" / "brain-volume-vs-age.tsv").write_text("session_id\tage\nses-1\t9.1\n")
+    git(sub, "add", "code/aggregate.py", "derivatives/brain-volume-vs-age.tsv")
+    git(sub, "commit", "-q", "-m", "add the aggregation script and its table")
+    git(root, "add", "sourcedata/ds007116")
+    git(root, "commit", "-q", "-m", "record the input at its new state")
+    return ("this object's script and table are committed inside the input module, and the superdataset "
+            "records that unpublished commit")
+
+
 def untracked_figure(root: pathlib.Path) -> str:
     """A result that exists only in somebody's working tree."""
     path = root / "figures" / "gm-wm-ratio-vs-age.png"
@@ -306,11 +329,15 @@ MUTANTS: dict[str, dict] = {
     },
     "outputs-into-inputs": {
         "apply": outputs_into_inputs,
-        # A modified submodule pointer is uncommitted superdataset state, and
-        # `inputs-untouched` reports the input drift as an extra finding: no
-        # 0.3.1 item asks whether an input was modified.
-        "expect": {"stamped-checklist:must/004": "unmet"},
-        "expect_extra": {"inputs-untouched": "unmet"},
+        # Two failures at once, and both are now items rather than extras: the
+        # superdataset is dirty (its pointer still names the old commit), and
+        # this object's product sits inside the input module.
+        "expect": {"stamped-checklist:must/004": "unmet", "stamped-checklist:should/003": "unmet"},
+        "probe": "inputs-untouched",
+    },
+    "outputs-into-inputs-pointer-updated": {
+        "apply": outputs_into_inputs_pointer_updated,
+        "expect": {"stamped-checklist:should/003": "unmet", "stamped-checklist:must/002": "unmet"},
         "probe": "inputs-untouched",
     },
     "outputs-under-inputs": {

@@ -56,11 +56,24 @@ def _statuses(root: pathlib.Path) -> dict[str, str]:
     return out
 
 
+# `platform-assumptions` never returns `met`: it can only flag platform-specific
+# commands, and must/011 and must/012 ask about host assumptions in general. Its
+# silence is a prompt to read, not a pass — an earlier version claimed `met` and
+# a blind run took that at face value, missing a documented route through a lab
+# mount. The items it covers are therefore expected to come back `not-checked`.
+PROBE_NEVER_MET = {"stamped-checklist:must/011", "stamped-checklist:must/012"}
+
+
 def test_fixture_is_clean_and_all_probes_pass(clean):
     statuses = _statuses(clean)
     assert statuses, "no probe answered any item"
-    bad = {item: status for item, status in statuses.items() if status != "met"}
+    bad = {item: status for item, status in statuses.items()
+           if status != "met" and item not in PROBE_NEVER_MET}
     assert not bad, f"the known-good fixture should be all met, got {bad}"
+    for item in PROBE_NEVER_MET:
+        assert statuses.get(item) == "not-checked", (
+            f"{item} should be left for judgement, got {statuses.get(item)}"
+        )
 
 
 def test_every_probe_returns_a_known_status(clean):

@@ -75,6 +75,11 @@ ENV_SPECS = {
     "Pipfile": "spec", "setup.cfg": "spec",
 }
 CI_DIRS = (".github/workflows/", ".gitlab-ci.yml", ".circleci/", ".forgejo/workflows/", ".gitea/workflows/")
+# PEP 723 inline script metadata: `# /// script` … `dependencies = [...]` …
+# `# ///`, which `uv run <script>` resolves. A script that carries its own
+# dependencies *is* an environment specification, pinned if the versions are.
+PEP723 = re.compile(r"^#\s*///\s*script\s*$.*?^#\s*///\s*$", re.M | re.S)
+PEP723_PINNED = re.compile(r'"[\w.\[\]-]+\s*(==|~=|>=)\s*[\d.]+')
 LOCKFILES_CI = ("pixi.lock", "uv.lock", "poetry.lock", "conda-lock.yml", "renv.lock",
                 "requirements.lock", "requirements.txt")
 CI_REEXECUTES = re.compile(
@@ -419,6 +424,12 @@ def env_spec_tracked(obj: Object) -> Probe:
             found[relpath] = kind
     if obj.exists(".datalad/config") and "containers." in obj.read(".datalad/config"):
         found[".datalad/config"] = "pinned"
+    for relpath in obj.tracked():
+        if not relpath.endswith(".py") or _is_record_output(relpath):
+            continue
+        block = PEP723.search(obj.read(relpath))
+        if block:
+            found[relpath] = "pinned" if PEP723_PINNED.search(block.group(0)) else "spec"
 
     pinned = sorted(p for p, k in found.items() if k == "pinned")
     uninstalled = [m.get("path", m["name"]) for m in obj.submodules() if not m.get("initialized", False)]
@@ -457,8 +468,10 @@ def env_spec_tracked(obj: Object) -> Probe:
                     "tool to be present already.")
     elif found:
         s010 = "partial"
+        inline = [p for p, k in found.items() if p.endswith(".py")]
         r010 = clip(f"{', '.join(sorted(found)[:3])} lists dependencies but pins no versions "
-                    "(no lockfile or digest).")
+                    + ("(inline PEP 723 metadata with unpinned requirements; `uv lock --script` "
+                       "would pin it)." if inline else "(no lockfile or digest)."))
     else:
         s010 = s013
         r010 = r013
@@ -589,20 +602,27 @@ def platform_assumptions(obj: Object) -> Probe:
                      {"hits": hits, "undocumented": undocumented},
                      item_status={i011: "partial", i012: "partial"},
                      item_reason={i011: reason, i012: reason})
+    # This probe reads *commands*. must/011 and must/012 ask about host
+    # assumptions in general — mounts, hardware, services, environment
+    # variables, OS versions — so a clean command scan is not a `met`. Claiming
+    # one suppressed the judgement that should have caught a documented route
+    # through /mnt/labshare, which is how this came to be written.
     if hits:
-        reason = clip(f"{len(hits)} platform-specific command(s), each in a file that names the platform "
-                      f"it expects (e.g. {hits[0]['path']}: {hits[0]['platform']}).")
-        return Probe("platform-assumptions", "met", items, reason, evidence, {"hits": hits},
-                     item_status={i011: "met", i012: "met"},
+        reason = clip(f"{len(hits)} platform-specific command(s), each in a file naming the platform it "
+                      f"expects (e.g. {hits[0]['path']}: {hits[0]['platform']}). Commands only; other "
+                      "host assumptions need a reading.")
+        return Probe("platform-assumptions", "not-checked", items, reason, evidence, {"hits": hits},
+                     item_status={i011: "not-checked", i012: "not-checked"},
                      item_reason={i011: reason, i012: reason})
-    reason = ("No platform-specific package manager, BSD/GNU-only flag or cluster scheduler command in "
-              "tracked text: nothing ties the object to one host kind.")
-    return Probe("platform-assumptions", "met", items, reason,
+    reason = clip("No platform-specific package manager, BSD/GNU-only flag or scheduler command in "
+                  "tracked text — all a command scan can settle. Whether the documented route needs a "
+                  "mount, a host install, hardware or a service is a reading.")
+    return Probe("platform-assumptions", "not-checked", items, reason,
                  [Evidence("probe:platform-assumptions",
                            f"scanned {len(obj.tracked())} tracked paths for "
                            f"{len(PLATFORM_COMMANDS)} platform-specific commands, 0 hits")],
                  {"hits": []},
-                 item_status={i011: "met", i012: "met"},
+                 item_status={i011: "not-checked", i012: "not-checked"},
                  item_reason={i011: reason, i012: reason})
 
 

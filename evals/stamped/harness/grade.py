@@ -155,6 +155,19 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("-o", "--output", type=pathlib.Path)
     args = ap.parse_args(argv)
 
+    # Never write inside the object being graded: a grading file left in the
+    # tree makes the next sweep report must/004 `unmet`, which is the grader
+    # accusing the object of the grader's own mess. Found when exactly that
+    # happened to an R0 arm.
+    obj_root = args.object.resolve()
+    if args.output:
+        out = args.output.resolve()
+        if out == obj_root or obj_root in out.parents:
+            redirected = obj_root.parent / f"{obj_root.name}.grading.json"
+            print(f"note: {out} is inside the object; writing {redirected} instead "
+                  "(a grading file in the tree would dirty it)", file=sys.stderr)
+            args.output = redirected
+
     import yaml
 
     rubric = yaml.safe_load((args.use_case / "rubric.yaml").read_text())

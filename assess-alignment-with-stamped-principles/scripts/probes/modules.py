@@ -10,6 +10,35 @@ import subprocess
 
 from .common import Evidence, Object, Probe, clip
 
+# Files that look like a product of the assessing object rather than part of an
+# input dataset. Kept in sync with provenance.py's view of what a product is.
+PRODUCT_HINTS = (".png", ".pdf", ".svg", ".tsv", ".csv", ".py", ".sh", ".ipynb")
+
+
+def _local_commits(obj: Object, path: str) -> list[dict]:
+    """Commits on a module's HEAD that are on no remote branch of that module.
+
+    This is how "the results were written into the input" looks from outside:
+    the module is *clean*, its pointer is updated, and its history has moved
+    somewhere nobody else can follow. Detected offline, from the module's own
+    refs.
+    """
+    sub = obj.root / path
+    if not (sub / ".git").exists():
+        return []
+    contains = obj.git("branch", "-r", "--contains", "HEAD", cwd=sub)
+    if contains.strip():
+        return []  # HEAD is published somewhere
+    out = obj.git("log", "--format=%H%x1f%s%x1f%an", "-20", "HEAD", "--not", "--remotes", cwd=sub)
+    commits = []
+    for line in out.splitlines():
+        if not line.strip():
+            continue
+        sha, subject, author = (line.split("\x1f") + ["", ""])[:3]
+        files = [f for f in obj.git("show", "--name-only", "--format=", sha, cwd=sub).splitlines() if f.strip()]
+        commits.append({"commit": sha, "subject": subject, "author": author, "files": files})
+    return commits
+
 # A URL that only resolves relative to wherever the superdataset happens to sit,
 # or only on one machine.  `url = ../..` is the single most common real-world
 # failure (compression-comparisons-t261-study).
@@ -84,7 +113,19 @@ def subdatasets_resolvable(obj: Object, check_remote: bool = False) -> Probe:
                                     "why": f"url answers, but commit {commit[:9]} is not fetchable from it: "
                                            + clip(fetch.stderr.strip(), 90)})
 
-    details = {"resolvable": good, "unresolvable": bad, "unreachable": unreachable}
+    # A well-formed url is not enough if the *commit* it is pinned to exists
+    # only here. Checked offline from the module's own remote refs; the
+    # network check in --check-remote confirms it against the server.
+    local_only = []
+    for mod in mods:
+        if not mod.get("initialized", False):
+            continue
+        path = mod.get("path", mod["name"])
+        if _local_commits(obj, path):
+            local_only.append(path)
+
+    details = {"resolvable": good, "unresolvable": bad, "unreachable": unreachable,
+               "pinned_to_local_commits": local_only}
     # may/001 asks whether external components are linked as modules at all; a
     # url that does not resolve elsewhere is must/002 and must/016, not may/001.
     may = {
@@ -96,6 +137,14 @@ def subdatasets_resolvable(obj: Object, check_remote: bool = False) -> Probe:
             f"{', '.join(m.get('path', m['name']) for m in mods[:3])}"
         )
     }
+    if local_only and not bad:
+        return Probe(
+            "subdatasets-resolvable", "unmet", items,
+            clip(f"{len(local_only)} module(s) are pinned to a commit that exists only in this checkout "
+                 f"({local_only[0]}): the url resolves, a fresh clone of the recorded state does not."),
+            [Evidence(".gitmodules", f"{path}: recorded commit is on no remote branch") for path in local_only],
+            details, item_status=may, item_reason=may_reason,
+        )
     if bad:
         first = bad[0]
         return Probe(
@@ -142,6 +191,31 @@ def inputs_untouched(obj: Object) -> Probe:
     uninit = [m for m in mods if not m.get("initialized", False)]
     modified = [m for m in mods if m.get("differs")]
     conflicted = [m for m in mods if m.get("conflict")]
+
+    # The failure a clean `git submodule status` hides: this object's own
+    # products committed inside an input module, with the pointer moved to
+    # follow them. A live R0 run did exactly this, and the earlier version of
+    # this probe called the inputs "clean and at the recorded commit".
+    written_into: list[dict] = []
+    for mod in mods:
+        if not mod.get("initialized", False):
+            continue
+        path = mod.get("path", mod["name"])
+        for commit in _local_commits(obj, path):
+            products = [f for f in commit["files"] if f.endswith(PRODUCT_HINTS)]
+            if products:
+                written_into.append({"path": path, **commit, "products": products})
+    if written_into:
+        first = written_into[0]
+        return Probe(
+            "inputs-untouched", "unmet", ["stamped-checklist:should/003"],
+            clip(f"{len(written_into)} commit(s) inside the input module {first['path']} add this object's "
+                 f"own products, e.g. {first['products'][0]} in {first['commit'][:7]}: raw and derived data "
+                 "are the same module, and the recorded input commit is on no remote."),
+            [Evidence(f"{w['path']}@{w['commit'][:7]}", f"{w['subject']}: {', '.join(w['products'][:3])}")
+             for w in written_into[:10]],
+            {"written_into_inputs": written_into},
+        )
     if modified or conflicted:
         worst = (modified + conflicted)[0]
         return Probe(

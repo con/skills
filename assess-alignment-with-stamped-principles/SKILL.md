@@ -109,7 +109,7 @@ Each of these needs a reading of the object, and each needs a citation:
 |---|---|
 | must/001 | Is everything essential under one root, or does something live only on a share, a cluster path or in prose? |
 | must/003 | Is external software inside the environment or linked as a module, rather than assumed present? |
-| must/011, must/012 | `platform-assumptions` flags platform-specific commands with no platform named. You judge the rest: are the OS, system libraries, environment variables, scheduler and hardware written down *where a stranger will look*, and does the documented route match what CI and the run records actually do? |
+| must/011, must/012 | **Always yours.** `platform-assumptions` can only flag platform-specific commands; it never returns `met`. Judge the rest: are the OS, system libraries, environment variables, mounts, scheduler and hardware written down *where a stranger will look*? Read the documented route end to end and ask what it assumes — a `/mnt/...` input, a host install under `/opt`, a GPU, a licence server — and whether the object says so. |
 | must/017 | Does the documentation say how to obtain and use the environment, not just that it exists? |
 | should/001 | One version-control system across components, or several? |
 | should/008 | The duplicate of must/014 — the same sentence at SHOULD level. Answer it, with the same evidence and the `upstream-duplicate` flag; it is easy to miss when skimming for `should/*` ids. |
