@@ -47,8 +47,10 @@ The aim is to make the agent **actually compute**: only R0 may take its result f
 Take the candidates with the needed image and a per-session age, sort by age (ties by participant id), and take N at ranks `round(i·(n−1)/(N−1))`.
 
 **Pilot protocol** (public; the resulting values are frozen in the private oracle before any reported run).
-Two different containers are hand-run on the use case's subjects, with recorded runs.
-Each band is the union of their ranges, widened by 10 %, so a legitimate tool with a different mask definition still passes.
+- **What runs:** a one-off, before the first iteration, outside the per-iteration budget.
+  These are hand-run compute jobs, not agent sessions: two containers on each of R1 and R2, so four recorded runs.
+- **Bands:** each band is the union of the two containers' ranges, widened by 10 %, so a legitimate tool with a different mask definition still passes.
+- **Ordering threshold:** the lower of the two containers' Spearman values, minus 0.1.
 
 **R0: warm-up.**
 - *Prompt:* "For ds007116, plot brain volume, with the GM/WM volume ratio on a secondary axis, against age, using the FreeSurfer derivatives the dataset ships."
@@ -67,7 +69,7 @@ Each band is the union of their ranges, widened by 10 %, so a legitimate tool wi
   Report brain-mask volume in mm³ per subject in a TSV and plot it against age."
 - *Oracle:* checked against FreeSurfer `brainseg_brainsegvol` for the same sessions:
   - **magnitude:** each mask volume / `brainseg_brainsegvol` falls within the pilot band, which catches voxel counts and wrong units;
-  - **ordering:** the Spearman correlation is at least the pilot threshold.
+  - **ordering:** the Spearman correlation is at least the pilot's ordering threshold.
 
   The pilot runs SynthStrip and FSL `bet`.
 - *Caveat:* the T1w images are refaced; that may affect skull stripping, and it is not a failure.
@@ -102,21 +104,26 @@ These scripts already call `claude -p` and check whether the skill is read.
 
 - **Inner loop: debugging only.**
   In-session subagents read the skill from a snapshot path, as skill-creator does.
-  They share a filesystem with this plan, so their results are never reported.
+  They share a filesystem with the grader material, so their results are never reported.
 - **Outer loop: every reported number.**
-  It runs on the lab's compute host, one fresh container per run.
+  It runs on a controlled host, one fresh container per run.
   The new code is a thin runner that adds what skill-creator lacks for full task runs: the container, and `datalad run` around the agent (the con/cierge#52 pattern).
   Per run it:
   1. creates a fresh dataset;
   2. copies **only the skill directories** at a pinned commit into the sandbox (none for `pointer`/`bare`);
   3. runs `claude -p --output-format stream-json` under `datalad run`;
   4. writes skill-creator's workspace layout, so its aggregation and viewer are reused.
+
+  Runs are unattended.
+  The eval prompt stands in for the user's approvals: it states that the plan is approved, which is the one approval `do-full-research-loop` asks for.
+  Permissions are pre-granted only inside the throwaway container; without both, a run would stall waiting for approval.
 - **What the sandbox can see.**
   - The sandbox needs the network for data.
     GitHub hosts both the datasets and the public con/skills repository, so a domain allow-list cannot hide the repository.
   - **Public grader material is therefore assumed readable** by the agent: the prompts, this plan and the probes.
     Only oracle values and hidden probes are secret, and they are mounted into the grader after the agent has finished.
   - Any fetch of con/skills or of the evals repository during a run is a process metric, and it marks the run as contaminated.
+    A contaminated run is excluded from the pass counts and repeated from the spare sessions (§10).
 - **Host tooling,** pinned and recorded under `evals/stamped/`:
   - Apptainer;
   - `datalad` (a release with the concurrent-run fix, gh-7899/#7901);
@@ -150,15 +157,14 @@ Everything here comes from `evals/stamped/`, pinned at the harness commit, and n
 - **Hidden probes:** a few more, with their own private mutants, stored with the oracles.
 - **`oracle-match`:** the use case's oracle checks (§3).
 - **`oracle-not-copied`** (from R1 on):
-  - no output reproduces the shipped FreeSurfer values, or a constant multiple of them;
-  - no output depends, through its run records, on `derivatives/freesurfer-post/` as an input.
+  - **primary:** no output depends, through its run records, on `derivatives/freesurfer-post/` as an input;
+  - **secondary:** no output reproduces the shipped FreeSurfer values, or a constant multiple of them; this catches only crude copies.
 
   Read-only inspection of that directory is allowed, and is logged as a process metric.
-- **`fresh-rerun`:**
-  1. The grader host clones the object from the private namespace, with a token scoped to the runs namespace that never enters the container.
-  2. The clone is mounted read-only into a fresh container whose network reaches only data and container hosts.
-  3. `datalad rerun`, or the documented entry point, runs there; it executes agent-authored code.
-  4. The TSVs are compared.
+- **`fresh-rerun`:** the grader keeps a read-only source clone of the object.
+  The rerun (`datalad rerun` or the documented entry point, which executes agent-authored code) happens in a throwaway copy of it, in a fresh container that holds no credentials.
+  That container's network cannot exclude GitHub, which hosts the datasets.
+  The resulting TSVs are compared.
 
 **Self-assessed** (reported separately): what `assess-stamped`, run by the agent inside the run, said about its own object.
 The gap between self-assessed and externally graded is itself a result.
@@ -240,15 +246,15 @@ Results go to `con/stamped-skills-evals` on the CON hub, **private first**:
 
 **Budget per iteration** (placeholders; the spend cap is the maintainers' to set):
 - **inner loop:** 10 sessions per debugging round;
-- **outer loop:** 40 sessions, counting runners, assessors, pilots and reruns, and 12 h of wall time.
+- **outer loop:** 40 agent sessions, counting runners, assessors and repeat runs after harness faults or contamination, and 12 h of wall time.
 
 A v0.1 iteration fits with headroom:
 - 3 arms (`pointer`, `skill`, `skill@vN-1`) × 2 rungs (R0, R1) × 1 model tier × 3 repeats = 18 runner sessions;
 - plus about 3 sampled assessor sessions;
-- plus up to 4 pilot sessions;
-- that is 25, which leaves about 15 for reruns after harness faults.
+- that is 21, which leaves about 19 for repeat runs.
 - The first iteration has no `skill@vN-1`.
 
+The pilots (§3) are a one-off outside this cap.
 R2 and release benchmarks are budgeted separately, with the maintainers' agreement.
 
 **How results are read.**
@@ -256,7 +262,8 @@ R2 and release benchmarks are budgeted separately, with the maintainers' agreeme
   Raw counts only, with no significance claims.
   Repeats are independent per arm, not paired, and even 3/3 vs 0/3 is only p ≈ 0.1 (two-sided Fisher).
 - **Per-iteration gates are smoke thresholds.**
-- **v1.0 gates** use a release benchmark with about 10 repeats per arm on R1.
+- **v1.0 gates** use a release benchmark with about 10 repeats per arm on R1, the main use case.
+  R0 and R2 stay at smoke level.
 
 **Done criteria** (placeholders, revised after two iterations):
 - **Probes and `assess-stamped` level 1:**
@@ -266,5 +273,5 @@ R2 and release benchmarks are budgeted separately, with the maintainers' agreeme
   - never `yes` without cited evidence.
 - **create / align / do-full-research-loop:**
   - **smoke:** `skill` passes all externally graded checks in at least 2 of 3 repeats on R0 and R1;
-  - **v1.0:** on the release benchmark, `skill`'s pass count is at least `pointer`'s on every v0.1 use case, with no regression against vN-1;
+  - **v1.0:** on the R1 release benchmark, `skill`'s pass count exceeds `pointer`'s by a stated margin (2 of about 10 as a placeholder, still as raw counts), with no regression against vN-1;
   - the maintainers sign off.

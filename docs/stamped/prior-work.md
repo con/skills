@@ -25,9 +25,9 @@ Each source, and the one thing the plan takes from it.
 
 - [#23](https://github.com/con/skills/pull/23) (@asmacdo): `assess-stamped`, `align-stamped`, the base of phase 1.
   Its `DESIGN.md` files list the deferred drop-ins this plan schedules.
-- [#16](https://github.com/con/skills/pull/16): `code-quality-report-conventions` (location, provenance stamp, evidence rules) and the top-level `version:` rule; not yet merged.
+- [#16](https://github.com/con/skills/pull/16) (merged): `code-quality-report-conventions` (location, provenance stamp, evidence rules) and the "Skill versions" rule (top-level `version:`).
 - [#13](https://github.com/con/skills/pull/13) (APM, `skills/` tree), [#14](https://github.com/con/skills/pull/14) (Claude-neutral wording), [#21](https://github.com/con/skills/pull/21) (`introduce-*` → `setup-*`): followed as they land.
-- [#25](https://github.com/con/skills/issues/25): the `allowed-tools` separator question; the STAMPED skills omit the field.
+- [#25](https://github.com/con/skills/issues/25): the `allowed-tools` separator question.
 - `ci/validate_skills.py`:
   - W003 warns when a `SKILL.md` exceeds 600 lines;
   - E003 scans `SKILL.md` for home-directory paths;

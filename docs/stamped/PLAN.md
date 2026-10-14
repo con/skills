@@ -3,9 +3,9 @@
 **Status:** draft for discussion; nothing here is implemented yet.
 **Tracks:** [stamped-principles/stamped-agent-skills#3](https://github.com/stamped-principles/stamped-agent-skills/issues/3),
 in particular [this comment](https://github.com/stamped-principles/stamped-agent-skills/issues/3#issuecomment-6128822460).
-**Builds on** two open PRs:
-- [con/skills#23](https://github.com/con/skills/pull/23): `assess-stamped`, `align-stamped`;
-- [con/skills#16](https://github.com/con/skills/pull/16): `code-quality-report-conventions` and the skill-version rule.
+**Builds on:**
+- [con/skills#23](https://github.com/con/skills/pull/23) (open): `assess-stamped`, `align-stamped`;
+- [con/skills#16](https://github.com/con/skills/pull/16) (merged): `code-quality-report-conventions` and the "Skill versions" rule in `AGENTS.md`.
 
 **Companion documents:**
 - [evals.md](evals.md): how the skills are tested and tuned;
@@ -25,7 +25,7 @@ Decisions taken and questions still open are in [§8](#8-decisions-and-open-ques
 - **How:** use-case first.
   Each skill version is handed to fresh agents on a ladder of concrete tasks on ds007116.
   The ladder starts at plotting tables the dataset already ships (R0); the main target is brain extraction of 10 named subjects with a `///repronim/containers` image (R1).
-  The resulting projects are graded outside the skills, by probes kept under `evals/`, reference tables and a fresh-clone rerun ([evals.md](evals.md)).
+  The resulting projects are graded outside the skills, by scripted probes, reference tables and a fresh-clone rerun ([evals.md](evals.md)).
 - **v0.1 scope:** rungs R0–R2; phase 1 is #23 itself ([§6](#6-roadmap)).
 
 ---
@@ -69,6 +69,7 @@ Later still, experiments from Dichter et al.'s SfN'25 poster ([zenodo 19834562](
    - The existing validator covers structure.
 4. **Minimal trust.**
    - The skills omit `allowed-tools`, as #23 does: the field grants pre-approval and restricts nothing (see #25).
+     The validator therefore warns W002 for them; that warning is expected.
    - Anything consequential, such as running target code, writing outside the report, installing or publishing, is proposed and approved by the user.
 5. **One-screen skills.**
    `SKILL.md` holds invariants and never-do rules; the reasoning goes to `DESIGN.md`, as #23 does.
@@ -212,20 +213,22 @@ The `AGENTS.md` PR rule applies to skills that prepare PRs for *other* projects.
 The real obligations are:
 - `tox -e validate` (`ci/validate_skills.py`) passes;
 - a README table row for every skill added;
-- #16's "Skill versions" rule (top-level `version:`), once #16 is merged.
+- #16's "Skill versions" rule: top-level `version:`, and a new skill stays at `version: 0.1.0` while its introducing PR is open;
+- W002 (missing `allowed-tools`) is expected, per [§2](#2-design-principles) item 4.
 
-**Dependencies:** #23 and #16, both unmerged.
+**Dependency:** #23, unmerged.
 
 - [ ] **Phase 0:** this plan.
 - [ ] **Phase 1:** #23 merged as it stands (@asmacdo).
-  The #16 provenance stamp follows as a small PR once #16 is merged.
-- [ ] **Phase 1b:**
-  - `evals/stamped/probes.py` and the mutants;
+  The #16 provenance stamp follows as a small PR.
+- [ ] **Phase 1b:** creates `evals/stamped/`, with:
+  - a hand-built known-good R0 object, needed before any runner exists;
+  - `probes.py` and the mutants;
   - calibration of #23's level-1 assessment on the gold set ([evals.md §7](evals.md#7-calibration)).
 - [ ] **Phase 2:**
   - `create-stamped-project`;
   - `evals/stamped/` with the R0/R1 prompts and the outer-loop runner;
-  - the validator's Python checks and the workflow path filter extended to `evals/`;
+  - checks for the Python under `evals/`, choosing between a workflow path-filter entry alone (simplest) and ruff in its own tox env; `ci/validate_skills.py` stays skill-only;
   - first iterations.
 - [ ] **Phase 3:** `do-full-research-loop`; R1–R2.
 - [ ] **Phase 4:** `create-repronim-stamped-project` with [stack-repronim.md](stack-repronim.md); reconcile with con/cierge#52.
@@ -243,10 +246,10 @@ The real obligations are:
 
 ## 7. Risks
 
-- **Grading against itself.** The probes never ship with a skill, and some stay hidden ([evals.md §6](evals.md#6-grading)).
+- **Grading against itself.** Mitigated by the probe placement in [§3](#3-layering-and-layout) and the hidden probes ([evals.md §6](evals.md#6-grading)).
 - **Oracle leakage.** ds007116 ships the answers for R0–R2, so only R0 may use them as its result, and oracle values stay private.
 - **Forking #23.** Two parallel assessors would drift; phase 1 is #23 itself.
-- **Unmerged dependencies.** #23 and #16 may change before they land; this plan follows them.
+- **Unmerged dependency.** #23 may change before it lands; this plan follows it.
 - **Skill bloat.** Mitigated by W003 (on `SKILL.md` only, above 600 lines), `analyze-duplicates`, reasoning kept in `DESIGN.md`, and pruning each iteration.
 - **Nagging.** Keep #23's "meet the project where it is" tone.
 - **Overfitting.** Mitigated by hold-out tasks in a separate private dataset.
@@ -260,9 +263,9 @@ The real obligations are:
 - Names follow #23; the long issue names are trigger phrases.
 - #23 lands first, on its own; a shared conventions skill comes later, once a second consumer of the pin exists.
 - No vendored copy of the checklist JSON; tag-pinned URLs only.
-- Probes live under `evals/`, never in a skill.
-- Skills omit `allowed-tools` (#25 tracks the separator question for skills that set it).
-- Results go to `con/stamped-skills-evals` on the CON hub, private first; compute runs on the lab's compute host.
+- Probes live under `evals/` ([§3](#3-layering-and-layout)).
+- Skills omit `allowed-tools` ([§2](#2-design-principles) item 4).
+- Results go to `con/stamped-skills-evals` on the CON hub, private first; compute runs on a controlled host.
 - v0.1 = R0–R2; only R0 may use shipped derivatives as its result.
 
 **Open:**
@@ -281,7 +284,7 @@ The real obligations are:
    Recommendation: yes, two skills.
 6. **spec-kit:** only where `.specify/` exists?
    Recommendation: yes, as #23 does.
-7. **Hub:** the private namespace and token scopes, settled outside this public PR.
+7. **Hub:** the private namespace, settled outside this public PR.
 8. **Budget:** confirm the caps in [evals.md §10](evals.md#10-budget-and-done-criteria), and set the spend cap.
 9. **Talks:** the slice in [talks.md](talks.md).
 
