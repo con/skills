@@ -47,6 +47,8 @@ Three questions, and the project kind ([`project-kinds.md`](../stamped-conventio
 2. **What are the inputs**, and where do they already live — a dataset URL, a share, a tarball somebody emailed?
 3. **What similar project of yours should this look like?** Ask for a path or a URL; read its layout and follow it where it is sound. Matching a convention the user already keeps beats imposing this skill's.
 
+**When no user is available** — a scripted run, an eval, a session with nobody attached — do not stall and do not invent preferences: answer the four from the PROMPT and the environment, write each answer into the README as a clearly labelled assumption, and carry on. An unanswered question is not a reason to produce nothing.
+
 With **explicit consent only**, skim shell history or earlier AI sessions for how similar work was done, and **summarise rather than copy** — no command lines into the new project, nothing quoted that was not offered.
 Default is not to look. Say that you are not looking.
 

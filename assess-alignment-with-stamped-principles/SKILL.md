@@ -164,9 +164,9 @@ Fill `assessor` with this skill's `version:`, the harness, the model, and `depen
 
 Where the products go:
 
-- With the user's agreement, into the object at `docs/stamped/assessments/` — as **uncommitted files**, so they can review before anything is recorded.
-- Otherwise into the current directory.
-- Never into the object's `derivatives/` or any input module.
+- **With no user available — a scripted run, an eval, a handoff from another skill — write them outside the object**, into the current directory. Not into it: an uncommitted report makes the object fail must/004 (the tree is no longer the whole state), and a committed one changes the object the assessment is about. A real run lost that item to this skill's own instruction.
+- With the user present and agreeing, into the object at `docs/stamped/assessments/` as **uncommitted files**, so they can review before anything is recorded — and say that they are uncommitted and why.
+- Never into the object's `derivatives/`, never into an input module.
 
 ## Never do
 

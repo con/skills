@@ -378,6 +378,12 @@ TOOL_PRECONDITION = re.compile(
     re.IGNORECASE,
 )
 PRECONDITION_EXIT = re.compile(r"\bexit\s+[1-9]|\breturn\s+[1-9]|\bdie\b")
+# A check whose failure branch *falls back* is not a precondition: it is the
+# opposite, a project making the tool optional. The template this collection
+# ships does exactly that, and an earlier version of this probe cost a real run
+# a MUST item for it.
+PRECONDITION_FALLBACK = re.compile(r"(?i)\bfallback\b|\bwarning\b|\bnot found;|\bif not\b|\belse\b|"
+                                   r"\boptional\b|\bwithout\b")
 PRECONDITION_IGNORE = {"echo", "then", "else", "fi", "do", "done", "if", "set", "the", "this", "python3", "python"}
 
 
@@ -398,9 +404,12 @@ def _host_tool_preconditions(obj: Object) -> list[dict]:
             tool = next((g for g in match.groups()[:2] if g), None)
             if tool and tool.lower() in PRECONDITION_IGNORE:
                 continue
-            window = "\n".join(lines[max(0, lineno - 9):lineno + 8])
+            # Only the lines that belong to this check's own failure branch.
+            window = "\n".join(lines[lineno - 1:lineno + 3])
             if tool and not PRECONDITION_EXIT.search(window) and not match.group(3):
                 continue  # a version check that does not gate anything
+            if tool and PRECONDITION_FALLBACK.search(window):
+                continue  # the project handles the tool being absent
             found.append({"path": relpath, "line": lineno, "tool": tool,
                           "text": clip(line.strip(), 120)})
     return found

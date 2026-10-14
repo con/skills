@@ -86,7 +86,7 @@ Record what it says, and fix what it finds.
 
 - Write the results into the README or a report: what was asked, what was done, what came out, and the caveats — including every revision from step 3.
 - Put the quick-and-dirty disclaimer in the README.
-- Run [`/assess-alignment-with-stamped-principles`](../assess-alignment-with-stamped-principles/SKILL.md) on the finished project. Its report is **part of the deliverable**.
+- Run [`/assess-alignment-with-stamped-principles`](../assess-alignment-with-stamped-principles/SKILL.md) on the finished project, with its four files written **outside** the project (an uncommitted report would make the object fail must/004, and committing one changes what was assessed). Its report is **part of the deliverable**; say where it is.
 - Fix every MUST failure it finds before declaring done — through [`align-with-stamped-principles`](../align-with-stamped-principles/SKILL.md) when the gap is in the harness.
 
 ## Never do

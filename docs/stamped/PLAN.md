@@ -432,7 +432,9 @@ What exists in con/skills as of 2026-10-13, on branch `claude/ecstatic-cerf-nh4j
 - mutant detection **13/13**, including two negative controls, with no collateral item flips;
 - false `unmet`/`partial` on the clean fixture **0/15** answered items;
 - on `compression-comparisons-t261-study` (1265 commits, 22286 tracked derivatives) the probe sweep takes **3.6 s** and finds the `url = ../..` gap the plan predicted;
-- after one blind run and the fixes it forced, an independent subagent's 31 verdicts and the reference answer agree on **30 of 31** items.
+- after one blind run and the fixes it forced, an independent subagent's 31 verdicts and the reference answer agree on **30 of 31** items;
+- **6/6 judgement mutants** detected and named, with the control's unexplained accusations down from 7/19 to 3/19;
+- **16/16 scripted mutants**, 49 tests.
 
 Two rounds of calibration paid for themselves.
 Running the probes on a real object caught must/009 counting host paths inside duct traces as script defects, must/005 calling 12 MiB of JSONL "binary data", must/006 ignoring environment *capture* as distinct from an environment *specification*, and four probes reporting `unmet` with no evidence of absence.

@@ -9,6 +9,12 @@
 set -eu
 quiet=0
 [ "${1:-}" = "--quiet" ] && quiet=1
+
+# Installed tooling is not the project. An agent harness directory, a vendored
+# dependency or a compiled cache carries paths and commands that are none of
+# this project's business, and flagging them produces a FAIL nobody can fix.
+# Extend with PREFLIGHT_EXCLUDE=':(exclude)vendor/*' etc.
+EXCLUDE=":(exclude).claude/* :(exclude)**/__pycache__/* :(exclude)**/*.pyc ${PREFLIGHT_EXCLUDE:-}"
 fail=0
 say() { [ "$quiet" = 1 ] || printf '%s\n' "$1"; }
 bad() { printf 'FAIL  %s\n' "$1" >&2; fail=1; }
@@ -42,10 +48,13 @@ else
 fi
 
 # P.1 — nothing the next host will not have.
-if git ls-files -z | xargs -0 grep -lE '(^|[^[:alnum:]:])/(home|Users|data|scratch|mnt)/[A-Za-z]' 2>/dev/null | grep -qv '^$'; then
-    bad "a tracked file carries a host-specific absolute path (must/009)"
+# shellcheck disable=SC2086  # EXCLUDE is a list of pathspecs on purpose
+hits=$(git ls-files -z -- . $EXCLUDE | xargs -0 grep -lE '(^|[^[:alnum:]:])/(home|Users|data|scratch|mnt)/[A-Za-z]' 2>/dev/null || true)
+if [ -n "$hits" ]; then
+    bad "a tracked file carries a host-specific absolute path (must/009):"
+    printf '%s\n' "$hits" | sed 's/^/        /' >&2
 else
-    say "ok    no host-specific absolute paths in tracked files"
+    say "ok    no host-specific absolute paths in the project's own tracked files"
 fi
 
 [ "$fail" = 0 ] && say "preflight passed" || printf '\npreflight failed: fix the above, or say in the run record why it is acceptable.\n' >&2

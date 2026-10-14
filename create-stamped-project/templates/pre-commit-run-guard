@@ -15,7 +15,12 @@
 # the run's own commit passes while a commit from any other shell is refused.
 set -eu
 
-MARKER=".datalad-run-in-flight"
+# The wrapper keeps the marker inside the git directory, so that `datalad run`
+# (which refuses to start with untracked files in the worktree) is not tripped
+# by the guard's own bookkeeping. The old worktree path is still honoured.
+GITDIR="$(git rev-parse --git-dir)"
+MARKER="$GITDIR/datalad-run-in-flight"
+[ -e "$MARKER" ] || MARKER=".datalad-run-in-flight"
 
 if [ -e "$MARKER" ] && [ "${IN_FLIGHT_OK:-}" != "1" ]; then
     printf 'refusing to commit: a recorded run is in flight (%s exists).\n' "$MARKER" >&2
@@ -25,6 +30,8 @@ if [ -e "$MARKER" ] && [ "${IN_FLIGHT_OK:-}" != "1" ]; then
     printf '  * wait for the run to finish (it commits its own result);\n' >&2
     printf '  * write to a gitignored scratch directory instead;\n' >&2
     printf '  * if you are certain no run is active, remove %s.\n' "$MARKER" >&2
+    printf '\nIf that marker is stale, the wrapper was killed in a way that skipped its\n' >&2
+    printf 'cleanup trap (SIGKILL, or a crash): removing it by hand is correct.\n' >&2
     exit 1
 fi
 
