@@ -115,6 +115,16 @@ def main(argv: list[str] | None = None) -> int:
         (sandbox / "CLAUDE.md").write_text(snippet)
         (sandbox / "AGENTS.md").write_text(snippet)
 
+    if installed:
+        # The skills are installed for the agent to read, not committed into
+        # the object the graders assess: two R0 arms lost MUST items to probes
+        # finding host paths and `command -v` checks inside this harness's own
+        # copies of the skills.
+        gitignore = sandbox / ".gitignore"
+        existing = gitignore.read_text() if gitignore.exists() else ""
+        if ".claude/" not in existing:
+            gitignore.write_text(existing + ".claude/\n")
+
     task = prompt
     if args.condition == "skill-explicit":
         task = EXPLICIT_PREFIX.get(case_id, "/do-full-research-loop ") + prompt
