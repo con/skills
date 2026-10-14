@@ -1,6 +1,6 @@
 ---
 name: assess-alignment-with-stamped-principles
-version: 0.2.0
+version: 0.1.0
 description: Assess how a project aligns with the STAMPED principles (self-contained, tracked, actionable, modular, portable, ephemeral, distributable) and leave a filled checklist behind — a dated report, a response JSON with per-item evidence, and a link that opens the answers in the STAMPED checklist app. Strictly read-only — it never changes the project it assesses. Use when asked to assess, audit, review or check a project, dataset or repository against STAMPED, to fill in the STAMPED checklist for something, or when another skill (align-, create-, do-full-research-loop) calls for an assessment.
 allowed-tools: Bash, Read, Glob, Grep, AskUserQuestion, Task
 user-invocable: true

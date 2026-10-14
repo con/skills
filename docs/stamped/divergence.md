@@ -160,6 +160,21 @@ matches `setup-*`, and #23 is already open with those directories. **If #23
 merges first, this branch renames to match rather than shipping two assessors**
 — the file-level collision is the real argument, and it is #23's to win.
 
+## Settled by #16, not by either branch
+
+[#16](https://github.com/con/skills/pull/16) merged to master while this branch
+was open, bringing the `AGENTS.md` **Skill versions** rule: a skill stays at its
+initial version while its introducing pull request is open, and counting starts
+at the first merge. Both skills here are therefore `0.1.0`, not the `0.2.0` they
+carried through development. The eval records under
+`evals/stamped/blind-runs/` keep the labels they ran with, because a run record
+that is edited afterwards is not a record.
+
+#16 also brought `code-quality-report-conventions` — a shared, non-invocable
+conventions skill read by two sibling skills, merged on the same day #24 decided
+that a shared conventions skill for STAMPED was premature. The pattern is now
+the house style, which is most of the argument in §4 above.
+
 ## How to read the two branches together
 
 | | #24 | this branch |
