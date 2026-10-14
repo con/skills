@@ -199,7 +199,7 @@ The paper-vs-schema drift (S.2, M.3, D.3, T.4) goes upstream as an issue.
 ## 5. Development and evaluation
 
 See [evals.md](evals.md).
-In one line: `pointer` vs `pointer` + skills, on public prompts, graded outside the sandbox ([evals.md §5–6](evals.md#5-runners)), with raw pass counts per use case and the maintainers' review of each iteration.
+In one line: `pointer` vs `pointer` + skills, on public prompts, graded outside the sandbox ([evals.md §5](evals.md#5-runners), [§6](evals.md#6-grading)), with raw pass counts per use case and the maintainers' review of each iteration.
 
 ---
 

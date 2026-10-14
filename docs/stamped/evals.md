@@ -253,9 +253,8 @@ R2 and release benchmarks are budgeted separately, with the maintainers' agreeme
 **How results are read.**
 - Each use case gets **side-by-side pass counts** (k of 3 per arm), for example `skill` 3/3 vs `pointer` 1/3 on R1.
   Raw counts only, with no significance claims.
-- Next to each count stands the number of contaminated and excluded runs for that arm.
-  Otherwise an arm that gets contaminated more often (`pointer`, which is told to look things up) would be silently advantaged.
   Repeats are independent per arm, not paired, and even 3/3 vs 0/3 is only p ≈ 0.1 (two-sided Fisher).
+- Report the contaminated and excluded runs per arm next to each count, so an arm that is contaminated more often (`pointer`) is not silently advantaged.
 - **Per-iteration gates are smoke thresholds.**
 - **v1.0 gates** use a release benchmark with about 10 repeats per arm on R1, the main use case.
   R0 and R2 stay at smoke level.
@@ -268,5 +267,5 @@ R2 and release benchmarks are budgeted separately, with the maintainers' agreeme
   - never `yes` without cited evidence.
 - **create / align / do-full-research-loop:**
   - **smoke:** `skill` passes all externally graded checks in at least 2 of 3 repeats on R0 and R1;
-  - **v1.0:** on the R1 release benchmark, `skill`'s pass count is at least `pointer`'s + 2, capped at all repeats (a placeholder margin, still raw counts), with no regression against vN-1;
+  - **v1.0:** on the R1 release benchmark, `skill`'s pass count is at least min(`pointer`'s + 2, all repeats) (a placeholder margin, still raw counts), with no regression against vN-1;
   - the maintainers sign off.
