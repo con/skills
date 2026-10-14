@@ -107,19 +107,23 @@ None of these candidate workflows was validated by the three trial pairs.
 
 ## Complete finished development records
 
-[The duct archive](logs/duct/) contains 18 completed captures, 90 files, and 291,226 bytes from the coordinator's intermediate skill-development exports.
+[The duct archive](logs/duct/) contains 21 completed captures, 105 files, and 645,981 bytes from the skill-development exports and three direct central-source copies added after the native documentation worker stopped.
 Every existing metadata file, stdout/stderr stream, and resource-sample file is preserved byte-for-byte, including failed attempts and historical paths.
 Seventeen captures match export plan/report 02; the later completed stage-03 provenance audit is absent from that plan and is separately marked in the [manifest](logs/manifest.json), with direct central-source/intermediate hash verification.
-Each file records its central source, intermediate export, final relative path, SHA-256, and size.
+The three added captures contain the finished native documentation invocation, its final SSH synchronization, and the uploaded-reference verification.
+Each file records its central source, any intermediate export, final relative path, SHA-256, size, and source/copied modes.
+Local copies preserve permissions; Git itself retains only the executable-bit distinction.
 
 Two captures have nonzero exit status; failed subcommands can also appear inside successful captures.
-There are no missing stdout/stderr files, eight empty stdout/stderr streams, and one empty resource-sample file.
+There are no missing stdout/stderr files, 10 empty stdout/stderr streams, and one empty resource-sample file.
 No stdin was captured or invented.
 Local duct resource samples measure monitored local processes, not remote model compute.
 Agent-native histories, command captures, and DataLad records establish different evidence.
 
-The current outer native documentation invocation is still running and is **not** included as a completed capture.
-The coordinator will export it after this worker stops in a separate curation commit and verify uploaded code/checkpoint references.
+The native documentation invocation stopped successfully and is included in full.
+Post-stop verification matched the uploaded code commit `d0f83b9492a697b929ddda2788da35fb3285170d` and its separate checkpoint ref, with completed native activity within that invocation.
+The manifest identifies this later coordinator curation and its verification/privacy records; the curation itself was not wrapped in duct, avoiding a recursive unfinished capture.
+Targeted private-guidance and credential checks passed for the three added captures; those bounded checks do not prove that every possible sensitive item is absent.
 Later log packaging, replay, or publication checks do not repair historical worker outcomes or count as worker-produced quality.
 Private native transcripts, user configuration, credentials, raw retrieval trees, and private Workshop memory are outside this delivery.
 

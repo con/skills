@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "session_id": "01a13c61-8f14-70a2-bade-f4699090bdf7",
+  "task_id": null,
+  "project_id": "skills-c005cbd1b8b4aa8f",
+  "project_root": "/Users/johnlee/code/CON/stamped-ai-research/skills",
+  "working_directory": "/Users/johnlee/code/CON/stamped-ai-research/skills",
+  "started_at": "2026-10-14T23:21:33.552524+00:00",
+  "git_commit": "d0f83b9492a697b929ddda2788da35fb3285170d",
+  "git_dirty": false,
+  "duct_executable": "/Users/johnlee/.local/bin/duct"
+}
