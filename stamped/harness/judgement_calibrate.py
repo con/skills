@@ -75,6 +75,14 @@ CONTROL_EXPECTED = {
     "stamped-checklist:should/004": "no rerun was attempted, and the fake pin would break a fresh clone",
     "stamped-checklist:should/007": "the container image is a placeholder, so no environment artifact is "
                                     "actually archived (see the object's FIXTURE.md)",
+    # True of any object one commit deep, and `verdicts.md` rule 5 says so:
+    # a declared process with no instance in the history is `partial`.
+    "stamped-checklist:must/014": "the regeneration command is declared and the history is one commit deep",
+    "stamped-checklist:should/008": "the duplicate of must/014, same evidence",
+    # CI cannot exercise an image that is a few bytes of placeholder, so the
+    # environment behind the recorded results is genuinely never rebuilt here.
+    "stamped-checklist:should/006": "CI cannot run the placeholder container the records name",
+    "stamped-checklist:should/005": "the Makefile route runs directly; only the records used the container",
 }
 
 

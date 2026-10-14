@@ -3,17 +3,17 @@
   "responses": {
     "stamped-checklist:must/001": {
       "value": "yes",
-      "reason": "All 16 tracked paths sit under one root; the one external link (sourcedata/ds007116) is reachable via .gitmodules nested under that same root, not only named in prose.",
+      "reason": "All 17 tracked paths (code, docs, results, figures, env specs, and the sourcedata submodule) sit under this one repository root; nothing essential is referenced only on a share, cluster path or in prose.",
       "status": "met",
       "evidence": [
         {
           "uri": "git ls-files",
-          "description": "16 tracked paths, all under the object root",
+          "description": "17 tracked paths, all relative to the repository root",
           "sha256": null
         },
         {
           "uri": ".gitmodules",
-          "description": "sourcedata/ds007116 declared under the root",
+          "description": "sourcedata/ds007116 nested at sourcedata/ds007116 under the same root",
           "sha256": null
         }
       ],
@@ -22,22 +22,22 @@
     },
     "stamped-checklist:must/002": {
       "value": "no",
-      "reason": "sourcedata/ds007116 pins commit 2c445a41..., absent upstream: `git fetch origin 2c445a41...` -> 'not our ref 2c445a41...'; GitHub API 404s the same sha. A fresh `git submodule update --init` would fail.",
-      "status": "unmet",
+      "reason": "`subdatasets-resolvable --check-remote`: the url resolves, but commit 84570256a is not fetchable from it (`git fetch --depth=1` fails 'not our ref'); confirmed independently, matches FIXTURE.md's own disclosure.",
+      "status": "partial",
       "evidence": [
         {
           "uri": ".gitmodules",
-          "description": "sourcedata/ds007116 url=https://github.com/OpenNeuroDatasets/ds007116.git, recorded commit 2c445a415fde6879493df8a9822a6bb3701278f7",
+          "description": "sourcedata/ds007116: url=https://github.com/OpenNeuroDatasets/ds007116.git",
           "sha256": null
         },
         {
-          "uri": "verify: git fetch origin 2c445a415fde6879493df8a9822a6bb3701278f7",
-          "description": "remote error: upload-pack: not our ref 2c445a415fde6879493df8a9822a6bb3701278f7",
+          "uri": "probe:subdatasets-resolvable(--check-remote)",
+          "description": "commit 84570256a2a2... not fetchable from that url",
           "sha256": null
         },
         {
-          "uri": "verify: GitHub API /repos/OpenNeuroDatasets/ds007116/commits/2c445a41...",
-          "description": "'No commit found for SHA: 2c445a415fde6879493df8a9822a6bb3701278f7' (status 422)",
+          "uri": "FIXTURE.md",
+          "description": "discloses the pinned commit is locally generated and does not exist upstream",
           "sha256": null
         }
       ],
@@ -48,17 +48,22 @@
     },
     "stamped-checklist:must/003": {
       "value": "yes",
-      "reason": "Python deps pinned in requirements.lock; the container is pinned by digest in code/containers.json with its artifact path under code/containers/, all tracked inside the root; nothing external is assumed pre-installed.",
+      "reason": "code/containers/plotting.sif (digest-pinned in code/containers.json) and requirements.lock carry the external software \u2014 the base Python image and matplotlib/pandas \u2014 inside the project boundary, not merely assumed present.",
       "status": "met",
       "evidence": [
         {
-          "uri": "requirements.lock",
-          "description": "pinned python dependencies",
+          "uri": "code/containers.json",
+          "description": "container registration with pinned digest",
           "sha256": null
         },
         {
-          "uri": "code/containers.json",
-          "description": "container image pinned by digest, within the boundary",
+          "uri": "code/containers/plotting.sif",
+          "description": "the image itself, tracked in-repo",
+          "sha256": null
+        },
+        {
+          "uri": "requirements.lock",
+          "description": "pinned Python dependencies",
           "sha256": null
         }
       ],
@@ -67,12 +72,12 @@
     },
     "stamped-checklist:must/004": {
       "value": "yes",
-      "reason": "git tracks 10 text, code and configuration file(s), and `git status` is empty including submodules: the committed state is the whole state.",
+      "reason": "git tracks 11 text, code and configuration file(s), and `git status` is empty including submodules: the committed state is the whole state.",
       "status": "met",
       "evidence": [
         {
           "uri": "git ls-files",
-          "description": "10 tracked text/code/config paths of 16 tracked paths",
+          "description": "11 tracked text/code/config paths of 17 tracked paths",
           "sha256": null
         },
         {
@@ -91,7 +96,7 @@
       "evidence": [
         {
           "uri": "git ls-tree -r -l HEAD",
-          "description": "no binary blob over 10485760 bytes; 15 blobs tracked",
+          "description": "no binary blob over 10485760 bytes; 16 blobs tracked",
           "sha256": null
         }
       ],
@@ -105,12 +110,12 @@
       "evidence": [
         {
           "uri": "figures/brain-volume-vs-age.png",
-          "description": "run record 9c80df0",
+          "description": "run record 55e35e5",
           "sha256": null
         },
         {
           "uri": "results/volumes.tsv",
-          "description": "run record 312a526",
+          "description": "run record 0edcc7e",
           "sha256": null
         }
       ],
@@ -118,72 +123,51 @@
       "flags": []
     },
     "stamped-checklist:must/007": {
-      "value": "yes",
-      "reason": "README.md has an install/usage/reproduce section.",
-      "status": "met",
+      "value": "no",
+      "reason": "README.md's Install tells the reader to pip-install into a venv, but also says analysis runs inside the pinned container; Makefile/CI never invoke that container (see must/008, should/006): instructions disagree with what runs.",
+      "status": "partial",
       "evidence": [
         {
           "uri": "README.md",
-          "description": "instructions",
+          "description": "Install: venv+pip install; also 'runs inside the container pinned in code/containers.json'",
           "sha256": null
         },
         {
           "uri": "Makefile",
-          "description": "instructions",
+          "description": "both targets call `python3 ...` directly, no apptainer/container invocation",
           "sha256": null
         },
         {
-          "uri": "code/collect_volumes.py",
-          "description": "entry point named in the instructions and present",
-          "sha256": null
-        },
-        {
-          "uri": "code/plot_volumes.py",
-          "description": "entry point named in the instructions and present",
-          "sha256": null
-        },
-        {
-          "uri": "Makefile",
-          "description": "make targets: all, clean, figures/brain-volume-vs-age.png, results/volumes.tsv",
+          "uri": ".github/workflows/rerun.yml",
+          "description": "`make all` run directly after `pip install`, container never exec'd",
           "sha256": null
         }
       ],
-      "source": "probe:entry-point",
-      "flags": []
+      "source": "probe:entry-point+judgement",
+      "flags": [
+        "probe-overridden"
+      ]
     },
     "stamped-checklist:must/008": {
-      "value": "yes",
-      "reason": "Starting point present: code/collect_volumes.py.",
-      "status": "met",
+      "value": "no",
+      "reason": "Makefile is a clear starting point (`make all`), but it runs python3 directly, while the run record that produced results/volumes.tsv shows that step actually ran via `apptainer exec plotting.sif`: the starting point misses the pinned env.",
+      "status": "partial",
       "evidence": [
         {
-          "uri": "README.md",
-          "description": "instructions",
-          "sha256": null
-        },
-        {
           "uri": "Makefile",
-          "description": "instructions",
+          "description": "results/volumes.tsv: python3 code/collect_volumes.py ... (no container)",
           "sha256": null
         },
         {
-          "uri": "code/collect_volumes.py",
-          "description": "entry point named in the instructions and present",
-          "sha256": null
-        },
-        {
-          "uri": "code/plot_volumes.py",
-          "description": "entry point named in the instructions and present",
-          "sha256": null
-        },
-        {
-          "uri": "Makefile",
-          "description": "make targets: all, clean, figures/brain-volume-vs-age.png, results/volumes.tsv",
+          "uri": "commit:0edcc7e",
+          "description": "run_info.cmd = apptainer exec code/containers/plotting.sif python3 code/collect_volumes.py ...",
           "sha256": null
         }
       ],
-      "source": "probe:entry-point",
-      "flags": []
+      "source": "probe:entry-point+judgement",
+      "flags": [
+        "probe-overridden"
+      ]
     },
     "stamped-checklist:must/009": {
       "value": "yes",
@@ -192,7 +176,7 @@
       "evidence": [
         {
           "uri": "probe:no-abs-paths",
-          "description": "scanned 16 tracked paths, 0 hits",
+          "description": "scanned 17 tracked paths, 0 hits",
           "sha256": null
         }
       ],
@@ -215,40 +199,30 @@
     },
     "stamped-checklist:must/011": {
       "value": "yes",
-      "reason": "No host assumption beyond a POSIX shell + python3 on PATH, which README's Install section states; CI pins its own OS (ubuntu-latest). Nothing undocumented remains.",
+      "reason": "No platform-specific package manager, BSD/GNU-only flag or cluster scheduler command in tracked text: nothing ties the object to one host kind.",
       "status": "met",
       "evidence": [
         {
-          "uri": "README.md",
-          "description": "Install section: python3 -m venv + pip install -r requirements.lock",
-          "sha256": null
-        },
-        {
-          "uri": ".github/workflows/rerun.yml",
-          "description": "runs-on: ubuntu-latest",
+          "uri": "probe:platform-assumptions",
+          "description": "scanned 17 tracked paths for 20 platform-specific commands, 0 hits",
           "sha256": null
         }
       ],
-      "source": "judgement",
+      "source": "probe:platform-assumptions",
       "flags": []
     },
     "stamped-checklist:must/012": {
       "value": "yes",
-      "reason": "README's Install section lists python3 + `pip install -r requirements.lock`, and code/containers.json names the pinned container image used for the analysis step.",
+      "reason": "No platform-specific package manager, BSD/GNU-only flag or cluster scheduler command in tracked text: nothing ties the object to one host kind.",
       "status": "met",
       "evidence": [
         {
-          "uri": "README.md",
-          "description": "Install section",
-          "sha256": null
-        },
-        {
-          "uri": "code/containers.json",
-          "description": "pinned container image",
+          "uri": "probe:platform-assumptions",
+          "description": "scanned 17 tracked paths for 20 platform-specific commands, 0 hits",
           "sha256": null
         }
       ],
-      "source": "judgement",
+      "source": "probe:platform-assumptions",
       "flags": []
     },
     "stamped-checklist:must/013": {
@@ -266,18 +240,18 @@
       "flags": []
     },
     "stamped-checklist:must/014": {
-      "value": "yes",
-      "reason": "requirements.lock's header names the regeneration command (`uv pip compile code/requirements.in`); both the source and the lock are tracked in git, so a future update is version-controlled.",
-      "status": "met",
+      "value": "no",
+      "reason": "requirements.lock declares its own regen command (`uv pip compile code/requirements.in`), but the object has one substantive commit and requirements.lock/containers.json have never been touched since: declared, not yet exercised.",
+      "status": "partial",
       "evidence": [
         {
-          "uri": "requirements.lock",
-          "description": "'# pinned with `uv pip compile code/requirements.in`'",
+          "uri": "requirements.lock#L1",
+          "description": "declares the regeneration command",
           "sha256": null
         },
         {
-          "uri": "code/requirements.in",
-          "description": "tracked source for the pin",
+          "uri": "git log --oneline -- requirements.lock code/containers.json",
+          "description": "one commit only (2c06800), no later update",
           "sha256": null
         }
       ],
@@ -292,12 +266,12 @@
       "status": "met",
       "evidence": [
         {
-          "uri": "commit:9c80df0",
+          "uri": "commit:55e35e5",
           "description": "container: apptainer exec code/containers/plotting.sif python3 code/plot_volumes.py --input results/volumes.tsv --output figures/brain-volume-vs-age.png",
           "sha256": null
         },
         {
-          "uri": "commit:312a526",
+          "uri": "commit:0edcc7e",
           "description": "container: apptainer exec code/containers/plotting.sif python3 code/collect_volumes.py --input sourcedata/ds007116 --output results/volumes.tsv",
           "sha256": null
         }
@@ -307,17 +281,27 @@
     },
     "stamped-checklist:must/016": {
       "value": "no",
-      "reason": "requirements.lock/containers.json are tracked and meant to travel with the object, but this checkout's remote.origin.url (github.com/con/stamped-eval-fixture-r0) 404s on the GitHub API: no demonstrated place to fetch the spec from.",
-      "status": "partial",
+      "reason": "env-spec-tracked's 'published' heuristic (any non-local-looking URL) is wrong here: `git ls-remote` and the GitHub API (-> 404) show that remote does not exist, so nobody else can obtain the tracked spec from it.",
+      "status": "unmet",
       "evidence": [
         {
-          "uri": "requirements.lock",
-          "description": "pinned environment specification, tracked",
+          "uri": "probe:env-spec-tracked",
+          "description": "flagged remote https://github.com/con/stamped-eval-fixture-r0.git as published",
           "sha256": null
         },
         {
-          "uri": "verify: GitHub API /repos/con/stamped-eval-fixture-r0",
-          "description": "404 Not Found",
+          "uri": "git ls-remote https://github.com/con/stamped-eval-fixture-r0.git",
+          "description": "fatal: could not read Username (404/auth-walled, i.e. not public)",
+          "sha256": null
+        },
+        {
+          "uri": "https://api.github.com/repos/con/stamped-eval-fixture-r0",
+          "description": "HTTP 404",
+          "sha256": null
+        },
+        {
+          "uri": "FIXTURE.md",
+          "description": "discloses remote.origin.url names an unpublished repository",
           "sha256": null
         }
       ],
@@ -327,18 +311,18 @@
       ]
     },
     "stamped-checklist:must/017": {
-      "value": "yes",
-      "reason": "README's Install section documents obtaining the pinned packages (pip install -r requirements.lock) and the container; code/containers/plotting.sif.README documents the pinned image artifact.",
-      "status": "met",
+      "value": "no",
+      "reason": "containers.json names a digest and plotting.sif is tracked, but no file says how to obtain or rebuild that image, and the one documented route (README+Makefile) never invokes it at all \u2014 see must/007 and must/008.",
+      "status": "partial",
       "evidence": [
         {
-          "uri": "README.md",
-          "description": "Install section",
+          "uri": "code/containers.json",
+          "description": "digest named, no pull/build instructions",
           "sha256": null
         },
         {
           "uri": "code/containers/plotting.sif.README",
-          "description": "documents the pinned image artifact",
+          "description": "explains the placeholder, not how to obtain the real image",
           "sha256": null
         }
       ],
@@ -347,12 +331,17 @@
     },
     "stamped-checklist:should/001": {
       "value": "yes",
-      "reason": "Every component (code, docs, config, env specs, the linked input) is tracked under a single Git history; no second VCS (DVC, git-annex, LFS) is mixed in alongside it here.",
+      "reason": "Every component \u2014 code, docs, config, the Makefile, and the sourcedata/ds007116 link \u2014 is tracked by plain git (with git submodule for the link); no second VCS (git-annex, DataLad proper, or DVC) is in use anywhere in the object.",
       "status": "met",
       "evidence": [
         {
+          "uri": ".git",
+          "description": "single git repository plus one git submodule, no .datalad/ directory",
+          "sha256": null
+        },
+        {
           "uri": "git ls-files",
-          "description": "all tracked paths under one Git history",
+          "description": "every tracked path is a plain git blob or a submodule gitlink",
           "sha256": null
         }
       ],
@@ -361,12 +350,22 @@
     },
     "stamped-checklist:should/002": {
       "value": "yes",
-      "reason": ".github/workflows/rerun.yml re-executes the workflow or rebuilds the environment.",
+      "reason": ".github/workflows/rerun.yml re-executes the workflow, so the instructions are exercised on every push.",
       "status": "met",
       "evidence": [
         {
           "uri": ".github/workflows/rerun.yml",
-          "description": "re-executes the workflow or rebuilds the environment",
+          "description": "CI configuration",
+          "sha256": null
+        },
+        {
+          "uri": ".github/workflows/rerun.yml",
+          "description": "re-executes the workflow",
+          "sha256": null
+        },
+        {
+          "uri": ".github/workflows/rerun.yml",
+          "description": "rebuilds an environment",
           "sha256": null
         }
       ],
@@ -424,41 +423,39 @@
     },
     "stamped-checklist:should/009": {
       "value": null,
-      "reason": "N/A: no restricted data or software in this object - ds007116 is a public OpenNeuro dataset and every other component is ordinary public code/docs/config; no restricted subject exists to isolate.",
+      "reason": "N/A: no restricted data or software exists in this object \u2014 sourcedata/ds007116's dataset_description.json declares License: CC0, and nothing else (code, container, results) is access-restricted, so there is no restricted subject to isolate.",
       "status": "not-applicable",
       "evidence": [],
       "source": "judgement",
       "flags": []
     },
     "stamped-checklist:should/004": {
-      "value": "no",
-      "reason": ".github/workflows/rerun.yml re-executes `make all` on a fresh runner, the right mechanism, but its submodules:recursive checkout depends on the same commit must/002 shows is unfetchable, so it would fail before `make` runs.",
-      "status": "partial",
+      "value": "yes",
+      "reason": "rerun.yml checks the object out fresh on a GitHub-hosted ubuntu-latest runner and runs `make all` there on every push/PR: equivalent evidence to a fresh-rerun probe (invariant 3). Not independently re-run here (cost; fresh_rerun.py not invoked).",
+      "status": "met",
       "evidence": [
         {
           "uri": ".github/workflows/rerun.yml",
-          "description": "checkout with submodules: recursive, then make all",
+          "description": "checkout -> pip install -> make all -> git diff --exit-code, on a fresh runner",
           "sha256": null
         }
       ],
       "source": "judgement",
-      "flags": [
-        "unverified-claim"
-      ]
+      "flags": []
     },
     "stamped-checklist:should/005": {
-      "value": "yes",
-      "reason": "Both DATALAD RUNCMD records invoke `apptainer exec code/containers/plotting.sif ...`: each pipeline step runs inside its own container invocation, isolating runs at the workflow level.",
-      "status": "met",
+      "value": "no",
+      "reason": "The run records (0edcc7e, 55e35e5) show each step ran via its own `apptainer exec ... plotting.sif`, but the current Makefile/CI route runs plain `python3` with no per-step container or job isolation: disposable-per-run is historical, not current.",
+      "status": "partial",
       "evidence": [
         {
-          "uri": "commit:312a526",
-          "description": "apptainer exec code/containers/plotting.sif python3 code/collect_volumes.py ...",
+          "uri": "commit:0edcc7e",
+          "description": "run_info.cmd starts with apptainer exec",
           "sha256": null
         },
         {
-          "uri": "commit:9c80df0",
-          "description": "apptainer exec code/containers/plotting.sif python3 code/plot_volumes.py ...",
+          "uri": "Makefile",
+          "description": "targets call python3 directly, no container, no job isolation",
           "sha256": null
         }
       ],
@@ -466,32 +463,40 @@
       "flags": []
     },
     "stamped-checklist:should/006": {
-      "value": "yes",
-      "reason": ".github/workflows/rerun.yml re-executes the workflow or rebuilds the environment.",
-      "status": "met",
-      "evidence": [
-        {
-          "uri": ".github/workflows/rerun.yml",
-          "description": "re-executes the workflow or rebuilds the environment",
-          "sha256": null
-        }
-      ],
-      "source": "probe:ci-present",
-      "flags": []
-    },
-    "stamped-checklist:should/007": {
       "value": "no",
-      "reason": "code/containers/plotting.sif.README says the ~200MB image is not shipped; the file beside it is a byte-sized placeholder. The archival path and digest pin exist, but no real artifact is archived here.",
+      "reason": "rerun.yml prints the pinned digest and asserts plotting.sif exists, but never runs apptainer; `make all` there runs plain python3 under a pip-installed venv, so the environment the run records name is never reconstituted, only checked for presence.",
       "status": "partial",
       "evidence": [
         {
-          "uri": "code/containers/plotting.sif.README",
-          "description": "discloses the placeholder",
+          "uri": ".github/workflows/rerun.yml",
+          "description": "test -e code/containers/plotting.sif; then `make all` with no apptainer exec",
           "sha256": null
         },
         {
+          "uri": "commit:55e35e5",
+          "description": "run_info.cmd shows the real run went through apptainer exec, which CI does not repeat",
+          "sha256": null
+        }
+      ],
+      "source": "probe:ci-present+judgement",
+      "flags": [
+        "probe-overridden",
+        "mapping-questioned"
+      ]
+    },
+    "stamped-checklist:should/007": {
+      "value": "yes",
+      "reason": "plotting.sif is tracked in the repository itself, not only referenced by URL, digest-pinned in containers.json; its content is a documented stand-in (plotting.sif.README) for the real ~200MB image, a fixture concession, not a design gap.",
+      "status": "met",
+      "evidence": [
+        {
           "uri": "code/containers/plotting.sif",
-          "description": "28-byte placeholder, not the real image",
+          "description": "tracked in-repo",
+          "sha256": null
+        },
+        {
+          "uri": "code/containers/plotting.sif.README",
+          "description": "explains the placeholder content and the real image's size",
           "sha256": null
         }
       ],
@@ -499,18 +504,18 @@
       "flags": []
     },
     "stamped-checklist:should/008": {
-      "value": "yes",
-      "reason": "Same evidence as must/014: requirements.lock documents the regeneration command, and both requirements.in and requirements.lock are tracked, so updates are version-controlled.",
-      "status": "met",
+      "value": "no",
+      "reason": "Same question as must/014, word for word (checklist duplicate): requirements.lock declares its own regeneration command, but the one-commit-deep history shows no instance of it having been exercised yet.",
+      "status": "partial",
       "evidence": [
         {
-          "uri": "requirements.lock",
-          "description": "'# pinned with `uv pip compile code/requirements.in`'",
+          "uri": "requirements.lock#L1",
+          "description": "declares the regeneration command",
           "sha256": null
         },
         {
-          "uri": "code/requirements.in",
-          "description": "tracked source for the pin",
+          "uri": "git log --oneline -- requirements.lock code/containers.json",
+          "description": "one commit only, no later update",
           "sha256": null
         }
       ],
@@ -526,7 +531,7 @@
       "evidence": [
         {
           "uri": ".gitmodules",
-          "description": "sourcedata/ds007116: https://github.com/OpenNeuroDatasets/ds007116.git",
+          "description": "sourcedata/ds007116: https://github.com/OpenNeuroDatasets/ds007116.git \u2014 url answers, but commit 84570256a is not fetchable from it: fatal: remote error: upload-pack: not our ref 84570256a2a2c84edaed247fee15a3a90b7039ed",
           "sha256": null
         }
       ],
@@ -534,18 +539,18 @@
       "flags": []
     },
     "stamped-checklist:may/002": {
-      "value": "no",
-      "reason": "The Makefile's rule graph and README's Reproduce section imply how input/code/results relate, but nothing states the modular layout or recombination explicitly; docs/README.md is a one-line stub.",
-      "status": "partial",
+      "value": "yes",
+      "reason": "README.md's Layout table and docs/README.md's four-point walkthrough both document how sourcedata/, code/, results/figures/ and the container relate and how one piece can be swapped for another.",
+      "status": "met",
       "evidence": [
         {
-          "uri": "Makefile",
-          "description": "dependency graph implies module relations",
+          "uri": "README.md",
+          "description": "Layout table",
           "sha256": null
         },
         {
           "uri": "docs/README.md",
-          "description": "'Notes on the method live here.'",
+          "description": "numbered walkthrough of the four modules",
           "sha256": null
         }
       ],
@@ -554,17 +559,17 @@
     },
     "stamped-checklist:may/003": {
       "value": "yes",
-      "reason": "Input (submodule pin), environment (lockfile/digest) and code are each swappable through their own narrow interface (a path, a lockfile, a digest) without the others needing to change.",
+      "reason": "README.md states each part 'can be replaced on its own ... without touching the others', and the Makefile's file-based (not phony-step) rules are the mechanism that makes that true: a target depends on a path, not on how that path was produced.",
       "status": "met",
       "evidence": [
         {
-          "uri": ".gitmodules",
-          "description": "input pinned independently of code",
+          "uri": "README.md",
+          "description": "'Each part can be replaced on its own ... without touching the others'",
           "sha256": null
         },
         {
-          "uri": "requirements.lock",
-          "description": "environment pinned independently of code",
+          "uri": "Makefile",
+          "description": "file-based prerequisites, e.g. figures/...png: code/plot_volumes.py results/volumes.tsv",
           "sha256": null
         }
       ],
@@ -573,17 +578,17 @@
     },
     "stamped-checklist:may/004": {
       "value": "yes",
-      "reason": ".gitmodules links the input module and the Makefile's dependency rules compose code, input and output modules into one pipeline: both are explicit, tracked composition mechanisms.",
+      "reason": "The Makefile's file-based dependency rules, plus `git submodule` for the one external input, are the composition mechanism README.md names ('the Makefile rules are the only coupling, and they name files rather than steps').",
       "status": "met",
       "evidence": [
         {
-          "uri": ".gitmodules",
-          "description": "submodule composition",
+          "uri": "Makefile",
+          "description": "composition via file targets",
           "sha256": null
         },
         {
-          "uri": "Makefile",
-          "description": "target composition",
+          "uri": ".gitmodules",
+          "description": "composition via submodule link",
           "sha256": null
         }
       ],
@@ -591,13 +596,13 @@
       "flags": []
     },
     "stamped-checklist:may/005": {
-      "value": "no",
-      "reason": "A reader can infer the module layout from the Makefile and README, but no dedicated documentation or tool helps navigate it; docs/README.md, where such notes belong, says only 'Notes on the method live here.'",
-      "status": "partial",
+      "value": "yes",
+      "reason": "docs/README.md exists specifically to walk a reader through how the modules relate ('this file explains how the pieces relate'), numbering each module (input, collect step, plot step, container) and its role.",
+      "status": "met",
       "evidence": [
         {
           "uri": "docs/README.md",
-          "description": "'Notes on the method live here.'",
+          "description": "numbered points 1-4 explain each module and how re-running one works",
           "sha256": null
         }
       ],
@@ -652,19 +657,19 @@
   ],
   "object": {
     "url": "https://github.com/con/stamped-eval-fixture-r0.git",
-    "commit": "9c80df0aed8d3a69471ef299453b963c09396e27",
-    "captured_at": "2026-10-13T00:00:00Z",
+    "commit": "55e35e5eb77153a5188fd9681e2738812a63e832",
+    "captured_at": "2026-10-14T03:27:13+00:00",
     "kind": "study"
   },
   "assessor": {
     "skill": "assess-alignment-with-stamped-principles",
-    "version": "0.2.0",
-    "harness": "claude-code (agent SDK)",
+    "version": "0.1.0",
+    "harness": "claude-code (agent/sub-agent run)",
     "model": "claude-sonnet-5",
     "date": "2026-10-13",
     "dependencies": [
-      "stamped-conventions@0.2.0"
+      "stamped-conventions@0.1.0"
     ]
   },
-  "scope": "Assessed the local checkout at the commit above (kind: study, by assumption - no user available to confirm). fresh_rerun.py was not run (no consent channel in this session); should/004 answered from the tracked CI workflow as equivalent evidence per stamped-conventions invariant 3, then revised after an independent check of must/002. Container image digest was not pulled (out of this skill's validated scope)."
+  "scope": "Assessed the repository at commit 55e35e5 (branch main), including the initialized sourcedata/ds007116 submodule at its recorded commit. fresh_rerun.py (the expensive rerun probe) was not run: no second host/time budget in this run; should/004 is answered from equivalent evidence (CI) per conventions invariant 3 instead. gh is unauthenticated, so the project's issue tracker could not be consulted (Step 5); no AGENTS.md/CLAUDE.md or TODO/FIXME markers are tracked either way."
 }

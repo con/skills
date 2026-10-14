@@ -1,0 +1,643 @@
+{
+  "checklist_version": "0.3.1",
+  "responses": {
+    "stamped-checklist:must/001": {
+      "value": "yes",
+      "reason": "All essential components (code, input module, results, environment specs) are nested under a single root directory at the object's top level.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": "README.md#L24-L32",
+          "description": "Layout table shows sourcedata, code, results, figures, docs all under root",
+          "sha256": null
+        },
+        {
+          "uri": ".gitmodules",
+          "description": "Input dataset linked as submodule under sourcedata/",
+          "sha256": null
+        }
+      ],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:must/002": {
+      "value": "no",
+      "reason": "The linked module URL resolves, but the recorded commit 84570256 does not exist in the upstream repository; git fetch --depth=1 returns 'not our ref'.",
+      "status": "unmet",
+      "evidence": [
+        {
+          "uri": ".gitmodules",
+          "description": "sourcedata/ds007116: https://github.com/OpenNeuroDatasets/ds007116.git",
+          "sha256": null
+        },
+        {
+          "uri": "commit:sourcedata/ds007116",
+          "description": "pinned to 84570256, which does not exist in the upstream repository",
+          "sha256": null
+        }
+      ],
+      "source": "probe:subdatasets-resolvable+judgement",
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:must/003": {
+      "value": "yes",
+      "reason": "External software (Python packages, container image) are specified in requirements.lock and code/containers.json, tracked in the repository.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": "requirements.lock",
+          "description": "Python dependencies pinned (matplotlib, pandas)",
+          "sha256": null
+        },
+        {
+          "uri": "code/containers.json",
+          "description": "Container image pinned by digest",
+          "sha256": null
+        }
+      ],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:must/004": {
+      "value": "yes",
+      "reason": "git tracks 11 text, code and configuration file(s), and `git status` is empty including submodules: the committed state is the whole state.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": "git ls-files",
+          "description": "11 tracked text/code/config paths of 17 tracked paths",
+          "sha256": null
+        },
+        {
+          "uri": "git status --porcelain",
+          "description": "no output",
+          "sha256": null
+        }
+      ],
+      "source": "probe:tree-clean",
+      "flags": []
+    },
+    "stamped-checklist:must/005": {
+      "value": "yes",
+      "reason": "No binary blob over 10 MiB in git, and no large-content mechanism is needed: nothing in this object is large binary data.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": "git ls-tree -r -l HEAD",
+          "description": "no binary blob over 10485760 bytes; 16 blobs tracked",
+          "sha256": null
+        }
+      ],
+      "source": "probe:large-in-annex",
+      "flags": []
+    },
+    "stamped-checklist:must/006": {
+      "value": "yes",
+      "reason": "All 2 derived file(s) trace to a re-executable record (2 run record(s), workflows: Makefile).",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": "figures/brain-volume-vs-age.png",
+          "description": "run record 55e35e5",
+          "sha256": null
+        },
+        {
+          "uri": "results/volumes.tsv",
+          "description": "run record 0edcc7e",
+          "sha256": null
+        }
+      ],
+      "source": "probe:derived-have-records",
+      "flags": []
+    },
+    "stamped-checklist:must/007": {
+      "value": "yes",
+      "reason": "README.md has an install/usage/reproduce section.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "instructions",
+          "sha256": null
+        },
+        {
+          "uri": "Makefile",
+          "description": "instructions",
+          "sha256": null
+        },
+        {
+          "uri": "code/collect_volumes.py",
+          "description": "entry point named in the instructions and present",
+          "sha256": null
+        },
+        {
+          "uri": "code/plot_volumes.py",
+          "description": "entry point named in the instructions and present",
+          "sha256": null
+        },
+        {
+          "uri": "Makefile",
+          "description": "make targets: all, clean, figures/brain-volume-vs-age.png, results/volumes.tsv",
+          "sha256": null
+        }
+      ],
+      "source": "probe:entry-point",
+      "flags": []
+    },
+    "stamped-checklist:must/008": {
+      "value": "yes",
+      "reason": "Starting point present: code/collect_volumes.py.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "instructions",
+          "sha256": null
+        },
+        {
+          "uri": "Makefile",
+          "description": "instructions",
+          "sha256": null
+        },
+        {
+          "uri": "code/collect_volumes.py",
+          "description": "entry point named in the instructions and present",
+          "sha256": null
+        },
+        {
+          "uri": "code/plot_volumes.py",
+          "description": "entry point named in the instructions and present",
+          "sha256": null
+        },
+        {
+          "uri": "Makefile",
+          "description": "make targets: all, clean, figures/brain-volume-vs-age.png, results/volumes.tsv",
+          "sha256": null
+        }
+      ],
+      "source": "probe:entry-point",
+      "flags": []
+    },
+    "stamped-checklist:must/009": {
+      "value": "no",
+      "reason": "No script depends on a host-specific path, but 1 such mention(s) remain: e.g. README.md line 44 (a host-specific mount, in docs)",
+      "status": "partial",
+      "evidence": [
+        {
+          "uri": "README.md#L44",
+          "description": "host path in docs: export DS007116=/mnt/labshare/openneuro/ds007116",
+          "sha256": null
+        }
+      ],
+      "source": "probe:no-abs-paths",
+      "flags": []
+    },
+    "stamped-checklist:must/010": {
+      "value": "yes",
+      "reason": "Dependencies are pinned in requirements.lock, and no tracked script expects a tool to be present already.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": "requirements.lock",
+          "description": "pinned environment specification",
+          "sha256": null
+        }
+      ],
+      "source": "probe:env-spec-tracked",
+      "flags": []
+    },
+    "stamped-checklist:must/011": {
+      "value": "yes",
+      "reason": "No platform-specific package manager, BSD/GNU-only flag or cluster scheduler command in tracked text: nothing ties the object to one host kind.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": "probe:platform-assumptions",
+          "description": "scanned 17 tracked paths for 20 platform-specific commands, 0 hits",
+          "sha256": null
+        }
+      ],
+      "source": "probe:platform-assumptions",
+      "flags": []
+    },
+    "stamped-checklist:must/012": {
+      "value": "yes",
+      "reason": "No platform-specific package manager, BSD/GNU-only flag or cluster scheduler command in tracked text: nothing ties the object to one host kind.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": "probe:platform-assumptions",
+          "description": "scanned 17 tracked paths for 20 platform-specific commands, 0 hits",
+          "sha256": null
+        }
+      ],
+      "source": "probe:platform-assumptions",
+      "flags": []
+    },
+    "stamped-checklist:must/013": {
+      "value": "yes",
+      "reason": "Tracked: requirements.lock.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": "requirements.lock",
+          "description": "pinned environment specification",
+          "sha256": null
+        }
+      ],
+      "source": "probe:env-spec-tracked",
+      "flags": []
+    },
+    "stamped-checklist:must/014": {
+      "value": "no",
+      "reason": "Environment specifications (requirements.lock, code/containers.json) have a declared process (pip install) but no updates are recorded in version history; both files were created in initial commit and never changed.",
+      "status": "partial",
+      "evidence": [
+        {
+          "uri": "README.md#L8-L12",
+          "description": "Installation procedure documented",
+          "sha256": null
+        },
+        {
+          "uri": "git log -- requirements.lock code/containers.json",
+          "description": "Only one commit (2c06800); no updates tracked",
+          "sha256": null
+        }
+      ],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:must/015": {
+      "value": "yes",
+      "reason": "2 run record(s) reference a pinned image or lockfile, and no ':latest' reference is tracked.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": "commit:55e35e5",
+          "description": "container: apptainer exec code/containers/plotting.sif python3 code/plot_volumes.py --input results/volumes.tsv --output figures/brain-volume-vs-age.png",
+          "sha256": null
+        },
+        {
+          "uri": "commit:0edcc7e",
+          "description": "container: apptainer exec code/containers/plotting.sif python3 code/collect_volumes.py --input sourcedata/ds007116 --output results/volumes.tsv",
+          "sha256": null
+        }
+      ],
+      "source": "probe:run-env-linked",
+      "flags": []
+    },
+    "stamped-checklist:must/016": {
+      "value": "no",
+      "reason": "The remote repository https://github.com/con/stamped-eval-fixture-r0.git is simulated as not published in this fixture. The requirements.lock and containers.json are tracked but not accessible from a published remote.",
+      "status": "unmet",
+      "evidence": [
+        {
+          "uri": "git remote -v",
+          "description": "origin: https://github.com/con/stamped-eval-fixture-r0.git (simulated, not published)",
+          "sha256": null
+        }
+      ],
+      "source": "probe:env-spec-tracked+judgement",
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:must/017": {
+      "value": "no",
+      "reason": "Documentation explains Python environment installation (python3 -m venv, pip install -r requirements.lock) but does not explain how to obtain the container image (Docker, rebuild, download digest).",
+      "status": "partial",
+      "evidence": [
+        {
+          "uri": "README.md#L8-L12",
+          "description": "Install section documents Python venv setup",
+          "sha256": null
+        },
+        {
+          "uri": "README.md#L14",
+          "description": "Mentions container is pinned but not how to obtain it",
+          "sha256": null
+        }
+      ],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:should/001": {
+      "value": "yes",
+      "reason": "Git is used for code and configuration files; input dataset is linked as a git submodule; version control is consistent across all components.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": ".gitmodules",
+          "description": "Input dataset linked as git submodule",
+          "sha256": null
+        },
+        {
+          "uri": "git ls-files",
+          "description": "Code, config, and documentation tracked in git",
+          "sha256": null
+        }
+      ],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:should/002": {
+      "value": "yes",
+      "reason": ".github/workflows/rerun.yml re-executes the workflow, so the instructions are exercised on every push.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": ".github/workflows/rerun.yml",
+          "description": "CI configuration",
+          "sha256": null
+        },
+        {
+          "uri": ".github/workflows/rerun.yml",
+          "description": "re-executes the workflow",
+          "sha256": null
+        },
+        {
+          "uri": ".github/workflows/rerun.yml",
+          "description": "rebuilds an environment",
+          "sha256": null
+        }
+      ],
+      "source": "probe:ci-present",
+      "flags": []
+    },
+    "stamped-checklist:should/003": {
+      "value": "yes",
+      "reason": "4 kinds of component live in distinct places: inputs in sourcedata, sourcedata/ds007116; code in Makefile, code; derived in figures, results; environment in code/containers.json, requirements.lock",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": "sourcedata",
+          "description": "inputs module",
+          "sha256": null
+        },
+        {
+          "uri": "sourcedata/ds007116",
+          "description": "inputs module",
+          "sha256": null
+        },
+        {
+          "uri": "Makefile",
+          "description": "code module",
+          "sha256": null
+        },
+        {
+          "uri": "code",
+          "description": "code module",
+          "sha256": null
+        },
+        {
+          "uri": "figures",
+          "description": "derived module",
+          "sha256": null
+        },
+        {
+          "uri": "results",
+          "description": "derived module",
+          "sha256": null
+        },
+        {
+          "uri": "code/containers.json",
+          "description": "environment module",
+          "sha256": null
+        },
+        {
+          "uri": "requirements.lock",
+          "description": "environment module",
+          "sha256": null
+        }
+      ],
+      "source": "probe:modules-separated",
+      "flags": []
+    },
+    "stamped-checklist:should/009": {
+      "value": null,
+      "reason": "N/A: Object contains only public data (BIDS dataset from OpenNeuro); no restricted data or software is present.",
+      "status": "not-applicable",
+      "evidence": [],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:should/004": {
+      "value": "yes",
+      "reason": "CI workflow (.github/workflows/rerun.yml) runs on ubuntu-latest GitHub Actions runner, which is a fresh virtual machine per execution.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": ".github/workflows/rerun.yml#L5",
+          "description": "runs-on: ubuntu-latest (fresh VM per run)",
+          "sha256": null
+        }
+      ],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:should/005": {
+      "value": "yes",
+      "reason": "GitHub Actions runner is a disposable environment created fresh for each workflow run, providing complete isolation between executions.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": ".github/workflows/rerun.yml",
+          "description": "CI environment is ephemeral GitHub Actions runner",
+          "sha256": null
+        }
+      ],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:should/006": {
+      "value": "yes",
+      "reason": ".github/workflows/rerun.yml reconstitutes the same environment the run records name.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": ".github/workflows/rerun.yml",
+          "description": "CI configuration",
+          "sha256": null
+        },
+        {
+          "uri": ".github/workflows/rerun.yml",
+          "description": "re-executes the workflow",
+          "sha256": null
+        },
+        {
+          "uri": ".github/workflows/rerun.yml",
+          "description": "rebuilds an environment",
+          "sha256": null
+        }
+      ],
+      "source": "probe:ci-present",
+      "flags": []
+    },
+    "stamped-checklist:should/007": {
+      "value": "no",
+      "reason": "Container image (code/containers/plotting.sif) is referenced by digest in run records but not archived; only a placeholder file exists (28 bytes) per plotting.sif.README.",
+      "status": "unmet",
+      "evidence": [
+        {
+          "uri": "code/containers/plotting.sif.README",
+          "description": "Image not shipped, only a placeholder so paths exist",
+          "sha256": null
+        }
+      ],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:should/008": {
+      "value": "no",
+      "reason": "Environment specifications (requirements.lock, code/containers.json) have a declared process but no updates are tracked in version history (see must/014).",
+      "status": "partial",
+      "evidence": [
+        {
+          "uri": "git log -- requirements.lock code/containers.json",
+          "description": "Only one commit; no updates tracked",
+          "sha256": null
+        }
+      ],
+      "source": "judgement",
+      "flags": [
+        "upstream-duplicate"
+      ]
+    },
+    "stamped-checklist:may/001": {
+      "value": "yes",
+      "reason": "1 external component(s) are linked as modules: sourcedata/ds007116",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": ".gitmodules",
+          "description": "sourcedata/ds007116: https://github.com/OpenNeuroDatasets/ds007116.git",
+          "sha256": null
+        }
+      ],
+      "source": "probe:subdatasets-resolvable",
+      "flags": []
+    },
+    "stamped-checklist:may/002": {
+      "value": "yes",
+      "reason": "Modular structure is documented in docs/README.md, explaining how sourcedata, code, and derived outputs relate and can be recombined.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": "docs/README.md",
+          "description": "Explains module boundaries and relationships",
+          "sha256": null
+        }
+      ],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:may/003": {
+      "value": "yes",
+      "reason": "Modular boundaries defined by Makefile dependencies; each step depends only on what it reads, allowing independent updates (e.g., swap input module, change plot, keep table).",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": "Makefile#L4-L8",
+          "description": "Explicit dependencies define boundaries between modules",
+          "sha256": null
+        }
+      ],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:may/004": {
+      "value": "yes",
+      "reason": "Makefile is the composition mechanism; targets define how modules are combined and recomposed.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": "Makefile",
+          "description": "Defines targets with explicit dependencies for module composition",
+          "sha256": null
+        }
+      ],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:may/005": {
+      "value": "yes",
+      "reason": "Documentation (docs/README.md, README.md layout table) guides users through the modular structure and how to reuse/replace components.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": "docs/README.md",
+          "description": "Explains how to reuse with different input module",
+          "sha256": null
+        },
+        {
+          "uri": "README.md#L24-L32",
+          "description": "Layout table shows modular organization",
+          "sha256": null
+        }
+      ],
+      "source": "judgement",
+      "flags": []
+    }
+  },
+  "schema_version": "0.2.0",
+  "principles_version": "0.2.0",
+  "checklist_source": {
+    "repo": "https://github.com/stamped-principles/stamped-checklist-schema",
+    "tag": "v0.3.1",
+    "commit": "af259bad237fa57b856417db8dba45a1b283a527"
+  },
+  "extra_items": [
+    {
+      "key": "clone-weight",
+      "status": "met",
+      "reason": "No text blob in git exceeds 10 MiB.",
+      "evidence": [
+        {
+          "uri": "git ls-tree -r -l HEAD",
+          "description": "largest text blob under 10485760 bytes",
+          "sha256": null
+        }
+      ]
+    },
+    {
+      "key": "inputs-untouched",
+      "status": "met",
+      "reason": "All 1 linked module(s) are clean and at the commit the superdataset records.",
+      "evidence": [
+        {
+          "uri": "git submodule status",
+          "description": "no '+' or 'U' flags",
+          "sha256": null
+        }
+      ]
+    },
+    {
+      "key": "license-declared",
+      "status": "met",
+      "reason": "Licence declared in LICENSE.",
+      "evidence": [
+        {
+          "uri": "LICENSE",
+          "description": "licence declaration",
+          "sha256": null
+        }
+      ]
+    }
+  ],
+  "object": {
+    "url": "https://github.com/con/stamped-eval-fixture-r0.git",
+    "commit": "91f2e0063d434fe4684d6d5d78b23f5c13533e0c",
+    "captured_at": "2026-10-14T03:21:27+00:00",
+    "kind": "study"
+  },
+  "assessor": {
+    "skill": "assess-alignment-with-stamped-principles/scripts/run_probes.py",
+    "version": null,
+    "harness": null,
+    "model": null,
+    "date": "2026-10-13"
+  },
+  "scope": "Probe sweep only; judgement items are left not-checked."
+}
