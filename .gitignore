@@ -7,3 +7,8 @@ node_modules/
 .env.*
 .venv/
 venvs/
+
+# Session scratch, kept inside the repository so the work is self-contained
+# (container images, eval sandboxes, the pinned tooling venv) but never
+# committed: it runs to gigabytes.
+.git-meta/

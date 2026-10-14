@@ -330,6 +330,10 @@ def run_message(message: str, run_info: dict) -> str:
 
 
 def build(root: pathlib.Path, input_remote: str) -> None:
+    # Absolute, because `git submodule add` refuses a relative repo URL that
+    # does not start with ./ or ../ — and a caller passing a relative path is
+    # the normal case from a harness.
+    root = root.resolve()
     root.mkdir(parents=True, exist_ok=True)
     git(root, "init", "-q", "-b", "main")
     git(root, "config", "user.name", ENV["GIT_AUTHOR_NAME"])

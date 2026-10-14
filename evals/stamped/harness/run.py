@@ -139,9 +139,18 @@ def main(argv: list[str] | None = None) -> int:
         "skills_installed": installed,
         "skill_commit": skill_commit(),
         "started_at": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
-        "host": {"uname": sh(["uname", "-a"], check=False).stdout.strip(),
-                 "datalad": have_datalad,
-                 "apptainer": bool(shutil.which("apptainer") or shutil.which("singularity"))},
+        "host": {
+            "uname": sh(["uname", "-a"], check=False).stdout.strip(),
+            # Versions, not booleans: "datalad: true" does not let anyone
+            # reproduce a run, and it is the must/006 evidence we grade others
+            # on. `container_exec` is whether a container can actually *run*
+            # here, which is a different question from whether apptainer is
+            # installed (see docs/stamped/evals.md §5.1).
+            "datalad": sh(["datalad", "--version"], check=False).stdout.strip() or None,
+            "git_annex": (sh(["git", "annex", "version"], check=False).stdout.splitlines() or [""])[0] or None,
+            "apptainer": sh(["apptainer", "--version"], check=False).stdout.strip() or None,
+            "container_exec": pathlib.Path("/dev/fuse").exists() or bool(shutil.which("unsquashfs")),
+        },
     }
     (sandbox / "run.json").write_text(json.dumps(meta, indent=2) + "\n")
     sh(["git", "add", "-A"], cwd=sandbox)
