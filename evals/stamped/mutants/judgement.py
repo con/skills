@@ -111,10 +111,13 @@ def readme_claims_absent_container(root: pathlib.Path) -> str:
     """Prose promising an environment the object does not carry."""
     path = root / "README.md"
     text = path.read_text()
-    text = text.replace("The analysis step runs inside the container pinned in `code/containers.json`.",
+    # Replace the object's honest account of its two routes with a false one.
+    honest = text[text.index("**Two ways to run"):text.index("## Layout")]
+    text = text.replace(honest,
                         "Every step runs inside the `neurodesk-freesurfer` container from "
                         "`///repronim/containers`, so no local installation is needed and the "
-                        "environment is identical everywhere.")
+                        "environment is identical everywhere — `make all`, CI and the run records "
+                        "all go through it.\n\n")
     path.write_text(text)
     git(root, "add", "README.md")
     git(root, "commit", "-q", "-m", "describe the container the analysis runs in")

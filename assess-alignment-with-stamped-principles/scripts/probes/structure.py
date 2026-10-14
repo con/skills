@@ -679,20 +679,22 @@ def ci_present(obj: Object) -> Probe:
 
     if runs_workflow:
         s002 = "met"
-        r002 = clip(f"{', '.join(runs_workflow[:2])} re-executes the workflow, so the instructions are "
-                    "exercised on every push.")
+        r002 = clip(f"{', '.join(runs_workflow[:2])} contains a workflow-executing step "
+                    "(make/snakemake/datalad rerun or similar). Whether it runs what the instructions "
+                    "describe is a reading.")
     else:
         s002 = "partial"
         r002 = clip(f"CI exists ({configs[0]}) but no job re-executes the workflow.")
 
     if not obj.run_records() and not recorded_images and not recorded_locks:
         s006 = "met" if rebuilders else "partial"
-        r006 = clip(f"{', '.join(rebuilders[:2])} rebuilds the environment from its specification."
+        r006 = clip(f"{', '.join(rebuilders[:2])} contains an environment-building step."
                     if rebuilders else
                     f"CI exists ({configs[0]}) but no job rebuilds the environment.")
     elif same_env:
         s006 = "met"
-        r006 = clip(f"{', '.join(same_env[:2])} reconstitutes the same environment the run records name.")
+        r006 = clip(f"{', '.join(same_env[:2])} names the same image or lockfile the run records name. "
+                    "Whether the job actually rebuilds it is a reading.")
     elif rebuilders:
         s006 = "partial"
         r006 = clip(f"{rebuilders[0]} rebuilds *an* environment, but not the one the run records name "

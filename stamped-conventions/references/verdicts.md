@@ -36,6 +36,7 @@ This reconciles @asmacdo's draft (pass/partial/fail/unknown), STAMPED-dl's met/p
 
    **A declared process that has never run is `partial`**, not `met` and not `not-checked`.
    must/014 and should/008 ask for a process *and* for its updates to be tracked; a documented regeneration command with no update in the history is half of that, so say "declared in <file>, no instance in the history yet".
+   **The bar for "declared" is a command a reader could run**: `# pinned with uv pip compile code/requirements.in` in a lockfile header clears it; "dependencies are kept up to date" does not, and that is `unmet`.
    This is the commonest borderline case, and it comes up on every young object.
 6. **`restricted`** (from STAMPED-dl) is **not a status here**.
    Restricted data that is properly isolated is `met` on should/009 and `not-checked` elsewhere with "access-restricted" as the reason.
@@ -49,6 +50,8 @@ This reconciles @asmacdo's draft (pass/partial/fail/unknown), STAMPED-dl's met/p
     An object can carry three accounts of its own execution — what the documentation says, what CI exercises, and what the run records recorded — and they need not agree.
     Judge **A.1 items (must/007, must/008, must/017) on the documented route**, because that is what a reader will follow; judge **T items on the records**, because that is what produced the results.
     Where the accounts disagree, the verdict is at most `partial`, the reason names both accounts, and the disagreement is reported as a finding in its own right: a README promising a container that the `Makefile` never invokes is worse than either an honest README or an honest Makefile.
+    Four pairings and where each lands: documentation against the mechanism → **must/007, must/008, must/017**, and **should/002**, because a workflow tested against instructions nobody can follow is not tested; the mechanism against the run records → **must/006 and must/008** (what produced the results is not what is offered to reproduce them); CI against the records → **should/006** (the environment being tested is not the one the results came from); and the object's *metadata* against its own layout — a `dataset_description.json` naming a pipeline the history never ran — which has no checklist item and goes in `extra_items`.
+    If naming both accounts will not fit in 250 characters, name the worse one in the reason and put the other in `evidence`; do not drop it.
 11. **A right answer reached by the wrong route is still a finding.**
     When a probe answers an item from a property the item does not ask about, the verdict may happen to be right and the reasoning is still wrong.
     Record it in the item's `flags` (`mapping-questioned`), say which property the probe actually measured, and keep your own verdict with `source` ending in `+judgement`.

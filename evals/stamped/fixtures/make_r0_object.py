@@ -56,7 +56,13 @@ axis against age.
 python3 -m venv .venv && .venv/bin/pip install -r requirements.lock
 ```
 
-The analysis step runs inside the container pinned in `code/containers.json`.
+**Two ways to run, and they are not identical.** The results in `results/` and
+`figures/` were produced inside the container pinned by digest in
+`code/containers.json`, which is what the run records in the history name.
+`make all` runs the same two steps directly against the environment in
+`requirements.lock`, which is what CI exercises. The steps are the same code;
+the environment is not, and a result that has to match the records should be
+produced the recorded way.
 
 ## Usage
 

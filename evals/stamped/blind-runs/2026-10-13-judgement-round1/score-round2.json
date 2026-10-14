@@ -1,0 +1,108 @@
+{
+  "mutants": {
+    "control-clean": {
+      "scored": true,
+      "control": true,
+      "judgement_items": 19,
+      "accused": {
+        "stamped-checklist:must/002": "partial",
+        "stamped-checklist:must/007": "partial",
+        "stamped-checklist:must/008": "partial",
+        "stamped-checklist:must/014": "partial",
+        "stamped-checklist:must/016": "unmet",
+        "stamped-checklist:must/017": "partial",
+        "stamped-checklist:should/005": "partial",
+        "stamped-checklist:should/006": "partial",
+        "stamped-checklist:should/008": "partial"
+      },
+      "expected": {
+        "stamped-checklist:must/002": "partial",
+        "stamped-checklist:must/014": "partial",
+        "stamped-checklist:must/016": "unmet",
+        "stamped-checklist:should/005": "partial",
+        "stamped-checklist:should/006": "partial",
+        "stamped-checklist:should/008": "partial"
+      },
+      "false_accusations": {
+        "stamped-checklist:must/007": "partial",
+        "stamped-checklist:must/008": "partial",
+        "stamped-checklist:must/017": "partial"
+      },
+      "false_accusation_rate": "3/19"
+    },
+    "dataset-description-contradicts-layout": {
+      "scored": true,
+      "detected": true,
+      "noticed": true,
+      "named": [
+        "fMRIPrep",
+        "ds000003",
+        "DatasetType",
+        "raw",
+        "contradict"
+      ],
+      "flagged": {
+        "stamped-checklist:must/012": "met",
+        "stamped-checklist:must/017": "partial",
+        "stamped-checklist:must/011": "met",
+        "stamped-checklist:may/002": "met"
+      },
+      "collateral": {},
+      "injected": "dataset-description-contradicts-layout: dataset_description.json says DatasetType raw, credits fMRIPrep, and points at ds000003: none of which matches an object whose own records show a Makefile and ds007116",
+      "response": "/tmp/claude-1000/-home-yoh-proj-CON-skills/06cf38e7-2332-4b50-89cf-572cc5e2ab24/scratchpad/jcal3/dataset-description-contradicts-layout/out/2026-10-13-response.json"
+    },
+    "readme-host-path-in-instructions": {
+      "scored": true,
+      "detected": true,
+      "noticed": true,
+      "named": [
+        "/mnt/labshare",
+        "labshare"
+      ],
+      "flagged": {
+        "stamped-checklist:must/011": "met",
+        "stamped-checklist:must/012": "met",
+        "stamped-checklist:must/009": "partial",
+        "stamped-checklist:must/001": "met"
+      },
+      "collateral": {},
+      "injected": "readme-host-path-in-instructions: the documented route depends on /mnt/labshare and a host FreeSurfer install, neither of which travels with the object, and the input is already a subdataset",
+      "response": "/tmp/claude-1000/-home-yoh-proj-CON-skills/06cf38e7-2332-4b50-89cf-572cc5e2ab24/scratchpad/jcal3/readme-host-path-in-instructions/out/2026-10-13-response.json"
+    },
+    "readme-steps-out-of-order": {
+      "scored": true,
+      "detected": true,
+      "noticed": true,
+      "named": [
+        "order",
+        "before",
+        "clone"
+      ],
+      "flagged": {
+        "stamped-checklist:must/007": "met",
+        "stamped-checklist:must/008": "partial"
+      },
+      "collateral": {},
+      "injected": "readme-steps-out-of-order: the reproduce steps are in an impossible order: build before clone, plot before the table it plots, inputs fetched last",
+      "response": "/tmp/claude-1000/-home-yoh-proj-CON-skills/06cf38e7-2332-4b50-89cf-572cc5e2ab24/scratchpad/jcal3/readme-steps-out-of-order/out/2026-10-14-response.json"
+    },
+    "readme-wrong-tool": {
+      "scored": true,
+      "detected": true,
+      "noticed": true,
+      "named": [
+        "pixi"
+      ],
+      "flagged": {
+        "stamped-checklist:must/007": "partial",
+        "stamped-checklist:must/008": "partial",
+        "stamped-checklist:must/017": "partial",
+        "stamped-checklist:must/012": "met"
+      },
+      "collateral": {},
+      "injected": "readme-wrong-tool: the documented environment and entry point are pixi, but the object tracks requirements.lock and a Makefile and has no pixi.toml",
+      "response": "/tmp/claude-1000/-home-yoh-proj-CON-skills/06cf38e7-2332-4b50-89cf-572cc5e2ab24/scratchpad/jcal3/readme-wrong-tool/out/2026-10-13-response.json"
+    }
+  },
+  "detection": "4/4"
+}

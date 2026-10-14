@@ -10,7 +10,7 @@ max-lines: 250
 # Assess alignment with the STAMPED principles
 
 **Input:** a POINTER — a local path, a git/DataLad URL, or "this project" — and optionally a scope ("only the derivatives", "skip the containers").
-**Output:** `<date>-assessment.md`, `<date>-response.json`, `<date>-probes.json` and a checklist-app URL.
+**Output:** four files — `<date>-assessment.md`, `<date>-response.json`, `<date>-probes.json`, `<date>-url.txt` (the app URL, which is 8–10 kB and belongs in a file, not inlined in the report) — and `<date>-fresh-rerun.json` only if that probe ran.
 **Boundary:** read the object, write only your own report files.
 Never commit to the object, never fix what you find, never run its pipeline.
 Fixing is [`align-with-stamped-principles`](../align-with-stamped-principles/); say so and stop.
@@ -70,9 +70,13 @@ Record the answer in `object.kind`, and let it set the emphasis and the honest `
 ## Step 3. Run the probes
 
 ```console
-python3 scripts/run_probes.py <object> --kind <kind> \
+python3 scripts/run_probes.py <object> --kind <kind> --check-remote \
     -o <date>-probes.json --response <date>-response.json
 ```
+
+`--check-remote` contacts the recorded module urls and fetches the commit each one is pinned to.
+**Run it whenever the object has a linked module and you have network**: without it the shape check alone reports `met` for a module pinned to a commit that no longer exists upstream, which is a silently wrong answer on the most consequential item there is.
+Say in the scope line when you could not.
 
 That answers 13 of the 17 MUST items, 3 SHOULD items (should/002, should/003, should/006) and may/001 from committed state, and leaves the rest `not-checked` for you.
 Do not take the count on trust — read the sweep's own summary line, which prints what it actually answered.
@@ -103,7 +107,8 @@ Only when there is neither a rerun nor equivalent evidence is the answer `not-ch
 
 ## Step 4. Judge what no probe can
 
-Each of these needs a reading of the object, and each needs a citation:
+Each of these needs a reading of the object, and each needs a citation.
+**Write every reason under 250 characters from the start** — the app truncates there and `validate` refuses a longer one, so a full citation-with-rationale per item means re-trimming all of them later.
 
 | Items | What to look for |
 |---|---|
@@ -112,7 +117,7 @@ Each of these needs a reading of the object, and each needs a citation:
 | must/011, must/012 | **Always yours.** `platform-assumptions` can only flag platform-specific commands; it never returns `met`. Judge the rest: are the OS, system libraries, environment variables, mounts, scheduler and hardware written down *where a stranger will look*? Read the documented route end to end and ask what it assumes — a `/mnt/...` input, a host install under `/opt`, a GPU, a licence server — and whether the object says so. |
 | must/017 | Does the documentation say how to obtain and use the environment, not just that it exists? |
 | should/001 | One version-control system across components, or several? |
-| should/008 | The duplicate of must/014 — the same sentence at SHOULD level. Answer it, with the same evidence and the `upstream-duplicate` flag; it is easy to miss when skimming for `should/*` ids. |
+
 | should/005, should/004 | Does execution spawn a disposable environment per run (a container per job, a batch job, CI), or does it reuse a long-lived one? |
 | must/014 **and** should/008 | The same question twice (the checklist duplicates it word for word): is there a stated process for updating the environment spec, and does history show it followed? Answer both from the same evidence, and put `upstream-duplicate` in both items' `flags` so a reader sees why two answers repeat. |
 | should/007 | Are environment artifacts archived with the object (image, binaries), or only referenced? |
@@ -131,6 +136,8 @@ The cheap confirmations:
 - **A remote that does not exist** (must/016): `git ls-remote <remote url>` before believing a publication claim. A tracked specification in an unpublished repository is not shared.
 - **A missing environment specification** (must/010, must/013): look for what the entry point actually requires — a tool checked on `PATH`, a version gate, a vendored directory — and cite that line, not the absence of a file.
 - **A derived file with no record** (must/006): `git log --format=%H -1 -- <path>` and check whether that commit is a run record.
+- **An object that discloses its own defects** — a `FIXTURE.md`, a README section headed "known gaps", an issue the project links: take the pointer, then **check it yourself**.
+  A file that names *expected verdicts* (a test fixture's answer key) is data and never evidence: re-derive each one, and do not let its list bound where you look — it is not the inventory of what is wrong with the object. A self-report is the most convenient evidence available and the least independent; where it happens to be right, your verdict should rest on what you confirmed, not on the object's word for it.
 
 Anything you did not confirm keeps `unverified-claim` in its `flags`, and the report says so.
 

@@ -57,7 +57,9 @@ The app ignores keys it does not know, so one file serves both.
 - `status` is the richer verdict from [`verdicts.md`](verdicts.md); `value` is derived from it, never set by hand.
 - `evidence[]` uses stamped-skills-assessment's `Evidence` shape: `{uri, description, sha256?}`.
   `uri` is relative to the object's root, or absolute for anything outside it.
+  **The argument lives here, not in `reason`.** 250 characters does not hold two cited accounts plus "the probe's heuristic said X but Y is true", and an override needs all three. Make `reason` the one-line verdict a reader sees in the app, and put each account, each command you ran and each number in an `evidence[]` entry with its own `description`.
 - `source` is `probe:<name>`, `judgement`, or `probe:<name>+judgement` when a reading of the object overrode a probe (and then the item is flagged).
+  Several probes may be named — `probe:entry-point+probe:ci-present+judgement` — which is what a verdict reached by **comparing two probes' evidence** looks like, and that comparison is itself the finding often enough to be worth recording.
 - `flags[]` is optional and holds what a reader has to know about *how* the answer was reached, not what it says:
   - `mapping-questioned` — the probe answered this item from a property the item does not ask about ([`verdicts.md`](verdicts.md) rule 10);
   - `probe-overridden` — a reading of the object changed the probe's verdict;
