@@ -89,6 +89,7 @@ Operating constraints for this run:
 4. You may install packages, pull containers and fetch data. Permissions are wide open
    **inside the sandbox and the scratch directory only**.
 5. Carry the task through to its stated product. A plan with no result is a failed run.
+6. {publish_paragraph}
 
 **What to return as your final message** (keep it compact — it is read by a harness):
 
@@ -101,6 +102,19 @@ Operating constraints for this run:
   **quoting the wording or command at fault**. Be specific and critical; this is the most
   valuable part of your return.
 """
+
+# Stated as a fact about the host, not as an instruction, and identical in
+# every arm — what a run *does* with a publishing target is the thing being
+# measured. Before this existed, must/016 ("anyone else can obtain it") was
+# `unmet` in every repeat on every tier regardless of behaviour, which made one
+# of the eleven mechanically checkable MUST items measure the harness.
+PUBLISH_PARAGRAPH = (
+    "**A publishing target exists:** `{url}` — an empty, writable repository you may use as a "
+    "remote. Nothing else will push to it for you."
+)
+NO_PUBLISH_PARAGRAPH = (
+    "There is **no publishing target** on this host: nothing you build here can be pushed anywhere."
+)
 
 CONDITION_PARAGRAPH = {
     "bare": "You have no project conventions to follow beyond the task itself.",
@@ -135,6 +149,25 @@ def sh(cmd: list[str], cwd: pathlib.Path | None = None, check: bool = True) -> s
     return proc
 
 
+def _publish_target(args, bare: pathlib.Path) -> str | None:
+    """The URL this run may push to, or None.
+
+    `local` initialises a bare repository beside the sandbox. It is a real
+    target — `datalad push` carries annexed content to it, and `git ls-remote`
+    answers — but it is a filesystem path, so an honest assessment caps
+    must/016 at `partial` ("whoever shares that filesystem, and nobody else").
+    Pass a URL to raise that ceiling; a run with credentials for a forge is
+    what the v1.0 gate needs.
+    """
+    if args.publish_target == "none":
+        return None
+    if args.publish_target != "local":
+        return args.publish_target
+    if not bare.exists():
+        sh(["git", "init", "-q", "--bare", str(bare)])
+    return str(bare)
+
+
 def skill_commit() -> str:
     proc = sh(["git", "rev-parse", "HEAD"], cwd=REPO, check=False)
     return proc.stdout.strip() or "unknown"
@@ -162,6 +195,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--repeat", type=int, default=1)
     ap.add_argument("--skills-from", type=pathlib.Path, default=REPO,
                     help="checkout to install the skills from (default: this repository)")
+    ap.add_argument("--publish-target", default="local",
+                    help="'local' (a bare repo beside the sandbox, the default), 'none', or a URL "
+                         "the run may push to. must/016 is unreachable without one.")
     ap.add_argument("--timeout", type=int, default=7200)
     ap.add_argument("--execute", action="store_true", help="actually run the agent")
     ap.add_argument("--inner-prompt", action="store_true",
@@ -239,6 +275,7 @@ def main(argv: list[str] | None = None) -> int:
         "skills_installed": installed,
         "skill_commit": skill_commit(),
         "started_at": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
+        "publish_target": args.publish_target,
         "host": {
             "uname": sh(["uname", "-a"], check=False).stdout.strip(),
             # Versions, not booleans: "datalad: true" does not let anyone
@@ -260,9 +297,12 @@ def main(argv: list[str] | None = None) -> int:
 
     outdir = sandbox.parent / f"{run_id}.out"
     outdir.mkdir(parents=True, exist_ok=True)
+    publish_url = _publish_target(args, sandbox.parent / f"{run_id}.publish.git")
     inner = INNER_PROMPT.format(
         sandbox=sandbox,
         outdir=outdir,
+        publish_paragraph=(PUBLISH_PARAGRAPH.format(url=publish_url) if publish_url
+                           else NO_PUBLISH_PARAGRAPH),
         datalad=" (DataLad dataset)" if have_datalad else "",
         task=task,
         condition_paragraph=CONDITION_PARAGRAPH[args.condition],

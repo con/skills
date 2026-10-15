@@ -1063,3 +1063,42 @@ def test_entry_point_reads_a_heading_that_is_not_a_keyword_first(tmp_path):
     # A README that genuinely says nothing about running it still fails, which
     # is the half of this probe that must not be loosened away.
     assert commit("# A study\n\n## Results\n\nThe brain got bigger.\n") == "unmet"
+
+
+def test_must016_reads_every_remote_and_names_a_local_one(tmp_path, clean):
+    """Two corrections, both from the conventions' own advice being followed.
+
+    The probe read `remote.origin.url` only, so a project that did exactly what
+    `create-stamped-project` asks — `datalad siblings add --name published` —
+    was told it "records no remote at all". And a filesystem path is a real
+    remote: reporting it as none denies the push happened, where the true
+    finding is narrower and more useful.
+    """
+    target = tmp_path / "remotes"
+    shutil.copytree(clean, target, symlinks=True)
+    env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@e.org",
+           "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@e.org"}
+    subprocess.run(["git", "remote", "remove", "origin"], cwd=target, check=True, env=env)
+
+    def status_and_reason() -> tuple[str, str]:
+        result = REGISTRY["env-spec-tracked"](Object(target))
+        item = "stamped-checklist:must/016"
+        return result.status_of(item), result.reason_of(item)
+
+    status, reason = status_and_reason()
+    assert status == "unmet" and "no remote at all" in reason
+
+    # A sibling under any name is a remote.
+    bare = tmp_path / "published.git"
+    subprocess.run(["git", "init", "-q", "--bare", str(bare)], check=True, env=env)
+    subprocess.run(["git", "remote", "add", "published", str(bare)], cwd=target, check=True, env=env)
+    status, reason = status_and_reason()
+    assert status == "partial", reason
+    assert "filesystem path" in reason, reason
+
+    # A URL alongside it is what the item asks for, and wins.
+    subprocess.run(["git", "remote", "add", "hub", "https://example.org/con/thing"],
+                   cwd=target, check=True, env=env)
+    status, reason = status_and_reason()
+    assert status == "partial" and "not checked" in reason, reason
+    assert "https://example.org/con/thing" in reason, reason
