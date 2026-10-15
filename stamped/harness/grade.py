@@ -36,6 +36,7 @@ EVALS = HERE.parent
 REPO = EVALS.parent.parent
 RUN_PROBES = REPO / "assess-alignment-with-stamped-principles" / "scripts" / "run_probes.py"
 CONVENTIONS = REPO / "stamped-conventions"
+FRESH_RERUN = REPO / "assess-alignment-with-stamped-principles" / "scripts" / "fresh_rerun.py"
 
 # What the transcript is scanned for; each is a STAMPED invariant from
 # stamped-conventions/SKILL.md that a run can be seen to break.
@@ -94,6 +95,27 @@ def oracle(obj: pathlib.Path, use_case: pathlib.Path, extra: list[str]) -> dict 
         return json.loads(proc.stdout)
     except json.JSONDecodeError:
         return {"status": "not-checked", "reason": f"oracle did not return JSON: {proc.stderr.strip()[:200]}"}
+
+
+def fresh_rerun(url: str, workdir: pathlib.Path | None, timeout: int) -> dict:
+    """The one probe that leaves the machine the results were made on.
+
+    §10.1 asks explicit-skill runs to pass every mechanically checkable MUST
+    probe "including `fresh-rerun`", and until a run had somewhere to publish
+    there was nothing to clone from, so the criterion named a probe that
+    nothing in this harness ran. It is reported beside the oracle rather than
+    folded into the MUST rate: it answers should/004 and D.1, not one of the
+    eleven items.
+    """
+    cmd = [sys.executable, str(FRESH_RERUN), "--url", url, "--timeout", str(timeout)]
+    if workdir:
+        cmd += ["--workdir", str(workdir)]
+    proc = subprocess.run(cmd, capture_output=True, text=True)
+    try:
+        return json.loads(proc.stdout)
+    except json.JSONDecodeError:
+        return {"status": "not-checked",
+                "reason": f"fresh_rerun.py did not return JSON: {(proc.stderr or proc.stdout).strip()[:300]}"}
 
 
 def process_metrics(transcript: pathlib.Path | None) -> dict:
@@ -161,6 +183,11 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--skill-commit", default="unknown")
     ap.add_argument("--repeat", type=int, default=1)
     ap.add_argument("--oracle-arg", action="append", default=[])
+    ap.add_argument("--fresh-rerun", metavar="URL",
+                    help="clone from here and try to re-create the outputs (the `fresh-rerun` probe "
+                         "§10.1 names); usually the run's publish target")
+    ap.add_argument("--fresh-rerun-workdir", type=pathlib.Path,
+                    help="keep the fresh-rerun clone here instead of a temp dir")
     ap.add_argument("--check-remote", action="store_true",
                     help="let the probes contact remotes (needed for must/016 above `partial`)")
     ap.add_argument("--publish-target", default="unknown",
@@ -191,6 +218,8 @@ def main(argv: list[str] | None = None) -> int:
     t1_result = t1(args.object.resolve(), check_remote=args.check_remote)
     oracle_result = oracle(args.object.resolve(), args.use_case, args.oracle_arg)
     process = process_metrics(args.transcript)
+    rerun = (fresh_rerun(args.fresh_rerun, args.fresh_rerun_workdir, 7200)
+             if args.fresh_rerun else None)
 
     passed = [i for i in scripted_musts if t1_result["items"].get(i, {}).get("status") == "met"]
     failed = [i for i in scripted_musts
@@ -247,6 +276,7 @@ def main(argv: list[str] | None = None) -> int:
         },
         "t2": {"items": t2_items, "disagreements_with_t1": disagreements},
         "oracle": oracle_result,
+        "fresh_rerun": rerun,
         "process": process,
         # skill-creator's shape, so its viewer can open these files too.
         "checks": [
@@ -263,6 +293,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"MUST (mechanically checkable): {grading['t1']['must_pass_rate']}"
               + (f" ({grading['t1']['must_pass_rate_at_ceiling']} at the sandbox ceiling)" if ceiling else "")
               + (f" · oracle: {oracle_result['status']}" if oracle_result else "")
+              + (f" · fresh-rerun: {rerun['status']}" if rerun else "")
               + (f" · T1/T2 disagreements: {len(disagreements)}" if t2_items else ""))
         print(f"wrote {args.output}")
     else:

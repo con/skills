@@ -25,8 +25,10 @@ than another, and nothing here says anything about how to organise a project.
   your working directory so that it does not clutter what you build.
 - **Fetch only the files you need.** The input dataset is large, and a previous
   run pulled several GB by accident with a too-broad `datalad run -i` glob.
-- `gh` is not authenticated, and there is no push access to anything. Nothing
-  here needs to be published.
+- `gh` is not authenticated and there is **no credential for any forge**, so
+  nothing can be pushed to GitHub or to a hub. A publishing target that does
+  not need credentials may be named in your task; this file is about the
+  machine, and says nothing about whether you should use it.
 - **This host is shared with other runs happening right now.** Never kill by
   pattern (`pkill -f 'datalad run'`): sibling runs are in the same process
   table and one arm's cleanup has already killed another's jobs. Kill the pid

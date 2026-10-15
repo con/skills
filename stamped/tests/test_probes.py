@@ -1102,3 +1102,56 @@ def test_must016_reads_every_remote_and_names_a_local_one(tmp_path, clean):
     status, reason = status_and_reason()
     assert status == "partial" and "not checked" in reason, reason
     assert "https://example.org/con/thing" in reason, reason
+
+
+def test_the_harness_gives_every_run_a_publishing_target(tmp_path):
+    """must/016 was `unmet` in every repeat on every tier, whatever the run did.
+
+    An item that no behaviour can change measures the harness. `run.py` now
+    initialises a bare repository beside the sandbox and names it in the
+    prompt — as a fact about the host, in identical wording in every arm,
+    because what a run *does* with it is the thing being measured.
+    """
+    run_py = EVALS / "harness" / "run.py"
+    workdir = tmp_path / "wd"
+    done = subprocess.run(
+        [sys.executable, str(run_py), "--use-case", str(EVALS / "use-cases" / "r0-freesurfer-plot"),
+         "--condition", "skill-explicit", "--workdir", str(workdir), "--model", "sonnet",
+         "--inner-prompt"],
+        capture_output=True, text=True,
+    )
+    assert done.returncode == 0, done.stderr
+    run_id = "r0-freesurfer-plot--skill-explicit--sonnet--r1"
+    bare = workdir / f"{run_id}.publish.git"
+    assert (bare / "HEAD").exists(), "no bare repository was initialised"
+    prompt = (workdir / f"{run_id}.inner-prompt.md").read_text()
+    assert str(bare) in prompt, "the run is never told where it may publish"
+    # The scratch directory is the other half: the skill says to write the
+    # assessment outside the object, and the prompt used to forbid writing
+    # outside it at all. Both tiers papered over that contradiction.
+    assert str(workdir / f"{run_id}.out") in prompt
+
+    # Opting out restores the condition every earlier round ran under, so old
+    # numbers stay reproducible.
+    done = subprocess.run(
+        [sys.executable, str(run_py), "--use-case", str(EVALS / "use-cases" / "r0-freesurfer-plot"),
+         "--condition", "bare", "--workdir", str(tmp_path / "wd2"), "--model", "sonnet",
+         "--repeat", "2", "--publish-target", "none", "--inner-prompt"],
+        capture_output=True, text=True,
+    )
+    assert done.returncode == 0, done.stderr
+    prompt = (tmp_path / "wd2" / "r0-freesurfer-plot--bare--sonnet--r2.inner-prompt.md").read_text()
+    assert "no publishing target" in prompt
+    assert not list((tmp_path / "wd2").glob("*.publish.git"))
+
+
+def test_grade_runs_the_fresh_rerun_probe_when_given_a_url():
+    """§10.1 asks for every MUST probe "including `fresh-rerun`", and nothing
+    in this harness ran it: with no publishing target there was nothing to
+    clone from, so the criterion named a probe that never executed."""
+    text = (EVALS / "harness" / "grade.py").read_text()
+    assert "--fresh-rerun" in text
+    assert "fresh_rerun.py" in text
+    # Reported beside the oracle, not folded into the eleven-item rate.
+    assert '"fresh_rerun": rerun' in text
+    assert "must_pass_rate_at_ceiling" in text
