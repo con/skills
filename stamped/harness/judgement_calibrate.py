@@ -222,6 +222,7 @@ def score(args: argparse.Namespace) -> int:
                     "accused": accused, "expected": expected,
                     "false_accusations": false_accusations,
                     "false_accusation_rate": f"{len(false_accusations)}/{len(judged)}",
+                    "model": _model(outdir, args.model),
                 }
                 print(f"control   {name:<42} {len(false_accusations)}/{len(judged)} false accusation(s)"
                       + (f": {', '.join(i.split(':')[-1] for i in false_accusations)}"
@@ -246,7 +247,7 @@ def score(args: argparse.Namespace) -> int:
         report["mutants"][name] = {
             "scored": True, "detected": hit, "noticed": noticed, "named": named,
             "flagged": flagged, "collateral": collateral, "injected": entry["injected"],
-            "response": str(response_path),
+            "response": str(response_path), "model": _model(outdir, args.model),
         }
         flag = "detected" if hit else "MISSED  "
         print(f"{flag}  {name:<42} "
@@ -255,12 +256,27 @@ def score(args: argparse.Namespace) -> int:
               + (f" | collateral={list(collateral)}" if collateral else ""))
 
     report["detection"] = f"{detected}/{scored}"
+    report["model"] = args.model
     print(f"\njudgement mutants detected: {detected}/{scored} scored"
           f" ({len(index)} prepared)")
     if args.output:
         args.output.write_text(json.dumps(report, indent=2) + "\n")
         print(f"wrote {args.output}")
     return 0 if scored and detected == scored else 1
+
+
+def _model(outdir: pathlib.Path, default: str) -> str:
+    """Which tier this one run was made on.
+
+    The gate in evals.md §10.1 is per tier (>= 80 % on the frontier model,
+    >= 60 % on the smaller one), so a detection count with no tier attached
+    cannot be read against it. A run directory may carry its own `model.txt`,
+    because one round is often mixed.
+    """
+    for candidate in (outdir / "model.txt", outdir.parent / "model.txt"):
+        if candidate.exists():
+            return candidate.read_text().strip() or default
+    return default
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -273,6 +289,10 @@ def main(argv: list[str] | None = None) -> int:
                    help="skip the clean-object control run (not recommended)")
     s = sub.add_parser("score", help="score the responses the runs produced")
     s.add_argument("--workdir", type=pathlib.Path, required=True)
+    s.add_argument("--model", default="unknown",
+                   help="model tier these runs were made on; a run directory may override it "
+                        "with a one-line model.txt. The v1.0 gate is per tier (evals.md §10.1), "
+                        "so a score without it cannot be read against the criterion.")
     s.add_argument("-o", "--output", type=pathlib.Path)
     args = ap.parse_args(argv)
     return prepare(args) if args.cmd == "prepare" else score(args)

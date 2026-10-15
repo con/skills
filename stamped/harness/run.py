@@ -205,6 +205,14 @@ def main(argv: list[str] | None = None) -> int:
     cache.mkdir(parents=True, exist_ok=True)
     notes = (EVALS / "conditions" / "host-notes.md").read_text()
     (sandbox / "HOST-NOTES.md").write_text(notes.replace("$STAMPED_CACHE_DIR", str(cache)))
+    # Untracked, like `.claude/`: the notes name an absolute cache path, and
+    # the first R1 arms both lost must/009 to the probes finding that path in a
+    # *tracked* file the run was handed by the harness. The grader must not
+    # accuse an object of the harness's own host-specific text.
+    gitignore = sandbox / ".gitignore"
+    existing = gitignore.read_text() if gitignore.exists() else ""
+    if "HOST-NOTES.md" not in existing:
+        gitignore.write_text(existing + "HOST-NOTES.md\n")
 
     task = prompt
     if args.condition == "skill-explicit":

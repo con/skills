@@ -19,3 +19,6 @@ git-annex==10.20260901.post1
 con-duct==0.16.0
 PyYAML==6.0.2
 pytest==8.3.5
+# The aggregation layer only: one eval case per mutant, one analysis test per
+# criterion (docs/stamped/eval-platforms.md, recommendation 2).
+pytest-evals==0.3.4
