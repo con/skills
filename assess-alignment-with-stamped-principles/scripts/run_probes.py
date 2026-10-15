@@ -78,7 +78,7 @@ def run(obj: Object, names: list[str], check_remote: bool, allow: tuple[str, ...
     for name in names:
         probe = REGISTRY[name]
         try:
-            if name == "subdatasets-resolvable":
+            if name in {"subdatasets-resolvable", "env-spec-tracked"}:
                 result = probe(obj, check_remote=check_remote)
             elif name == "no-abs-paths":
                 result = probe(obj, allow=allow)
@@ -142,6 +142,13 @@ def merge_into_response(results: list[dict], obj: Object, checklist, template, s
         if not result["items"] and not result["details"].get("collector_failure")
     ]
     response["extra_items"] = extras
+    # The app truncates a reason at 250 characters and `validate` refuses a
+    # longer one, so a draft that carries one makes the run trim it by hand. A
+    # probe reason that does not fit is clipped here, where the limit is known.
+    for answer in response["responses"].values():
+        reason = answer.get("reason") or ""
+        if len(reason) > 250:
+            answer["reason"] = reason[:249] + "…"
     response["object"] = {
         "url": (obj.git("config", "--get", "remote.origin.url").strip() or None),
         "commit": obj.head,

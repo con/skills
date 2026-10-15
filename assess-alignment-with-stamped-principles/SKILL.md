@@ -78,7 +78,8 @@ python3 scripts/run_probes.py <object> --kind <kind> --check-remote \
 **Run it whenever the object has a linked module and you have network**: without it the shape check alone reports `met` for a module pinned to a commit that no longer exists upstream, which is a silently wrong answer on the most consequential item there is.
 Say in the scope line when you could not.
 
-That answers 13 of the 17 MUST items, 3 SHOULD items (should/002, should/003, should/006) and may/001 from committed state, and leaves the rest `not-checked` for you.
+That covers 13 of the 17 MUST items, 3 SHOULD items (should/002, should/003, should/006) and may/001 from committed state.
+**Covered is not answered:** two of those 13 — must/011 and must/012 — are `platform-assumptions`, which never returns `met` and leaves them `not-checked` for you, so eleven come back with a verdict and six MUST items are yours from the start.
 Do not take the count on trust — read the sweep's own summary line, which prints what it actually answered.
 `platform-assumptions` covers the lock-in that comes through *tool choice* — `brew`, BSD `sed -i ''`, `nproc`, `sbatch` — which the path probe cannot see; what it cannot judge is whether an assumption the object *does* name is adequately documented, or whether two accounts of how the object runs agree ([`verdicts.md`](../stamped-conventions/references/verdicts.md) rule 10).
 Three probes answer no checklist item at all and are reported as extras: `license-declared` (paper S.2/D.3), `clone-weight` (oversized text in git) and `inputs-untouched` (did an input move).
@@ -155,6 +156,8 @@ A known, tracked gap is reported differently from one nobody has noticed: say "a
 
 Merge your judgement into the draft response, keeping the probe verdicts and evidence.
 **Do not write a merge script**: `set` writes one answer in place, with the one status-to-value mapping there is, and `table` renders the per-item table the report layout asks for.
+`set` replaces that item's status, reason and source; it keeps the evidence already there unless you pass `--evidence` (or `--drop-evidence`), and `--flag` is how an override or a questioned mapping is recorded.
+Every path in this file is relative to **this skill's directory** — run the commands from here, or make them absolute; a run that worked from its output directory had to rewrite each one.
 
 ```console
 python3 ../stamped-conventions/scripts/encode_response.py set <date>-response.json \
@@ -172,7 +175,14 @@ Three runs in a row wrote their own merge script for this, and one of them crash
 Every one of the 31 items gets your answer — the judgement items in [Step 4](#step-4-judge-what-no-probe-can) are not optional, and a smaller model skipping the `may/*` items is the observed failure this check exists to stop.
 Write the four files `response-format.md` names — `<date>-assessment.md`, `<date>-response.json`, `<date>-probes.json`, and `<date>-fresh-rerun.json` only if that probe ran — where `<date>` is the day you made the assessment, in UTC — from `date -u +%F`, not from any date in your context, which may disagree with the host by a day.
 Follow its report layout: verdict line with denominators, what to fix first, what is already good, the per-item table, the flagged items, the not-checked list, goals and kind, then the URL and the stamp.
-Fill `assessor` with this skill's `version:`, the harness, the model, and `dependencies: ["stamped-conventions@<version>"]`.
+Fill `assessor` with the harness, the model and `dependencies` — the draft already carries the skill and its `version:` — plus the scope and the object's kind, with `stamp` rather than a snippet of your own:
+
+```console
+python3 ../stamped-conventions/scripts/encode_response.py stamp <date>-response.json \
+    --harness 'claude-code (subagent)' --model <model> --kind study \
+    --dependency 'stamped-conventions@<version>' \
+    --scope 'Committed state at <commit>; modules not installed; no rerun attempted.'
+```
 
 Where the products go:
 

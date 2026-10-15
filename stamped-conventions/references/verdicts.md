@@ -36,6 +36,8 @@ This reconciles @asmacdo's draft (pass/partial/fail/unknown), STAMPED-dl's met/p
 
    **A declared process that has never run is `partial`**, not `met` and not `not-checked`.
    must/014 and should/008 ask for a process *and* for its updates to be tracked; a documented regeneration command with no update in the history is half of that, so say "declared in <file>, no instance in the history yet".
+   **The commit that introduced the file is not an instance of updating it.**
+   A lockfile committed once, with a regeneration command in its header, is "declared, never run": the creation is the declaration, not an instance of the process.
    **A declared process with instances in the history is `met`**: cite one.
    A blind run stalled on exactly this gap — a re-install step the history shows was carried out seventeen times fits neither "never run" nor "unmet" — so the three cases are: instances in the history → `met`; declared, no instance → `partial`; not declared → `unmet`.
    **The bar for "declared" is a command a reader could run**: `# pinned with uv pip compile code/requirements.in` in a lockfile header clears it; "dependencies are kept up to date" does not, and that is `unmet`.
@@ -59,6 +61,8 @@ This reconciles @asmacdo's draft (pass/partial/fail/unknown), STAMPED-dl's met/p
     This rule exists for accounts that conflict *silently* — a README promising a container the `Makefile` never invokes.
     An object whose documentation states the difference and says which route produced the results is telling one story in two parts, and the items above stay `met` on it: the test is whether a reader following the documentation would be misled, not whether two routes exist.
     Two runs in a row marked a disclosed, accurate two-route object `partial` on four items under this rule; that is this rule being over-applied, and the reason to say so here.
+    **The disclosure has to be true.**
+    A comment in a CI workflow claiming it exercises the recorded environment, in a job whose steps never touch it, is not a disclosure: it is the silent conflict with an extra sentence, and it is worse than silence because it tells a reader not to check.
 11. **A right answer reached by the wrong route is still a finding.**
     When a probe answers an item from a property the item does not ask about, the verdict may happen to be right and the reasoning is still wrong.
     Record it in the item's `flags` (`mapping-questioned`), say which property the probe actually measured, and keep your own verdict with `source` ending in `+judgement`.

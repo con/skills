@@ -53,10 +53,13 @@ SCRIPTED_DETECTION = 0.90
 FALSE_ACCUSATION = 0.10
 JUDGEMENT_BY_TIER = {"frontier": 0.80, "smaller": 0.60}
 SMALLER_TIERS = {"haiku"}
-# The control's false accusations have come down 7/19 -> 3/19 over two rounds.
-# The gate is zero; until then this is a ratchet, so a regression fails here
-# rather than being noticed in a report six weeks later.
-CONTROL_FALSE_ACCUSATION_CEILING = 3
+# The control's unexplained accusations: 7/19, 3/19, 6/22 (once the judgement
+# denominator grew and rule 10 turned out to be over-applied), then **0/19**
+# after the fixture documented its system requirements and the rule said what
+# it is for. That is the §10.1 gate, so the ratchet is now the gate itself.
+# Checked against the *most recent* round only: an earlier round cannot
+# improve, and holding history to today's bar would freeze the number.
+CONTROL_FALSE_ACCUSATION_CEILING = 0
 
 
 @pytest.fixture(scope="session")
@@ -160,6 +163,11 @@ def _judgement_rounds() -> list[pathlib.Path]:
     return sorted((EVALS / "blind-runs").glob("*/score*.json"))
 
 
+def _latest_round(paths: list[str]) -> str | None:
+    """The most recent recorded round, by the date its directory carries."""
+    return sorted(paths)[-1] if paths else None
+
+
 @pytest.mark.eval(name="judgement-mutants")
 @pytest.mark.parametrize("record", _judgement_rounds(), ids=lambda p: f"{p.parent.name}/{p.stem}")
 def test_recorded_judgement_round(record, eval_bag):
@@ -182,8 +190,8 @@ def test_recorded_judgement_round(record, eval_bag):
 @pytest.mark.eval_analysis(name="judgement-mutants")
 def test_recorded_judgement_rounds_meet_the_gate(eval_results):
     by_tier: dict[str, list[bool]] = {}
-    worst_control = 0
     controls: dict[str, str] = {}
+    counts: dict[str, int] = {}
     for result in eval_results:
         bag = result.result
         for mutant, model in bag["models"].items():
@@ -192,20 +200,23 @@ def test_recorded_judgement_rounds_meet_the_gate(eval_results):
             tier = "smaller" if model in SMALLER_TIERS else "frontier"
             by_tier.setdefault(tier, []).append(mutant in bag["detected"])
         for mutant, entry in bag["controls"].items():
-            count = len(entry.get("false_accusations") or {})
-            controls[f"{bag['round']}:{mutant}"] = entry.get("false_accusation_rate", str(count))
-            worst_control = max(worst_control, count)
+            key = f"{bag['round']}:{mutant}"
+            controls[key] = entry.get("false_accusation_rate", "")
+            counts[key] = len(entry.get("false_accusations") or {})
+    latest = _latest_round(list(counts))
+    worst_control = counts.get(latest, 0) if latest else 0
 
     print("\njudgement detection by tier (evals.md §10.1)")
     for tier, hits in sorted(by_tier.items()):
         print(f"  {tier:<9} {sum(hits)}/{len(hits)}  (gate {JUDGEMENT_BY_TIER[tier]:.0%})")
     print(f"  control false accusations: {controls or 'none recorded'}")
+    print(f"  ratchet applies to the most recent round: {latest or 'none'}")
 
     for tier, hits in by_tier.items():
         rate = sum(hits) / len(hits)
         assert rate >= JUDGEMENT_BY_TIER[tier], \
             f"{tier} tier detected {sum(hits)}/{len(hits)}, below {JUDGEMENT_BY_TIER[tier]:.0%}"
     assert worst_control <= CONTROL_FALSE_ACCUSATION_CEILING, (
-        f"a control run made {worst_control} unexplained accusations, above the current "
-        f"ratchet of {CONTROL_FALSE_ACCUSATION_CEILING}; the §10.1 gate is zero"
+        f"the most recent control run ({latest}) made {worst_control} unexplained accusations, "
+        f"above the current ratchet of {CONTROL_FALSE_ACCUSATION_CEILING}; the §10.1 gate is zero"
     )

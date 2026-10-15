@@ -14,6 +14,7 @@ items      list the pinned items (id, level, principle codes, text)
 set        answer one item in a response JSON, in place (what every run was
            otherwise writing a merge script for)
 table      the per-item markdown table response-format.md section 4 asks for
+stamp      fill the fields no script can know: harness, model, scope, kind
 validate   check a response JSON against the pin and the app's constraints
 encode     response JSON -> checklist-app URL
 decode     checklist-app URL -> response JSON (how a filled web form becomes
@@ -157,7 +158,7 @@ def app_payload(response: dict, cl: Checklist) -> dict:
 
 def set_answer(response: dict, cl: Checklist, item_id: str, status: str, reason: str,
                source: str | None = None, evidence: list[str] | None = None,
-               flags: list[str] | None = None) -> dict:
+               flags: list[str] | None = None, keep_evidence: bool = True) -> dict:
     """Write one answer into a response, replacing whatever was there.
 
     Every blind run so far has hand-written a script to merge its judgement
@@ -169,9 +170,15 @@ def set_answer(response: dict, cl: Checklist, item_id: str, status: str, reason:
         raise KeyError(f"{item_id} is not an item of checklist {cl.version}")
     if status not in STATUS_VALUE:
         raise ValueError(f"unknown status {status!r}; see ../references/verdicts.md")
+    previous = (response.get("responses") or {}).get(item_id) or {}
     answer: dict = {"status": status, "reason": reason}
     if source:
         answer["source"] = source
+    # Evidence survives unless this call supplies its own: a run lost the
+    # citation it had just gathered because `set` replaced the whole answer,
+    # and `met` without a citation is the one thing the rules forbid outright.
+    if not evidence and previous.get("evidence") and keep_evidence:
+        answer["evidence"] = previous["evidence"]
     if evidence:
         answer["evidence"] = [
             # `uri=description` or a bare uri; sha256 stays the caller's job.
@@ -182,6 +189,29 @@ def set_answer(response: dict, cl: Checklist, item_id: str, status: str, reason:
     if flags:
         answer["flags"] = flags
     response.setdefault("responses", {})[item_id] = answer
+    return response
+
+
+def stamp(response: dict, harness: str | None = None, model: str | None = None,
+          scope: str | None = None, kind: str | None = None,
+          dependency: list[str] | None = None) -> dict:
+    """Fill the stamp fields a probe sweep cannot know.
+
+    Four runs patched these in with their own Python snippet, because `set`
+    only writes answers. Which harness and which model is reading the skill is
+    exactly what the skill cannot work out for itself.
+    """
+    assessor = response.setdefault("assessor", {})
+    if harness:
+        assessor["harness"] = harness
+    if model:
+        assessor["model"] = model
+    if dependency:
+        assessor["dependencies"] = dependency
+    if scope:
+        response["scope"] = scope
+    if kind:
+        response.setdefault("object", {})["kind"] = kind
     return response
 
 
@@ -305,6 +335,18 @@ def main(argv: list[str] | None = None) -> int:
     p_set.add_argument("--evidence", action="append", default=[],
                        help="uri, or uri=description; repeatable")
     p_set.add_argument("--flag", action="append", default=[], dest="flags")
+    p_set.add_argument("--drop-evidence", action="store_true",
+                       help="clear the evidence already on this item (by default it is kept "
+                            "when --evidence is not given)")
+
+    p_stamp = sub.add_parser("stamp", help="fill harness, model, scope and kind")
+    p_stamp.add_argument("response", type=pathlib.Path)
+    p_stamp.add_argument("--harness", help='e.g. "claude-code (subagent)"')
+    p_stamp.add_argument("--model")
+    p_stamp.add_argument("--scope", help="what this assessment did and did not cover")
+    p_stamp.add_argument("--kind", help="the object's kind (see references/project-kinds.md)")
+    p_stamp.add_argument("--dependency", action="append",
+                         help='e.g. "stamped-conventions@0.1.0"; repeatable')
 
     p_table = sub.add_parser("table", help="print the per-item markdown table")
     p_table.add_argument("response", type=pathlib.Path)
@@ -350,7 +392,8 @@ def main(argv: list[str] | None = None) -> int:
         item_id = args.item if ":" in args.item else f"stamped-checklist:{args.item}"
         try:
             set_answer(response, cl, item_id, args.status, args.reason,
-                       args.source, args.evidence, args.flags)
+                       args.source, args.evidence, args.flags,
+                       keep_evidence=not args.drop_evidence)
         except (KeyError, ValueError) as exc:
             print(f"error: {exc}", file=sys.stderr)
             return 2
@@ -360,6 +403,12 @@ def main(argv: list[str] | None = None) -> int:
             print(f"warning: {p}", file=sys.stderr)
         print(f"{item_id} = {args.status}")
         return 0 if not remaining else 1
+
+    if args.cmd == "stamp":
+        stamp(response, args.harness, args.model, args.scope, args.kind, args.dependency)
+        args.response.write_text(json.dumps(response, indent=2) + "\n")
+        print(f"stamped {args.response}")
+        return 0
 
     if args.cmd == "table":
         out = table(response, cl)

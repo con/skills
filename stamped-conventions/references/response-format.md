@@ -51,7 +51,7 @@ The app ignores keys it does not know, so one file serves both.
 }
 ```
 
-- **Required core** (what the app reads): `checklist_version`, and `responses` with a `value` and a string `reason` per id.
+- **Required core** (what the app reads): `checklist_version`, and `responses` with a `value` and a string `reason` per id — *in the payload the encoder builds*. The response JSON you write carries `status`, and `encode` derives `value` from it; `validate` therefore does not ask for a `value` and `set` does not write one. A `value` you write by hand that disagrees with its `status` is an error `validate` reports.
 - Every one of the 31 pinned ids appears exactly once.
   A missing id is not "no answer"; it is a bug the validator catches.
 - `status` is the richer verdict from [`verdicts.md`](verdicts.md); `value` is derived from it, never set by hand.

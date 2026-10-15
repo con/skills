@@ -425,7 +425,35 @@ def _host_tool_preconditions(obj: Object) -> list[dict]:
     return found
 
 
-def env_spec_tracked(obj: Object) -> Probe:
+def _remote_resolves(url: str) -> bool | None:
+    """Does this remote exist? None when we did not get to ask.
+
+    `GIT_TERMINAL_PROMPT=0` matters: a missing or private GitHub repository
+    *asks for credentials* otherwise, and three blind runs lost time to that
+    prompt before falling back to `curl`.
+    """
+    import os
+    import subprocess
+
+    try:
+        proc = subprocess.run(
+            ["git", "ls-remote", "--exit-code", url, "HEAD"],
+            capture_output=True, text=True, timeout=30,
+            env={**os.environ, "GIT_TERMINAL_PROMPT": "0", "GIT_ASKPASS": "/bin/true",
+                 "GIT_SSH_COMMAND": "ssh -oBatchMode=yes"},
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if proc.returncode == 0:
+        return True
+    text = (proc.stderr + proc.stdout).lower()
+    if any(w in text for w in ("not found", "does not exist", "repository not found",
+                              "authentication", "permission denied", "could not read")):
+        return False
+    return None
+
+
+def env_spec_tracked(obj: Object, check_remote: bool = False) -> Probe:
     """must/010 (nothing assumed pre-installed), must/013 (the spec is tracked),
     must/016 (the spec is published where others can get it)."""
     i010, i013, i016 = ("stamped-checklist:must/010", "stamped-checklist:must/013",
@@ -500,13 +528,23 @@ def env_spec_tracked(obj: Object) -> Probe:
         s016, r016 = s013, clip("Nothing to share: " + r013)
     elif published:
         # A configured remote is a *claim* of publication, not evidence of it:
-        # two independent blind runs overrode this `met` after finding the URL
-        # returns 404. The probe cannot check offline, so it says what it saw
-        # and leaves the verification to the reader (`GIT_TERMINAL_PROMPT=0
-        # git ls-remote <url>`), which is the skill's step 4.
-        s016 = "partial"
-        r016 = clip(f"The specification is tracked and a remote is recorded ({remote}), but whether that "
-                    "remote resolves was not checked here: verify with `git ls-remote` before calling it met.")
+        # three blind runs overrode an earlier `met` here after finding the URL
+        # returns 404. With `--check-remote` the probe asks; without it, it says
+        # what it saw and leaves the asking to the reader (step 4).
+        resolved = _remote_resolves(remote) if check_remote else None
+        if resolved is True:
+            s016 = "met"
+            r016 = clip(f"The specification is tracked and its remote resolves ({remote}): "
+                        "`git ls-remote` reached it, so anyone who can clone it obtains the spec.")
+        elif resolved is False:
+            s016 = "unmet"
+            r016 = clip(f"The recorded remote does not resolve ({remote}): `git ls-remote` could not "
+                        "reach it, so the tracked specification is not obtainable from where it claims.")
+        else:
+            s016 = "partial"
+            r016 = clip(f"The specification is tracked and a remote is recorded ({remote}), but whether "
+                        "that remote resolves was not checked: run with --check-remote, or "
+                        "`GIT_TERMINAL_PROMPT=0 git ls-remote`, before calling it met.")
     else:
         s016 = "unmet"
         r016 = clip("The specification is tracked, but this checkout records no remote at all, so nothing "
