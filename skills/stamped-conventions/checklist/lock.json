@@ -13,7 +13,7 @@
   "sha256": "da2eb88ed49dff64f098ad92200dec81c1b4404cc2d3ba1e1e1404d0e10e7bba",
   "size": 10709,
   "vendored_at": "2026-10-13",
-  "vendored_by": "stamped-conventions/scripts/vendor_checklist.py",
+  "vendored_by": "skills/stamped-conventions/scripts/vendor_checklist.py",
   "item_counts": {
     "must": 17,
     "should": 9,

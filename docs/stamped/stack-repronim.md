@@ -1,7 +1,7 @@
 # Stack: ReproNim and BIDS
 
 What `create-repronim-stamped-project` turns a PROMPT into, and what
-`stamped-conventions/references/stacks/repronim.md` will carry once that skill exists.
+`skills/stamped-conventions/references/stacks/repronim.md` will carry once that skill exists.
 Companion to [PLAN.md](PLAN.md).
 
 Thin: it reads `stacks/repronim.md` and turns PROMPT into PROMPT-WITH-REPRONIM-SPECIFICS for *create*.

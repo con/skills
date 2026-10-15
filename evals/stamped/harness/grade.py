@@ -34,12 +34,13 @@ import sys
 HERE = pathlib.Path(__file__).resolve().parent
 EVALS = HERE.parent
 REPO = EVALS.parent.parent
-RUN_PROBES = REPO / "assess-alignment-with-stamped-principles" / "scripts" / "run_probes.py"
-CONVENTIONS = REPO / "stamped-conventions"
-FRESH_RERUN = REPO / "assess-alignment-with-stamped-principles" / "scripts" / "fresh_rerun.py"
+SKILLS = REPO / "skills"
+RUN_PROBES = SKILLS / "assess-alignment-with-stamped-principles" / "scripts" / "run_probes.py"
+CONVENTIONS = SKILLS / "stamped-conventions"
+FRESH_RERUN = SKILLS / "assess-alignment-with-stamped-principles" / "scripts" / "fresh_rerun.py"
 
 # What the transcript is scanned for; each is a STAMPED invariant from
-# stamped-conventions/SKILL.md that a run can be seen to break.
+# skills/stamped-conventions/SKILL.md that a run can be seen to break.
 PROCESS_PATTERNS = {
     "commit_during_run": re.compile(r"datalad\s+(?:save|run)\b[\s\S]{0,400}?git\s+commit", re.I),
     "git_commit_calls": re.compile(r"\bgit\s+commit\b"),

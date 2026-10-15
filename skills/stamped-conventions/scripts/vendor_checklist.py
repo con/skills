@@ -14,9 +14,9 @@ hand-edited: this script is the only writer.  Run it through the project's
 recorded mechanism so the refresh is itself provenance-tracked, e.g.
 
     datalad run -m 'vendor checklist v0.3.2' \
-        python3 stamped-conventions/scripts/vendor_checklist.py --tag v0.3.2
+        python3 skills/stamped-conventions/scripts/vendor_checklist.py --tag v0.3.2
 
-Then bump ``version:`` in ``stamped-conventions/SKILL.md`` (MINOR) and add a
+Then bump ``version:`` in ``skills/stamped-conventions/SKILL.md`` (MINOR) and add a
 changelog line, because every report records the pin it used.
 
 Usage:
@@ -122,7 +122,7 @@ def vendor(tag: str, commit: str | None, offline: pathlib.Path | None, force: bo
         "sha256": hashlib.sha256(raw).hexdigest(),
         "size": len(raw),
         "vendored_at": today,
-        "vendored_by": "stamped-conventions/scripts/vendor_checklist.py",
+        "vendored_by": "skills/stamped-conventions/scripts/vendor_checklist.py",
         "item_counts": counts,
     }
 
@@ -132,7 +132,7 @@ def vendor(tag: str, commit: str | None, offline: pathlib.Path | None, force: bo
     total = sum(counts.values())
     print(f"vendored checklist {version} ({total} items: {counts}) from {tag} @ {commit[:7]}")
     print(f"  {target}\n  {LOCK}")
-    print("next: bump version: in stamped-conventions/SKILL.md and add a changelog line")
+    print("next: bump version: in skills/stamped-conventions/SKILL.md and add a changelog line")
     return 0
 
 

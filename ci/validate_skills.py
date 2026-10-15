@@ -35,8 +35,9 @@ Warnings never affect the exit code.
 Usage:
     python3 ci/validate_skills.py [<skill-dir> ...]
 
-    If no directories are given, scans every immediate subdirectory of the
-    repo root that contains a SKILL.md.
+    If no directories are given, scans every directory containing a SKILL.md
+    under `skills/` and every immediate subdirectory of the repo root that
+    contains one (the collection is mid-move to a single `skills/` tree).
 """
 
 from __future__ import annotations
@@ -225,10 +226,21 @@ def check_python_file(py_path: Path, result: Result) -> None:
 # ---------------------------------------------------------------------------
 
 def find_skill_dirs(repo_root: Path) -> list[Path]:
-    return sorted(
+    """Every skill directory, in either layout.
+
+    con/skills is moving to one canonical ``skills/`` tree (con/skills#13, so
+    that `apm.yml` can publish the collection); the skills that have not been
+    moved yet are still immediate children of the repository root. Scanning
+    both means neither half goes unvalidated while the move is half done, and
+    nothing here needs touching when it finishes.
+    """
+    found = {
+        p.parent for p in repo_root.glob("skills/*/SKILL.md")
+    } | {
         p.parent for p in repo_root.glob("*/SKILL.md")
         if p.parent.name not in {"ci"}
-    )
+    }
+    return sorted(found)
 
 
 # ---------------------------------------------------------------------------

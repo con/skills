@@ -55,7 +55,8 @@ REPO = EVALS.parent.parent
 FIXTURE = EVALS / "fixtures" / "make_r0_object.py"
 JUDGEMENT = EVALS / "mutants" / "judgement.py"
 BLIND_RUN = HERE / "blind_run.py"
-RUN_PROBES = REPO / "assess-alignment-with-stamped-principles" / "scripts" / "run_probes.py"
+SKILLS = REPO / "skills"
+RUN_PROBES = SKILLS / "assess-alignment-with-stamped-principles" / "scripts" / "run_probes.py"
 
 sys.path.insert(0, str(EVALS / "mutants"))
 from judgement import JUDGEMENT_MUTANTS  # noqa: E402

@@ -113,7 +113,7 @@ Companion to [PLAN.md](PLAN.md).
   - `AGENTS.md` rules;
   - `ci/validate_skills.py`;
   - the shared-conventions pattern and `version:` frontmatter (#16/#22);
-  - APM distribution with a `skills/` tree (#13);
+  - APM distribution with a `skills/` tree (#13, merged 2026-10-15 into the `ci-security-llm-review` branch of #9; adopted here already);
   - Claude-neutral wording (#14);
   - `introduce-*` → `setup-*` (#21).
 - *What we take:* follow all of these.

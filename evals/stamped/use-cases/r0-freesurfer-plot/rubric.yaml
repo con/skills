@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 #
 # The emphasis this use case is graded under; see
-# stamped-conventions/references/project-kinds.md.
+# skills/stamped-conventions/references/project-kinds.md.
 use_case: r0-freesurfer-plot
 kind: study
 checklist_version: "0.3.1"

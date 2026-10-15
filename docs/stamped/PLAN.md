@@ -90,7 +90,7 @@ These are developed in `con/skills`. Automated distribution, and vendoring into 
 
 1. **Agent-agnostic core, opinionated stacks in references.**
    The skill bodies are written in terms of properties: "every derived file has a re-executable record".
-   Concrete stacks live in `stamped-conventions/references/stacks/*.md`, loaded only when the project uses that stack.
+   Concrete stacks live in `skills/stamped-conventions/references/stacks/*.md`, loaded only when the project uses that stack.
    `datalad.md` comes first, then `repronim.md`, then others (Snakemake, DVC, Pixi/uv) as needed.
    STAMPED generalizes YODA, so nothing in them is YODA-specific.
    This follows @asmacdo's draft and con/skills#14.
@@ -160,10 +160,11 @@ flowchart BT
   self --> assess
 ```
 
-Proposed layout, at the repository root today, or under `skills/` once con/skills#13 lands:
+Layout. con/skills#13 moved the collection into one canonical `skills/` tree
+(what `apm.yml` publishes), so these five live there too:
 
 ```
-stamped-conventions/
+skills/stamped-conventions/
   SKILL.md                      # user-invocable: false; "read it or stop" contract
   references/
     principles-card.md          # one screen; links the paper
@@ -178,16 +179,16 @@ stamped-conventions/
   scripts/
     vendor_checklist.py         # refresh the pin (run through a recorded command)
     encode_response.py          # response JSON <-> checklist URL (format 3)
-assess-alignment-with-stamped-principles/
+skills/assess-alignment-with-stamped-principles/
   SKILL.md
   scripts/probes/*.py           # scripted checks (evals.md §6), shared with the graders
   scripts/run_probes.py         # the sweep; also writes a draft response JSON
   scripts/fresh_rerun.py        # the expensive probe: clone elsewhere and re-run
-align-with-stamped-principles/SKILL.md
-create-stamped-project/{SKILL.md, templates/…}
-create-repronim-stamped-project/SKILL.md
-do-full-research-loop/SKILL.md
-self-assess-alignment-with-stamped-principles/SKILL.md
+skills/align-with-stamped-principles/SKILL.md
+skills/create-stamped-project/{SKILL.md, templates/…}
+skills/create-repronim-stamped-project/SKILL.md
+skills/do-full-research-loop/SKILL.md
+skills/self-assess-alignment-with-stamped-principles/SKILL.md
 evals/stamped/                  # kept outside the skills (K-Dense convention)
   conditions/pointer-CLAUDE.md  # the `pointer` baseline, verbatim from the issue
   fixtures/make_r0_object.py    # a known-good object, built with plain git
@@ -410,7 +411,7 @@ Skills stay at `0.x` until their done criteria hold.
   - R1–R3, then R4 as a demonstration with NIDM and BEP028 outputs.
 - [ ] **Phase 5:** `self-assess-alignment-with-stamped-principles` v0.1, plus R5 (cross-domain).
 - [ ] **Phase 6: distribution.**
-  - APM packaging, once #13 lands.
+  - APM packaging: the skills sit in `skills/`, which `apm.yml` already includes, so what is left is the package metadata and a consumer test.
   - Vendoring into stamped-agent-skills, replacing its single draft, and closing #3.
   - The ReproNim layer into ReproNim/skills.
   - Domain-neutral pieces upstream to K-Dense (answering their issue #217, "should STAMPED be its own skill?").
@@ -420,11 +421,11 @@ Skills stay at `0.x` until their done criteria hold.
 
 What exists in con/skills as of 2026-10-13, on branch `claude/ecstatic-cerf-nh4j6w`:
 
-- **`stamped-conventions/` 0.2.0** — the five references, the checklist vendored at `v0.3.1` (`af259ba`) with a `lock.json` carrying tag, commit and sha256, `vendor_checklist.py` (`--check` verifies the files against the lock) and `encode_response.py` (`items`, `validate`, `encode`, `decode`, `template`).
+- **`skills/stamped-conventions/` 0.2.0** — the five references, the checklist vendored at `v0.3.1` (`af259ba`) with a `lock.json` carrying tag, commit and sha256, `vendor_checklist.py` (`--check` verifies the files against the lock) and `encode_response.py` (`items`, `validate`, `encode`, `decode`, `template`).
   The encoder is the only writer of an app URL, and `decode` is what turns a checklist a person filled in the web app into reference answers.
-- **`create-stamped-project/` 0.1.0, `align-with-stamped-principles/` 0.1.0 and `do-full-research-loop/` 0.1.0** — the three skills R0 exercises, with the guards shipped as templates rather than described: `pre-commit-run-guard` (refuses a commit while a recorded run is in flight, and allows the run's own), `run-recorded.sh` (sets the marker, refuses a dirty tree, falls back to a plain recorded commit without datalad) and `preflight.sh` (eight checks, each naming the checklist item it protects).
+- **`skills/create-stamped-project/` 0.1.0, `skills/align-with-stamped-principles/` 0.1.0 and `skills/do-full-research-loop/` 0.1.0** — the three skills R0 exercises, with the guards shipped as templates rather than described: `pre-commit-run-guard` (refuses a commit while a recorded run is in flight, and allows the run's own), `run-recorded.sh` (sets the marker, refuses a dirty tree, falls back to a plain recorded commit without datalad) and `preflight.sh` (eight checks, each naming the checklist item it protects).
   All three guards are tested: `preflight.sh` passes on the clean fixture and refuses three mutants; the hook refuses an outside commit and admits `IN_FLIGHT_OK=1`.
-- **`assess-alignment-with-stamped-principles/` 0.2.0** — the skill, thirteen probes in `scripts/probes/`, `scripts/run_probes.py` (which also writes a draft response JSON) and `scripts/fresh_rerun.py`.
+- **`skills/assess-alignment-with-stamped-principles/` 0.2.0** — the skill, thirteen probes in `scripts/probes/`, `scripts/run_probes.py` (which also writes a draft response JSON) and `scripts/fresh_rerun.py`.
   The probes answer **11 of the 17 MUST items**, 2 SHOULD items and may/001 from committed state; the other six MUST items are judgement, listed in the skill.
   Three probes answer no checklist item and are reported as extras: `license-declared`, `clone-weight` and `inputs-untouched`.
   One probe can answer two items differently — `entry-point` separates must/007 (instructions) from must/008 (a starting point), `run-env-linked` separates must/006 (the record names an environment) from must/015 (that environment is pinned).
@@ -640,6 +641,9 @@ For a Claude Code session on typhon (under Remote Control) picking this up:
   Every report carries its pin; a version bump in `stamped-conventions` is the only way a pin changes.
 - **Collision with in-flight con/skills PRs.** The layout (#13), Claude-neutral wording (#14) and renames (#21) are followed as they land.
   Nothing in the STAMPED skills depends on which order they merge in.
+  #13's `skills/` tree was adopted on 2026-10-15 (decision 12), ahead of #9
+  reaching master, because the move is mechanical and doing it late would move
+  every run record's quoted paths with it.
 
 ---
 
@@ -698,6 +702,13 @@ My recommendation comes first in each item.
 12. ~~**Layout:** start at the repository root now, or wait for #13's `skills/` tree?~~
     **Decided 2026-10-13:** started at the root, as recommended; moving is one `git mv` when #13 lands.
     `evals/` sits beside the skills, outside them.
+    **Done 2026-10-15**, and it was one `git mv`: the five skills are `skills/*`.
+    #13 merged into `ci-security-llm-review` (PR #9), not into master, so master
+    still carries the other skills at the root — the validator therefore scans
+    both layouts (`skills/*/SKILL.md` and `*/SKILL.md`) until #9 lands and the
+    second glob can go. `apm.yml` includes the whole `skills` tree, so these
+    five need no per-skill entry there. `evals/` stays at the root: it is not a
+    skill and APM should not publish it.
 
 ---
 

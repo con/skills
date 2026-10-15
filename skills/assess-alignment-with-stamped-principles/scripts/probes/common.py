@@ -4,7 +4,7 @@
 
 A probe is a deterministic, tool-agnostic check over *committed* state.  It
 returns a :class:`Probe` result carrying a status from
-``stamped-conventions/references/verdicts.md``, the checklist items it speaks
+``../stamped-conventions/references/verdicts.md``, the checklist items it speaks
 to, a reason short enough for the checklist app, and evidence a reader can
 open.  A probe never writes to the object it inspects, and it never reports
 ``met`` without evidence.

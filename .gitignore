@@ -12,3 +12,6 @@ venvs/
 # (container images, eval sandboxes, the pinned tooling venv) but never
 # committed: it runs to gigabytes.
 .git-meta/
+
+# pytest-evals default output directory
+test-out/

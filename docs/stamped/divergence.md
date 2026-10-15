@@ -81,7 +81,7 @@ app itself is unaffected — it receives exactly `yes`/`no`/`null`.
 
 **#24:** "No vendored copy of the checklist JSON; tag-pinned URLs only."
 
-**Here:** `stamped-conventions/checklist/stamped-checklist-0.3.1.json` plus
+**Here:** `skills/stamped-conventions/checklist/stamped-checklist-0.3.1.json` plus
 `lock.json` (tag, commit, sha256, item counts), refreshed only by
 `vendor_checklist.py` and verified by `--check`.
 

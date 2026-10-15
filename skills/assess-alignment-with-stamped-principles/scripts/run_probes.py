@@ -8,7 +8,7 @@
                   [--kind dataset|component|study|skill]
 
 Writes the per-probe results, and optionally a response JSON (the format in
-``stamped-conventions/references/response-format.md``) in which every item a
+``../stamped-conventions/references/response-format.md``) in which every item a
 probe speaks to carries that probe's verdict and every other item is left
 ``not-checked`` for the assessing session to judge.
 

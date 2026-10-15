@@ -6,6 +6,7 @@ on:
     paths:
       - '*/SKILL.md'
       - '*/**.py'
+      - 'skills/**'
       - 'ci/validate_skills.py'
       - 'evals/**'
       - 'tox.ini'
@@ -15,6 +16,7 @@ on:
     paths:
       - '*/SKILL.md'
       - '*/**.py'
+      - 'skills/**'
       - 'ci/validate_skills.py'
       - 'evals/**'
   workflow_dispatch:

@@ -30,7 +30,8 @@ EVALS = HERE.parent
 REPO = EVALS.parent.parent
 FIXTURE = EVALS / "fixtures" / "make_r0_object.py"
 MUTATE = EVALS / "mutants" / "mutate.py"
-RUN_PROBES = REPO / "assess-alignment-with-stamped-principles" / "scripts" / "run_probes.py"
+SKILLS = REPO / "skills"
+RUN_PROBES = SKILLS / "assess-alignment-with-stamped-principles" / "scripts" / "run_probes.py"
 
 sys.path.insert(0, str(EVALS / "mutants"))
 sys.path.insert(0, str(EVALS / "fixtures"))
