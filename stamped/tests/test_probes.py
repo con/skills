@@ -944,3 +944,22 @@ def test_other_tools_provenance_counts_and_a_paper_is_not_a_product(tmp_path, cl
     assert result.status == "partial", (result.status, result.reason)
     assert "provenance artefact" in result.reason or "provenance" in result.reason
     assert "AVerySimplePublication_v3.pdf" not in str(result.details.get("candidates"))
+
+
+def test_fresh_rerun_does_not_credit_an_entry_point_that_does_nothing(tmp_path):
+    """`--entry true` must not score `met`.
+
+    The probe recorded the shipped outputs, ran the entry point, and compared —
+    so an entry point that did nothing left them untouched and scored as
+    reproduction. Caught by running the probe with `--entry true` as a smoke
+    test and getting `met`.
+    """
+    source = _tiny_reproducible_object(tmp_path / "noop-source")
+    report = tmp_path / "noop.json"
+    subprocess.run(
+        [sys.executable, str(ASSESS / "scripts" / "fresh_rerun.py"), "--path", str(source),
+         "--entry", "true", "--outputs", "*.tsv", "-o", str(report)],
+        check=True, capture_output=True, text=True)
+    result = json.loads(report.read_text())
+    assert result["status"] != "met", result["reason"]
+    assert "results.tsv" in str(result.get("comparison") or result["reason"])
