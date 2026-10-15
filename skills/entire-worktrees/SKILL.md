@@ -15,6 +15,7 @@ Retain preparation receipts with the owning experiment.
 
 Hook trust may be path-specific.
 Reuse approvals only for byte-identical already-approved hooks; preserve denials and review changed hooks.
+Use [scripts/sync.py](scripts/sync.py) with `--worktree PATH --source APPROVED_HOOKS --dry-run` to inspect reusable trust before applying the same command without `--dry-run`.
 Compose capture, formatting and provenance hooks without replacing or double-wrapping them.
 Clear inherited session identifiers before starting a fresh native CLI session.
 
