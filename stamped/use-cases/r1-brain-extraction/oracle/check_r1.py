@@ -116,6 +116,15 @@ def main(argv: list[str] | None = None) -> int:
         return _finish(report, args)
     shipped = shipped_mask_volumes(dataset.resolve())
     report["comparator_subjects"] = len(shipped)
+    if not shipped:
+        # Without the comparator every later check silently passes: no exact
+        # matches, no ratios, no out-of-band values, and the run would be
+        # declared `met` on the strength of a table nobody checked. In a real
+        # clone this means the qc.tsv content was never fetched.
+        report.update(status="not-checked",
+                      reason=(f"{dataset} carries no mask_maskvol values (annexed content not "
+                              "fetched?), so nothing can be compared; the product was not judged."))
+        return _finish(report, args)
 
     # (1) the product
     tables = [p for p in paths if p.endswith((".tsv", ".csv")) and not _is_input(p)]
@@ -204,6 +213,10 @@ def main(argv: list[str] | None = None) -> int:
     report["out_of_band"] = out_of_band
     unmatched = sorted(set(best["measured"]) - set(shipped))
     report["no_comparator"] = unmatched
+    if len(ratios) < args.min_subjects:
+        findings.append(f"only {len(ratios)} of {len(best['measured'])} volumes have a shipped "
+                        f"mask_maskvol to compare against (<{args.min_subjects}): "
+                        f"no comparator for {', '.join(unmatched[:5]) or 'some subjects'}")
     if out_of_band:
         worst = max(out_of_band.items(), key=lambda kv: abs(kv[1] - 1))
         findings.append(f"{len(out_of_band)} volume(s) outside [{args.ratio_min}, {args.ratio_max}] of the "
