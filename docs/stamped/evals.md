@@ -54,6 +54,8 @@ A run has a scope, a condition ([§4](#4-conditions)), a model, and a place its 
 - Tell the subagent **not to read con/skills** — and say why. `evals/stamped/gold/` holds reference answers for exactly the objects worth testing on, and a helpful agent will find them.
 - Tell it the user is unavailable, so the steps that ask it to review goals and project kind with the user have to become labelled assumptions in its report. How well it handles that is itself a finding.
 - Name what it may not do (run the project's pipeline, attempt the expensive probe), so a refusal is a choice rather than a timeout.
+- **Keep the prompt.** `harness/run.py --inner-prompt` and `harness/blind_run.py prepare` both write the exact text the subagent was given, next to the run, because it is the one input a later reader cannot reconstruct from the object. R0's first four arms were launched from prompts composed by hand, and that is the gap their run record cannot close.
+- **Give every arm the same facts about the host, in the same file.** `conditions/host-notes.md` is copied into every sandbox: what is installed, that `datasets.datalad.org` refuses connections here while the GitHub mirrors work, that images are 0.5–9 GB, that the host is shared with concurrent runs. These are *environment*, not *method*, and identical across arms, so they bias no comparison — and without them every arm spends its first ten minutes rediscovering the same thing. The notes stay **untracked** in the sandbox: they name an absolute cache path, and a tracked file carrying one cost both R1 arms must/009 before `run.py` learned to ignore it.
 
 **Two things come back, and the second one is usually worth more:**
 
@@ -85,6 +87,10 @@ Which of two related items a reader pins a prose defect on is not under test; na
 **Cadence.** At least one blind run per skill per iteration, on a scope the previous iteration also used (so the diff is a regression test) plus one it has not seen, and the judgement mutants whenever the prose of a skill changes.
 Runs are cheap enough — minutes, on an object already on disk — that there is no excuse for an untested wording change.
 The harness this grows into is surveyed in [`eval-platforms.md`](eval-platforms.md): keep our object generators and structured scorer, adopt `pytest-evals` for aggregation now, and Inspect AI at phase 3 for containers per run and local models.
+
+**`pytest-evals` is in, as of 2026-10-14**, and only at that aggregation layer: `evals/stamped/tests/test_eval_cases.py` holds one eval case per scripted mutant plus the clean-object control, one case per *recorded* judgement round, and one analysis test per criterion of [§10.1](#101-done-criteria) — per-item detection, the false-accusation rate, collateral flips, and judgement detection split by model tier.
+`tox -e stamped-evals` runs the fast suite first and then those with `--run-eval --run-eval-analysis`.
+Two things fell out of it immediately: two mutants had been producing collateral item flips that `calibrate.py` printed and nobody gated on (both were genuine knock-on effects, now *declared* with `also` rather than tolerated), and the recorded judgement rounds carried no model label at all, so the per-tier gate could not be read against them.
 
 ## 3 Use-case ladder
 
