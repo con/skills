@@ -215,7 +215,7 @@ def no_abs_paths(obj: Object, allow: tuple[str, ...] = ()) -> Probe:
         clip(f"No host-specific absolute paths in tracked text files.{tmp_note}"),
         [Evidence("probe:no-abs-paths", f"scanned {len(obj.tracked())} tracked paths, "
                   f"{len(tmp_hits)} /tmp hit(s), 0 host-specific")],
-        {"tmp_hits": tmp_hits} if tmp_hits else None,
+        {"tmp_hits": tmp_hits},
     )
 
 

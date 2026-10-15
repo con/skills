@@ -38,7 +38,12 @@ SEVERITY = {"unmet": 0, "partial": 1, "not-checked": 2, "not-applicable": 3, "me
 DETAIL_CAP = 50
 
 
-def cap_details(details: dict) -> dict:
+def cap_details(details: dict | None) -> dict:
+    # A probe may carry no details at all; crashing on that turned one such
+    # probe into "probe failed to run", which drops its item from the report
+    # without failing anything.
+    if not details:
+        return {}
     out: dict = {}
     for key, value in details.items():
         if isinstance(value, list) and len(value) > DETAIL_CAP:

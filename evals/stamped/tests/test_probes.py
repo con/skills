@@ -77,6 +77,22 @@ def test_fixture_is_clean_and_all_probes_pass(clean):
         )
 
 
+def test_no_probe_crashes_on_the_clean_fixture(clean, tmp_path):
+    """A crashed probe is `not-checked` and its items disappear.
+
+    Nothing failed when one did: the sweep simply answered one item fewer,
+    and the calibration reported a smaller denominator as if that were normal.
+    """
+    out = subprocess.run([sys.executable, str(ASSESS / "scripts" / "run_probes.py"),
+                          str(clean), "--quiet"], capture_output=True, text=True, check=True)
+    payload = json.loads(out.stdout)
+    crashed = {p["probe"]: p["reason"] for p in payload["probes"]
+               if "probe failed to run" in (p.get("reason") or "")}
+    assert not crashed, crashed
+    answered = {item for p in payload["probes"] for item in p["items"]}
+    assert "stamped-checklist:must/009" in answered
+
+
 def test_every_probe_returns_a_known_status(clean):
     obj = Object(clean)
     allowed = {"met", "partial", "unmet", "not-checked", "not-applicable"}

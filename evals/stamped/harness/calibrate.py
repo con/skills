@@ -36,6 +36,9 @@ sys.path.insert(0, str(EVALS / "mutants"))
 from mutate import MUTANTS  # noqa: E402
 
 
+COLLECTOR_FAILURE = "probe failed to run"
+
+
 def _probe(path: pathlib.Path) -> tuple[dict[str, dict], dict[str, dict]]:
     """(item id -> answer, probe name -> answer for probes with no item)."""
     out = subprocess.run(
@@ -45,6 +48,15 @@ def _probe(path: pathlib.Path) -> tuple[dict[str, dict], dict[str, dict]]:
     if out.returncode != 0:
         raise RuntimeError(f"run_probes.py failed on {path}: {out.stderr.strip()}")
     payload = json.loads(out.stdout)
+    # A probe that crashes is reported as `not-checked` and its items simply
+    # vanish from the sweep — so a defect in a probe reads as "fewer items
+    # answered" and nothing fails. One did exactly that, and only the item
+    # count moving by one gave it away.
+    crashed = {p["probe"]: p["reason"] for p in payload["probes"]
+               if COLLECTOR_FAILURE in (p.get("reason") or "")}
+    if crashed:
+        raise RuntimeError("probe(s) crashed on " + str(path) + ": "
+                           + "; ".join(f"{k}: {v}" for k, v in crashed.items()))
     answers: dict[str, dict] = {}
     extras: dict[str, dict] = {}
     severity = {"unmet": 0, "partial": 1, "not-checked": 2, "not-applicable": 3, "met": 4}
