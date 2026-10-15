@@ -47,6 +47,7 @@ assessor is the test suite.
 2. **Adopt `pytest-evals` now**, for the aggregation layer: one eval case per
    (mutant × model), one analysis test asserting the done criteria of [evals.md §10](evals.md#10-done-criteria). Cheap,
    reversible, and it keeps `tox -e stamped-evals` as the single entry point.
+   **Done, 2026-10-14** (`pytest-evals==0.3.4`, `evals/stamped/tests/test_eval_cases.py`): one case per scripted mutant plus the clean-object control, one case per *recorded* judgement round — model runs cannot be re-run for free, so the cases read what was recorded and hold it to the gate — and one analysis test per criterion. It paid for itself the hour it landed: two mutants had been producing collateral item flips that `calibrate.py` printed and nothing gated on, and the recorded judgement rounds carried no model label at all, so the per-tier criterion could not be read against them.
 3. **Adopt Inspect AI at phase 3**, when the outer loop needs containers per run and
    more than one model tier. Map our pieces onto its vocabulary:
    - *dataset* → one sample per (use case or mutant), each carrying the path of the
