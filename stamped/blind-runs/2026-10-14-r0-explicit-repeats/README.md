@@ -87,7 +87,15 @@ weakness, in the item next door.
    now counts, and a README that says nothing about running the project still
    fails.
 
-Each is pinned by a test in `evals/stamped/tests/test_probes.py`. The
+Each is pinned by a test in `evals/stamped/tests/test_probes.py`. The first
+one survived two days because the known-good fixture had only one of the two
+layouts — every record in it named a `.sif` — so the fixture now carries a
+registered container too, and two new mutants guard the loosening from the
+other side: `record-env-stripped` (a record naming no environment must still
+cost must/006) and `record-container-floating` (`docker run x:latest`, which
+was invisible before must/006 credited a bare runtime invocation). 18/18
+mutants detected, 0/17 false accusations — unchanged, which is what a loosening
+has to show. The
 2026-10-13 R0 round was graded before all three, and its objects are gone, so
 those numbers cannot be restated — a reason to keep objects, which the results
 dataset now does.

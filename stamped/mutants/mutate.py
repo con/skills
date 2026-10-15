@@ -142,6 +142,47 @@ def remote_removed(root: pathlib.Path) -> str:
     return "no published remote is recorded, so there is no evidence anyone else can obtain the spec"
 
 
+def _run_record(root: pathlib.Path, message: str, cmd: str, output: str, content: str) -> None:
+    """Add one `[DATALAD RUNCMD]` commit producing `output`."""
+    info = {"chain": [], "cmd": cmd, "dsid": "0a1b2c3d-4e5f-6071-8293-a4b5c6d7e8f9",
+            "exit": 0, "extra_inputs": [], "inputs": [], "outputs": [output], "pwd": "."}
+    path = root / output
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content)
+    git(root, "add", "-f", output)
+    body = (f"[DATALAD RUNCMD] {message}\n\n=== Do not change lines below ===\n"
+            + json.dumps(info, indent=1, sort_keys=True)
+            + "\n^^^ Do not change lines above ^^^\n")
+    git(root, "commit", "-q", "-m", body)
+
+
+def record_env_stripped(root: pathlib.Path) -> str:
+    """A recorded run that names no environment at all.
+
+    The negative control for a *loosened* must/006. The probe learned to credit
+    a container registered at `.datalad/environments/<name>/image` and a bare
+    `apptainer exec`; this mutant is what must still fail, so that broadening
+    the detection cannot quietly turn into crediting anything.
+    """
+    _run_record(root, "summary statistics", "python3 code/summarise.py results/volumes.tsv results/summary.txt",
+                "results/summary.txt", "mean brainsegvol: 1208333\n")
+    return "a run record whose command names neither a container, a lockfile nor a capture"
+
+
+def record_container_floating(root: pathlib.Path) -> str:
+    """A record that pins nothing: the tag moves under the next reader.
+
+    Reachable only since must/006 credited a bare runtime invocation — before
+    that, this record named "no environment" and must/015 never looked at it,
+    so the float was invisible rather than reported.
+    """
+    _run_record(root, "summary statistics, in a container",
+                "docker run myorg/analysis:latest python3 code/summarise.py "
+                "results/volumes.tsv results/summary.txt",
+                "results/summary.txt", "mean brainsegvol: 1208333\n")
+    return "a run record names `myorg/analysis:latest`, which is a different image tomorrow"
+
+
 def large_binary_in_git(root: pathlib.Path, size_mb: int = 50) -> str:
     """A big image committed as a git blob instead of content-addressed."""
     path = root / "results" / "sub-01_T1w_brain.nii.gz"
@@ -388,6 +429,16 @@ MUTANTS: dict[str, dict] = {
         "apply": untracked_figure,
         "expect": {"stamped-checklist:must/004": "unmet"},
         "probe": "tree-clean",
+    },
+    "record-env-stripped": {
+        "apply": record_env_stripped,
+        "expect": {"stamped-checklist:must/006": "partial"},
+        "probe": "run-env-linked",
+    },
+    "record-container-floating": {
+        "apply": record_container_floating,
+        "expect": {"stamped-checklist:must/015": "unmet"},
+        "probe": "run-env-linked",
     },
     "derived-without-record": {
         "apply": derived_without_record,

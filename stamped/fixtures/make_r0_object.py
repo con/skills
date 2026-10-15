@@ -165,6 +165,25 @@ pandas==2.2.3
         "every path a run record names exists.\n"
     ),
     "code/containers/plotting.sif": "apptainer-image-placeholder\n",
+    # The *other* way a record can name its environment, and the one the probes
+    # were blind to for two days: `datalad containers-add` copies a locally
+    # built image to `.datalad/environments/<name>/image` — no extension — and
+    # `containers-run` records the expanded call, so neither a `.sif` nor the
+    # word `containers-run` appears anywhere in the record. Both layouts are in
+    # the fixture now, so the clean-fixture gate exercises both.
+    ".datalad/config": (
+        '[datalad "dataset"]\n'
+        "\tid = 0a1b2c3d-4e5f-6071-8293-a4b5c6d7e8f9\n"
+        '[datalad "containers.qc"]\n'
+        "\timage = .datalad/environments/qc/image\n"
+        "\tcmdexec = apptainer exec {img} {cmd}\n"
+    ),
+    ".datalad/environments/qc/image": "apptainer-image-placeholder\n",
+    ".datalad/environments/qc/README.md": (
+        "The `qc` container, registered with `datalad containers-add`. The image\n"
+        "here is a placeholder of a few bytes, like `code/containers/plotting.sif`:\n"
+        "the fixture tests how a record *names* its environment, not the image.\n"
+    ),
     "code/containers.json": json.dumps(
         {
             "containers": {
@@ -239,6 +258,12 @@ if __name__ == "__main__":
         "ses-1\t9.1\t1150000\t640000\t510000\n"
         "ses-2\t12.4\t1210000\t655000\t545000\n"
         "ses-3\t17.8\t1265000\t648000\t585000\n"
+    ),
+    "results/qc.tsv": (
+        "session_id\teuler_lh\teuler_rh\tflag\n"
+        "ses-1\t-8\t-6\tok\n"
+        "ses-2\t-11\t-9\treview\n"
+        "ses-3\t-7\t-7\tok\n"
     ),
     "figures/brain-volume-vs-age.png": "PNG-placeholder:3",
     "LICENSE": "MIT License\n\nCopyright (c) 2026 STAMPED fixture\n",
@@ -316,6 +341,23 @@ RUNS = [
             "inputs": ["sourcedata/ds007116/derivatives/freesurfer-post"],
             "extra_inputs": [f"code/containers/plotting.sif ({CONTAINER_DIGEST})"],
             "outputs": ["results/volumes.tsv"],
+            "chain": [],
+            "dsid": "0a1b2c3d-4e5f-6071-8293-a4b5c6d7e8f9",
+            "pwd": ".",
+        },
+    },
+    {
+        "message": "quality table, in the registered container qc",
+        "paths": ["results/qc.tsv"],
+        "run_info": {
+            # What `datalad containers-run -n qc` actually records: the call
+            # format expanded, with the registered image as an extra input.
+            "cmd": "apptainer exec .datalad/environments/qc/image "
+                   "python3 code/collect_volumes.py --qc --input results/volumes.tsv "
+                   "--output results/qc.tsv",
+            "inputs": ["results/volumes.tsv", ".datalad/environments/qc/image"],
+            "extra_inputs": [".datalad/environments/qc/image"],
+            "outputs": ["results/qc.tsv"],
             "chain": [],
             "dsid": "0a1b2c3d-4e5f-6071-8293-a4b5c6d7e8f9",
             "pwd": ".",
