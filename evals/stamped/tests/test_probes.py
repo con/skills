@@ -1155,3 +1155,41 @@ def test_grade_runs_the_fresh_rerun_probe_when_given_a_url():
     # Reported beside the oracle, not folded into the eleven-item rate.
     assert '"fresh_rerun": rerun' in text
     assert "must_pass_rate_at_ceiling" in text
+
+
+def test_the_upstream_schema_carries_every_field_this_repo_emits(clean, tmp_path):
+    """The schema proposed upstream fell three fields behind its own producers.
+
+    `flags` on an item, `drafted_by` and `note` on the assessor: all three in
+    use here, none of them in `docs/stamped/upstream/`, so the real responses
+    the PR body cites as evidence had stopped validating. `linkml` is not in
+    this repository's pinned environment, so the guard is structural rather
+    than a validation run: every key our tooling can emit must appear as an
+    attribute in the schema.
+    """
+    schema = (REPO / "docs" / "stamped" / "upstream"
+              / "stamped-checklist-response-schema.yaml").read_text()
+    subprocess.run(
+        [sys.executable, str(ASSESS / "scripts" / "run_probes.py"), str(clean),
+         "--response", str(tmp_path / "r.json"), "--quiet"],
+        capture_output=True, text=True, check=True,
+    )
+    response = json.loads((tmp_path / "r.json").read_text())
+
+    emitted = set(response) | {"flags"}          # flags appear only once set
+    for answer in response["responses"].values():
+        emitted |= set(answer)
+    emitted |= set(response.get("assessor") or {})
+    for extra in response.get("extra_items") or []:
+        emitted |= set(extra)
+    for answer in response["responses"].values():
+        for ev in answer.get("evidence") or []:
+            emitted |= set(ev) if isinstance(ev, dict) else set()
+
+    missing = sorted(k for k in emitted if f"\n      {k}:" not in schema
+                     and f"\n  {k}:" not in schema)
+    assert not missing, (
+        f"the upstream schema draft does not carry {missing}, which this "
+        "repository's own responses contain; the PR body cites them as "
+        "validating instances"
+    )

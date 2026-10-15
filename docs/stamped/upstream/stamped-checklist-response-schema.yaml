@@ -126,6 +126,18 @@ classes:
           How the answer was produced, e.g. `probe:<name>`, `judgement`,
           `human:web-app`, or `probe:<name>+judgement` when a reading of the
           object overrode an automated check.
+      flags:
+        description: >-
+          What a reader has to know about *how* the answer was reached, rather
+          than about what it says. Deliberately an open vocabulary: the four
+          in use are `mapping-questioned` (the check answered this item from a
+          property the item does not ask about), `probe-overridden` (a reading
+          of the object changed an automated verdict), `unverified-claim` (the
+          verdict rests on something not independently confirmed) and
+          `upstream-duplicate` (the checklist asks this question twice, so the
+          answer repeats another by design). A consumer that does not know a
+          flag should show it, not drop it.
+        multivalued: true
 
   Evidence:
     description: A citable observation. Same shape as `Evidence` in stamped-skills-assessment.
@@ -196,6 +208,17 @@ classes:
       date:
         description: Date the response was produced.
         range: date
+      drafted_by:
+        description: >-
+          The script or step that produced the draft, where that differs from
+          the skill as a whole, e.g. a probe sweep that left the judgement
+          items unanswered. Provenance within the assessor, not a second
+          assessor.
+      note:
+        description: >-
+          Anything a reader needs about the assessor itself rather than about
+          the object — why a version string looks the way it does, which of
+          several configurations ran.
 
   ExtraFinding:
     description: A finding outside the pinned checklist.

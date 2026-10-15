@@ -86,9 +86,18 @@ already in use (`pass/partial/fail/unknown` in the stamped-agent-skills draft,
 - `linkml-lint` is clean apart from three style warnings, two of which are
   deliberate (see below) and one of which matches this repository's own
   `schema` prefix choice.
-- `linkml-validate --target-class ChecklistResponse` passes on three real
-  instances: a full 31-item response produced by a tool, the core-only payload
-  decoded from an app URL, and the trimmed example in this directory.
+- `linkml-validate --target-class ChecklistResponse` passes on four real
+  instances: a full 31-item response produced by a tool, a second one produced
+  by a different model tier, a draft straight out of a probe sweep (judgement
+  items left `not-checked`), and the trimmed example in this directory — plus
+  the core-only payload decoded from an app URL.
+
+  The fourth of those is why this list says four. Re-running the validation
+  before filing caught the schema trailing its own producers by three fields:
+  `flags` on an item, and `drafted_by` and `note` on the assessor, all three in
+  use and none of them in the schema. They are in it now, `flags` deliberately
+  as an open vocabulary. A schema proposed for other people's tooling has to be
+  re-validated against the tooling, not against the day it was written.
 
 ```console
 linkml-validate --schema stamped-checklist-response-schema.yaml \
@@ -113,7 +122,8 @@ linkml-validate --schema stamped-checklist-response-schema.yaml \
 - [x] Schema added as a new file; neither versioned file touched, so no
       version bump is required by `check_version_bump.yml`
 - [x] `linkml-lint` run (3 warnings, 2 deliberate, documented above)
-- [x] `linkml-validate` passes on real instances, including an app-exported one
+- [x] `linkml-validate` passes on four real instances, including an
+      app-exported one and a probe-drafted one
 - [ ] A `validate.yml` step for the new schema — left to the maintainers,
       together with where examples should live
 - [ ] Documentation in `README.md` — happy to write it once the file layout

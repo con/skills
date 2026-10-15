@@ -68,6 +68,8 @@ The app ignores keys it does not know, so one file serves both.
   - `upstream-duplicate` — the checklist asks this question twice (must/014 and should/008 are the same sentence), so this answer repeats another by design rather than by mistake.
 
   Flagged items get their own short list in the report, after the per-item table.
+  The list is **open**: these four are the ones in use, and a consumer that meets an unfamiliar flag shows it rather than dropping it.
+- The `assessor` block may also carry `drafted_by` (the script or step that produced a draft, where that differs from the skill — `scripts/run_probes.py` sets it) and `note` (anything a reader needs about the assessor itself rather than about the object). Both are provenance *within* the assessor, not a second assessor.
 - `extra_items[]` carries findings with no checklist id (licences, T.4) so they are reported without bending an existing id.
 
 ## The provenance stamp

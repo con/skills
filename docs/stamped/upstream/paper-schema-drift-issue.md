@@ -9,6 +9,8 @@ checklist items*. Section 3 belongs in
 <https://github.com/stamped-principles/stamped-checklist-schema> if the
 maintainers prefer one issue per repository.
 
+---
+
 Checked 2026-10-13 against `stamped-paper@main` `main.tex`,
 `stamped-principles-schema@v0.2.0` and `stamped-checklist-schema@v0.3.1`.
 Tooling that reads the schema — the checklist app, assessment records, the
