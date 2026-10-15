@@ -298,6 +298,12 @@ def test_fresh_rerun_reports_a_difference_as_such(tmp_path):
     ('TMPDIR=${RUNNER_TEMP}/work', None),
     ('out="$CI_PROJECT_DIR/results/table.tsv"', None),
     ('cd ~/scratch/ds007116', None),
+    # The tail of a relative glob: three slashes after the variable, and the
+    # one before `ses-1` used to read as the root of an absolute path. It cost
+    # a real R1 arm must/009 twice.
+    ('for m in sorted(glob.glob(f"{maskdir}/sub-*/ses-1/anat/*_mask.nii.gz")):', None),
+    ('- **Products**: `derivatives/synthstrip-7.4.1/sub-*/ses-1/anat/*_desc-brain_mask.nii.gz`', None),
+    ('out = f"{outdir}/sub-{sid}/ses-1/anat"', None),
     # System roots and URLs are not host paths.
     ('#!/usr/bin/env python3', None),
     ('export FREESURFER_HOME=/opt/local/freesurfer-7.4.1', None),

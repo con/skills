@@ -1,0 +1,781 @@
+{
+  "run": {
+    "object": "/home/yoh/proj/CON/skills/.git-meta/scratch/stamped/r1-arms/corrected-skill-explicit",
+    "use_case": "r1-brain-extraction",
+    "condition": "skill-explicit",
+    "model": "sonnet",
+    "skill_commit": "unknown",
+    "repeat": 1,
+    "graded_at": "2026-10-15T03:41:03+00:00",
+    "checklist_version": "0.3.1"
+  },
+  "t1": {
+    "items": {
+      "stamped-checklist:should/002": {
+        "status": "unmet",
+        "probe": "ci-present",
+        "reason": "No CI configuration: nothing checks that the instructions still work."
+      },
+      "stamped-checklist:should/006": {
+        "status": "unmet",
+        "probe": "ci-present",
+        "reason": "No CI configuration: the environment behind the results is never rebuilt."
+      },
+      "stamped-checklist:must/006": {
+        "status": "partial",
+        "probe": "run-env-linked",
+        "reason": "3 of 13 run record(s) name no container or lockfile (10 name a container, 0 a lockfile, 0 only a capture), e.g. 1ce4652: .venv/bin/python code/qc.py derivatives/synthstrip-7.4.1 results/qc.tsv"
+      },
+      "stamped-checklist:must/007": {
+        "status": "met",
+        "probe": "entry-point",
+        "reason": "README.md has an install/usage/reproduce section."
+      },
+      "stamped-checklist:must/008": {
+        "status": "met",
+        "probe": "entry-point",
+        "reason": "Starting point present: code/preflight.sh."
+      },
+      "stamped-checklist:must/010": {
+        "status": "met",
+        "probe": "env-spec-tracked",
+        "reason": "Dependencies are pinned in .datalad/config, code/requirements.lock, and no tracked script expects a tool to be present already."
+      },
+      "stamped-checklist:must/013": {
+        "status": "met",
+        "probe": "env-spec-tracked",
+        "reason": "Tracked: .datalad/config, code/requirements.lock."
+      },
+      "stamped-checklist:must/016": {
+        "status": "unmet",
+        "probe": "env-spec-tracked",
+        "reason": "The specification is tracked, but this checkout records no remote at all, so nothing says where anyone else could obtain it."
+      },
+      "stamped-checklist:must/005": {
+        "status": "met",
+        "probe": "large-in-annex",
+        "reason": "git-annex carries the binary content (21 pointer(s) tracked) and no binary blob over 10 MiB is in git."
+      },
+      "stamped-checklist:should/003": {
+        "status": "met",
+        "probe": "modules-separated",
+        "reason": "4 kinds of component live in distinct places: inputs in sourcedata, sourcedata/ds007116; code in code; derived in derivatives, figures; environment in code/requirements.lock"
+      },
+      "stamped-checklist:must/009": {
+        "status": "met",
+        "probe": "no-abs-paths",
+        "reason": "No host-specific absolute paths in tracked text files."
+      },
+      "stamped-checklist:must/011": {
+        "status": "not-checked",
+        "probe": "platform-assumptions",
+        "reason": "No platform-specific package manager, BSD/GNU-only flag or scheduler command in tracked text \u2014 all a command scan can settle. Whether the documented route needs a mount, a host install, hardware or a service is a reading."
+      },
+      "stamped-checklist:must/012": {
+        "status": "not-checked",
+        "probe": "platform-assumptions",
+        "reason": "No platform-specific package manager, BSD/GNU-only flag or scheduler command in tracked text \u2014 all a command scan can settle. Whether the documented route needs a mount, a host install, hardware or a service is a reading."
+      },
+      "stamped-checklist:must/015": {
+        "status": "met",
+        "probe": "run-env-linked",
+        "reason": "10 run record(s) reference a pinned image or lockfile, and no ':latest' reference is tracked."
+      },
+      "stamped-checklist:must/002": {
+        "status": "met",
+        "probe": "subdatasets-resolvable",
+        "reason": "All 2 linked module(s) carry urls that resolve from elsewhere: sourcedata/ds007116, code/containers"
+      },
+      "stamped-checklist:may/001": {
+        "status": "met",
+        "probe": "subdatasets-resolvable",
+        "reason": "2 external component(s) are linked as modules: sourcedata/ds007116, code/containers"
+      },
+      "stamped-checklist:must/004": {
+        "status": "met",
+        "probe": "tree-clean",
+        "reason": "git tracks 13 text, code and configuration file(s), and `git status` is empty including submodules: the committed state is the whole state."
+      }
+    },
+    "probes": [
+      {
+        "probe": "ci-present",
+        "status": "unmet",
+        "items": [
+          "stamped-checklist:should/002",
+          "stamped-checklist:should/006"
+        ],
+        "reason": "No CI configuration: nothing checks that the instructions still work.",
+        "evidence": [
+          {
+            "uri": "probe:ci-present",
+            "description": "no tracked .github/workflows/, .gitlab-ci.yml, .circleci/, .forgejo/workflows/, .gitea/workflows/ in 41 tracked paths",
+            "sha256": null
+          }
+        ],
+        "details": {
+          "configs": []
+        },
+        "item_status": {
+          "stamped-checklist:should/002": "unmet",
+          "stamped-checklist:should/006": "unmet"
+        },
+        "item_reason": {
+          "stamped-checklist:should/002": "No CI configuration: nothing checks that the instructions still work.",
+          "stamped-checklist:should/006": "No CI configuration: the environment behind the results is never rebuilt."
+        }
+      },
+      {
+        "probe": "clone-weight",
+        "status": "met",
+        "items": [],
+        "reason": "No text blob in git exceeds 10 MiB.",
+        "evidence": [
+          {
+            "uri": "git ls-tree -r -l HEAD",
+            "description": "largest text blob under 10485760 bytes",
+            "sha256": null
+          }
+        ],
+        "details": {},
+        "item_status": {},
+        "item_reason": {}
+      },
+      {
+        "probe": "derived-have-records",
+        "status": "met",
+        "items": [
+          "stamped-checklist:must/006"
+        ],
+        "reason": "All 3 derived file(s) trace to a re-executable record (13 run record(s), workflows: none).",
+        "evidence": [
+          {
+            "uri": "figures/brain_volume_vs_age.png",
+            "description": "run record cb94e73",
+            "sha256": null
+          },
+          {
+            "uri": "results/brain_volume.tsv",
+            "description": "run record 8ee0731",
+            "sha256": null
+          },
+          {
+            "uri": "results/qc.tsv",
+            "description": "run record 1ce4652",
+            "sha256": null
+          }
+        ],
+        "details": {
+          "candidates": 3,
+          "covered": 3,
+          "uncovered": [],
+          "run_records": 13,
+          "workflow_sources": []
+        },
+        "item_status": {
+          "stamped-checklist:must/006": "met"
+        },
+        "item_reason": {
+          "stamped-checklist:must/006": "All 3 derived file(s) trace to a re-executable record (13 run record(s), workflows: none)."
+        }
+      },
+      {
+        "probe": "entry-point",
+        "status": "met",
+        "items": [
+          "stamped-checklist:must/007",
+          "stamped-checklist:must/008"
+        ],
+        "reason": "must/007 met: README.md has an install/usage/reproduce section. must/008 met: Starting point present: code/preflight.sh.",
+        "evidence": [
+          {
+            "uri": "README.md",
+            "description": "instructions",
+            "sha256": null
+          },
+          {
+            "uri": "code/preflight.sh",
+            "description": "entry point named in the instructions and present",
+            "sha256": null
+          },
+          {
+            "uri": "code/qc.py",
+            "description": "entry point named in the instructions and present",
+            "sha256": null
+          },
+          {
+            "uri": "code/run-recorded.sh",
+            "description": "entry point named in the instructions and present",
+            "sha256": null
+          }
+        ],
+        "details": {
+          "readmes": [
+            "README.md"
+          ],
+          "makefiles": [],
+          "named": [
+            "code/preflight.sh",
+            "code/qc.py",
+            "code/run-recorded.sh"
+          ],
+          "targets": [],
+          "workflow": [],
+          "has_section": true,
+          "documented_targets": [],
+          "missing_targets": []
+        },
+        "item_status": {
+          "stamped-checklist:must/007": "met",
+          "stamped-checklist:must/008": "met"
+        },
+        "item_reason": {
+          "stamped-checklist:must/007": "README.md has an install/usage/reproduce section.",
+          "stamped-checklist:must/008": "Starting point present: code/preflight.sh."
+        }
+      },
+      {
+        "probe": "env-spec-tracked",
+        "status": "unmet",
+        "items": [
+          "stamped-checklist:must/010",
+          "stamped-checklist:must/013",
+          "stamped-checklist:must/016"
+        ],
+        "reason": "must/010 met: Dependencies are pinned in .datalad/config, code/requirements.lock, and no tracked script expects a tool to be present already. must/013 met. must/016 unmet.",
+        "evidence": [
+          {
+            "uri": ".datalad/config",
+            "description": "pinned environment specification",
+            "sha256": null
+          },
+          {
+            "uri": "code/requirements.lock",
+            "description": "pinned environment specification",
+            "sha256": null
+          }
+        ],
+        "details": {
+          "specs": {
+            "code/requirements.lock": "pinned",
+            ".datalad/config": "pinned"
+          },
+          "uninstalled_modules": [],
+          "preconditions": [],
+          "remote": null
+        },
+        "item_status": {
+          "stamped-checklist:must/010": "met",
+          "stamped-checklist:must/013": "met",
+          "stamped-checklist:must/016": "unmet"
+        },
+        "item_reason": {
+          "stamped-checklist:must/010": "Dependencies are pinned in .datalad/config, code/requirements.lock, and no tracked script expects a tool to be present already.",
+          "stamped-checklist:must/013": "Tracked: .datalad/config, code/requirements.lock.",
+          "stamped-checklist:must/016": "The specification is tracked, but this checkout records no remote at all, so nothing says where anyone else could obtain it."
+        }
+      },
+      {
+        "probe": "inputs-untouched",
+        "status": "met",
+        "items": [],
+        "reason": "All 2 linked module(s) are clean and at the commit the superdataset records.",
+        "evidence": [
+          {
+            "uri": "git submodule status",
+            "description": "no '+' or 'U' flags",
+            "sha256": null
+          }
+        ],
+        "details": {},
+        "item_status": {},
+        "item_reason": {}
+      },
+      {
+        "probe": "large-in-annex",
+        "status": "met",
+        "items": [
+          "stamped-checklist:must/005"
+        ],
+        "reason": "git-annex carries the binary content (21 pointer(s) tracked) and no binary blob over 10 MiB is in git.",
+        "evidence": [
+          {
+            "uri": "git ls-tree -r -l HEAD",
+            "description": "no binary blob over 10485760 bytes",
+            "sha256": null
+          },
+          {
+            "uri": ".datalad/config",
+            "description": "git-annex in use for large content",
+            "sha256": null
+          }
+        ],
+        "details": {
+          "mechanism": "git-annex",
+          "annex_pointers": 21,
+          "large_binary": []
+        },
+        "item_status": {
+          "stamped-checklist:must/005": "met"
+        },
+        "item_reason": {
+          "stamped-checklist:must/005": "git-annex carries the binary content (21 pointer(s) tracked) and no binary blob over 10 MiB is in git."
+        }
+      },
+      {
+        "probe": "license-declared",
+        "status": "unmet",
+        "items": [],
+        "reason": "No LICENSE, LICENSES/, REUSE.toml or BIDS License field: reuse terms are unstated.",
+        "evidence": [
+          {
+            "uri": "probe:license-declared",
+            "description": "no licence file among 41 tracked paths, and no License field in any dataset_description.json",
+            "sha256": null
+          }
+        ],
+        "details": {},
+        "item_status": {},
+        "item_reason": {}
+      },
+      {
+        "probe": "modules-separated",
+        "status": "met",
+        "items": [
+          "stamped-checklist:should/003"
+        ],
+        "reason": "4 kinds of component live in distinct places: inputs in sourcedata, sourcedata/ds007116; code in code; derived in derivatives, figures; environment in code/requirements.lock",
+        "evidence": [
+          {
+            "uri": "sourcedata",
+            "description": "inputs module",
+            "sha256": null
+          },
+          {
+            "uri": "sourcedata/ds007116",
+            "description": "inputs module",
+            "sha256": null
+          },
+          {
+            "uri": "code",
+            "description": "code module",
+            "sha256": null
+          },
+          {
+            "uri": "derivatives",
+            "description": "derived module",
+            "sha256": null
+          },
+          {
+            "uri": "figures",
+            "description": "derived module",
+            "sha256": null
+          },
+          {
+            "uri": "code/requirements.lock",
+            "description": "environment module",
+            "sha256": null
+          }
+        ],
+        "details": {
+          "found": {
+            "inputs": [
+              "sourcedata",
+              "sourcedata/ds007116"
+            ],
+            "code": [
+              "code"
+            ],
+            "derived": [
+              "derivatives",
+              "figures",
+              "results"
+            ],
+            "environment": [
+              "code/requirements.lock"
+            ]
+          }
+        },
+        "item_status": {
+          "stamped-checklist:should/003": "met"
+        },
+        "item_reason": {
+          "stamped-checklist:should/003": "4 kinds of component live in distinct places: inputs in sourcedata, sourcedata/ds007116; code in code; derived in derivatives, figures; environment in code/requirements.lock"
+        }
+      },
+      {
+        "probe": "no-abs-paths",
+        "status": "met",
+        "items": [
+          "stamped-checklist:must/009"
+        ],
+        "reason": "No host-specific absolute paths in tracked text files.",
+        "evidence": [
+          {
+            "uri": "probe:no-abs-paths",
+            "description": "scanned 41 tracked paths, 0 /tmp hit(s), 0 host-specific",
+            "sha256": null
+          }
+        ],
+        "details": {
+          "tmp_hits": []
+        },
+        "item_status": {
+          "stamped-checklist:must/009": "met"
+        },
+        "item_reason": {
+          "stamped-checklist:must/009": "No host-specific absolute paths in tracked text files."
+        }
+      },
+      {
+        "probe": "platform-assumptions",
+        "status": "not-checked",
+        "items": [
+          "stamped-checklist:must/011",
+          "stamped-checklist:must/012"
+        ],
+        "reason": "No platform-specific package manager, BSD/GNU-only flag or scheduler command in tracked text \u2014 all a command scan can settle. Whether the documented route needs a mount, a host install, hardware or a service is a reading.",
+        "evidence": [
+          {
+            "uri": "probe:platform-assumptions",
+            "description": "scanned 41 tracked paths for 20 platform-specific commands, 0 hits",
+            "sha256": null
+          }
+        ],
+        "details": {
+          "hits": []
+        },
+        "item_status": {
+          "stamped-checklist:must/011": "not-checked",
+          "stamped-checklist:must/012": "not-checked"
+        },
+        "item_reason": {
+          "stamped-checklist:must/011": "No platform-specific package manager, BSD/GNU-only flag or scheduler command in tracked text \u2014 all a command scan can settle. Whether the documented route needs a mount, a host install, hardware or a service is a reading.",
+          "stamped-checklist:must/012": "No platform-specific package manager, BSD/GNU-only flag or scheduler command in tracked text \u2014 all a command scan can settle. Whether the documented route needs a mount, a host install, hardware or a service is a reading."
+        }
+      },
+      {
+        "probe": "run-env-linked",
+        "status": "partial",
+        "items": [
+          "stamped-checklist:must/006",
+          "stamped-checklist:must/015"
+        ],
+        "reason": "must/006 partial: 3 of 13 run record(s) name no container or lockfile (10 name a container, 0 a lockfile, 0 only a capture), e.g. 1ce4652: .venv/bin/python code/qc.py derivatives/synthstrip-7.4.1 results/qc.tsv must/015 met: 10 run record(s) referen\u2026",
+        "evidence": [
+          {
+            "uri": "commit:61404ee",
+            "description": "container: apptainer exec --cleanenv code/containers/images/neurodesk/neurodesk-synthstrip--7.4.1.simg sh code/skullstrip.sh sub-23676 derivatives/synthstrip-7.4.1",
+            "sha256": null
+          },
+          {
+            "uri": "commit:176555c",
+            "description": "container: apptainer exec --cleanenv code/containers/images/neurodesk/neurodesk-synthstrip--7.4.1.simg sh code/skullstrip.sh sub-20902 derivatives/synthstrip-7.4.1",
+            "sha256": null
+          },
+          {
+            "uri": "commit:43e4a00",
+            "description": "container: apptainer exec --cleanenv code/containers/images/neurodesk/neurodesk-synthstrip--7.4.1.simg sh code/skullstrip.sh sub-21493 derivatives/synthstrip-7.4.1",
+            "sha256": null
+          },
+          {
+            "uri": "commit:1330638",
+            "description": "container: apptainer exec --cleanenv code/containers/images/neurodesk/neurodesk-synthstrip--7.4.1.simg sh code/skullstrip.sh sub-21035 derivatives/synthstrip-7.4.1",
+            "sha256": null
+          },
+          {
+            "uri": "commit:7dc239d",
+            "description": "container: apptainer exec --cleanenv code/containers/images/neurodesk/neurodesk-synthstrip--7.4.1.simg sh code/skullstrip.sh sub-22670 derivatives/synthstrip-7.4.1",
+            "sha256": null
+          },
+          {
+            "uri": "commit:1ce4652",
+            "description": "no environment named: .venv/bin/python code/qc.py derivatives/synthstrip-7.4.1 results/qc.tsv",
+            "sha256": null
+          },
+          {
+            "uri": "commit:cb94e73",
+            "description": "no environment named: .venv/bin/python code/plot.py results/brain_volume.tsv figures/brain_volume_vs_age.png",
+            "sha256": null
+          },
+          {
+            "uri": "commit:8ee0731",
+            "description": "no environment named: .venv/bin/python code/collect.py derivatives/synthstrip-7.4.1 sourcedata/ds007116 results/brain_volume.tsv",
+            "sha256": null
+          }
+        ],
+        "details": {
+          "records": 13,
+          "with_env": 10,
+          "without_env": [
+            {
+              "commit": "1ce4652955484d3298299e3b8e464f0d3ae880c1",
+              "cmd": ".venv/bin/python code/qc.py derivatives/synthstrip-7.4.1 results/qc.tsv",
+              "mechanism": null
+            },
+            {
+              "commit": "cb94e736990671fbf602f6f20f86f4469cc7cce4",
+              "cmd": ".venv/bin/python code/plot.py results/brain_volume.tsv figures/brain_volume_vs_age.png",
+              "mechanism": null
+            },
+            {
+              "commit": "8ee0731e4c7edd13d28c0d8576323dd260ee1af1",
+              "cmd": ".venv/bin/python code/collect.py derivatives/synthstrip-7.4.1 sourcedata/ds007116 results/brain_volume.tsv",
+              "mechanism": null
+            }
+          ],
+          "by_mechanism": {
+            "container": 10,
+            "lockfile": 0,
+            "capture": 0
+          },
+          "unpinned": []
+        },
+        "item_status": {
+          "stamped-checklist:must/006": "partial",
+          "stamped-checklist:must/015": "met"
+        },
+        "item_reason": {
+          "stamped-checklist:must/006": "3 of 13 run record(s) name no container or lockfile (10 name a container, 0 a lockfile, 0 only a capture), e.g. 1ce4652: .venv/bin/python code/qc.py derivatives/synthstrip-7.4.1 results/qc.tsv",
+          "stamped-checklist:must/015": "10 run record(s) reference a pinned image or lockfile, and no ':latest' reference is tracked."
+        }
+      },
+      {
+        "probe": "subdatasets-resolvable",
+        "status": "met",
+        "items": [
+          "stamped-checklist:must/002",
+          "stamped-checklist:may/001"
+        ],
+        "reason": "All 2 linked module(s) carry urls that resolve from elsewhere: sourcedata/ds007116, code/containers",
+        "evidence": [
+          {
+            "uri": ".gitmodules",
+            "description": "sourcedata/ds007116: https://github.com/OpenNeuroDatasets/ds007116",
+            "sha256": null
+          },
+          {
+            "uri": ".gitmodules",
+            "description": "code/containers: https://github.com/ReproNim/containers",
+            "sha256": null
+          }
+        ],
+        "details": {
+          "resolvable": [
+            {
+              "path": "sourcedata/ds007116",
+              "url": "https://github.com/OpenNeuroDatasets/ds007116"
+            },
+            {
+              "path": "code/containers",
+              "url": "https://github.com/ReproNim/containers"
+            }
+          ],
+          "unresolvable": [],
+          "unreachable": [],
+          "pinned_to_local_commits": []
+        },
+        "item_status": {
+          "stamped-checklist:must/002": "met",
+          "stamped-checklist:may/001": "met"
+        },
+        "item_reason": {
+          "stamped-checklist:must/002": "All 2 linked module(s) carry urls that resolve from elsewhere: sourcedata/ds007116, code/containers",
+          "stamped-checklist:may/001": "2 external component(s) are linked as modules: sourcedata/ds007116, code/containers"
+        }
+      },
+      {
+        "probe": "tree-clean",
+        "status": "met",
+        "items": [
+          "stamped-checklist:must/004"
+        ],
+        "reason": "git tracks 13 text, code and configuration file(s), and `git status` is empty including submodules: the committed state is the whole state.",
+        "evidence": [
+          {
+            "uri": "git ls-files",
+            "description": "13 tracked text/code/config paths of 41 tracked paths",
+            "sha256": null
+          },
+          {
+            "uri": "git status --porcelain",
+            "description": "no output",
+            "sha256": null
+          }
+        ],
+        "details": {
+          "tracked_text": 13
+        },
+        "item_status": {
+          "stamped-checklist:must/004": "met"
+        },
+        "item_reason": {
+          "stamped-checklist:must/004": "git tracks 13 text, code and configuration file(s), and `git status` is empty including submodules: the committed state is the whole state."
+        }
+      }
+    ],
+    "must_pass_rate": "9/11",
+    "must_passed": [
+      "stamped-checklist:must/002",
+      "stamped-checklist:must/004",
+      "stamped-checklist:must/005",
+      "stamped-checklist:must/007",
+      "stamped-checklist:must/008",
+      "stamped-checklist:must/009",
+      "stamped-checklist:must/010",
+      "stamped-checklist:must/013",
+      "stamped-checklist:must/015"
+    ],
+    "must_failed": [
+      "stamped-checklist:must/006",
+      "stamped-checklist:must/016"
+    ],
+    "must_unknown": []
+  },
+  "t2": {
+    "items": {},
+    "disagreements_with_t1": {}
+  },
+  "oracle": {
+    "object": "/home/yoh/proj/CON/skills/.git-meta/scratch/stamped/r1-arms/corrected-skill-explicit",
+    "comparator_subjects": 129,
+    "product": {
+      "path": "results/brain_volume.tsv",
+      "volume_column": "brain_volume_ml",
+      "age_column": "age_years",
+      "unit_factor": 1000.0,
+      "unit_declared": true
+    },
+    "subjects_measured": 10,
+    "figures": [
+      "figures/brain_volume_vs_age.png"
+    ],
+    "figures_without_content": [],
+    "identical_to_shipped": [],
+    "byte_identical_products": [],
+    "ratios": {
+      "sub-20336": 1.0638,
+      "sub-20902": 1.0562,
+      "sub-20919": 1.075,
+      "sub-21035": 1.0766,
+      "sub-21146": 1.0714,
+      "sub-21161": 1.0488,
+      "sub-21493": 1.0681,
+      "sub-22670": 1.0354,
+      "sub-23113": 1.104,
+      "sub-23676": 1.0455
+    },
+    "out_of_band": {},
+    "no_comparator": [],
+    "ratio_mean": 1.0645,
+    "ratio_spread": [
+      1.0354,
+      1.104
+    ],
+    "correlation_age_volume": 0.173,
+    "findings": [],
+    "unit": {
+      "column": "brain_volume_ml",
+      "mm3_per_unit": 1000.0,
+      "declared_in_column_name": true
+    },
+    "status": "met",
+    "reason": "10 subjects computed, all within [0.9, 1.34] of the shipped mask_maskvol (mean ratio 1.0645), figure present"
+  },
+  "process": {
+    "available": false,
+    "note": "no transcript: process metrics are unknown, which is not the same as zero"
+  },
+  "checks": [
+    {
+      "text": "T1 stamped-checklist:may/001",
+      "passed": true,
+      "evidence": "2 external component(s) are linked as modules: sourcedata/ds007116, code/containers"
+    },
+    {
+      "text": "T1 stamped-checklist:must/002",
+      "passed": true,
+      "evidence": "All 2 linked module(s) carry urls that resolve from elsewhere: sourcedata/ds007116, code/containers"
+    },
+    {
+      "text": "T1 stamped-checklist:must/004",
+      "passed": true,
+      "evidence": "git tracks 13 text, code and configuration file(s), and `git status` is empty including submodules: the committed state is the whole state."
+    },
+    {
+      "text": "T1 stamped-checklist:must/005",
+      "passed": true,
+      "evidence": "git-annex carries the binary content (21 pointer(s) tracked) and no binary blob over 10 MiB is in git."
+    },
+    {
+      "text": "T1 stamped-checklist:must/006",
+      "passed": false,
+      "evidence": "3 of 13 run record(s) name no container or lockfile (10 name a container, 0 a lockfile, 0 only a capture), e.g. 1ce4652: .venv/bin/python code/qc.py derivatives/synthstrip-7.4.1 results/qc.tsv"
+    },
+    {
+      "text": "T1 stamped-checklist:must/007",
+      "passed": true,
+      "evidence": "README.md has an install/usage/reproduce section."
+    },
+    {
+      "text": "T1 stamped-checklist:must/008",
+      "passed": true,
+      "evidence": "Starting point present: code/preflight.sh."
+    },
+    {
+      "text": "T1 stamped-checklist:must/009",
+      "passed": true,
+      "evidence": "No host-specific absolute paths in tracked text files."
+    },
+    {
+      "text": "T1 stamped-checklist:must/010",
+      "passed": true,
+      "evidence": "Dependencies are pinned in .datalad/config, code/requirements.lock, and no tracked script expects a tool to be present already."
+    },
+    {
+      "text": "T1 stamped-checklist:must/011",
+      "passed": false,
+      "evidence": "No platform-specific package manager, BSD/GNU-only flag or scheduler command in tracked text \u2014 all a command scan can settle. Whether the documented route needs a mount, a host install, hardware or a service is a reading."
+    },
+    {
+      "text": "T1 stamped-checklist:must/012",
+      "passed": false,
+      "evidence": "No platform-specific package manager, BSD/GNU-only flag or scheduler command in tracked text \u2014 all a command scan can settle. Whether the documented route needs a mount, a host install, hardware or a service is a reading."
+    },
+    {
+      "text": "T1 stamped-checklist:must/013",
+      "passed": true,
+      "evidence": "Tracked: .datalad/config, code/requirements.lock."
+    },
+    {
+      "text": "T1 stamped-checklist:must/015",
+      "passed": true,
+      "evidence": "10 run record(s) reference a pinned image or lockfile, and no ':latest' reference is tracked."
+    },
+    {
+      "text": "T1 stamped-checklist:must/016",
+      "passed": false,
+      "evidence": "The specification is tracked, but this checkout records no remote at all, so nothing says where anyone else could obtain it."
+    },
+    {
+      "text": "T1 stamped-checklist:should/002",
+      "passed": false,
+      "evidence": "No CI configuration: nothing checks that the instructions still work."
+    },
+    {
+      "text": "T1 stamped-checklist:should/003",
+      "passed": true,
+      "evidence": "4 kinds of component live in distinct places: inputs in sourcedata, sourcedata/ds007116; code in code; derived in derivatives, figures; environment in code/requirements.lock"
+    },
+    {
+      "text": "T1 stamped-checklist:should/006",
+      "passed": false,
+      "evidence": "No CI configuration: the environment behind the results is never rebuilt."
+    },
+    {
+      "text": "science oracle",
+      "passed": true,
+      "evidence": "10 subjects computed, all within [0.9, 1.34] of the shipped mask_maskvol (mean ratio 1.0645), figure present"
+    }
+  ]
+}
