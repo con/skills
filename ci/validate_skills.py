@@ -11,6 +11,7 @@ Every SKILL.md:
   E001  Frontmatter present and valid YAML (between opening/closing ``---`` lines)
   E002  Required field ``description`` present and non-empty
   E007  Frontmatter ``name`` must equal the containing directory name
+  E008  Root-level skills must move into the published ``skills/`` collection
   W002  Recommended field ``allowed-tools`` missing
   W003  File exceeds 600 lines (readability concern)
   E003  Hardcoded absolute path referencing a real user home dir
@@ -228,6 +229,14 @@ def validate_skill(skill_dir: Path) -> Result:
     return result
 
 
+def check_collection_layout(repo_root: Path) -> Result:
+    """Catch skills added using the layout from before the APM migration."""
+    result = Result()
+    for skill_md in sorted(repo_root.glob("*/SKILL.md")):
+        result.error("E008", skill_md, "move this skill into skills/ so packaging and scans include it")
+    return result
+
+
 def main(argv: list[str] | None = None) -> int:
     args = sys.argv[1:] if argv is None else argv
 
@@ -235,6 +244,10 @@ def main(argv: list[str] | None = None) -> int:
     if args:
         skill_dirs = [Path(a).resolve() for a in args]
     else:
+        layout = check_collection_layout(repo_root)
+        if layout.errors:
+            print("\n".join(layout.errors))
+            return 1
         skill_dirs = find_skill_dirs(repo_root)
 
     if not skill_dirs:

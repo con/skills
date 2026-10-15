@@ -134,6 +134,18 @@ Place this reminder before commands that read contributor-controlled content, cu
 
 Keep operational instructions self-contained in each skill; this convention provides consistent wording for authors, not a runtime dependency.
 
+### Skill versions
+
+A skill whose output records which version of the skill produced it declares
+`version: MAJOR.MINOR.PATCH` in its `SKILL.md` frontmatter — the field APM
+reads. Whoever changes its procedure, report layout, or scoring bumps it in
+the same commit: MINOR for a changed or added step or section, PATCH for a
+clarification that changes nothing a run does, MAJOR when earlier reports can
+no longer be compared with new ones. Typo and pure wording fixes do not bump.
+The version is a label; consumers pin the `con/skills` commit. Counting
+starts at the first merge: a skill stays at its initial version (e.g.
+`0.1.0`) while its introducing pull request is still open.
+
 ## APM distribution
 
 Track canonical skills in `skills/<name>/`; `apm.yml` publishes that collection.

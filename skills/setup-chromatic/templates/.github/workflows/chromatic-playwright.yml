@@ -1,0 +1,76 @@
+name: Chromatic (Playwright)
+
+on: push
+
+permissions:
+  contents: read
+
+jobs:
+  chromatic-playwright:
+    name: Run Chromatic (Playwright)
+    # Dependabot-triggered runs cannot read Actions secrets, so the Chromatic project token is
+    # unavailable; skip instead of failing.
+    if: github.actor != 'dependabot[bot]'
+    # Pinned rather than ubuntu-latest: a runner image bump (system fonts, antialiasing,
+    # rasterizer) shifts screenshot pixels on its own, with no code change to explain it.
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          # The whole history: Chromatic picks the baseline from it.
+          fetch-depth: 0
+
+      - name: Report the runner image
+        # The ubuntu-24.04 label is not a fixed machine: the image behind it is rebuilt roughly
+        # weekly, and a new one brings new fonts and rasterizer libraries. Printed so a snapshot
+        # diff with no code change behind it can be checked against the image its baseline used.
+        # (A block scalar: the colon in the message would otherwise make this line invalid YAML.)
+        run: |
+          echo "Runner image: ${ImageOS:-unknown} ${ImageVersion:-unknown}"
+
+      - name: Report how far the branch is behind main
+        # Chromatic takes the branch's own last build as the baseline, so a branch that has not
+        # seen main in a week diffs against a week-old UI and reports main's changes as this
+        # branch's. Merge main in before reading the result.
+        if: github.ref != 'refs/heads/main'
+        run: |
+          git fetch --no-tags --quiet origin main
+          behind=$(git rev-list --count HEAD..origin/main)
+          if [ "$behind" -eq 0 ]; then
+            echo "Branch is up to date with main."
+          else
+            echo "::notice::This branch is $behind commit(s) behind main. Chromatic diffs it against the branch's own last build, so the changes it reports may be main's rather than this branch's; merge main in before reading them."
+          fi
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        # --with-deps installs system libraries and needs root, which the runner has and a
+        # developer's machine does not; locally, `npx playwright install chromium` is enough.
+        run: npx playwright install chromium --with-deps
+
+      - name: Run Playwright tests
+        run: npm run test:chromatic
+        env:
+          # Read by the app's Vite config (not by Chromatic) during the build that the Playwright
+          # config's webServer command runs: pins the footer's version string so a version bump
+          # alone does not re-snapshot the page.
+          CHROMATIC_STATIC_VERSION: "true"
+
+      - name: Run Chromatic
+        # An exact release tag, so a new release of the action cannot move a snapshot on its own;
+        # Dependabot proposes the bumps. Pick the newest tag when writing this file.
+        uses: chromaui/action@v18.10.2
+        with:
+          projectToken: ${{ secrets.CHROMATIC_PLAYWRIGHT_PROJECT_TOKEN }}
+          # Builds a Storybook from the archives under test-results/ and uploads that. No
+          # onlyChanged here: TurboSnap cannot apply to a black-box archive of the running app.
+          playwright: true
