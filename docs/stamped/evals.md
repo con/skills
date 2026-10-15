@@ -417,7 +417,8 @@ These are initial targets, to be revised after the first two iterations.
     One blind run on a *new* object each iteration, so the wording is not fitted to the gold set.
   - **judgement mutants:** ≥ 80 % detected (flagged *and* named) on the frontier tier and ≥ 60 % on the smaller tier, with no collateral accusation on the clean fixture — the scripted-mutant bar applied to the half of the skill made of sentences.
 - **create / align / do-full-research-loop v1.0:**
-  - at R0–R2, explicit-skill runs — which are blind runs with a PROMPT as their scope — pass every mechanically checkable MUST probe, including `fresh-rerun`, in ≥ 2 of 3 repeats on two model tiers;
+  - at R0–R2, explicit-skill runs — which are blind runs with a PROMPT as their scope — pass every mechanically checkable MUST probe, including `fresh-rerun`, in ≥ 2 of 3 repeats on two model tiers.
+    **must/016 is read at the ceiling of the target the run was given** (`run.py --publish-target`): `met` where that was a URL, `partial` where it was the default bare repository beside the sandbox, and `unmet` where a target existed and the run did not publish. A run given no target at all cannot be counted against this criterion — that was the condition until 2026-10-15, under which no repeat on any tier could score 11/11 and the item measured the harness rather than the skill ([PLAN §10](PLAN.md#7-decisions-and-where-we-diverge) item 13);
   - they clearly beat `pointer`;
   - the oracle agrees;
   - no regression against vN-1;

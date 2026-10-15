@@ -485,6 +485,32 @@ def _is_fully_pinned(name: str, text: str) -> bool:
     return bool(deps) and all(PINNED_DEP.match(d) or d.strip().rstrip(":") == "- pip" for d in deps)
 
 
+LOCAL_URL = ("/", ".", "~", "file://")
+
+
+def _remotes(obj: Object) -> tuple[str, str]:
+    """(the first remote that is not a filesystem path, the first that is).
+
+    Two corrections from live runs. Reading only `remote.origin.url` missed a
+    run that did exactly what the conventions ask — `datalad siblings add
+    --name published` — and was told it "records no remote at all". And a
+    filesystem path *is* a recorded remote: calling that no remote is simply
+    false, so it is reported as what it is.
+    """
+    remote = ""
+    local = ""
+    for line in obj.git("config", "--get-regexp", r"^remote\..*\.url").splitlines():
+        _, _, url = line.partition(" ")
+        url = url.strip()
+        if not url:
+            continue
+        if url.startswith(LOCAL_URL):
+            local = local or url
+        else:
+            remote = remote or url
+    return remote, local
+
+
 def _remote_resolves(url: str) -> bool | None:
     """Does this remote exist? None when we did not get to ask.
 
@@ -549,8 +575,8 @@ def env_spec_tracked(obj: Object, check_remote: bool = False) -> Probe:
     pinned = sorted(p for p, k in found.items() if k == "pinned")
     uninstalled = [m.get("path", m["name"]) for m in obj.submodules() if not m.get("initialized", False)]
     preconditions = _host_tool_preconditions(obj)
-    remote = obj.git("config", "--get", "remote.origin.url").strip()
-    published = bool(remote) and not remote.startswith(("/", ".", "file://", "~"))
+    remote, local_remote = _remotes(obj)
+    published = bool(remote)
 
     evidence = [Evidence(p, f"{k} environment specification") for p, k in sorted(found.items())]
     evidence += [Evidence(f"{h['path']}#L{h['line']}",
@@ -613,6 +639,16 @@ def env_spec_tracked(obj: Object, check_remote: bool = False) -> Probe:
             r016 = clip(f"The specification is tracked and a remote is recorded ({remote}), but whether "
                         "that remote resolves was not checked: run with --check-remote, or "
                         "`GIT_TERMINAL_PROMPT=0 git ls-remote`, before calling it met.")
+    elif local_remote:
+        # A path on one filesystem is a real remote and real distribution to
+        # whoever shares that filesystem — and to nobody else. The same failure
+        # as `url = ../..` in a submodule, which this collection was calibrated
+        # on. `partial`, with the limitation named, rather than a flat `unmet`
+        # that denies the push happened.
+        s016 = "partial"
+        r016 = clip(f"The remote is a filesystem path ({local_remote}): anyone with access to that "
+                    "filesystem can obtain the specification and nobody else can. A URL is what the "
+                    "item asks for.")
     else:
         s016 = "unmet"
         r016 = clip("The specification is tracked, but this checkout records no remote at all, so nothing "

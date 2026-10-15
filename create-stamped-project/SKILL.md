@@ -75,7 +75,16 @@ Then:
 3. **Pin the environment** in the same commit: `uv pip compile code/requirements.in -o code/requirements.lock`, or `pixi.toml` + lock, or a container definition plus its digest. Pin the project's *own* tooling too — datalad, git-annex, con-duct — not only the analysis software.
 4. **Install the guards** from [`templates/`](templates/): `pre-commit-run-guard` into `.git/hooks/pre-commit`, `preflight.sh` and `run-recorded.sh` into `code/`. Adapt them to the stack, run each once, and say what you saw.
 5. **Write the README** with the question, the entry point by name, and a reproduce section a stranger can follow. A README that names a command that does not exist is worse than none.
-6. **Commit**, and show the user the first commit.
+6. **Publish it, if there is anywhere to publish to.** must/016 asks whether anyone else can obtain the project and the environment specification behind it, and the answer is a URL, not an intention. Where a target exists — a forge repository the user names, a hub, even a bare repository on a shared filesystem — register it and push in this same first pass:
+
+   ```console
+   datalad siblings add --name published --url <url>    # git: git remote add origin <url>
+   datalad push --to published                          # git: git push -u origin HEAD
+   GIT_TERMINAL_PROMPT=0 git ls-remote <url> >/dev/null  # it answers, or you have not published
+   ```
+
+   Then **write the URL into the README**: a remote in `.git/config` is not something a reader can see. Where there is no target, say so in the README as a known gap and name the one thing that would close it — never leave must/016 quietly unmet and unmentioned.
+7. **Commit**, and show the user the first commit.
 
 ## Step 4. Hand off
 

@@ -56,8 +56,11 @@ def _json(cmd: list[str]) -> dict:
     return json.loads(proc.stdout)
 
 
-def t1(obj: pathlib.Path) -> dict:
-    payload = _json([sys.executable, str(RUN_PROBES), str(obj), "--quiet"])
+def t1(obj: pathlib.Path, check_remote: bool = False) -> dict:
+    cmd = [sys.executable, str(RUN_PROBES), str(obj), "--quiet"]
+    if check_remote:
+        cmd.append("--check-remote")
+    payload = _json(cmd)
     severity = {"unmet": 0, "partial": 1, "not-checked": 2, "not-applicable": 3, "met": 4}
     items: dict[str, dict] = {}
     for result in payload["probes"]:
@@ -158,6 +161,12 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--skill-commit", default="unknown")
     ap.add_argument("--repeat", type=int, default=1)
     ap.add_argument("--oracle-arg", action="append", default=[])
+    ap.add_argument("--check-remote", action="store_true",
+                    help="let the probes contact remotes (needed for must/016 above `partial`)")
+    ap.add_argument("--publish-target", default="unknown",
+                    help="what the run was given to publish to: 'none', 'local', or a URL. "
+                         "'local' caps must/016 at `partial`, so the rate is also reported at "
+                         "that ceiling.")
     ap.add_argument("-o", "--output", type=pathlib.Path)
     args = ap.parse_args(argv)
 
@@ -179,7 +188,7 @@ def main(argv: list[str] | None = None) -> int:
     rubric = yaml.safe_load((args.use_case / "rubric.yaml").read_text())
     scripted_musts = rubric.get("must_items_mechanically_checkable") or []
 
-    t1_result = t1(args.object.resolve())
+    t1_result = t1(args.object.resolve(), check_remote=args.check_remote)
     oracle_result = oracle(args.object.resolve(), args.use_case, args.oracle_arg)
     process = process_metrics(args.transcript)
 
@@ -187,6 +196,20 @@ def main(argv: list[str] | None = None) -> int:
     failed = [i for i in scripted_musts
               if t1_result["items"].get(i, {}).get("status") in {"unmet", "partial"}]
     unknown = [i for i in scripted_musts if i not in passed and i not in failed]
+
+    # A sandbox with a filesystem-path target cannot reach must/016 `met` —
+    # the probe says so, honestly — so every repeat lost one of eleven items
+    # to the harness. Reporting the rate twice keeps the strict number and
+    # shows what the run was actually able to do.
+    ceiling: dict[str, str] = {}
+    if args.publish_target == "local":
+        ceiling["stamped-checklist:must/016"] = (
+            "partial is the ceiling: the target given was a filesystem path, so an honest "
+            "assessment cannot call it met"
+        )
+    at_ceiling = [i for i in scripted_musts
+                  if t1_result["items"].get(i, {}).get("status") == "met"
+                  or (i in ceiling and t1_result["items"].get(i, {}).get("status") == "partial")]
 
     t2_items = {}
     if args.t2 and args.t2.exists():
@@ -206,6 +229,7 @@ def main(argv: list[str] | None = None) -> int:
             "model": args.model,
             "skill_commit": args.skill_commit,
             "repeat": args.repeat,
+            "publish_target": args.publish_target,
             "commit": t1_result["commit"],
             "graded_at": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
             "checklist_version": t1_result["checklist_version"],
@@ -217,6 +241,9 @@ def main(argv: list[str] | None = None) -> int:
             "must_passed": passed,
             "must_failed": failed,
             "must_unknown": unknown,
+            "must_pass_rate_at_ceiling": f"{len(at_ceiling)}/{len(scripted_musts)}",
+            "ceiling": ceiling,
+            "check_remote": args.check_remote,
         },
         "t2": {"items": t2_items, "disagreements_with_t1": disagreements},
         "oracle": oracle_result,
@@ -234,6 +261,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.output:
         args.output.write_text(out)
         print(f"MUST (mechanically checkable): {grading['t1']['must_pass_rate']}"
+              + (f" ({grading['t1']['must_pass_rate_at_ceiling']} at the sandbox ceiling)" if ceiling else "")
               + (f" · oracle: {oracle_result['status']}" if oracle_result else "")
               + (f" · T1/T2 disagreements: {len(disagreements)}" if t2_items else ""))
         print(f"wrote {args.output}")

@@ -107,3 +107,4 @@ none of them is discoverable from the error message alone.
 - Inputs as subdatasets (`datalad clone -d . <url> <path>`), never as copies and never as absolute paths.
 - An entry point named in `README.md` that a stranger can run, and a `Makefile` or workflow that calls the recorded mechanism.
 - CI that re-executes at least one unit, so A.2 and should/002 have evidence rather than intent.
+- A sibling and a push as soon as there is anywhere to push to (`datalad siblings add --name published --url <url>` then `datalad push --to published`), with the URL in `README.md` and `git ls-remote` as the proof. A local bare repository is a target too: it exercises the same mechanism, and `datalad push` carries annexed content to it.
