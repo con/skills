@@ -759,3 +759,36 @@ def test_encode_response_set_and_table(tmp_path):
     assert "| must/011 | " in out and "judgement" in out
     # MUST before SHOULD before MAY, as the report layout asks.
     assert out.index("must/001") < out.index("should/001") < out.index("may/001")
+
+
+def test_run_recorded_declares_the_environment_spec(tmp_path):
+    """must/006 asks that the record name the environment it ran in.
+
+    Two of three live runs forgot: a `datalad run` with unchanged outputs
+    writes no commit, so declaring the lockfile afterwards records nothing.
+    The wrapper declares it on every run instead.
+    """
+    root = tmp_path / "env-input"
+    env = _guarded_repo(root)
+    (root / "requirements.lock").write_text("pandas==2.2.3\n")
+    subprocess.run(["git", "add", "requirements.lock"], cwd=root, check=True, env=env)
+    subprocess.run(["git", "commit", "-qm", "pin the environment"], cwd=root, check=True, env=env)
+    log = tmp_path / "calls.log"
+    env = {**env, "PATH": f"{_stub_datalad(tmp_path)}:{env['PATH']}", "DATALAD_STUB_LOG": str(log)}
+
+    subprocess.run(["sh", "./run-recorded.sh", "-m", "a recorded step", "--", "true"],
+                   cwd=root, capture_output=True, text=True, env=env, check=True)
+    assert log.read_text().strip() == "run -i requirements.lock -m a recorded step -- true"
+
+    # Opting out is this wrapper's own flag and must not reach datalad — and
+    # dropping it must not re-split the multi-word message.
+    log.write_text("")
+    subprocess.run(["sh", "./run-recorded.sh", "--no-env-input", "-m", "no env please", "--", "true"],
+                   cwd=root, capture_output=True, text=True, env=env, check=True)
+    assert log.read_text().strip() == "run -m no env please -- true"
+
+    # `containers-run` already names an image, so nothing is added.
+    log.write_text("")
+    subprocess.run(["sh", "./run-recorded.sh", "-n", "img", "-m", "in a container", "--", "true"],
+                   cwd=root, capture_output=True, text=True, env=env, check=True)
+    assert log.read_text().strip() == "containers-run -n img -m in a container -- true"
