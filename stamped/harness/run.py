@@ -165,6 +165,14 @@ def _publish_target(args, bare: pathlib.Path) -> str | None:
         return args.publish_target
     if not bare.exists():
         sh(["git", "init", "-q", "--bare", str(bare)])
+        # A bare repository with no annex accepts `datalad push`, reports
+        # "publish ok" — and receives none of the annexed content, because
+        # git-annex has no uuid to copy to. A run hit exactly that: its figure
+        # never left the sandbox, and only its own reviewer noticed, because
+        # the `git ls-remote` check cannot see it. The harness hands over a
+        # target that works; debugging an empty annex is not what is being
+        # measured.
+        sh(["git", "annex", "init", "stamped-eval publish target"], cwd=bare, check=False)
     return str(bare)
 
 
