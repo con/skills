@@ -9,6 +9,8 @@ max-lines: 100
 # Pixi with STAMPED
 
 Use the project's root `pixi.toml` for dependencies and named tasks.
+Experiments own their environments and may evolve requirements in separate worktrees; integrate differing requirements as named environments on merge and select them explicitly in tasks (`pixi run -e <name> ...`).
+Named environments inherit the default feature unless disabled; use `no-default-feature = true` for incompatible requirements and avoid a shared solve group when versions must differ.
 Add ordinary missing packages with `pixi add`; reuse maintained scientific and plotting packages rather than writing dependency-free substitutes.
 Run tools through `pixi run`, including DataLad, git-annex and requested duct, so executables come from the declared environment.
 A package installed in another project or on the host is not a declared dependency.
@@ -26,9 +28,11 @@ A tracked lock is suitable when requested; a developing shared manifest may inst
 For the latter policy: preserve the final lock bytes without re-solving, commit them as ordinary Git on a snapshot branch one commit above the task commit, and record immutable code/snapshot IDs, lock hash and platform.
 Keep that snapshot separate from main; set ignore and annex rules before the task commit.
 
-Before replay, restore the recorded manifest and lock together and install with `pixi install --locked`.
-Do this again when replay changes the code revision; never silently solve a new environment while claiming the old one.
-Use a fresh workspace to test restoration and output regeneration.
+Choose what stays fixed across data, code, dependencies and host before reassessment or reproduction.
+To hold dependencies fixed, restore the matching manifest and retained lock, then synchronize with `pixi install --locked -e <recorded-env>`; a code change alone need not change this selection.
+To test current requirements, deliberately solve afresh and record the new selection.
+Disposable installations test rebuildability; flexible requirements ease reuse; retained locks improve historical recovery but do not guarantee package availability or host portability.
+Use a fresh workspace when testing restoration and output regeneration.
 
 ## Execution evidence
 
