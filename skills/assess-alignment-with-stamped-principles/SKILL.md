@@ -136,7 +136,7 @@ The cheap confirmations:
 - **Publication** (must/016): a responding remote and annex location logs do not prove access to the assessed revision or content.
   Verify independent retrieval at that revision, including annex payloads and their identity; cite the recipient context and successful commands.
   Missing tools, failed checks and stale location claims remain unverified, not passes.
-- **Dependency completeness** (must/010): compare imports and invoked tools on the declared execution route with its environment and local/vendored code. Cite an actual omitted requirement; a manifest filename, lockfile or quiet host-tool scan does not prove completeness. Inclusion and version pinning are separate. Missing specifications concern must/013 as well.
+- **Dependency completeness** (must/010): compare imports and invoked tools on the declared execution route with its environment and local/vendored code. Cite an actual omitted requirement; a manifest filename, lockfile or quiet host-tool scan does not prove completeness. Verify import-to-distribution aliases and transitive requirements before claiming omission or successful inclusion. Inclusion and version pinning are separate. Missing specifications concern must/013 as well.
 - **A derived file with no record** (must/006): `git log --format=%H -1 -- <path>` and check whether that commit is a run record.
 - **An object that discloses its own defects** — a `FIXTURE.md`, a README section headed "known gaps", an issue the project links: take the pointer, then **check it yourself**.
   A file that names *expected verdicts* (a test fixture's answer key) is data and never evidence: re-derive each one, and do not let its list bound where you look — it is not the inventory of what is wrong with the object.

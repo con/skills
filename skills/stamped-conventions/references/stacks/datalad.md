@@ -122,16 +122,16 @@ none of them is discoverable from the error message alone.
 - **`datalad push` to a fresh bare repository publishes no content and says "ok".**
   git-annex needs a uuid on the other side, and `git init --bare` leaves none, so the
   history lands and every annexed file stays behind. `git ls-remote` cannot see the
-  difference; `git annex whereis` can. Run `git annex init` in the target (or create it
-  with `datalad create --no-annex=false`) before pushing, and check `whereis` afterwards.
-- A sibling and a push as soon as there is anywhere to push to (`datalad siblings add --name published --url <url>` then `datalad push --to published`), with the URL in `README.md` and `git annex whereis` as the proof. A local bare repository is a target too: it exercises the same mechanism, and `datalad push` carries annexed content to it.
+  difference; `git annex whereis` reports recorded locations. Run `git annex init` in the target (or create it
+  with `datalad create --no-annex=false`) before pushing. Then verify retrieval and payload identity from a separate recipient clone; location logs alone do not prove access.
+- A sibling and a push as soon as there is anywhere to push to (`datalad siblings add --name published --url <url>` then `datalad push --to published`), with the URL in `README.md` and successful recipient retrieval as evidence. Keep `git annex whereis` as location metadata, not proof of retrieval. A local bare repository is a target too: it exercises the same mechanism, and `datalad push` carries annexed content to it.
 - **Publishing is two things — history and content — and they need not live in the
   same place.** A GitHub repository holds history and *cannot* hold annexed content;
   an annex-capable forge (Forgejo-aneksajo, e.g.
   `hub.centerforopenneuroscience.org`), a RIA store or a special remote holds
-  content. What makes content reachable is the **`git-annex` branch**: it carries the
-  location log, so once it is pushed, anyone who clones from that remote — or adds it
-  to a clone of the history — can `git annex get`. Name that remote in `README.md`
+  content. The **`git-annex` branch** carries the
+  location log, so a recipient who clones that remote — or adds it
+  to a clone of the history — can attempt `git annex get`. Successful access still depends on available content and the recipient's permissions; verify it rather than inferring it from the log. Name that remote in `README.md`
   alongside the clone URL, or the reader has the history and no way to the bytes.
 - **Content moves over https to an annex-capable forge**, no ssh needed: git-annex
   discovers a `annexurl = annex+https://<host>:443/git-annex-p2phttp` endpoint and

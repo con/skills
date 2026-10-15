@@ -717,9 +717,9 @@ def env_spec_tracked(obj: Object, check_remote: bool = False) -> Probe:
                         "reach it, so the tracked specification is not obtainable from where it claims.")
         else:
             s016 = "partial"
-            r016 = clip(f"The specification is tracked and a remote is recorded ({remote}), but whether "
-                        "that remote resolves was not checked: run with --check-remote, or "
-                        "`GIT_TERMINAL_PROMPT=0 git ls-remote`, before calling it met.")
+            r016 = clip(f"Remote recorded ({remote}); reachability was not established. "
+                        "A remote check alone cannot verify publication: independently retrieve "
+                        "the assessed revision and required specification payloads.")
     elif local_remote:
         # A path on one filesystem is a real remote and real distribution to
         # whoever shares that filesystem — and to nobody else. The same failure
@@ -727,9 +727,9 @@ def env_spec_tracked(obj: Object, check_remote: bool = False) -> Probe:
         # on. `partial`, with the limitation named, rather than a flat `unmet`
         # that denies the push happened.
         s016 = "partial"
-        r016 = clip(f"The remote is a filesystem path ({local_remote}): anyone with access to that "
-                    "filesystem can obtain the specification and nobody else can. A URL is what the "
-                    "item asks for.")
+        r016 = clip(f"The remote is a filesystem path ({local_remote}). "
+                    "The recipient needs access to that filesystem; exact-revision and payload "
+                    "retrieval remain unverified. Record actual recipient access and its scope.")
     else:
         s016 = "unmet"
         r016 = clip("The specification is tracked, but this checkout records no remote at all, so nothing "
