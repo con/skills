@@ -49,6 +49,76 @@ SKILLS = (
 CONDITIONS = ("bare", "pointer", "skill-implicit", "skill-explicit")
 EXPLICIT_PREFIX = {
     "r0-freesurfer-plot": "/do-full-research-loop ",
+    "r1-brain-extraction": "/do-full-research-loop ",
+}
+
+# The inner-loop prompt, as an artifact rather than wording retyped per run.
+# R0's four arms were launched from prompts composed by hand in the
+# orchestrating session, so the one thing a reader cannot reconstruct from that
+# run record is what each arm was actually told.  This is that text, with the
+# per-condition paragraph the only thing that differs between arms.
+INNER_PROMPT = """You are a fresh session working in a sandbox. Treat this as a normal user request.
+
+**Working directory:** `{sandbox}` — a git{datalad} repository, already initialised and
+committed. Everything you produce goes inside it. Do not write outside it.
+
+**Your task:** {task}
+
+{condition_paragraph}
+
+Operating constraints for this run:
+
+1. `HOST-NOTES.md` in the sandbox describes the machine: read it first. It is the same
+   file in every arm of this evaluation.
+2. **The user is not available to answer questions.** Where you would ask, state the
+   decision and your reason for it in the project instead, and carry on. Do not stop to
+   wait for an answer.
+3. **Do NOT read or search `{repo}`**, with the single exception of your own working
+   directory above (which happens to live under it, in an ignored scratch area):
+   everything else under that path is off-limits for this run, including any plan,
+   rubric, reference answer, or any other arm of this evaluation. This is a blind run:
+   what you build is graded against criteria you must not see, and seeing them would
+   destroy the measurement. Work from your task, the sandbox, and whatever you fetch from
+   the network.
+4. You may install packages, pull containers and fetch data. Permissions are wide open
+   **inside the sandbox only**.
+5. Carry the task through to its stated product. A plan with no result is a failed run.
+
+**What to return as your final message** (keep it compact — it is read by a harness):
+
+- What you built: the paths of the products, and the one-line method (tool, container,
+  how the numbers were obtained).
+- The numbers themselves: the per-subject table as text, if the task produced one.
+- How you recorded what you did, if you did.
+- Up to 5 bullets of **friction**: anything that was ambiguous, missing, contradictory,
+  broken or slow — in the task, in the host, or in any instructions you were given —
+  **quoting the wording or command at fault**. Be specific and critical; this is the most
+  valuable part of your return.
+"""
+
+CONDITION_PARAGRAPH = {
+    "bare": "You have no project conventions to follow beyond the task itself.",
+    "pointer": (
+        "The sandbox root carries a `CLAUDE.md` (and an identical `AGENTS.md`). Read it "
+        "before you start and follow it, exactly as a session whose project root held "
+        "that file would."
+    ),
+    # A subagent has no slash-command dispatcher, so "implicit" can only mean
+    # the skills are on disk and the run is told it may use what it finds —
+    # evals.md §4 records why these numbers are indicative only.
+    "skill-implicit": (
+        "The sandbox has a `.claude/skills/` directory holding skills that are installed "
+        "for you. You may read and use whatever you find there if it is relevant; nothing "
+        "obliges you to. (Those files are tooling, not part of the project you are "
+        "building: leave them out of what you commit.)"
+    ),
+    "skill-explicit": (
+        "The task above names a skill. It is installed in the sandbox under "
+        "`.claude/skills/`, but there is no slash-command dispatcher here, so read its "
+        "`SKILL.md` from disk and follow its procedure exactly as written, including the "
+        "files it tells you to read. (Those skill files are tooling, not part of the "
+        "project you are building: leave them out of what you commit.)"
+    ),
 }
 
 
@@ -88,6 +158,8 @@ def main(argv: list[str] | None = None) -> int:
                     help="checkout to install the skills from (default: this repository)")
     ap.add_argument("--timeout", type=int, default=7200)
     ap.add_argument("--execute", action="store_true", help="actually run the agent")
+    ap.add_argument("--inner-prompt", action="store_true",
+                    help="also write and print the prompt for an inner-loop (subagent) run")
     args = ap.parse_args(argv)
 
     use_case = args.use_case.resolve()
@@ -125,6 +197,14 @@ def main(argv: list[str] | None = None) -> int:
         if ".claude/" not in existing:
             gitignore.write_text(existing + ".claude/\n")
 
+    # The same host notes in every arm, with the one host-specific path filled
+    # in: a shared image cache next to the sandboxes, so the second arm to want
+    # a 516 MB container image does not download it again.
+    cache = args.workdir.resolve() / "apptainer-cache"
+    cache.mkdir(parents=True, exist_ok=True)
+    notes = (EVALS / "conditions" / "host-notes.md").read_text()
+    (sandbox / "HOST-NOTES.md").write_text(notes.replace("$STAMPED_SHARED_CACHE", str(cache)))
+
     task = prompt
     if args.condition == "skill-explicit":
         task = EXPLICIT_PREFIX.get(case_id, "/do-full-research-loop ") + prompt
@@ -157,6 +237,16 @@ def main(argv: list[str] | None = None) -> int:
     sh(["git", "-c", "user.name=stamped-evals", "-c", "user.email=evals@example.org",
         "commit", "-q", "-m", f"eval sandbox: {run_id}"], cwd=sandbox)
 
+    inner = INNER_PROMPT.format(
+        sandbox=sandbox,
+        datalad=" (DataLad dataset)" if have_datalad else "",
+        task=task,
+        condition_paragraph=CONDITION_PARAGRAPH[args.condition],
+        repo=REPO,
+    )
+    if args.inner_prompt:
+        (sandbox.parent / f"{run_id}.inner-prompt.md").write_text(inner)
+
     agent = (
         'claude -p "$(cat prompt.md)" --output-format stream-json --verbose '
         "--dangerously-skip-permissions > transcript.jsonl"
@@ -172,8 +262,13 @@ def main(argv: list[str] | None = None) -> int:
     print(f"sandbox: {sandbox}")
     print(f"condition: {args.condition}; skills installed: {', '.join(installed) or 'none'}")
     print("command: " + " ".join(f"'{c}'" if " " in c else c for c in command))
+    if args.inner_prompt:
+        print(f"inner prompt: {sandbox.parent / f'{run_id}.inner-prompt.md'}")
+        print("\n--- paste the following to a fresh subagent ---\n")
+        print(inner)
     if not args.execute:
-        print("\n(dry run: pass --execute to launch the agent)")
+        print("\n(dry run: pass --execute to launch the agent in the outer loop, "
+              "or --inner-prompt to drive it as a subagent)")
         return 0
     if not shutil.which("claude"):
         print("error: no `claude` on PATH; this runner needs the CLI for headless runs", file=sys.stderr)

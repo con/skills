@@ -490,6 +490,7 @@ def _r1_object(root: pathlib.Path, rows: list[tuple[str, float, float]]) -> path
 
 def _fake_dataset(root: pathlib.Path, shipped: dict[str, float]) -> pathlib.Path:
     """A stand-in ds007116 carrying only the comparator column."""
+    root.mkdir(parents=True, exist_ok=True)
     for sub, vol in shipped.items():
         qc = root / "derivatives" / "freesurfer-post" / sub / f"{sub}_ses-1_desc-FreeSurfer_qc.tsv"
         qc.parent.mkdir(parents=True, exist_ok=True)
@@ -536,3 +537,26 @@ def test_r1_oracle_rejects_a_short_run_and_an_implausible_volume(tmp_path):
             for i, (s, v) in enumerate(shipped.items())]
     result = _run_r1_oracle(_r1_object(tmp_path / "wild", wild), tmp_path / "ds")
     assert result["status"] != "met" and "outside" in result["reason"]
+
+
+def test_r1_oracle_will_not_pass_a_product_it_could_not_compare(tmp_path):
+    """No comparator is `not-checked`, never `met`.
+
+    Every check after the comparator lookup is a comparison, so an unfetched
+    `qc.tsv` made all of them vacuously true and the oracle declared a run
+    good on the strength of a table nobody had checked.
+    """
+    _fake_dataset(tmp_path / "empty", {})
+    rows = [(f"sub-{i:05d}", 9.0 + i, 1_590_000.0) for i in range(1, 11)]
+    obj = _r1_object(tmp_path / "obj", rows)
+    result = _run_r1_oracle(obj, tmp_path / "empty")
+    assert result["status"] == "not-checked", result
+    assert "no mask_maskvol" in result["reason"]
+
+    # Half the subjects comparable is not enough either: that is a finding
+    # about the measurement, reported rather than averaged away.
+    shipped = {f"sub-{i:05d}": 1_500_000.0 for i in range(1, 6)}
+    _fake_dataset(tmp_path / "half", shipped)
+    result = _run_r1_oracle(_r1_object(tmp_path / "obj2", rows), tmp_path / "half")
+    assert result["status"] != "met"
+    assert "no comparator for" in result["reason"]
