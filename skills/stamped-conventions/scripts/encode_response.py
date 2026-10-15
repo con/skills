@@ -33,6 +33,8 @@ import pathlib
 import sys
 import urllib.parse
 
+from jsonschema import Draft202012Validator, FormatChecker
+
 HERE = pathlib.Path(__file__).resolve().parent
 CHECKLIST_DIR = HERE.parent / "checklist"
 APP_URL = "https://checklist.stamped-principles.org/"
@@ -90,7 +92,21 @@ def _b64(payload: dict) -> str:
 
 def validate(response: dict, cl: Checklist) -> list[str]:
     """Return a list of problems; empty means the response is usable."""
-    problems: list[str] = []
+    schema = json.loads((HERE.parent / "references" / "response-schema.json").read_text())
+    problems = [f"{'/'.join(map(str, err.absolute_path)) or 'response'}: {err.message}"
+                for err in Draft202012Validator(schema, format_checker=FormatChecker())
+                .iter_errors(response)]
+    if not isinstance(response, dict):
+        return problems
+    for key, expected in (("schema_version", cl.schema_version),
+                          ("principles_version", cl.principles_version)):
+        if response.get(key) != expected:
+            problems.append(f"{key} does not match pinned {expected!r}")
+    source = response.get("checklist_source")
+    if isinstance(source, dict):
+        for key in ("repo", "tag", "commit"):
+            if source.get(key) != cl.lock["source"][key]:
+                problems.append(f"checklist_source/{key} does not match the vendored pin")
     version = response.get("checklist_version")
     if version != cl.version:
         problems.append(f"checklist_version {version!r} != pinned {cl.version!r}")
@@ -122,7 +138,7 @@ def validate(response: dict, cl: Checklist) -> list[str]:
         status = answer.get("status")
         if status is None:
             problems.append(f"{where} no 'status' (see references/verdicts.md)")
-        elif status not in STATUS_VALUE:
+        elif not isinstance(status, str) or status not in STATUS_VALUE:
             problems.append(f"{where} unknown status {status!r}")
         else:
             expected = STATUS_VALUE[status]
@@ -130,7 +146,7 @@ def validate(response: dict, cl: Checklist) -> list[str]:
                 problems.append(f"{where} value {answer['value']!r} does not follow from status {status!r}")
             if status in {"met", "partial", "unmet"} and not answer.get("evidence"):
                 problems.append(f"{where} status {status!r} needs at least one evidence entry")
-            if status in {"partial", "unmet", "not-checked", "not-applicable"} and not (reason or "").strip():
+            if status in {"partial", "unmet", "not-checked", "not-applicable"} and (not isinstance(reason, str) or not reason.strip()):
                 problems.append(f"{where} status {status!r} needs a reason")
             if item_id in cl.by_id and cl.level(item_id) == "must" and status == "partial":
                 # Not an error in the file, but it must be reported as a MUST failure.
@@ -344,7 +360,7 @@ def main(argv: list[str] | None = None) -> int:
     p_stamp.add_argument("--harness", help='e.g. "claude-code (subagent)"')
     p_stamp.add_argument("--model")
     p_stamp.add_argument("--scope", help="what this assessment did and did not cover")
-    p_stamp.add_argument("--kind", help="the object's kind (see references/project-kinds.md)")
+    p_stamp.add_argument("--kind", choices=["dataset", "component", "study", "skill"], help="the object's kind (see references/project-kinds.md)")
     p_stamp.add_argument("--dependency", action="append",
                          help='e.g. "stamped-conventions@0.1.0"; repeatable')
 

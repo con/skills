@@ -206,7 +206,9 @@ class Object:
             subject = lines[1].strip() if len(lines) > 1 else ""
             start = body.find("{")
             info = None
-            if start != -1:
+            # Native DataLad discovers records only when this marker starts
+            # the message. A Conventional Commit prefix breaks native rerun.
+            if start != -1 and body.startswith("[DATALAD RUNCMD]"):
                 try:
                     info, _ = json.JSONDecoder().raw_decode(body[start:])
                 except ValueError:

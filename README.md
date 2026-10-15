@@ -34,7 +34,7 @@ A collection of [Claude Code Agent Skills](https://agentskills.io/) for software
 
 This branch builds on [Yarik's PR #26](https://github.com/con/skills/pull/26) at `6f013956fe52f22f151dfc54d29fbbddffc259fd`, retaining its probes, templates and checklist format.
 The research protocol, ReproNim adapter, scientific validation and comparison guidance incorporate the [first research skill bundle](https://github.com/con/skills/tree/8f3acaa4a7c353b6c8ea6928c278478f95328fc5) and its [compressed revisions](https://github.com/con/skills/tree/e31edc77078b78c9ce415bd41dc9e7e98de451b4).
-The linked skills above include the working research workflow and common Pixi, DataLad/annex and Entire guidance; assessment is pinned separately by projects that compare evolving skill conditions.
+The linked skills above include the working research workflow and common Pixi, DataLad/annex and Entire guidance; assessment is pinned separately by projects that compare evolving skill conditions. A [blind workflow trial](evals/stamped/blind-runs/2026-10-15-pixi-native/) retains a completed known-answer analysis, its exact instruction snapshot, observed friction and independently checked delivery/replay evidence.
 
 ## Installation
 

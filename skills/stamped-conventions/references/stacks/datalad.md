@@ -21,6 +21,10 @@ It says what evidence to look for and what to never do; it is not a DataLad tuto
 git log --format='%H%n%B' --grep='\[DATALAD RUNCMD\]' | …     # the JSON block follows the message body
 datalad rerun --report <commit>                                # structured form, when datalad is available
 ```
+Preserve native `[DATALAD RUNCMD]` as the first text of DataLad-generated commit messages, with its record block unchanged. Conventional Commit prefixes belong on other commits; adding one before this marker prevents native replay discovery.
+
+Follow the project's environment policy: an accessible immutable lock snapshot on a separate commit is valid. Record the code revision, environment revision and lock checksum; inspect those identities before grading the environment.
+
 A record whose `outputs` list is empty does not cover the files that commit touched — that is `partial` on must/006, not `met`.
 
 ## Never do
@@ -71,7 +75,8 @@ none of them is discoverable from the error message alone.
   `mkdir -p` belongs in the script that writes them.
 - **`datalad run` refuses a dirty tree** with "clean dataset required to detect
   changes from command", which does not say what is dirty: commit the scripts
-  first, and keep logs and scratch output *outside* the dataset.
+  first, declare requested execution logs as outputs in their owning module, and
+  keep unrelated scratch files outside the run's tracked scope.
 - **A shared host is shared.**
   Two recorded runs under one process table are indistinguishable to
   `pkill -f 'datalad run'`: in these evaluations one arm's cleanup killed
@@ -110,7 +115,7 @@ none of them is discoverable from the error message alone.
 
 ## Laying out a new DataLad project
 
-- `datalad create -c text2git` when the text files may be shared publicly (keeps text in git, content in the annex).
+- `datalad create`, then explicit filename/path attributes keeping source and specifications in Git and large payloads in annex. MIME policies such as `text2git` require a git-annex build with MagicMime.
 - Inputs as subdatasets (`datalad clone -d . <url> <path>`), never as copies and never as absolute paths.
 - An entry point named in `README.md` that a stranger can run, and a `Makefile` or workflow that calls the recorded mechanism.
 - CI that re-executes at least one unit, so A.2 and should/002 have evidence rather than intent.

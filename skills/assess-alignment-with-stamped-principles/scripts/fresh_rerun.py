@@ -3,8 +3,8 @@
 # SPDX-License-Identifier: MIT
 """The `fresh-rerun` probe: clone the published object elsewhere and re-run it.
 
-This is the one probe that tests A.1, P.1-P.3, E.1, D.1 and should/004 together,
-because it is the only one that leaves the machine the results were made on.
+This probe tests re-creation in a fresh clone. Running it on the original host
+does not establish portability to another host; the report records the host.
 
     fresh_rerun.py --url <published url> [--entry 'make all'] [--in-container IMAGE]
                    [--outputs 'results/*.tsv' 'figures/*.png'] [--rtol 1e-6]
@@ -36,10 +36,12 @@ Exit code 0 means the probe ran, not that the object reproduced; read
 from __future__ import annotations
 
 import argparse
+import csv
 import datetime
 import glob
 import hashlib
 import json
+import math
 import pathlib
 import shutil
 import subprocess
@@ -126,24 +128,13 @@ def _collect(root: pathlib.Path, patterns: list[str],
 
 
 def _numeric_close(a: pathlib.Path, b: pathlib.Path, rtol: float) -> bool | None:
-    """True/False when both files parse as tables of numbers, None when they do not."""
-    def parse(path: pathlib.Path) -> list[list[float]] | None:
-        rows = []
+    """Compare numeric cells relatively, labels exactly, and missingness explicitly."""
+    def parse(path: pathlib.Path) -> list[list[str]] | None:
         try:
-            text = path.read_text(errors="replace")
-        except OSError:
+            with path.open(newline="") as stream:
+                return list(csv.reader(stream, delimiter="\t" if path.suffix == ".tsv" else ","))
+        except (OSError, UnicodeError, csv.Error):
             return None
-        for line in text.splitlines():
-            fields = line.replace("\t", ",").split(",")
-            row = []
-            for field in fields:
-                field = field.strip()
-                try:
-                    row.append(float(field))
-                except ValueError:
-                    row.append(float("nan")) if field.lower() in {"nan", "na", ""} else row.append(None)
-            rows.append(row)
-        return rows
 
     rows_a, rows_b = parse(a), parse(b)
     if rows_a is None or rows_b is None or len(rows_a) != len(rows_b):
@@ -151,12 +142,16 @@ def _numeric_close(a: pathlib.Path, b: pathlib.Path, rtol: float) -> bool | None
     for ra, rb in zip(rows_a, rows_b):
         if len(ra) != len(rb):
             return None
-        for va, vb in zip(ra, rb):
-            if va is None or vb is None:
-                continue  # a header or a label; compared by checksum instead
-            if va != va and vb != vb:  # both NaN
+        for text_a, text_b in zip(ra, rb):
+            if text_a == text_b:
                 continue
-            if abs(va - vb) > rtol * max(1.0, abs(va), abs(vb)):
+            try:
+                va, vb = float(text_a), float(text_b)
+            except ValueError:
+                return False
+            if math.isnan(va) and math.isnan(vb):
+                continue
+            if not math.isclose(va, vb, rel_tol=rtol, abs_tol=0.0):
                 return False
     return True
 
@@ -182,6 +177,8 @@ def main(argv: list[str] | None = None) -> int:
                          "a module of a container registry can be hundreds of GB")
     ap.add_argument("-o", "--output", type=pathlib.Path)
     args = ap.parse_args(argv)
+    if not math.isfinite(args.rtol) or args.rtol < 0:
+        ap.error("--rtol must be finite and nonnegative")
 
     base = args.workdir or pathlib.Path(tempfile.mkdtemp(prefix="stamped-fresh-rerun-"))
     base.mkdir(parents=True, exist_ok=True)
@@ -241,6 +238,11 @@ def main(argv: list[str] | None = None) -> int:
         step(f"fetched {len(candidates)} output candidate(s) for comparison", code, log)
     before = _collect(clone, args.outputs, skip=modules)
     report["outputs_shipped"] = dict(before)
+    unavailable = [path for path, digest in before.items() if digest is None]
+    if unavailable:
+        report.update(status="not-checked", unavailable_comparators=unavailable,
+                      reason="Published output content was unavailable; no valid baseline exists for comparison.")
+        return _finish(report, args)
     # Keep the shipped copies aside: the rerun overwrites them in place, and a
     # comparison has to be against what the object published, not against itself.
     shipped = base / "shipped"
@@ -262,8 +264,10 @@ def main(argv: list[str] | None = None) -> int:
             try:
                 (clone / path).unlink()
                 removed.append(path)
-            except OSError:
-                pass
+            except OSError as exc:
+                report.update(status="not-checked",
+                              reason=f"Could not remove {path} for a valid re-creation test: {exc}")
+                return _finish(report, args)
         if removed:
             step(f"removed {len(removed)} shipped output(s) before the rerun", 0, "\n".join(removed[:20]))
             # And commit the removal. `datalad rerun` refuses a dirty tree —
@@ -276,10 +280,17 @@ def main(argv: list[str] | None = None) -> int:
                                  cwd=clone, timeout=args.timeout)
                 step("committed the removal, so the entry point starts from a clean tree", code, log)
             else:
-                _run(["git", "add", "-A"], cwd=clone, timeout=args.timeout)
-                _run(["git", "-c", "user.name=fresh-rerun", "-c", "user.email=probe@example.org",
+                code, log = _run(["git", "add", "-A"], cwd=clone, timeout=args.timeout)
+                if code:
+                    report.update(status="not-checked", reason="Could not stage output removal in the disposable clone.")
+                    return _finish(report, args)
+                code, log = _run(["git", "-c", "user.name=fresh-rerun", "-c", "user.email=probe@example.org",
                       "commit", "-q", "-m", "fresh-rerun: remove the shipped outputs"],
                      cwd=clone, timeout=args.timeout)
+                step("committed output removal", code, log)
+            if code:
+                report.update(status="not-checked", reason="Could not commit output removal in the disposable clone.")
+                return _finish(report, args)
     if not before:
         report.update(status="not-checked",
                       reason="The clone ships no file matching --outputs, so there is nothing to compare.")
@@ -344,6 +355,9 @@ def main(argv: list[str] | None = None) -> int:
         report.update(status="partial" if identical or close else "unmet",
                       reason=(f"{len(differing) + len(vanished)} of {total} output(s) did not come back the same "
                               f"in a fresh clone, e.g. {(differing + vanished)[0]}."))
+    elif args.keep_outputs:
+        report.update(status="not-checked",
+                      reason="Outputs match, but --keep-outputs cannot establish that the entry point re-created them.")
     else:
         report.update(status="met",
                       reason=f"All {total} compared output(s) reproduced from a fresh clone via `{entry}`.")
