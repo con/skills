@@ -1,23 +1,23 @@
 ---
 name: git-annex-worktrees
-description: Run git-annex reliably in Git linked worktrees and worktree-hosted submodules when relative core.worktree resolution points Annex at the wrong path. Use when ordinary Git finds a repository but git-annex reports a nonexistent or incorrectly rooted working tree.
+description: Troubleshoot git-annex or DataLad failures in Git linked worktrees and their subdatasets. Use when either tool reports a missing repository, nonexistent working tree, or wrong path even though ordinary Git works; apply a command-local GIT_DIR and GIT_WORK_TREE workaround.
 allowed-tools: Bash, Read
 user-invocable: true
 ---
 
-# Git Annex in Linked Worktrees
+# Fix git-annex and DataLad Worktree Path Errors
 
-Use this workaround only when Git Annex misresolves a linked worktree, often through a submodule whose `.git` entry reaches a worktree-specific module directory.
-Ordinary Git may work while Git Annex interprets a relative `core.worktree` from the wrong directory and reports a nonexistent path.
+When git-annex fails directly or through DataLad in a linked worktree, it may be resolving a relative `core.worktree` from the wrong directory.
+The trick is to give the failing Annex command absolute `GIT_DIR` and `GIT_WORK_TREE` paths derived by Git.
 
-First confirm the mismatch:
+Set `repo` to the affected worktree or subdataset, then check whether Git finds it while Annex reports the wrong path:
 
 ```bash
 git -C "$repo" rev-parse --show-toplevel
 git -C "$repo" annex info
 ```
 
-If Git reports the correct worktree but Annex does not, derive both paths with Git and scope them to the Annex invocation:
+If so, retry the failing Annex operation with this override, using the project's existing tool environment:
 
 ```bash
 (
@@ -37,8 +37,8 @@ If Git reports the correct worktree but Annex does not, derive both paths with G
 Pass file arguments relative to the worktree root (or use absolute paths).
 The subshell leaves the caller's working directory unchanged.
 
-Keep the override local to each affected command.
-Do not rewrite `core.worktree`, replace worktree or submodule Git metadata, or export these variables for the surrounding shell merely to make Annex work.
-Those changes can break ordinary Git's already-correct repository discovery.
+For a DataLad failure, apply the override to the failing underlying Annex operation in the affected dataset.
+Do not pass one dataset's Git paths to a recursive DataLad command that visits other datasets.
+Keep the override local; do not export it for the surrounding shell or rewrite `core.worktree` or Git metadata.
 
-After the Annex operation, verify its externally relevant result with the smallest appropriate check, such as `git annex find`, `git annex whereis`, or the workflow that originally required the content.
+Verify the result with the smallest appropriate check, such as `git annex find`, `git annex whereis`, or the original workflow, applying the same override if needed.
