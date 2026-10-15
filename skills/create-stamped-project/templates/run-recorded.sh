@@ -176,4 +176,14 @@ while [ $# -gt 0 ]; do
 done
 "$@"
 git add -A
+# A command whose outputs do not change leaves nothing to commit, and
+# `git commit` then exits 1 — the wrapper reporting failure for a run that
+# succeeded. The datalad path has the same property (an identical output writes
+# no record) and says so without failing; this is the fallback's version of it.
+# Found by CI, which is a machine with no datalad, so this path is the only one
+# it ever runs.
+if git diff --cached --quiet; then
+    printf 'the command changed nothing tracked; no commit made.\n' >&2
+    exit 0
+fi
 git commit -m "run: $*" -m "Recorded without datalad; declared:$record"

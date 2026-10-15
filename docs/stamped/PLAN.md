@@ -613,7 +613,30 @@ byte-identical** from a fresh clone of the published repository with the
 shipped copies removed first. One object, one repeat — but it is the only
 check here that leaves the machine the results were made on.
 
-### 5.2 Continuing on the compute host
+### 5.6 2026-10-15: the gate was green here and red in CI
+
+`tox -e stamped-evals` had passed on this host for three days while **every
+pull-request run of it on GitHub failed** — four runs, back to the branch's
+first. Nobody looked, which is its own finding: a gate whose result is only
+read locally is not a gate.
+
+Both failures were the same shape, and neither was CI's fault. CI is a machine
+with **no datalad**, which makes it the only place two fallbacks in this
+project ever execute:
+
+- `run-recorded.sh`'s datalad-free path committed unconditionally, so a
+  command whose outputs did not change exited 1 — the wrapper reporting
+  failure for a run that succeeded. It is the same property the datalad path
+  has (an identical output writes no record) without datalad's honesty about
+  it; the fallback now says "no commit made" and exits 0.
+- `run.py` recorded host facts with `sh(["datalad", "--version"], check=False)`,
+  and `check=False` cannot help with a `FileNotFoundError`: preparing a run
+  died on exactly the host `conditions/host-notes.md` warns every run about.
+  An absent tool is an answer, so `sh` returns 127 and the record says `null`.
+
+Both are now tests that build a PATH with git and without datalad rather than
+assuming one (91 tests), because on any machine where this work is done the
+broken path is the one that never runs.
 
 For a Claude Code session on typhon (under Remote Control) picking this up:
 
