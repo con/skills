@@ -1,4 +1,4 @@
 [submodule "evals"]
 	path = evals
 	url = https://github.com/con/skills.git
-	branch = stamped-evals
+	branch = codex/assessment-v1-evals
