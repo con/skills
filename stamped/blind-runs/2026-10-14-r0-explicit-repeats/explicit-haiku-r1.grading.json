@@ -4,9 +4,10 @@
     "use_case": "r0-freesurfer-plot",
     "condition": "skill-explicit",
     "model": "haiku",
-    "skill_commit": "unknown",
+    "skill_commit": "23ea92eb4cc357a6413397a036137a41a1ef95cb",
     "repeat": 1,
-    "graded_at": "2026-10-15T03:41:16+00:00",
+    "commit": "4dd6015e0252a5c3ce6d70748d93107286ad97a5",
+    "graded_at": "2026-10-15T13:37:49+00:00",
     "checklist_version": "0.3.1"
   },
   "t1": {
@@ -22,14 +23,14 @@
         "reason": "No CI configuration: the environment behind the results is never rebuilt."
       },
       "stamped-checklist:must/006": {
-        "status": "unmet",
+        "status": "partial",
         "probe": "run-env-linked",
-        "reason": "None of the 7 run record(s) name a container or a lockfile."
+        "reason": "5 of 7 run record(s) name no container or lockfile (2 name a container, 0 a lockfile, 0 only a capture), e.g. 8ef13b6: .venv/bin/python code/summarise.py results/volumes_by_session.tsv results/summary.txt"
       },
       "stamped-checklist:must/007": {
-        "status": "unmet",
+        "status": "met",
         "probe": "entry-point",
-        "reason": "Neither a README with install/usage instructions nor a Makefile."
+        "reason": "README.md has an install/usage/reproduce section."
       },
       "stamped-checklist:must/008": {
         "status": "met",
@@ -77,9 +78,9 @@
         "reason": "No platform-specific package manager, BSD/GNU-only flag or scheduler command in tracked text \u2014 all a command scan can settle. Whether the documented route needs a mount, a host install, hardware or a service is a reading."
       },
       "stamped-checklist:must/015": {
-        "status": "not-checked",
+        "status": "met",
         "probe": "run-env-linked",
-        "reason": "Nothing names an environment to check for a pin."
+        "reason": "2 run record(s) reference a pinned image or lockfile, and no ':latest' reference is tracked."
       },
       "stamped-checklist:must/002": {
         "status": "met",
@@ -201,12 +202,12 @@
       },
       {
         "probe": "entry-point",
-        "status": "unmet",
+        "status": "met",
         "items": [
           "stamped-checklist:must/007",
           "stamped-checklist:must/008"
         ],
-        "reason": "must/007 unmet: Neither a README with install/usage instructions nor a Makefile. must/008 met: Starting point present: code/collect_volumes.py.",
+        "reason": "must/007 met: README.md has an install/usage/reproduce section. must/008 met: Starting point present: code/collect_volumes.py.",
         "evidence": [
           {
             "uri": "README.md",
@@ -254,16 +255,16 @@
           ],
           "targets": [],
           "workflow": [],
-          "has_section": false,
+          "has_section": true,
           "documented_targets": [],
           "missing_targets": []
         },
         "item_status": {
-          "stamped-checklist:must/007": "unmet",
+          "stamped-checklist:must/007": "met",
           "stamped-checklist:must/008": "met"
         },
         "item_reason": {
-          "stamped-checklist:must/007": "Neither a README with install/usage instructions nor a Makefile.",
+          "stamped-checklist:must/007": "README.md has an install/usage/reproduce section.",
           "stamped-checklist:must/008": "Starting point present: code/collect_volumes.py."
         }
       },
@@ -488,21 +489,21 @@
       },
       {
         "probe": "run-env-linked",
-        "status": "unmet",
+        "status": "partial",
         "items": [
           "stamped-checklist:must/006",
           "stamped-checklist:must/015"
         ],
-        "reason": "must/006 unmet: None of the 7 run record(s) name a container or a lockfile. must/015 not-checked: Nothing names an environment to check for a pin.",
+        "reason": "must/006 partial: 5 of 7 run record(s) name no container or lockfile (2 name a container, 0 a lockfile, 0 only a capture), e.g. 8ef13b6: .venv/bin/python code/summarise.py results/volumes_by_session.tsv results/summary.txt must/015 met: 2 run record\u2026",
         "evidence": [
           {
             "uri": "commit:3c0e73f",
-            "description": "no environment named: apptainer exec --env PYTHONPATH=/pylib --bind ./.apptainer-pylib:/pylib .datalad/environments/py313/image python3 code/collect_volumes.py --root sourcedata/ds00",
+            "description": "container: apptainer exec --env PYTHONPATH=/pylib --bind ./.apptainer-pylib:/pylib .datalad/environments/py313/image python3 code/collect_volumes.py --root sourcedata/ds00",
             "sha256": null
           },
           {
             "uri": "commit:3a3b831",
-            "description": "no environment named: apptainer exec --env PYTHONPATH=/pylib --bind ./.apptainer-pylib:/pylib .datalad/environments/py313/image python3 code/summarise.py results/volumes_by_session.t",
+            "description": "container: apptainer exec --env PYTHONPATH=/pylib --bind ./.apptainer-pylib:/pylib .datalad/environments/py313/image python3 code/summarise.py results/volumes_by_session.t",
             "sha256": null
           },
           {
@@ -519,22 +520,22 @@
             "uri": "commit:6b61a4c",
             "description": "no environment named: .venv/bin/python code/collect_volumes.py --root sourcedata/ds007116 --output results/volumes_by_session.tsv",
             "sha256": null
+          },
+          {
+            "uri": "commit:be11f37",
+            "description": "no environment named: .venv/bin/python code/collect_volumes.py --root sourcedata/ds007116 --output results/pilot_sub-20919_ses-1.tsv --session sub-20919 ses-1",
+            "sha256": null
+          },
+          {
+            "uri": "commit:f613667",
+            "description": "no environment named: .venv/bin/python code/collect_volumes.py --root sourcedata/ds007116 --output results/pilot_sub-20919_ses-1.tsv --session sub-20919 ses-1",
+            "sha256": null
           }
         ],
         "details": {
           "records": 7,
-          "with_env": 0,
+          "with_env": 2,
           "without_env": [
-            {
-              "commit": "3c0e73ff66acae91ed2e9167793a95dba3aa25f8",
-              "cmd": "apptainer exec --env PYTHONPATH=/pylib --bind ./.apptainer-pylib:/pylib .datalad/environments/py313/image python3 code/collect_volumes.py --root sourcedata/ds00",
-              "mechanism": null
-            },
-            {
-              "commit": "3a3b8310913c9abb32d28f32026d15ebd2f92fa5",
-              "cmd": "apptainer exec --env PYTHONPATH=/pylib --bind ./.apptainer-pylib:/pylib .datalad/environments/py313/image python3 code/summarise.py results/volumes_by_session.t",
-              "mechanism": null
-            },
             {
               "commit": "8ef13b6921ea9fba08e28193ed1a450d502c0e09",
               "cmd": ".venv/bin/python code/summarise.py results/volumes_by_session.tsv results/summary.txt",
@@ -562,19 +563,19 @@
             }
           ],
           "by_mechanism": {
-            "container": 0,
+            "container": 2,
             "lockfile": 0,
             "capture": 0
           },
           "unpinned": []
         },
         "item_status": {
-          "stamped-checklist:must/006": "unmet",
-          "stamped-checklist:must/015": "not-checked"
+          "stamped-checklist:must/006": "partial",
+          "stamped-checklist:must/015": "met"
         },
         "item_reason": {
-          "stamped-checklist:must/006": "None of the 7 run record(s) name a container or a lockfile.",
-          "stamped-checklist:must/015": "Nothing names an environment to check for a pin."
+          "stamped-checklist:must/006": "5 of 7 run record(s) name no container or lockfile (2 name a container, 0 a lockfile, 0 only a capture), e.g. 8ef13b6: .venv/bin/python code/summarise.py results/volumes_by_session.tsv results/summary.txt",
+          "stamped-checklist:must/015": "2 run record(s) reference a pinned image or lockfile, and no ':latest' reference is tracked."
         }
       },
       {
@@ -642,28 +643,76 @@
         }
       }
     ],
-    "must_pass_rate": "7/11",
+    "must_pass_rate": "9/11",
     "must_passed": [
       "stamped-checklist:must/002",
       "stamped-checklist:must/004",
       "stamped-checklist:must/005",
+      "stamped-checklist:must/007",
       "stamped-checklist:must/008",
       "stamped-checklist:must/009",
       "stamped-checklist:must/010",
-      "stamped-checklist:must/013"
+      "stamped-checklist:must/013",
+      "stamped-checklist:must/015"
     ],
     "must_failed": [
       "stamped-checklist:must/006",
-      "stamped-checklist:must/007",
       "stamped-checklist:must/016"
     ],
-    "must_unknown": [
-      "stamped-checklist:must/015"
-    ]
+    "must_unknown": []
   },
   "t2": {
-    "items": {},
-    "disagreements_with_t1": {}
+    "items": {
+      "stamped-checklist:must/001": "met",
+      "stamped-checklist:must/002": "met",
+      "stamped-checklist:must/003": "met",
+      "stamped-checklist:must/004": "met",
+      "stamped-checklist:must/005": "met",
+      "stamped-checklist:must/006": "partial",
+      "stamped-checklist:must/007": "met",
+      "stamped-checklist:must/008": "met",
+      "stamped-checklist:must/009": "met",
+      "stamped-checklist:must/010": "met",
+      "stamped-checklist:must/011": "partial",
+      "stamped-checklist:must/012": "met",
+      "stamped-checklist:must/013": "met",
+      "stamped-checklist:must/014": "unmet",
+      "stamped-checklist:must/015": "partial",
+      "stamped-checklist:must/016": "partial",
+      "stamped-checklist:must/017": "met",
+      "stamped-checklist:should/001": "met",
+      "stamped-checklist:should/002": "unmet",
+      "stamped-checklist:should/003": "met",
+      "stamped-checklist:should/009": "not-applicable",
+      "stamped-checklist:should/004": "unmet",
+      "stamped-checklist:should/005": "partial",
+      "stamped-checklist:should/006": "unmet",
+      "stamped-checklist:should/007": "met",
+      "stamped-checklist:should/008": "unmet",
+      "stamped-checklist:may/001": "met",
+      "stamped-checklist:may/002": "partial",
+      "stamped-checklist:may/003": "partial",
+      "stamped-checklist:may/004": "met",
+      "stamped-checklist:may/005": "partial"
+    },
+    "disagreements_with_t1": {
+      "stamped-checklist:must/016": {
+        "t1": "unmet",
+        "t2": "partial"
+      },
+      "stamped-checklist:must/011": {
+        "t1": "not-checked",
+        "t2": "partial"
+      },
+      "stamped-checklist:must/012": {
+        "t1": "not-checked",
+        "t2": "met"
+      },
+      "stamped-checklist:must/015": {
+        "t1": "met",
+        "t2": "partial"
+      }
+    }
   },
   "oracle": {
     "object": "/home/yoh/proj/CON/skills/.git-meta/scratch/stamped/r0-round2/r0-freesurfer-plot--skill-explicit--haiku--r1",
@@ -724,12 +773,12 @@
     {
       "text": "T1 stamped-checklist:must/006",
       "passed": false,
-      "evidence": "None of the 7 run record(s) name a container or a lockfile."
+      "evidence": "5 of 7 run record(s) name no container or lockfile (2 name a container, 0 a lockfile, 0 only a capture), e.g. 8ef13b6: .venv/bin/python code/summarise.py results/volumes_by_session.tsv results/summary.txt"
     },
     {
       "text": "T1 stamped-checklist:must/007",
-      "passed": false,
-      "evidence": "Neither a README with install/usage instructions nor a Makefile."
+      "passed": true,
+      "evidence": "README.md has an install/usage/reproduce section."
     },
     {
       "text": "T1 stamped-checklist:must/008",
@@ -763,8 +812,8 @@
     },
     {
       "text": "T1 stamped-checklist:must/015",
-      "passed": false,
-      "evidence": "Nothing names an environment to check for a pin."
+      "passed": true,
+      "evidence": "2 run record(s) reference a pinned image or lockfile, and no ':latest' reference is tracked."
     },
     {
       "text": "T1 stamped-checklist:must/016",
