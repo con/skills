@@ -143,7 +143,12 @@ CONDITION_PARAGRAPH = {
 
 
 def sh(cmd: list[str], cwd: pathlib.Path | None = None, check: bool = True) -> subprocess.CompletedProcess:
-    proc = subprocess.run(cmd, cwd=str(cwd) if cwd else None, capture_output=True, text=True)
+    try:
+        proc = subprocess.run(cmd, cwd=str(cwd) if cwd else None, capture_output=True, text=True)
+    except FileNotFoundError as exc:
+        if check:
+            raise
+        return subprocess.CompletedProcess(cmd, 127, "", str(exc))
     if check and proc.returncode != 0:
         raise RuntimeError(f"{' '.join(cmd[:4])}… failed: {(proc.stderr or proc.stdout).strip()[:600]}")
     return proc

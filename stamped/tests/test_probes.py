@@ -799,7 +799,12 @@ def test_encode_response_set_and_table(tmp_path):
     assert out.index("must/001") < out.index("should/001") < out.index("may/001")
 
 
-def test_run_recorded_declares_the_environment_spec(tmp_path):
+@pytest.mark.parametrize("spec,contents", [
+    ("requirements.lock", "pandas==2.2.3\n"),
+    ("pixi.toml", '[workspace]\nname = "test"\nchannels = ["conda-forge"]\n'),
+    ("pyproject.toml", '[project]\nname = "test"\nversion = "0.1.0"\n'),
+])
+def test_run_recorded_declares_the_environment_spec(tmp_path, spec, contents):
     """must/006 asks that the record name the environment it ran in.
 
     Two of three live runs forgot: a `datalad run` with unchanged outputs
@@ -808,15 +813,19 @@ def test_run_recorded_declares_the_environment_spec(tmp_path):
     """
     root = tmp_path / "env-input"
     env = _guarded_repo(root)
-    (root / "requirements.lock").write_text("pandas==2.2.3\n")
-    subprocess.run(["git", "add", "requirements.lock"], cwd=root, check=True, env=env)
+    (root / spec).write_text(contents)
+    if spec == "pixi.toml":
+        (root / ".gitignore").write_text("pixi.lock\n")
+        (root / "pixi.lock").write_text("ignored resolved environment\n")
+        subprocess.run(["git", "add", ".gitignore"], cwd=root, check=True, env=env)
+    subprocess.run(["git", "add", spec], cwd=root, check=True, env=env)
     subprocess.run(["git", "commit", "-qm", "pin the environment"], cwd=root, check=True, env=env)
     log = tmp_path / "calls.log"
     env = {**env, "PATH": f"{_stub_datalad(tmp_path)}:{env['PATH']}", "DATALAD_STUB_LOG": str(log)}
 
     subprocess.run(["sh", "./run-recorded.sh", "-m", "a recorded step", "--", "true"],
                    cwd=root, capture_output=True, text=True, env=env, check=True)
-    assert log.read_text().strip() == "run -i requirements.lock -m a recorded step -- true"
+    assert log.read_text().strip() == f"run -i {spec} -m a recorded step -- true"
 
     # Opting out is this wrapper's own flag and must not reach datalad — and
     # dropping it must not re-split the multi-word message.
