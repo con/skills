@@ -828,3 +828,23 @@ def test_fresh_rerun_refuses_an_unbounded_fetch(tmp_path):
     assert text.count('"get", "-r", "-J4"') == 1
     budgeted = text.split("budget = ")[1]
     assert "pending <= budget" in budgeted
+
+
+def test_remote_check_does_not_prompt_or_hang(tmp_path):
+    """`git ls-remote` on a missing repository must fail, not ask.
+
+    Without `GIT_TERMINAL_PROMPT=0` a missing or private GitHub repository
+    prompts for credentials; three blind runs lost time to that before falling
+    back to `curl`, and in a non-interactive harness it is a hang.
+    """
+    import time
+
+    from probes.structure import _remote_resolves
+
+    started = time.monotonic()
+    # A path that cannot exist, so the answer is "no" without network.
+    assert _remote_resolves(str(tmp_path / "nothing-here.git")) is False
+    # And a URL that needs credentials: False (refused) or None (undecidable),
+    # never a prompt and never a wait.
+    assert _remote_resolves("https://github.com/con/this-repo-does-not-exist-9q7.git") in (False, None)
+    assert time.monotonic() - started < 60, "the remote check should not block a run"
