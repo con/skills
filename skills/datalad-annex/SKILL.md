@@ -20,6 +20,7 @@ Add required provenance trailers without moving the native marker or changing th
 Compose existing hooks; confirm discovery with `datalad rerun --report RUN_COMMIT`, then execute a genuine native rerun.
 
 A DataLad record selects a command, not automatically its historical data, code or environment.
+For comparison choices and environment trade-offs, use [reassessment and replay](references/reassessment.md).
 State what stays fixed and what changes for the question; `datalad rerun RUN_COMMIT` normally uses the current checkout.
 Restore the retained environment only when holding that dependency selection fixed; record a new selection when testing dependency changes.
 An outer environment launcher runs before DataLad checkout transitions: select the intended state before launching, or record an explicit inner launcher that synchronizes afterward.
