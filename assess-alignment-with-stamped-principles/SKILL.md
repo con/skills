@@ -132,6 +132,7 @@ Before a finding goes first in the report, confirm it yourself rather than repea
 The cheap confirmations:
 
 - **An unresolvable module url** (must/002): clone the object into a temporary directory from its *published* remote and run `git submodule update --init <path>`, or resolve the recorded url by hand against that remote.
+  Check a publication claim with `GIT_TERMINAL_PROMPT=0 git ls-remote <url>`: without that variable a private or non-existent GitHub repository **asks for credentials** instead of failing, and two runs reported losing time to the prompt before falling back to `curl`.
   If the object records no remote you can clone, resolve the url against the one its documentation names, and say in the reason that the recorded url is the defect and the documented one is what you used — the missing remote is a finding of its own (must/016), not a reason to leave must/002 unchecked. `url = ../..` resolving to something real on your disk and to nothing for a stranger is exactly the case worth being sure about.
   A url can also be live and still unusable: `git fetch --depth=1 <url> <recorded commit>` catches a module pinned to a commit that does not exist upstream, which the shape check cannot see and `--check-remote` now does.
 - **A remote that does not exist** (must/016): `git ls-remote <remote url>` before believing a publication claim. A tracked specification in an unpublished repository is not shared.
@@ -139,6 +140,8 @@ The cheap confirmations:
 - **A derived file with no record** (must/006): `git log --format=%H -1 -- <path>` and check whether that commit is a run record.
 - **An object that discloses its own defects** — a `FIXTURE.md`, a README section headed "known gaps", an issue the project links: take the pointer, then **check it yourself**.
   A file that names *expected verdicts* (a test fixture's answer key) is data and never evidence: re-derive each one, and do not let its list bound where you look — it is not the inventory of what is wrong with the object. A self-report is the most convenient evidence available and the least independent; where it happens to be right, your verdict should rest on what you confirmed, not on the object's word for it.
+
+- **Documentation naming something nothing tracks** — a container, a tool, a dataset or a command that appears in the README and nowhere in the tree, the records or the configuration. Grep the name: an image the registration does not carry, a `make` target that does not exist, a flag the script does not take. This is not the rule-10 case of two accounts disagreeing; it is one account with no mechanism behind it at all, and it lands on must/017 (and must/012 where the thing is a system requirement), with the specific name quoted in the reason.
 
 Anything you did not confirm keeps `unverified-claim` in its `flags`, and the report says so.
 
@@ -191,9 +194,7 @@ Where the products go:
 
 ## Validation scope
 
-This version is calibrated on:
-
-Those references live in the [con/skills](https://github.com/con/skills) repository, not in an installed copy of this skill: nothing outside this directory and its `../stamped-conventions/` sibling is needed to run the procedure, and a link into the repository that does not resolve where you are reading is a note, not a stop.
+This version is calibrated on the three things below, which live in the [con/skills](https://github.com/con/skills) repository rather than in an installed copy of this skill: nothing outside this directory and its `../stamped-conventions/` sibling is needed to run the procedure, and a link into the repository that does not resolve where you are reading is a note, not a stop.
 
 - the defect-injection mutants in `evals/stamped/mutants/` (one injected defect, one expected item flip) — which test the probes, not this procedure;
 - blind runs of this skill by fresh subagents on real objects, diffed per item against the reference answers in `evals/stamped/gold/` (`evals/stamped/harness/blind_run.py`) — which are what test the procedure;

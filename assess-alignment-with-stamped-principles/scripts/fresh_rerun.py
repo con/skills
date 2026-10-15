@@ -17,8 +17,11 @@ Steps
 -----
 1. clone from the published location (``datalad clone`` when available, else
    ``git clone``) — a clone that fails is already D.1 ``unmet``;
-2. get the content the rerun needs (``datalad get`` for the named outputs'
-   inputs, best effort);
+2. install the modules without content (``datalad get -n -r``) and fetch only
+   what fits under ``--max-get-gb``: an unbounded ``datalad get -r .`` pulled
+   **87 GB** of container images on its first real R1 object before it was
+   stopped, because a module of ``///repronim/containers`` carries every image
+   the registry knows. The entry point fetches its own declared inputs;
 3. record the checksums the clone *shipped* for the output files;
 4. run the entry point, in a container when ``--in-container`` is given;
 5. compare: identical checksums, or numeric agreement within ``--rtol`` for
@@ -50,6 +53,26 @@ ITEMS = [
     "stamped-checklist:should/006",
 ]
 TABLE_SUFFIXES = (".tsv", ".csv", ".txt")
+
+
+def _annexed_bytes_missing(clone: pathlib.Path) -> int:
+    """Bytes of annexed content not here yet, this dataset and its modules.
+
+    Asked *before* fetching, because the honest answer to "how much is this
+    about to download" is the one number nobody had: the first real R1 rerun
+    pulled 87 GB of container images and had to be killed by hand.
+    """
+    total = 0
+    for gitdir in [clone, *sorted(p.parent for p in clone.rglob(".git") if p.parent != clone)]:
+        proc = subprocess.run(
+            ["git", "annex", "find", "--not", "--in", "here", "--format=${bytesize}\n"],
+            cwd=str(gitdir), capture_output=True, text=True)
+        for line in proc.stdout.split():
+            try:
+                total += int(line)
+            except ValueError:
+                continue
+    return total
 
 
 def _run(cmd: list[str], cwd: pathlib.Path | None = None, timeout: int = 7200) -> tuple[int, str]:
@@ -125,6 +148,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--rtol", type=float, default=1e-6, help="relative tolerance for tables")
     ap.add_argument("--workdir", type=pathlib.Path, help="keep the clone here instead of a temp dir")
     ap.add_argument("--timeout", type=int, default=7200)
+    ap.add_argument("--max-get-gb", type=float, default=5.0,
+                    help="skip the up-front content fetch when it would exceed this (default 5 GiB); "
+                         "a module of a container registry can be hundreds of GB")
     ap.add_argument("-o", "--output", type=pathlib.Path)
     args = ap.parse_args(argv)
 
@@ -154,9 +180,23 @@ def main(argv: list[str] | None = None) -> int:
 
     get_failed = False
     if shutil.which("datalad"):
-        code, log = _run(["datalad", "get", "-r", "-J4", "."], cwd=clone, timeout=args.timeout)
-        step("datalad get -r .", code, log)
+        # Modules first, without content: a rerun needs the submodules present
+        # to resolve paths, and that costs nothing.
+        code, log = _run(["datalad", "get", "-n", "-r", "."], cwd=clone, timeout=args.timeout)
+        step("datalad get -n -r .", code, log)
         get_failed = code != 0
+        pending = _annexed_bytes_missing(clone)
+        report["content_to_fetch_bytes"] = pending
+        budget = int(args.max_get_gb * 1024 ** 3)
+        if pending and pending <= budget:
+            code, log = _run(["datalad", "get", "-r", "-J4", "."], cwd=clone, timeout=args.timeout)
+            step(f"datalad get -r . ({pending / 1024 ** 3:.1f} GiB)", code, log)
+            get_failed = get_failed or code != 0
+        elif pending:
+            step(f"skipped datalad get -r . ({pending / 1024 ** 3:.1f} GiB > "
+                 f"--max-get-gb {args.max_get_gb})", 0,
+                 "Left to the entry point, which fetches its own declared inputs. "
+                 "Raise --max-get-gb to fetch everything up front.")
 
     before = _collect(clone, args.outputs)
     report["outputs_shipped"] = dict(before)

@@ -1,6 +1,6 @@
 # Response, report and stamp
 
-Every STAMPED assessment produces four files, named for **the day the assessment was made** (UTC, `YYYY-MM-DD`) — not the object's commit date, and not the date of an earlier assessment being redone:
+Every STAMPED assessment produces four files (five with the optional fresh-rerun report), named for **the day the assessment was made** (UTC, `YYYY-MM-DD`) — not the object's commit date, and not the date of an earlier assessment being redone:
 
 | File | What it is |
 |---|---|

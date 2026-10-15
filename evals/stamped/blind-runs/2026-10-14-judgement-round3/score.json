@@ -1,0 +1,82 @@
+{
+  "mutants": {
+    "control-clean": {
+      "scored": true,
+      "control": true,
+      "judgement_items": 22,
+      "accused": {
+        "stamped-checklist:must/002": "unmet",
+        "stamped-checklist:must/006": "partial",
+        "stamped-checklist:must/008": "partial",
+        "stamped-checklist:must/011": "partial",
+        "stamped-checklist:must/012": "partial",
+        "stamped-checklist:must/014": "partial",
+        "stamped-checklist:must/016": "unmet",
+        "stamped-checklist:must/017": "partial",
+        "stamped-checklist:should/002": "partial",
+        "stamped-checklist:should/004": "partial",
+        "stamped-checklist:should/006": "partial",
+        "stamped-checklist:should/007": "partial",
+        "stamped-checklist:should/008": "partial"
+      },
+      "expected": {
+        "stamped-checklist:must/002": "unmet",
+        "stamped-checklist:must/014": "partial",
+        "stamped-checklist:must/016": "unmet",
+        "stamped-checklist:should/004": "partial",
+        "stamped-checklist:should/006": "partial",
+        "stamped-checklist:should/007": "partial",
+        "stamped-checklist:should/008": "partial"
+      },
+      "false_accusations": {
+        "stamped-checklist:must/006": "partial",
+        "stamped-checklist:must/008": "partial",
+        "stamped-checklist:must/011": "partial",
+        "stamped-checklist:must/012": "partial",
+        "stamped-checklist:must/017": "partial",
+        "stamped-checklist:should/002": "partial"
+      },
+      "false_accusation_rate": "6/22",
+      "model": "sonnet"
+    },
+    "readme-claims-absent-container": {
+      "scored": true,
+      "detected": true,
+      "noticed": true,
+      "named": [
+        "neurodesk",
+        "repronim/containers"
+      ],
+      "flagged": {
+        "stamped-checklist:must/015": "met",
+        "stamped-checklist:must/017": "partial",
+        "stamped-checklist:must/012": "partial",
+        "stamped-checklist:must/003": "partial"
+      },
+      "collateral": {},
+      "injected": "readme-claims-absent-container: README promises a `neurodesk-freesurfer` container from ///repronim/containers that is registered nowhere in the object, while the tracked registration names another image",
+      "response": "/home/yoh/proj/CON/skills/.git-meta/scratch/stamped/jm3/readme-claims-absent-container/out/2026-10-15-response.json",
+      "model": "sonnet"
+    },
+    "readme-steps-out-of-order": {
+      "scored": true,
+      "detected": true,
+      "noticed": true,
+      "named": [
+        "order",
+        "before",
+        "clone"
+      ],
+      "flagged": {
+        "stamped-checklist:must/007": "partial",
+        "stamped-checklist:must/008": "partial"
+      },
+      "collateral": {},
+      "injected": "readme-steps-out-of-order: the reproduce steps are in an impossible order: build before clone, plot before the table it plots, inputs fetched last",
+      "response": "/home/yoh/proj/CON/skills/.git-meta/scratch/stamped/jm3/readme-steps-out-of-order/out/2026-10-15-response.json",
+      "model": "haiku"
+    }
+  },
+  "detection": "2/2",
+  "model": "sonnet"
+}

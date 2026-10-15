@@ -54,6 +54,11 @@ This reconciles @asmacdo's draft (pass/partial/fail/unknown), STAMPED-dl's met/p
     Where the accounts disagree, the verdict is at most `partial`, the reason names both accounts, and the disagreement is reported as a finding in its own right: a README promising a container that the `Makefile` never invokes is worse than either an honest README or an honest Makefile.
     Four pairings and where each lands: documentation against the mechanism → **must/007, must/008, must/017**, and **should/002**, because a workflow tested against instructions nobody can follow is not tested; the mechanism against the run records → **must/006 and must/008** (what produced the results is not what is offered to reproduce them); CI against the records → **should/006** (the environment being tested is not the one the results came from); and the object's *metadata* against its own layout — a `dataset_description.json` naming a pipeline the history never ran — which has no checklist item and goes in `extra_items`.
     If naming both accounts will not fit in 250 characters, name the worse one in the reason and put the other in `evidence`; do not drop it.
+
+    **An accurate disclosure is not a disagreement.**
+    This rule exists for accounts that conflict *silently* — a README promising a container the `Makefile` never invokes.
+    An object whose documentation states the difference and says which route produced the results is telling one story in two parts, and the items above stay `met` on it: the test is whether a reader following the documentation would be misled, not whether two routes exist.
+    Two runs in a row marked a disclosed, accurate two-route object `partial` on four items under this rule; that is this rule being over-applied, and the reason to say so here.
 11. **A right answer reached by the wrong route is still a finding.**
     When a probe answers an item from a property the item does not ask about, the verdict may happen to be right and the reasoning is still wrong.
     Record it in the item's `flags` (`mapping-questioned`), say which property the probe actually measured, and keep your own verdict with `source` ending in `+judgement`.

@@ -38,6 +38,26 @@ ENV = {
     "GIT_CONFIG_GLOBAL": "/dev/null", "GIT_CONFIG_SYSTEM": "/dev/null",
     "GIT_TERMINAL_PROMPT": "0",
 }
+# What is *simulated* about this fixture, and therefore cannot honestly come
+# back `met` from any assessor — scripted or reading. Declared here, next to the
+# code that creates the simulation, and imported by both calibrators: a verdict
+# on this list is correct, not a false accusation.
+SIMULATED: dict[str, str] = {
+    "stamped-checklist:must/002": "the input is pinned to a commit that exists only in this build",
+    "stamped-checklist:must/016": "the object's own remote is not published",
+    "stamped-checklist:should/004": "no rerun was attempted, and the fake pin would break a fresh clone",
+    "stamped-checklist:should/007": "the container image is a placeholder, so no environment artifact is "
+                                    "actually archived (see the object's FIXTURE.md)",
+    # True of any object one commit deep, and `verdicts.md` rule 5 says so:
+    # a declared process with no instance in the history is `partial`.
+    "stamped-checklist:must/014": "the regeneration command is declared and the history is one commit deep",
+    "stamped-checklist:should/008": "the duplicate of must/014, same evidence",
+    # CI cannot exercise an image that is a few bytes of placeholder, so the
+    # environment behind the recorded results is genuinely never rebuilt here.
+    "stamped-checklist:should/006": "CI cannot run the placeholder container the records name",
+    "stamped-checklist:should/005": "the Makefile route runs directly; only the records used the container",
+}
+
 CONTAINER_DIGEST = "sha256:3e0f1b6c5a2d4e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f7"
 RUN_SEP_TOP = "=== Do not change lines below ==="
 RUN_SEP_BOTTOM = "^^^ Do not change lines above ^^^"
@@ -63,6 +83,23 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.lock
 `requirements.lock`, which is what CI exercises. The steps are the same code;
 the environment is not, and a result that has to match the records should be
 produced the recorded way.
+
+## System requirements
+
+Documented because must/011 and must/012 ask for exactly this list, and three
+blind runs in a row answered both `partial` on an earlier version of this file
+that had none:
+
+| Need | Why | Version |
+|---|---|---|
+| POSIX shell, `make`, `git` (with submodule support) | the entry point and the input module | any current release |
+| `python3` | the two steps | 3.11 or newer |
+| the packages in `requirements.lock` | pinned, installed into a venv | as pinned |
+| `apptainer` (or `singularity`) | **only** for the recorded route: the run records ran inside the image in `code/containers/` | 1.2 or newer |
+| network access | `git submodule update --init` fetches the input dataset | once |
+
+No environment variable is required, and nothing is read from outside this
+directory.
 
 ## Usage
 

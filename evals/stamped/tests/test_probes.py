@@ -28,8 +28,10 @@ ENCODE = CONVENTIONS / "scripts" / "encode_response.py"
 sys.path.insert(0, str(ASSESS / "scripts"))
 sys.path.insert(0, str(CONVENTIONS / "scripts"))
 sys.path.insert(0, str(EVALS / "mutants"))
+sys.path.insert(0, str(EVALS / "fixtures"))
 
 from encode_response import Checklist, app_payload, decode, encode, template, validate  # noqa: E402
+from make_r0_object import SIMULATED  # noqa: E402
 from mutate import MUTANTS  # noqa: E402
 from probes import REGISTRY, Object  # noqa: E402
 
@@ -69,8 +71,14 @@ def test_fixture_is_clean_and_all_probes_pass(clean):
     statuses = _statuses(clean)
     assert statuses, "no probe answered any item"
     bad = {item: status for item, status in statuses.items()
-           if status != "met" and item not in PROBE_NEVER_MET}
+           if status != "met" and item not in PROBE_NEVER_MET and item not in SIMULATED}
     assert not bad, f"the known-good fixture should be all met, got {bad}"
+    # `SIMULATED` is about what no *honest assessment* can call met, which is
+    # not the same as what the probes can see: the unfetchable pin and the
+    # placeholder container look fine offline, so the probes answer `met` on
+    # must/002 and should/006 and a reading run is what catches them. The place
+    # that checks the declaration is still current is the judgement control
+    # run, whose "expected" list is exactly this one.
     for item in PROBE_NEVER_MET:
         assert statuses.get(item) == "not-checked", (
             f"{item} should be left for judgement, got {statuses.get(item)}"
@@ -792,3 +800,20 @@ def test_run_recorded_declares_the_environment_spec(tmp_path):
     subprocess.run(["sh", "./run-recorded.sh", "-n", "img", "-m", "in a container", "--", "true"],
                    cwd=root, capture_output=True, text=True, env=env, check=True)
     assert log.read_text().strip() == "containers-run -n img -m in a container -- true"
+
+
+def test_fresh_rerun_refuses_an_unbounded_fetch(tmp_path):
+    """The step that pulled 87 GB of container images on its first real object.
+
+    `datalad get -r .` is recursive and unbounded, and a module of a container
+    registry carries every image the registry knows. The probe now asks how
+    much it is about to fetch and skips the up-front fetch above the budget.
+    """
+    source = assess_scripts_fresh_rerun = ASSESS / "scripts" / "fresh_rerun.py"
+    text = source.read_text()
+    assert "--max-get-gb" in text
+    assert 'datalad", "get", "-n", "-r"' in text, "modules must be installed without content first"
+    # No unconditional recursive content fetch remains.
+    assert text.count('"get", "-r", "-J4"') == 1
+    budgeted = text.split("budget = ")[1]
+    assert "pending <= budget" in budgeted

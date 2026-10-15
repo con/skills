@@ -149,14 +149,33 @@ def merge_into_response(results: list[dict], obj: Object, checklist, template, s
         "kind": kind,
     }
     response["assessor"] = {
-        "skill": "assess-alignment-with-stamped-principles/scripts/run_probes.py",
-        "version": None,
-        "harness": None,
-        "model": None,
-        "date": datetime.date.today().isoformat(),
+        # The skill, not the script that drafted the response: three runs had
+        # to correct this by hand, and one reported the draft as "not
+        # stamp-ready". The version comes from the SKILL.md next to this
+        # script, so it cannot drift from what shipped.
+        "skill": "assess-alignment-with-stamped-principles",
+        "version": _skill_version(),
+        "harness": None,          # the run fills these two: a script cannot
+        "model": None,            # know which harness or model is reading it
+        # UTC, because the host's local "today" and the session's idea of today
+        # have disagreed by a day, and the report is named after this date.
+        "date": datetime.datetime.now(datetime.timezone.utc).date().isoformat(),
+        "drafted_by": "scripts/run_probes.py",
     }
     response["scope"] = "Probe sweep only; judgement items are left not-checked."
     return response
+
+
+def _skill_version() -> str | None:
+    """The `version:` from the SKILL.md beside this script."""
+    skill = pathlib.Path(__file__).resolve().parent.parent / "SKILL.md"
+    try:
+        for line in skill.read_text().splitlines()[:30]:
+            if line.startswith("version:"):
+                return line.split(":", 1)[1].strip().strip('"\'')
+    except OSError:
+        pass
+    return None
 
 
 def summarise(results: list[dict], checklist) -> str:

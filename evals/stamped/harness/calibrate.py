@@ -33,6 +33,8 @@ MUTATE = EVALS / "mutants" / "mutate.py"
 RUN_PROBES = REPO / "assess-alignment-with-stamped-principles" / "scripts" / "run_probes.py"
 
 sys.path.insert(0, str(EVALS / "mutants"))
+sys.path.insert(0, str(EVALS / "fixtures"))
+from make_r0_object import SIMULATED  # noqa: E402
 from mutate import MUTANTS  # noqa: E402
 
 
@@ -88,13 +90,19 @@ def main(argv: list[str] | None = None) -> int:
         subprocess.run([sys.executable, str(FIXTURE), str(clean)], check=True, capture_output=True)
 
     baseline, baseline_extras = _probe(clean)
-    false_unmet = {i: a for i, a in baseline.items() if a["status"] in {"unmet", "partial"}}
-    false_unmet.update({k: v for k, v in baseline_extras.items() if v["status"] in {"unmet", "partial"}})
+    accused = {i: a for i, a in baseline.items() if a["status"] in {"unmet", "partial"}}
+    accused.update({k: v for k, v in baseline_extras.items() if v["status"] in {"unmet", "partial"}})
+    # What the fixture itself declares as simulated is a correct verdict, not a
+    # false accusation: the two are counted apart so that neither can hide the
+    # other. The list lives with the fixture (`SIMULATED`).
+    expected = {i: a for i, a in accused.items() if i in SIMULATED}
+    false_unmet = {i: a for i, a in accused.items() if i not in SIMULATED}
     report: dict = {
         "clean_object": {
             "answered_items": len(baseline),
             "false_unmet": false_unmet,
             "false_unmet_rate": f"{len(false_unmet)}/{len(baseline)}",
+            "expected_by_the_fixture": {i: SIMULATED[i] for i in expected},
         },
         "mutants": {},
     }
@@ -148,10 +156,12 @@ def main(argv: list[str] | None = None) -> int:
 
     report["sensitivity"] = f"{detected}/{len(names)}"
     print(f"\nmutants detected: {detected}/{len(names)}")
-    print(f"false unmet/partial on the clean object: {len(false_unmet)}/{len(baseline)} answered items")
-    if false_unmet:
-        for item, answer in false_unmet.items():
-            print(f"  {item} = {answer['status']} ({answer['probe']}): {answer['reason']}")
+    print(f"false unmet/partial on the clean object: {len(false_unmet)}/{len(baseline)} answered items"
+          + (f" ({len(expected)} more are the fixture's declared simulations)" if expected else ""))
+    for item, answer in false_unmet.items():
+        print(f"  {item} = {answer['status']} ({answer['probe']}): {answer['reason']}")
+    for item in expected:
+        print(f"  (expected) {item} = {accused[item]['status']}: {SIMULATED[item]}")
     if args.output:
         args.output.write_text(json.dumps(report, indent=2) + "\n")
         print(f"wrote {args.output}")

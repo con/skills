@@ -499,13 +499,18 @@ def env_spec_tracked(obj: Object) -> Probe:
     if not found:
         s016, r016 = s013, clip("Nothing to share: " + r013)
     elif published:
-        s016 = "met"
-        r016 = clip(f"The specification is tracked in a repository published at {remote}, so it travels with "
-                    "the object for anyone who can clone it.")
-    else:
+        # A configured remote is a *claim* of publication, not evidence of it:
+        # two independent blind runs overrode this `met` after finding the URL
+        # returns 404. The probe cannot check offline, so it says what it saw
+        # and leaves the verification to the reader (`GIT_TERMINAL_PROMPT=0
+        # git ls-remote <url>`), which is the skill's step 4.
         s016 = "partial"
-        r016 = clip("The specification is tracked, but this checkout records no published remote, so there is "
-                    "no evidence anyone else can obtain it.")
+        r016 = clip(f"The specification is tracked and a remote is recorded ({remote}), but whether that "
+                    "remote resolves was not checked here: verify with `git ls-remote` before calling it met.")
+    else:
+        s016 = "unmet"
+        r016 = clip("The specification is tracked, but this checkout records no remote at all, so nothing "
+                    "says where anyone else could obtain it.")
 
     worst = min((s010, s013, s016), key=lambda s: {"unmet": 0, "partial": 1, "not-checked": 2,
                                                    "not-applicable": 3, "met": 4}[s])
@@ -676,9 +681,11 @@ def ci_present(obj: Object) -> Probe:
     # What the run records actually ran in, so that "the environment" means the
     # one behind the shipped results rather than whatever CI happens to build.
     recorded = " ".join(
-        str((rec.get("run_info") or {}).get("cmd", "")) + " ".join(
-            str(x) for x in ((rec.get("run_info") or {}).get("extra_inputs") or [])
-        )
+        # A space between the command and the extra inputs. Without it the last
+        # token of one ran into the first of the other, and `details` carried
+        # entries like `figures/plot.pngcode/containers/plotting.sif`.
+        " ".join([str((rec.get("run_info") or {}).get("cmd", ""))]
+                 + [str(x) for x in ((rec.get("run_info") or {}).get("extra_inputs") or [])])
         for rec in obj.run_records()
     )
     rebuild = re.compile(r"(?:docker|apptainer|singularity)\s+(?:build|pull|exec|run)|"

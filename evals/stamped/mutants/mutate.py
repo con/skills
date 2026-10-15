@@ -376,7 +376,12 @@ MUTANTS: dict[str, dict] = {
     },
     "remote-removed": {
         "apply": remote_removed,
-        "expect": {"stamped-checklist:must/016": "partial"},
+        # `unmet` rather than `partial` since the probe stopped treating a
+        # *configured* remote as a published one: with a remote recorded the
+        # clean object is `partial` (a claim it cannot verify offline), and with
+        # none it is `unmet` (nothing even claims a location). The mutant now
+        # measures that distinction rather than straddling it.
+        "expect": {"stamped-checklist:must/016": "unmet"},
         "probe": "env-spec-tracked",
     },
     "untracked-figure": {

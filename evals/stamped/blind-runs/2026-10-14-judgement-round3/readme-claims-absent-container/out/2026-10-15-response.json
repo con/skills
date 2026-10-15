@@ -1,0 +1,773 @@
+{
+ "checklist_version": "0.3.1",
+ "responses": {
+  "stamped-checklist:must/001": {
+   "value": "yes",
+   "reason": "All tracked files nest under the repo root; the input is a submodule at sourcedata/ds007116, no path outside the root is referenced.",
+   "status": "met",
+   "evidence": [
+    {
+     "uri": ".gitmodules",
+     "description": "input module under root",
+     "sha256": null
+    },
+    {
+     "uri": "Makefile",
+     "description": "relative paths only",
+     "sha256": null
+    }
+   ],
+   "source": "judgement",
+   "flags": []
+  },
+  "stamped-checklist:must/002": {
+   "value": "no",
+   "reason": "Recorded commit 84570256 of sourcedata/ds007116 does not exist upstream (git fetch: 'not our ref'); url answers but a stranger cannot fetch the input.",
+   "status": "unmet",
+   "evidence": [
+    {
+     "uri": ".gitmodules",
+     "description": "url https://github.com/OpenNeuroDatasets/ds007116.git",
+     "sha256": null
+    },
+    {
+     "uri": "cmd: git fetch --depth=1 <url> 84570256a2a2c84edaed247fee15a3a90b7039ed",
+     "description": "fatal: remote error: upload-pack: not our ref",
+     "sha256": null
+    },
+    {
+     "uri": "FIXTURE.md",
+     "description": "self-report of same defect; re-derived above, not relied on",
+     "sha256": null
+    }
+   ],
+   "source": "probe:subdatasets-resolvable+judgement",
+   "flags": [
+    "probe-overridden"
+   ]
+  },
+  "stamped-checklist:must/003": {
+   "value": "no",
+   "reason": "Python deps are pinned and the image is referenced by digest, but the image is a 28-byte placeholder, Makefile assumes host python3 and records assume host apptainer; README names a container not present.",
+   "status": "partial",
+   "evidence": [
+    {
+     "uri": "code/containers.json",
+     "description": "only registered container is 'plotting' (docker://python@sha256:3e0f...); no neurodesk-freesurfer anywhere in tracked tree (grep)",
+     "sha256": null
+    },
+    {
+     "uri": "Makefile",
+     "description": "rules call host `python3` directly; no container invoked",
+     "sha256": null
+    },
+    {
+     "uri": "README.md#L14",
+     "description": "claims every step runs in neurodesk-freesurfer from ///repronim/containers; `make all`, CI and run records 'all go through it'",
+     "sha256": null
+    },
+    {
+     "uri": "code/containers/plotting.sif.README",
+     "description": "image not shipped, placeholder",
+     "sha256": null
+    }
+   ],
+   "source": "judgement",
+   "flags": [
+    "unverified-claim"
+   ]
+  },
+  "stamped-checklist:must/004": {
+   "value": "yes",
+   "reason": "git tracks 11 text, code and configuration file(s), and `git status` is empty including submodules: the committed state is the whole state.",
+   "status": "met",
+   "evidence": [
+    {
+     "uri": "git ls-files",
+     "description": "11 tracked text/code/config paths of 17 tracked paths",
+     "sha256": null
+    },
+    {
+     "uri": "git status --porcelain",
+     "description": "no output",
+     "sha256": null
+    }
+   ],
+   "source": "probe:tree-clean",
+   "flags": []
+  },
+  "stamped-checklist:must/005": {
+   "value": "yes",
+   "reason": "No binary blob over 10 MiB in git, and no large-content mechanism is needed: nothing in this object is large binary data.",
+   "status": "met",
+   "evidence": [
+    {
+     "uri": "git ls-tree -r -l HEAD",
+     "description": "no binary blob over 10485760 bytes; 16 blobs tracked",
+     "sha256": null
+    }
+   ],
+   "source": "probe:large-in-annex",
+   "flags": []
+  },
+  "stamped-checklist:must/006": {
+   "value": "no",
+   "reason": "Both derived files have run records naming the digest-pinned image, but what the records ran (apptainer exec) differs from what Makefile/README/CI offer to reproduce them (host python3).",
+   "status": "partial",
+   "evidence": [
+    {
+     "uri": "git:5d7aaa0,021ff4d",
+     "description": "run records cmd: `apptainer exec code/containers/plotting.sif ...`; image docker://python, not neurodesk-freesurfer",
+     "sha256": null
+    },
+    {
+     "uri": "Makefile",
+     "description": "rules call host `python3` directly; no container invoked",
+     "sha256": null
+    },
+    {
+     "uri": ".github/workflows/rerun.yml",
+     "description": "pip install -r requirements.lock; make all; container only checked for existence/digest, never used",
+     "sha256": null
+    },
+    {
+     "uri": "README.md#L14",
+     "description": "claims every step runs in neurodesk-freesurfer from ///repronim/containers; `make all`, CI and run records 'all go through it'",
+     "sha256": null
+    }
+   ],
+   "source": "probe:derived-have-records+judgement",
+   "flags": [
+    "probe-overridden"
+   ]
+  },
+  "stamped-checklist:must/007": {
+   "value": "no",
+   "reason": "README has Install/Reproduce sections, but they contradict each other and the Makefile: it promises a neurodesk container for every step while `make all` and the venv install use host python3.",
+   "status": "partial",
+   "evidence": [
+    {
+     "uri": "README.md#L14",
+     "description": "claims every step runs in neurodesk-freesurfer from ///repronim/containers; `make all`, CI and run records 'all go through it'",
+     "sha256": null
+    },
+    {
+     "uri": "README.md#L8-L10",
+     "description": "venv + pip install requirements.lock",
+     "sha256": null
+    },
+    {
+     "uri": "Makefile",
+     "description": "rules call host `python3` directly; no container invoked",
+     "sha256": null
+    }
+   ],
+   "source": "probe:entry-point+judgement",
+   "flags": [
+    "probe-overridden",
+    "mapping-questioned"
+   ]
+  },
+  "stamped-checklist:must/008": {
+   "value": "no",
+   "reason": "Starting point exists (`make all`, code/collect_volumes.py) but the documented route (container) is not what it runs, and not what the records ran; records use apptainer exec on plotting.sif.",
+   "status": "partial",
+   "evidence": [
+    {
+     "uri": "README.md#L40-L44",
+     "description": "git clone, submodule init, make all",
+     "sha256": null
+    },
+    {
+     "uri": "Makefile",
+     "description": "rules call host `python3` directly; no container invoked",
+     "sha256": null
+    },
+    {
+     "uri": "git:5d7aaa0,021ff4d",
+     "description": "run records cmd: `apptainer exec code/containers/plotting.sif ...`; image docker://python, not neurodesk-freesurfer",
+     "sha256": null
+    }
+   ],
+   "source": "probe:entry-point+judgement",
+   "flags": [
+    "probe-overridden",
+    "mapping-questioned"
+   ]
+  },
+  "stamped-checklist:must/009": {
+   "value": "yes",
+   "reason": "No host-specific absolute paths in tracked text files.",
+   "status": "met",
+   "evidence": [
+    {
+     "uri": "probe:no-abs-paths",
+     "description": "scanned 17 tracked paths, 0 hits",
+     "sha256": null
+    }
+   ],
+   "source": "probe:no-abs-paths",
+   "flags": []
+  },
+  "stamped-checklist:must/010": {
+   "value": "yes",
+   "reason": "matplotlib==3.9.2, pandas==2.2.3 pinned in requirements.lock; no tracked script relies on a pre-installed tool beyond python3/make (see must/011).",
+   "status": "met",
+   "evidence": [
+    {
+     "uri": "requirements.lock",
+     "description": "pinned versions",
+     "sha256": null
+    }
+   ],
+   "source": "probe:env-spec-tracked",
+   "flags": []
+  },
+  "stamped-checklist:must/011": {
+   "value": "no",
+   "reason": "Host needs make, python3, git submodules, and apptainer for the recorded route; README documents none of it and says 'no local installation is needed', which is false for the Makefile route.",
+   "status": "partial",
+   "evidence": [
+    {
+     "uri": "README.md#L14",
+     "description": "claims every step runs in neurodesk-freesurfer from ///repronim/containers; `make all`, CI and run records 'all go through it'",
+     "sha256": null
+    },
+    {
+     "uri": "Makefile",
+     "description": "rules call host `python3` directly; no container invoked",
+     "sha256": null
+    },
+    {
+     "uri": "git:5d7aaa0,021ff4d",
+     "description": "run records cmd: `apptainer exec code/containers/plotting.sif ...`; image docker://python, not neurodesk-freesurfer",
+     "sha256": null
+    },
+    {
+     "uri": "probe:platform-assumptions",
+     "description": "found no platform-specific commands; cannot judge documentation",
+     "sha256": null
+    }
+   ],
+   "source": "judgement",
+   "flags": []
+  },
+  "stamped-checklist:must/012": {
+   "value": "no",
+   "reason": "No list of system requirements (python3 version, make, apptainer, network for the submodule) in README or specs; the only environment statement is the container claim, which the tree does not support.",
+   "status": "partial",
+   "evidence": [
+    {
+     "uri": "README.md#L14",
+     "description": "claims every step runs in neurodesk-freesurfer from ///repronim/containers; `make all`, CI and run records 'all go through it'",
+     "sha256": null
+    },
+    {
+     "uri": "requirements.lock",
+     "description": "python packages only",
+     "sha256": null
+    },
+    {
+     "uri": "code/containers.json",
+     "description": "only registered container is 'plotting' (docker://python@sha256:3e0f...); no neurodesk-freesurfer anywhere in tracked tree (grep)",
+     "sha256": null
+    }
+   ],
+   "source": "judgement",
+   "flags": []
+  },
+  "stamped-checklist:must/013": {
+   "value": "yes",
+   "reason": "Tracked: requirements.lock.",
+   "status": "met",
+   "evidence": [
+    {
+     "uri": "requirements.lock",
+     "description": "pinned environment specification",
+     "sha256": null
+    }
+   ],
+   "source": "probe:env-spec-tracked",
+   "flags": []
+  },
+  "stamped-checklist:must/014": {
+   "value": "no",
+   "reason": "Declared in requirements.lock header (`uv pip compile code/requirements.in`) but the lock was added once in 7a2612d and never updated: declared, no instance in history.",
+   "status": "partial",
+   "evidence": [
+    {
+     "uri": "requirements.lock#L1",
+     "description": "pinned with uv pip compile",
+     "sha256": null
+    },
+    {
+     "uri": "git log -- requirements.lock",
+     "description": "single commit 7a2612d",
+     "sha256": null
+    }
+   ],
+   "source": "judgement",
+   "flags": [
+    "upstream-duplicate"
+   ]
+  },
+  "stamped-checklist:must/015": {
+   "value": "yes",
+   "reason": "2 run record(s) reference a pinned image or lockfile, and no ':latest' reference is tracked.",
+   "status": "met",
+   "evidence": [
+    {
+     "uri": "commit:5d7aaa0",
+     "description": "container: apptainer exec code/containers/plotting.sif python3 code/plot_volumes.py --input results/volumes.tsv --output figures/brain-volume-vs-age.png",
+     "sha256": null
+    },
+    {
+     "uri": "commit:021ff4d",
+     "description": "container: apptainer exec code/containers/plotting.sif python3 code/collect_volumes.py --input sourcedata/ds007116 --output results/volumes.tsv",
+     "sha256": null
+    }
+   ],
+   "source": "probe:run-env-linked",
+   "flags": []
+  },
+  "stamped-checklist:must/016": {
+   "value": "no",
+   "reason": "Remote origin https://github.com/con/stamped-eval-fixture-r0.git does not exist (ls-remote asks for credentials, HTTP 404): the tracked specs are not published, and the image is a placeholder.",
+   "status": "unmet",
+   "evidence": [
+    {
+     "uri": "cmd: curl -s -o /dev/null -w '%{http_code}' https://github.com/con/stamped-eval-fixture-r0",
+     "description": "404",
+     "sha256": null
+    },
+    {
+     "uri": "git remote -v",
+     "description": "origin url",
+     "sha256": null
+    },
+    {
+     "uri": "FIXTURE.md",
+     "description": "self-report; confirmed independently",
+     "sha256": null
+    }
+   ],
+   "source": "probe:env-spec-tracked+judgement",
+   "flags": [
+    "probe-overridden"
+   ]
+  },
+  "stamped-checklist:must/017": {
+   "value": "no",
+   "reason": "README tells how to build a venv from requirements.lock, but its container instructions point to neurodesk-freesurfer in ///repronim/containers, which the tree does not use; no steps to obtain plotting.sif.",
+   "status": "partial",
+   "evidence": [
+    {
+     "uri": "README.md#L14",
+     "description": "claims every step runs in neurodesk-freesurfer from ///repronim/containers; `make all`, CI and run records 'all go through it'",
+     "sha256": null
+    },
+    {
+     "uri": "README.md#L8-L10",
+     "description": "venv install works",
+     "sha256": null
+    },
+    {
+     "uri": "code/containers.json",
+     "description": "only registered container is 'plotting' (docker://python@sha256:3e0f...); no neurodesk-freesurfer anywhere in tracked tree (grep)",
+     "sha256": null
+    }
+   ],
+   "source": "judgement",
+   "flags": []
+  },
+  "stamped-checklist:should/001": {
+   "value": "yes",
+   "reason": "Git alone covers code, text, the container placeholder and the input (a git submodule); no second version-control system is used.",
+   "status": "met",
+   "evidence": [
+    {
+     "uri": ".gitmodules",
+     "description": "git submodule",
+     "sha256": null
+    },
+    {
+     "uri": "git ls-files",
+     "description": "all in one git repo",
+     "sha256": null
+    }
+   ],
+   "source": "judgement",
+   "flags": []
+  },
+  "stamped-checklist:should/002": {
+   "value": "no",
+   "reason": "CI runs `make all` and diffs outputs, but that is not the documented container route nor what the records ran, and its submodule checkout cannot succeed (pinned commit absent upstream).",
+   "status": "partial",
+   "evidence": [
+    {
+     "uri": ".github/workflows/rerun.yml",
+     "description": "pip install -r requirements.lock; make all; container only checked for existence/digest, never used",
+     "sha256": null
+    },
+    {
+     "uri": "README.md#L14",
+     "description": "claims every step runs in neurodesk-freesurfer from ///repronim/containers; `make all`, CI and run records 'all go through it'",
+     "sha256": null
+    },
+    {
+     "uri": "git:5d7aaa0,021ff4d",
+     "description": "run records cmd: `apptainer exec code/containers/plotting.sif ...`; image docker://python, not neurodesk-freesurfer",
+     "sha256": null
+    }
+   ],
+   "source": "probe:ci-present+judgement",
+   "flags": [
+    "probe-overridden"
+   ]
+  },
+  "stamped-checklist:should/003": {
+   "value": "yes",
+   "reason": "4 kinds of component live in distinct places: inputs in sourcedata, sourcedata/ds007116; code in Makefile, code; derived in figures, results; environment in code/containers.json, requirements.lock",
+   "status": "met",
+   "evidence": [
+    {
+     "uri": "sourcedata",
+     "description": "inputs module",
+     "sha256": null
+    },
+    {
+     "uri": "sourcedata/ds007116",
+     "description": "inputs module",
+     "sha256": null
+    },
+    {
+     "uri": "Makefile",
+     "description": "code module",
+     "sha256": null
+    },
+    {
+     "uri": "code",
+     "description": "code module",
+     "sha256": null
+    },
+    {
+     "uri": "figures",
+     "description": "derived module",
+     "sha256": null
+    },
+    {
+     "uri": "results",
+     "description": "derived module",
+     "sha256": null
+    },
+    {
+     "uri": "code/containers.json",
+     "description": "environment module",
+     "sha256": null
+    },
+    {
+     "uri": "requirements.lock",
+     "description": "environment module",
+     "sha256": null
+    }
+   ],
+   "source": "probe:modules-separated",
+   "flags": []
+  },
+  "stamped-checklist:should/009": {
+   "value": null,
+   "reason": "N/A: empty subject; the only input (OpenNeuro ds007116) and all software are public, no restricted component exists.",
+   "status": "not-applicable",
+   "evidence": [],
+   "source": "judgement",
+   "flags": []
+  },
+  "stamped-checklist:should/004": {
+   "value": "no",
+   "reason": "CI is designed as a fresh ubuntu-latest run of make all, but it checks out a submodule commit that does not exist and runs host python, not the container; no run is recorded.",
+   "status": "partial",
+   "evidence": [
+    {
+     "uri": ".github/workflows/rerun.yml",
+     "description": "pip install -r requirements.lock; make all; container only checked for existence/digest, never used",
+     "sha256": null
+    },
+    {
+     "uri": ".gitmodules",
+     "description": "unfetchable pin",
+     "sha256": null
+    }
+   ],
+   "source": "judgement",
+   "flags": []
+  },
+  "stamped-checklist:should/005": {
+   "value": "no",
+   "reason": "Run records execute each step as a fresh `apptainer exec` of the image, but the Makefile/CI route reuses host python3; the disposable-per-run claim holds only for the recorded route.",
+   "status": "partial",
+   "evidence": [
+    {
+     "uri": "git:5d7aaa0,021ff4d",
+     "description": "run records cmd: `apptainer exec code/containers/plotting.sif ...`; image docker://python, not neurodesk-freesurfer",
+     "sha256": null
+    },
+    {
+     "uri": "Makefile",
+     "description": "rules call host `python3` directly; no container invoked",
+     "sha256": null
+    }
+   ],
+   "source": "judgement",
+   "flags": []
+  },
+  "stamped-checklist:should/006": {
+   "value": "no",
+   "reason": "CI echoes the digest and tests plotting.sif exists, but runs make all in a pip environment; the environment the results came from (container) is never reconstituted.",
+   "status": "partial",
+   "evidence": [
+    {
+     "uri": ".github/workflows/rerun.yml",
+     "description": "pip install -r requirements.lock; make all; container only checked for existence/digest, never used",
+     "sha256": null
+    },
+    {
+     "uri": "git:5d7aaa0,021ff4d",
+     "description": "run records cmd: `apptainer exec code/containers/plotting.sif ...`; image docker://python, not neurodesk-freesurfer",
+     "sha256": null
+    }
+   ],
+   "source": "probe:ci-present+judgement",
+   "flags": [
+    "probe-overridden",
+    "mapping-questioned"
+   ]
+  },
+  "stamped-checklist:should/007": {
+   "value": "no",
+   "reason": "Image is not archived: code/containers/plotting.sif is a 28-byte placeholder; only the digest is referenced. Ship the image via git-annex or publish it.",
+   "status": "unmet",
+   "evidence": [
+    {
+     "uri": "code/containers/plotting.sif.README",
+     "description": "image not shipped",
+     "sha256": null
+    },
+    {
+     "uri": "git ls-tree -r -l HEAD code/containers",
+     "description": "28 bytes",
+     "sha256": null
+    }
+   ],
+   "source": "judgement",
+   "flags": []
+  },
+  "stamped-checklist:should/008": {
+   "value": "no",
+   "reason": "Declared in requirements.lock header (`uv pip compile code/requirements.in`) but the lock was added once in 7a2612d and never updated: declared, no instance in history.",
+   "status": "partial",
+   "evidence": [
+    {
+     "uri": "requirements.lock#L1",
+     "description": "pinned with uv pip compile",
+     "sha256": null
+    },
+    {
+     "uri": "git log -- requirements.lock",
+     "description": "single commit 7a2612d",
+     "sha256": null
+    }
+   ],
+   "source": "judgement",
+   "flags": [
+    "upstream-duplicate"
+   ]
+  },
+  "stamped-checklist:may/001": {
+   "value": "yes",
+   "reason": "sourcedata/ds007116 is linked as a git submodule (.gitmodules); structural answer only, resolvability is must/002.",
+   "status": "met",
+   "evidence": [
+    {
+     "uri": ".gitmodules",
+     "description": "sourcedata/ds007116: https://github.com/OpenNeuroDatasets/ds007116.git \u2014 url answers, but commit 84570256a is not fetchable from it: fatal: remote error: upload-pack: not our ref 84570256a2a2c84edaed247fee15a3a90b7039ed",
+     "sha256": null
+    }
+   ],
+   "source": "probe:subdatasets-resolvable+judgement",
+   "flags": [
+    "mapping-questioned"
+   ]
+  },
+  "stamped-checklist:may/002": {
+   "value": "yes",
+   "reason": "README layout table and docs/README.md explain how input, steps, container and products relate and recombine (note: docs/README.md also repeats the false container claim).",
+   "status": "met",
+   "evidence": [
+    {
+     "uri": "README.md#L17-L25",
+     "description": "layout table",
+     "sha256": null
+    },
+    {
+     "uri": "docs/README.md",
+     "description": "component relations",
+     "sha256": null
+    }
+   ],
+   "source": "judgement",
+   "flags": []
+  },
+  "stamped-checklist:may/003": {
+   "value": "yes",
+   "reason": "collect_volumes.py is the only step knowing the input layout; plot reads only results/volumes.tsv; Makefile couples by file names, so steps and input can be swapped independently.",
+   "status": "met",
+   "evidence": [
+    {
+     "uri": "docs/README.md",
+     "description": "points 1-3",
+     "sha256": null
+    },
+    {
+     "uri": "Makefile",
+     "description": "file-level coupling",
+     "sha256": null
+    }
+   ],
+   "source": "judgement",
+   "flags": []
+  },
+  "stamped-checklist:may/004": {
+   "value": "yes",
+   "reason": "Composition: git submodule for the input and a Makefile joining steps through files; the image pinned by digest in containers.json.",
+   "status": "met",
+   "evidence": [
+    {
+     "uri": ".gitmodules",
+     "description": "submodule",
+     "sha256": null
+    },
+    {
+     "uri": "Makefile",
+     "description": "composition",
+     "sha256": null
+    }
+   ],
+   "source": "judgement",
+   "flags": []
+  },
+  "stamped-checklist:may/005": {
+   "value": "yes",
+   "reason": "docs/README.md is a navigation guide (where things are, how to re-run one step) and README has a layout table.",
+   "status": "met",
+   "evidence": [
+    {
+     "uri": "docs/README.md",
+     "description": "navigation notes",
+     "sha256": null
+    }
+   ],
+   "source": "judgement",
+   "flags": []
+  }
+ },
+ "schema_version": "0.2.0",
+ "principles_version": "0.2.0",
+ "checklist_source": {
+  "repo": "https://github.com/stamped-principles/stamped-checklist-schema",
+  "tag": "v0.3.1",
+  "commit": "af259bad237fa57b856417db8dba45a1b283a527"
+ },
+ "extra_items": [
+  {
+   "key": "clone-weight",
+   "status": "met",
+   "reason": "No text blob in git exceeds 10 MiB.",
+   "evidence": [
+    {
+     "uri": "git ls-tree -r -l HEAD",
+     "description": "largest text blob under 10485760 bytes",
+     "sha256": null
+    }
+   ]
+  },
+  {
+   "key": "inputs-untouched",
+   "status": "met",
+   "reason": "All 1 linked module(s) are clean and at the commit the superdataset records.",
+   "evidence": [
+    {
+     "uri": "git submodule status",
+     "description": "no '+' or 'U' flags",
+     "sha256": null
+    }
+   ]
+  },
+  {
+   "key": "license-declared",
+   "status": "met",
+   "reason": "Licence declared in LICENSE.",
+   "evidence": [
+    {
+     "uri": "LICENSE",
+     "description": "licence declaration",
+     "sha256": null
+    }
+   ]
+  },
+  {
+   "key": "readme-container-claim-absent",
+   "status": "unmet",
+   "reason": "README.md#L14 and docs/README.md#4 say every step runs in neurodesk-freesurfer from ///repronim/containers; no such container is registered or used by Makefile, CI or records.",
+   "evidence": [
+    {
+     "uri": "README.md#L14",
+     "description": "claims every step runs in neurodesk-freesurfer from ///repronim/containers; `make all`, CI and run records 'all go through it'",
+     "sha256": null
+    },
+    {
+     "uri": "code/containers.json",
+     "description": "only registered container is 'plotting' (docker://python@sha256:3e0f...); no neurodesk-freesurfer anywhere in tracked tree (grep)",
+     "sha256": null
+    },
+    {
+     "uri": "Makefile",
+     "description": "rules call host `python3` directly; no container invoked",
+     "sha256": null
+    },
+    {
+     "uri": ".github/workflows/rerun.yml",
+     "description": "pip install -r requirements.lock; make all; container only checked for existence/digest, never used",
+     "sha256": null
+    },
+    {
+     "uri": "git:5d7aaa0,021ff4d",
+     "description": "run records cmd: `apptainer exec code/containers/plotting.sif ...`; image docker://python, not neurodesk-freesurfer",
+     "sha256": null
+    }
+   ]
+  },
+  {
+   "key": "object-self-disclosure",
+   "status": "met",
+   "reason": "FIXTURE.md discloses the unfetchable pin and unpublished remote; both re-derived. It does not mention the README container claim, nor the nature of the placeholder image.",
+   "evidence": []
+  }
+ ],
+ "object": {
+  "url": "https://github.com/con/stamped-eval-fixture-r0.git (unpublished; local path object/)",
+  "commit": "3df77eefb1865f5f4dfd7795ffd135c54a048d6f",
+  "captured_at": "2026-10-15T03:13:40+00:00",
+  "kind": "study"
+ },
+ "assessor": {
+  "skill": "assess-alignment-with-stamped-principles",
+  "version": "0.1.0",
+  "harness": "claude-code (Agent SDK)",
+  "model": "claude-sonnet-5-5",
+  "date": "2026-10-15",
+  "dependencies": [
+   "stamped-conventions@0.1.0"
+  ]
+ },
+ "scope": "Committed state at 3df77ee. ASSUMPTION (user unavailable): goals = reproduce a brain-volume-vs-age study from ds007116 FreeSurfer tables; kind = study (re-derivation). --check-remote run. Container image not pulled; fresh_rerun not run; gh unauthenticated, no tracker read."
+}

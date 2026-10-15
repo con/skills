@@ -39,8 +39,10 @@ HERE = pathlib.Path(__file__).resolve().parent
 EVALS = HERE.parent
 sys.path.insert(0, str(EVALS / "harness"))
 sys.path.insert(0, str(EVALS / "mutants"))
+sys.path.insert(0, str(EVALS / "fixtures"))
 
 from calibrate import FIXTURE, MUTATE, _probe  # noqa: E402
+from make_r0_object import SIMULATED  # noqa: E402
 from mutate import MUTANTS  # noqa: E402
 
 # §10.1: ">= 90 % mutant detection per mechanically checkable MUST item, and
@@ -107,12 +109,17 @@ def test_clean_object_is_not_accused(clean_answers, eval_bag):
     baseline, extras = clean_answers
     accused = {i: a["status"] for i, a in baseline.items() if a["status"] in {"unmet", "partial"}}
     accused.update({k: v["status"] for k, v in extras.items() if v["status"] in {"unmet", "partial"}})
+    # What the fixture declares about itself is a correct verdict (SIMULATED,
+    # in the fixture builder): counted, reported, and not called false.
+    declared = {i: s for i, s in accused.items() if i in SIMULATED}
+    accused = {i: s for i, s in accused.items() if i not in SIMULATED}
     eval_bag.mutant = "clean"
     eval_bag.model = "scripted probes"
     eval_bag.items = []
     eval_bag.detected = not accused
     eval_bag.answered = len(baseline)
     eval_bag.false_accusations = accused
+    eval_bag.declared_by_the_fixture = declared
     assert not accused, f"clean fixture accused on {accused}"
 
 
