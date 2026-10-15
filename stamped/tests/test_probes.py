@@ -23,6 +23,7 @@ REPO = pathlib.Path(__file__).resolve().parents[3]
 EVALS = REPO / "evals" / "stamped"
 ASSESS = REPO / "assess-alignment-with-stamped-principles"
 CONVENTIONS = REPO / "stamped-conventions"
+ENCODE = CONVENTIONS / "scripts" / "encode_response.py"
 
 sys.path.insert(0, str(ASSESS / "scripts"))
 sys.path.insert(0, str(CONVENTIONS / "scripts"))
@@ -647,3 +648,98 @@ def test_r1_oracle_prefers_a_volume_over_a_voxel_count(tmp_path):
     result = _run_r1_oracle(root, tmp_path / "ds")
     assert result["product"]["volume_column"] == "brain_volume_mm3", result["product"]
     assert result["status"] == "met", result["reason"]
+
+
+def test_run_recorded_propagates_a_failure(tmp_path):
+    """`if datalad …; then` reports the *if*'s status, which is always 0.
+
+    The wrapper swallowed every failure for one commit because of that, which
+    is worse than the bug it was added to report.
+    """
+    root = tmp_path / "wrapper-status"
+    env = _guarded_repo(root)
+    done = subprocess.run(["sh", "./run-recorded.sh", "-m", "fail", "--", "sh", "-c", "exit 3"],
+                          cwd=root, capture_output=True, text=True, env=env)
+    assert done.returncode != 0, done.stdout + done.stderr
+
+
+def test_guard_clears_a_marker_whose_run_is_gone(tmp_path):
+    """A killed run must not lock the repository out of committing.
+
+    SIGKILL skips the wrapper's cleanup trap, and the marker it leaves then
+    refuses every later commit — the guard inflicting the hazard it exists to
+    prevent, which an agent hit for real.
+    """
+    root = tmp_path / "stale"
+    env = _guarded_repo(root)
+    marker = root / ".git" / "datalad-run-in-flight"
+
+    # A pid that cannot be running: 0 is never a user process here.
+    marker.write_text("2147483646\n")
+    (root / "later.txt").write_text("work after the crash\n")
+    subprocess.run(["git", "add", "later.txt"], cwd=root, check=True, env=env)
+    done = subprocess.run(["git", "commit", "-qm", "after a killed run"],
+                          cwd=root, capture_output=True, text=True, env=env)
+    assert done.returncode == 0, done.stdout + done.stderr
+    assert not marker.exists(), "the stale marker should have been removed"
+
+    # A live run still refuses: the marker names this very process.
+    marker.write_text(f"{os.getpid()}\n")
+    (root / "during.txt").write_text("work during a run\n")
+    subprocess.run(["git", "add", "during.txt"], cwd=root, check=True, env=env)
+    done = subprocess.run(["git", "commit", "-qm", "during a run"],
+                          cwd=root, capture_output=True, text=True, env=env)
+    assert done.returncode != 0
+    assert "in flight" in done.stdout + done.stderr
+
+
+def test_tmp_paths_do_not_cost_must_009(tmp_path, clean):
+    """`/tmp` is on every POSIX host, so it is not an assumption about *this* one.
+
+    A live run lost must/009 for `/tmp/` in a CI workflow. The path is still
+    worth reporting — it writes outside the object — but as a note.
+    """
+    target = tmp_path / "tmp-path"
+    shutil.copytree(clean, target, symlinks=True)
+    workflow = target / ".github" / "workflows" / "rerun.yml"
+    workflow.write_text(workflow.read_text() + "      - run: make all > /tmp/build.log\n")
+    env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@e.org",
+           "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@e.org"}
+    subprocess.run(["git", "add", "-A"], cwd=target, check=True, env=env)
+    subprocess.run(["git", "commit", "-qm", "log the build to /tmp"], cwd=target, check=True, env=env)
+
+    obj = Object(target)
+    result = REGISTRY["no-abs-paths"](obj)
+    assert result.status == "met", (result.status, result.reason)
+    assert "/tmp" in result.reason
+
+
+def test_encode_response_set_and_table(tmp_path):
+    """The two subcommands that exist because three runs hand-rolled them."""
+    response = tmp_path / "response.json"
+    subprocess.run([sys.executable, str(ENCODE), "template", "-o", str(response)],
+                   check=True, capture_output=True)
+    done = subprocess.run(
+        [sys.executable, str(ENCODE), "set", str(response), "--item", "must/011",
+         "--status", "met", "--source", "judgement",
+         "--reason", "no host assumptions beyond a POSIX shell and the tracked lockfile",
+         "--evidence", "README.md#requirements=the documented list"],
+        capture_output=True, text=True)
+    assert done.returncode == 0, done.stderr
+    answer = json.loads(response.read_text())["responses"]["stamped-checklist:must/011"]
+    assert answer["status"] == "met" and answer["source"] == "judgement"
+    assert answer["evidence"][0]["uri"] == "README.md#requirements"
+
+    # An unknown item is refused rather than written: a typo in an id would
+    # otherwise make the app reject the whole load.
+    done = subprocess.run(
+        [sys.executable, str(ENCODE), "set", str(response), "--item", "must/999",
+         "--status", "met", "--reason", "x"], capture_output=True, text=True)
+    assert done.returncode == 2 and "not an item" in done.stderr
+
+    out = subprocess.run([sys.executable, str(ENCODE), "table", str(response)],
+                         capture_output=True, text=True, check=True).stdout
+    assert out.startswith("| item | principles | status |")
+    assert "| must/011 | " in out and "judgement" in out
+    # MUST before SHOULD before MAY, as the report layout asks.
+    assert out.index("must/001") < out.index("should/001") < out.index("may/001")
