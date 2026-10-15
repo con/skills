@@ -1,0 +1,6 @@
+*.pyc
+__pycache__/
+
+# pytest-evals output, when the gate is run with an explicit --out-path here
+test-out/
+eval-out/
