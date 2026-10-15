@@ -198,12 +198,13 @@ def main(argv: list[str] | None = None) -> int:
             gitignore.write_text(existing + ".claude/\n")
 
     # The same host notes in every arm, with the one host-specific path filled
-    # in: a shared image cache next to the sandboxes, so the second arm to want
-    # a 516 MB container image does not download it again.
-    cache = args.workdir.resolve() / "apptainer-cache"
+    # in: a cache and temporary area for container images, one per run (arms
+    # run concurrently, and two apptainer processes populating one cache is a
+    # race) and outside the sandbox, so it does not dirty the object.
+    cache = args.workdir.resolve() / "cache" / run_id
     cache.mkdir(parents=True, exist_ok=True)
     notes = (EVALS / "conditions" / "host-notes.md").read_text()
-    (sandbox / "HOST-NOTES.md").write_text(notes.replace("$STAMPED_SHARED_CACHE", str(cache)))
+    (sandbox / "HOST-NOTES.md").write_text(notes.replace("$STAMPED_CACHE_DIR", str(cache)))
 
     task = prompt
     if args.condition == "skill-explicit":
