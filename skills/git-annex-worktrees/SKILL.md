@@ -1,6 +1,6 @@
 ---
 name: git-annex-worktrees
-description: Troubleshoot git-annex or DataLad failures in Git linked worktrees and their subdatasets. Use when either tool reports a missing repository, nonexistent working tree, or wrong path even though ordinary Git works; apply a command-local GIT_DIR and GIT_WORK_TREE workaround.
+description: Fix git-annex or DataLad path errors in linked worktrees and subdatasets using command-local GIT_DIR and GIT_WORK_TREE overrides.
 allowed-tools: Bash, Read
 user-invocable: true
 ---
