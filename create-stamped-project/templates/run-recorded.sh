@@ -19,6 +19,18 @@
 # Quote path lists. `-i "$FILES"` passes one argument under zsh, which does not
 # word-split unquoted variables, and `datalad run` then looks for a single file
 # with ten names in it. One run per subject, or `-i` repeated, or `xargs`.
+#
+# Many inputs: build the argument list, do not interpolate a string.
+#
+#   set -- -m 'collect 33 subjects'
+#   for s in $(cat code/batch-1.txt); do
+#       set -- "$@" -i "sourcedata/ds/$s/ses-1/anat"
+#   done
+#   ./code/run-recorded.sh "$@" -o results/batch-1.tsv -- \
+#       python3 code/collect.py --subjects code/batch-1.txt --output results/batch-1.tsv
+#
+# The subject list is a tracked file, so the record names it and a rerun reads
+# the same list.
 # Falls back to a plain recorded commit when datalad is absent, so the project
 # still records *something* rather than nothing.
 #

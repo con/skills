@@ -7,8 +7,12 @@ than another, and nothing here says anything about how to organise a project.
 
 - 32 CPU cores, ~1 TB RAM, **no GPU**; a few hundred GB free on this
   filesystem.
-- `datalad`, `git-annex` and `apptainer` are on `PATH`; `python3` has `nibabel`,
-  `numpy`, `pandas` and `matplotlib` available through `uv` if not directly.
+- `apptainer` is on `PATH`. `datalad`, `git-annex` and `uv` may or may not be,
+  depending on this host's current image: check, and install what you need
+  (`uv tool install datalad --with datalad-container --with git-annex`).
+- The system `python3` has **none** of `nibabel`, `numpy`, `pandas`,
+  `matplotlib`. `uv run --with nibabel --with matplotlib …` has them, and a
+  tracked lockfile is better than either.
 - **Network:** general HTTPS works, but `datasets.datalad.org` resolves and
   then refuses the connection from here, so the DataLad registry shortcuts
   (`///repronim/containers`, `///openneuro/dsXXXXXX`) cannot be cloned through

@@ -88,7 +88,9 @@ Record what it says, and fix what it finds.
 - Write the results into the README or a report: what was asked, what was done, what came out, and the caveats — including every revision from step 3.
 - Put the quick-and-dirty disclaimer in the README.
 - Run [`/assess-alignment-with-stamped-principles`](../assess-alignment-with-stamped-principles/SKILL.md) on the finished project, with its four files written **outside** the project (an uncommitted report would make the object fail must/004, and committing one changes what was assessed). Its report is **part of the deliverable**; say where it is.
+  If you are forbidden to write outside the working directory, put them in a directory the object *ignores* — a `.gitignore`d `assessment-out/` — which keeps the tree clean and the assessed state unchanged. Say which you did.
 - Fix every MUST failure it finds before declaring done — through [`align-with-stamped-principles`](../align-with-stamped-principles/SKILL.md) when the gap is in the harness.
+  **A failure you cannot fix from where you are** — no publishing target for must/016, no CI runner, no container registry — is not a reason to declare done anyway, and not a reason to stall: list it in the close-out as a known gap, with the one thing that would close it ("needs a remote to push to"), and say plainly that the project is incomplete on that item. The distinction is between a gap you chose and a gap you were handed, and only the second is acceptable unfixed.
 
 ## Never do
 
