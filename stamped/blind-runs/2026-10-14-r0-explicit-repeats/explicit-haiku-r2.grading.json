@@ -1,0 +1,739 @@
+{
+  "run": {
+    "object": "/home/yoh/proj/CON/skills/.git-meta/scratch/stamped/r0-round2/r0-freesurfer-plot--skill-explicit--haiku--r2",
+    "use_case": "r0-freesurfer-plot",
+    "condition": "skill-explicit",
+    "model": "haiku",
+    "skill_commit": "unknown",
+    "repeat": 2,
+    "graded_at": "2026-10-15T03:11:37+00:00",
+    "checklist_version": "0.3.1"
+  },
+  "t1": {
+    "items": {
+      "stamped-checklist:should/002": {
+        "status": "unmet",
+        "probe": "ci-present",
+        "reason": "No CI configuration: nothing checks that the instructions still work."
+      },
+      "stamped-checklist:should/006": {
+        "status": "unmet",
+        "probe": "ci-present",
+        "reason": "No CI configuration: the environment behind the results is never rebuilt."
+      },
+      "stamped-checklist:must/006": {
+        "status": "unmet",
+        "probe": "run-env-linked",
+        "reason": "None of the 4 run record(s) name a container or a lockfile."
+      },
+      "stamped-checklist:must/007": {
+        "status": "met",
+        "probe": "entry-point",
+        "reason": "README.md has an install/usage/reproduce section."
+      },
+      "stamped-checklist:must/008": {
+        "status": "met",
+        "probe": "entry-point",
+        "reason": "Starting point present: code/collect_volumes.py."
+      },
+      "stamped-checklist:must/010": {
+        "status": "met",
+        "probe": "env-spec-tracked",
+        "reason": "Dependencies are pinned in code/requirements.lock, and no tracked script expects a tool to be present already."
+      },
+      "stamped-checklist:must/013": {
+        "status": "met",
+        "probe": "env-spec-tracked",
+        "reason": "Tracked: code/requirements.lock."
+      },
+      "stamped-checklist:must/016": {
+        "status": "partial",
+        "probe": "env-spec-tracked",
+        "reason": "The specification is tracked, but this checkout records no published remote, so there is no evidence anyone else can obtain it."
+      },
+      "stamped-checklist:must/005": {
+        "status": "met",
+        "probe": "large-in-annex",
+        "reason": "git-annex carries the binary content (1 pointer(s) tracked) and no binary blob over 10 MiB is in git."
+      },
+      "stamped-checklist:should/003": {
+        "status": "met",
+        "probe": "modules-separated",
+        "reason": "4 kinds of component live in distinct places: inputs in sourcedata, sourcedata/ds007116; code in code; derived in figures, results; environment in code/requirements.lock"
+      },
+      "stamped-checklist:must/009": {
+        "status": "met",
+        "probe": "no-abs-paths",
+        "reason": "No host-specific absolute paths in tracked text files."
+      },
+      "stamped-checklist:must/011": {
+        "status": "not-checked",
+        "probe": "platform-assumptions",
+        "reason": "No platform-specific package manager, BSD/GNU-only flag or scheduler command in tracked text \u2014 all a command scan can settle. Whether the documented route needs a mount, a host install, hardware or a service is a reading."
+      },
+      "stamped-checklist:must/012": {
+        "status": "not-checked",
+        "probe": "platform-assumptions",
+        "reason": "No platform-specific package manager, BSD/GNU-only flag or scheduler command in tracked text \u2014 all a command scan can settle. Whether the documented route needs a mount, a host install, hardware or a service is a reading."
+      },
+      "stamped-checklist:must/015": {
+        "status": "not-checked",
+        "probe": "run-env-linked",
+        "reason": "Nothing names an environment to check for a pin."
+      },
+      "stamped-checklist:must/002": {
+        "status": "met",
+        "probe": "subdatasets-resolvable",
+        "reason": "All 1 linked module(s) carry urls that resolve from elsewhere: sourcedata/ds007116"
+      },
+      "stamped-checklist:may/001": {
+        "status": "met",
+        "probe": "subdatasets-resolvable",
+        "reason": "1 external component(s) are linked as modules: sourcedata/ds007116"
+      },
+      "stamped-checklist:must/004": {
+        "status": "met",
+        "probe": "tree-clean",
+        "reason": "git tracks 12 text, code and configuration file(s), and `git status` is empty including submodules: the committed state is the whole state."
+      }
+    },
+    "probes": [
+      {
+        "probe": "ci-present",
+        "status": "unmet",
+        "items": [
+          "stamped-checklist:should/002",
+          "stamped-checklist:should/006"
+        ],
+        "reason": "No CI configuration: nothing checks that the instructions still work.",
+        "evidence": [
+          {
+            "uri": "probe:ci-present",
+            "description": "no tracked .github/workflows/, .gitlab-ci.yml, .circleci/, .forgejo/workflows/, .gitea/workflows/ in 19 tracked paths",
+            "sha256": null
+          }
+        ],
+        "details": {
+          "configs": []
+        },
+        "item_status": {
+          "stamped-checklist:should/002": "unmet",
+          "stamped-checklist:should/006": "unmet"
+        },
+        "item_reason": {
+          "stamped-checklist:should/002": "No CI configuration: nothing checks that the instructions still work.",
+          "stamped-checklist:should/006": "No CI configuration: the environment behind the results is never rebuilt."
+        }
+      },
+      {
+        "probe": "clone-weight",
+        "status": "met",
+        "items": [],
+        "reason": "No text blob in git exceeds 10 MiB.",
+        "evidence": [
+          {
+            "uri": "git ls-tree -r -l HEAD",
+            "description": "largest text blob under 10485760 bytes",
+            "sha256": null
+          }
+        ],
+        "details": {},
+        "item_status": {},
+        "item_reason": {}
+      },
+      {
+        "probe": "derived-have-records",
+        "status": "met",
+        "items": [
+          "stamped-checklist:must/006"
+        ],
+        "reason": "All 3 derived file(s) trace to a re-executable record (4 run record(s), workflows: none).",
+        "evidence": [
+          {
+            "uri": "figures/brain_volume_vs_age.png",
+            "description": "run record 1b5dc3d",
+            "sha256": null
+          },
+          {
+            "uri": "results/pilot_sub-19861.tsv",
+            "description": "run record c7a8dda",
+            "sha256": null
+          },
+          {
+            "uri": "results/volumes_per_session.tsv",
+            "description": "run record a66b912",
+            "sha256": null
+          }
+        ],
+        "details": {
+          "candidates": 3,
+          "covered": 3,
+          "uncovered": [],
+          "run_records": 4,
+          "workflow_sources": []
+        },
+        "item_status": {
+          "stamped-checklist:must/006": "met"
+        },
+        "item_reason": {
+          "stamped-checklist:must/006": "All 3 derived file(s) trace to a re-executable record (4 run record(s), workflows: none)."
+        }
+      },
+      {
+        "probe": "entry-point",
+        "status": "met",
+        "items": [
+          "stamped-checklist:must/007",
+          "stamped-checklist:must/008"
+        ],
+        "reason": "must/007 met: README.md has an install/usage/reproduce section. must/008 met: Starting point present: code/collect_volumes.py.",
+        "evidence": [
+          {
+            "uri": "README.md",
+            "description": "instructions",
+            "sha256": null
+          },
+          {
+            "uri": "code/collect_volumes.py",
+            "description": "entry point named in the instructions and present",
+            "sha256": null
+          },
+          {
+            "uri": "code/plot_volume_age.py",
+            "description": "entry point named in the instructions and present",
+            "sha256": null
+          },
+          {
+            "uri": "code/preflight.sh",
+            "description": "entry point named in the instructions and present",
+            "sha256": null
+          },
+          {
+            "uri": "code/run-recorded.sh",
+            "description": "entry point named in the instructions and present",
+            "sha256": null
+          }
+        ],
+        "details": {
+          "readmes": [
+            "README.md"
+          ],
+          "makefiles": [],
+          "named": [
+            "code/collect_volumes.py",
+            "code/plot_volume_age.py",
+            "code/preflight.sh",
+            "code/run-recorded.sh"
+          ],
+          "targets": [],
+          "workflow": [],
+          "has_section": true,
+          "documented_targets": [],
+          "missing_targets": []
+        },
+        "item_status": {
+          "stamped-checklist:must/007": "met",
+          "stamped-checklist:must/008": "met"
+        },
+        "item_reason": {
+          "stamped-checklist:must/007": "README.md has an install/usage/reproduce section.",
+          "stamped-checklist:must/008": "Starting point present: code/collect_volumes.py."
+        }
+      },
+      {
+        "probe": "env-spec-tracked",
+        "status": "partial",
+        "items": [
+          "stamped-checklist:must/010",
+          "stamped-checklist:must/013",
+          "stamped-checklist:must/016"
+        ],
+        "reason": "must/010 met: Dependencies are pinned in code/requirements.lock, and no tracked script expects a tool to be present already. must/013 met. must/016 partial.",
+        "evidence": [
+          {
+            "uri": "code/requirements.lock",
+            "description": "pinned environment specification",
+            "sha256": null
+          }
+        ],
+        "details": {
+          "specs": {
+            "code/requirements.lock": "pinned"
+          },
+          "uninstalled_modules": [],
+          "preconditions": [],
+          "remote": null
+        },
+        "item_status": {
+          "stamped-checklist:must/010": "met",
+          "stamped-checklist:must/013": "met",
+          "stamped-checklist:must/016": "partial"
+        },
+        "item_reason": {
+          "stamped-checklist:must/010": "Dependencies are pinned in code/requirements.lock, and no tracked script expects a tool to be present already.",
+          "stamped-checklist:must/013": "Tracked: code/requirements.lock.",
+          "stamped-checklist:must/016": "The specification is tracked, but this checkout records no published remote, so there is no evidence anyone else can obtain it."
+        }
+      },
+      {
+        "probe": "inputs-untouched",
+        "status": "met",
+        "items": [],
+        "reason": "All 1 linked module(s) are clean and at the commit the superdataset records.",
+        "evidence": [
+          {
+            "uri": "git submodule status",
+            "description": "no '+' or 'U' flags",
+            "sha256": null
+          }
+        ],
+        "details": {},
+        "item_status": {},
+        "item_reason": {}
+      },
+      {
+        "probe": "large-in-annex",
+        "status": "met",
+        "items": [
+          "stamped-checklist:must/005"
+        ],
+        "reason": "git-annex carries the binary content (1 pointer(s) tracked) and no binary blob over 10 MiB is in git.",
+        "evidence": [
+          {
+            "uri": "git ls-tree -r -l HEAD",
+            "description": "no binary blob over 10485760 bytes",
+            "sha256": null
+          },
+          {
+            "uri": ".datalad/config",
+            "description": "git-annex in use for large content",
+            "sha256": null
+          }
+        ],
+        "details": {
+          "mechanism": "git-annex",
+          "annex_pointers": 1,
+          "large_binary": []
+        },
+        "item_status": {
+          "stamped-checklist:must/005": "met"
+        },
+        "item_reason": {
+          "stamped-checklist:must/005": "git-annex carries the binary content (1 pointer(s) tracked) and no binary blob over 10 MiB is in git."
+        }
+      },
+      {
+        "probe": "license-declared",
+        "status": "unmet",
+        "items": [],
+        "reason": "No LICENSE, LICENSES/, REUSE.toml or BIDS License field: reuse terms are unstated.",
+        "evidence": [
+          {
+            "uri": "probe:license-declared",
+            "description": "no licence file among 19 tracked paths, and no License field in any dataset_description.json",
+            "sha256": null
+          }
+        ],
+        "details": {},
+        "item_status": {},
+        "item_reason": {}
+      },
+      {
+        "probe": "modules-separated",
+        "status": "met",
+        "items": [
+          "stamped-checklist:should/003"
+        ],
+        "reason": "4 kinds of component live in distinct places: inputs in sourcedata, sourcedata/ds007116; code in code; derived in figures, results; environment in code/requirements.lock",
+        "evidence": [
+          {
+            "uri": "sourcedata",
+            "description": "inputs module",
+            "sha256": null
+          },
+          {
+            "uri": "sourcedata/ds007116",
+            "description": "inputs module",
+            "sha256": null
+          },
+          {
+            "uri": "code",
+            "description": "code module",
+            "sha256": null
+          },
+          {
+            "uri": "figures",
+            "description": "derived module",
+            "sha256": null
+          },
+          {
+            "uri": "results",
+            "description": "derived module",
+            "sha256": null
+          },
+          {
+            "uri": "code/requirements.lock",
+            "description": "environment module",
+            "sha256": null
+          }
+        ],
+        "details": {
+          "found": {
+            "inputs": [
+              "sourcedata",
+              "sourcedata/ds007116"
+            ],
+            "code": [
+              "code"
+            ],
+            "derived": [
+              "figures",
+              "results"
+            ],
+            "environment": [
+              "code/requirements.lock"
+            ]
+          }
+        },
+        "item_status": {
+          "stamped-checklist:should/003": "met"
+        },
+        "item_reason": {
+          "stamped-checklist:should/003": "4 kinds of component live in distinct places: inputs in sourcedata, sourcedata/ds007116; code in code; derived in figures, results; environment in code/requirements.lock"
+        }
+      },
+      {
+        "probe": "no-abs-paths",
+        "status": "met",
+        "items": [
+          "stamped-checklist:must/009"
+        ],
+        "reason": "No host-specific absolute paths in tracked text files.",
+        "evidence": [
+          {
+            "uri": "probe:no-abs-paths",
+            "description": "scanned 19 tracked paths, 0 /tmp hit(s), 0 host-specific",
+            "sha256": null
+          }
+        ],
+        "details": {
+          "tmp_hits": []
+        },
+        "item_status": {
+          "stamped-checklist:must/009": "met"
+        },
+        "item_reason": {
+          "stamped-checklist:must/009": "No host-specific absolute paths in tracked text files."
+        }
+      },
+      {
+        "probe": "platform-assumptions",
+        "status": "not-checked",
+        "items": [
+          "stamped-checklist:must/011",
+          "stamped-checklist:must/012"
+        ],
+        "reason": "No platform-specific package manager, BSD/GNU-only flag or scheduler command in tracked text \u2014 all a command scan can settle. Whether the documented route needs a mount, a host install, hardware or a service is a reading.",
+        "evidence": [
+          {
+            "uri": "probe:platform-assumptions",
+            "description": "scanned 19 tracked paths for 20 platform-specific commands, 0 hits",
+            "sha256": null
+          }
+        ],
+        "details": {
+          "hits": []
+        },
+        "item_status": {
+          "stamped-checklist:must/011": "not-checked",
+          "stamped-checklist:must/012": "not-checked"
+        },
+        "item_reason": {
+          "stamped-checklist:must/011": "No platform-specific package manager, BSD/GNU-only flag or scheduler command in tracked text \u2014 all a command scan can settle. Whether the documented route needs a mount, a host install, hardware or a service is a reading.",
+          "stamped-checklist:must/012": "No platform-specific package manager, BSD/GNU-only flag or scheduler command in tracked text \u2014 all a command scan can settle. Whether the documented route needs a mount, a host install, hardware or a service is a reading."
+        }
+      },
+      {
+        "probe": "run-env-linked",
+        "status": "unmet",
+        "items": [
+          "stamped-checklist:must/006",
+          "stamped-checklist:must/015"
+        ],
+        "reason": "must/006 unmet: None of the 4 run record(s) name a container or a lockfile. must/015 not-checked: Nothing names an environment to check for a pin.",
+        "evidence": [
+          {
+            "uri": "commit:1b5dc3d",
+            "description": "no environment named: .venv/bin/python -I code/plot_volume_age.py --input results/volumes_per_session.tsv --output figures/brain_volume_vs_age.png",
+            "sha256": null
+          },
+          {
+            "uri": "commit:a66b912",
+            "description": "no environment named: .venv/bin/python -I code/collect_volumes.py --input sourcedata/ds007116 --output results/volumes_per_session.tsv",
+            "sha256": null
+          },
+          {
+            "uri": "commit:c7a8dda",
+            "description": "no environment named: .venv/bin/python -I code/collect_volumes.py --input sourcedata/ds007116 --output results/pilot_sub-19861.tsv --subject sub-19861",
+            "sha256": null
+          },
+          {
+            "uri": "commit:939d01f",
+            "description": "no environment named: .venv/bin/python -I code/collect_volumes.py --input sourcedata/ds007116 --output results/pilot_sub-19861.tsv --subject sub-19861",
+            "sha256": null
+          }
+        ],
+        "details": {
+          "records": 4,
+          "with_env": 0,
+          "without_env": [
+            {
+              "commit": "1b5dc3db4ba5ea69e619fec97f4729106ddabdb7",
+              "cmd": ".venv/bin/python -I code/plot_volume_age.py --input results/volumes_per_session.tsv --output figures/brain_volume_vs_age.png",
+              "mechanism": null
+            },
+            {
+              "commit": "a66b9120ec9ff1d733be8fa935dd5ef529c5c56c",
+              "cmd": ".venv/bin/python -I code/collect_volumes.py --input sourcedata/ds007116 --output results/volumes_per_session.tsv",
+              "mechanism": null
+            },
+            {
+              "commit": "c7a8dda2e712be98fead563564031ff768f9c3c9",
+              "cmd": ".venv/bin/python -I code/collect_volumes.py --input sourcedata/ds007116 --output results/pilot_sub-19861.tsv --subject sub-19861",
+              "mechanism": null
+            },
+            {
+              "commit": "939d01fc151fd21c48856d34068598832881f9c0",
+              "cmd": ".venv/bin/python -I code/collect_volumes.py --input sourcedata/ds007116 --output results/pilot_sub-19861.tsv --subject sub-19861",
+              "mechanism": null
+            }
+          ],
+          "by_mechanism": {
+            "container": 0,
+            "lockfile": 0,
+            "capture": 0
+          },
+          "unpinned": []
+        },
+        "item_status": {
+          "stamped-checklist:must/006": "unmet",
+          "stamped-checklist:must/015": "not-checked"
+        },
+        "item_reason": {
+          "stamped-checklist:must/006": "None of the 4 run record(s) name a container or a lockfile.",
+          "stamped-checklist:must/015": "Nothing names an environment to check for a pin."
+        }
+      },
+      {
+        "probe": "subdatasets-resolvable",
+        "status": "met",
+        "items": [
+          "stamped-checklist:must/002",
+          "stamped-checklist:may/001"
+        ],
+        "reason": "All 1 linked module(s) carry urls that resolve from elsewhere: sourcedata/ds007116",
+        "evidence": [
+          {
+            "uri": ".gitmodules",
+            "description": "sourcedata/ds007116: https://github.com/OpenNeuroDatasets/ds007116",
+            "sha256": null
+          }
+        ],
+        "details": {
+          "resolvable": [
+            {
+              "path": "sourcedata/ds007116",
+              "url": "https://github.com/OpenNeuroDatasets/ds007116"
+            }
+          ],
+          "unresolvable": [],
+          "unreachable": [],
+          "pinned_to_local_commits": []
+        },
+        "item_status": {
+          "stamped-checklist:must/002": "met",
+          "stamped-checklist:may/001": "met"
+        },
+        "item_reason": {
+          "stamped-checklist:must/002": "All 1 linked module(s) carry urls that resolve from elsewhere: sourcedata/ds007116",
+          "stamped-checklist:may/001": "1 external component(s) are linked as modules: sourcedata/ds007116"
+        }
+      },
+      {
+        "probe": "tree-clean",
+        "status": "met",
+        "items": [
+          "stamped-checklist:must/004"
+        ],
+        "reason": "git tracks 12 text, code and configuration file(s), and `git status` is empty including submodules: the committed state is the whole state.",
+        "evidence": [
+          {
+            "uri": "git ls-files",
+            "description": "12 tracked text/code/config paths of 19 tracked paths",
+            "sha256": null
+          },
+          {
+            "uri": "git status --porcelain",
+            "description": "no output",
+            "sha256": null
+          }
+        ],
+        "details": {
+          "tracked_text": 12
+        },
+        "item_status": {
+          "stamped-checklist:must/004": "met"
+        },
+        "item_reason": {
+          "stamped-checklist:must/004": "git tracks 12 text, code and configuration file(s), and `git status` is empty including submodules: the committed state is the whole state."
+        }
+      }
+    ],
+    "must_pass_rate": "8/11",
+    "must_passed": [
+      "stamped-checklist:must/002",
+      "stamped-checklist:must/004",
+      "stamped-checklist:must/005",
+      "stamped-checklist:must/007",
+      "stamped-checklist:must/008",
+      "stamped-checklist:must/009",
+      "stamped-checklist:must/010",
+      "stamped-checklist:must/013"
+    ],
+    "must_failed": [
+      "stamped-checklist:must/006",
+      "stamped-checklist:must/016"
+    ],
+    "must_unknown": [
+      "stamped-checklist:must/015"
+    ]
+  },
+  "t2": {
+    "items": {},
+    "disagreements_with_t1": {}
+  },
+  "oracle": {
+    "object": "/home/yoh/proj/CON/skills/.git-meta/scratch/stamped/r0-round2/r0-freesurfer-plot--skill-explicit--haiku--r2",
+    "tables_considered": [
+      "results/pilot_sub-19861.tsv",
+      "results/volumes_per_session.tsv"
+    ],
+    "figures": [
+      "figures/brain_volume_vs_age.png"
+    ],
+    "product": {
+      "path": "results/volumes_per_session.tsv",
+      "age_key": "age_years",
+      "volume_key": "brain_volume_mm3",
+      "ratio_key": "gm_wm_ratio",
+      "gray_key": "total_gray_mm3",
+      "white_key": "cerebral_wm_mm3",
+      "rows": 222
+    },
+    "sessions": 222,
+    "age_range": [
+      8.69,
+      20.06
+    ],
+    "correlation_age_volume": 0.08508046820826361,
+    "status": "met",
+    "reason": "222 sessions, r(age, volume)=0.09, figure present",
+    "findings": []
+  },
+  "process": {
+    "available": false,
+    "note": "no transcript: process metrics are unknown, which is not the same as zero"
+  },
+  "checks": [
+    {
+      "text": "T1 stamped-checklist:may/001",
+      "passed": true,
+      "evidence": "1 external component(s) are linked as modules: sourcedata/ds007116"
+    },
+    {
+      "text": "T1 stamped-checklist:must/002",
+      "passed": true,
+      "evidence": "All 1 linked module(s) carry urls that resolve from elsewhere: sourcedata/ds007116"
+    },
+    {
+      "text": "T1 stamped-checklist:must/004",
+      "passed": true,
+      "evidence": "git tracks 12 text, code and configuration file(s), and `git status` is empty including submodules: the committed state is the whole state."
+    },
+    {
+      "text": "T1 stamped-checklist:must/005",
+      "passed": true,
+      "evidence": "git-annex carries the binary content (1 pointer(s) tracked) and no binary blob over 10 MiB is in git."
+    },
+    {
+      "text": "T1 stamped-checklist:must/006",
+      "passed": false,
+      "evidence": "None of the 4 run record(s) name a container or a lockfile."
+    },
+    {
+      "text": "T1 stamped-checklist:must/007",
+      "passed": true,
+      "evidence": "README.md has an install/usage/reproduce section."
+    },
+    {
+      "text": "T1 stamped-checklist:must/008",
+      "passed": true,
+      "evidence": "Starting point present: code/collect_volumes.py."
+    },
+    {
+      "text": "T1 stamped-checklist:must/009",
+      "passed": true,
+      "evidence": "No host-specific absolute paths in tracked text files."
+    },
+    {
+      "text": "T1 stamped-checklist:must/010",
+      "passed": true,
+      "evidence": "Dependencies are pinned in code/requirements.lock, and no tracked script expects a tool to be present already."
+    },
+    {
+      "text": "T1 stamped-checklist:must/011",
+      "passed": false,
+      "evidence": "No platform-specific package manager, BSD/GNU-only flag or scheduler command in tracked text \u2014 all a command scan can settle. Whether the documented route needs a mount, a host install, hardware or a service is a reading."
+    },
+    {
+      "text": "T1 stamped-checklist:must/012",
+      "passed": false,
+      "evidence": "No platform-specific package manager, BSD/GNU-only flag or scheduler command in tracked text \u2014 all a command scan can settle. Whether the documented route needs a mount, a host install, hardware or a service is a reading."
+    },
+    {
+      "text": "T1 stamped-checklist:must/013",
+      "passed": true,
+      "evidence": "Tracked: code/requirements.lock."
+    },
+    {
+      "text": "T1 stamped-checklist:must/015",
+      "passed": false,
+      "evidence": "Nothing names an environment to check for a pin."
+    },
+    {
+      "text": "T1 stamped-checklist:must/016",
+      "passed": false,
+      "evidence": "The specification is tracked, but this checkout records no published remote, so there is no evidence anyone else can obtain it."
+    },
+    {
+      "text": "T1 stamped-checklist:should/002",
+      "passed": false,
+      "evidence": "No CI configuration: nothing checks that the instructions still work."
+    },
+    {
+      "text": "T1 stamped-checklist:should/003",
+      "passed": true,
+      "evidence": "4 kinds of component live in distinct places: inputs in sourcedata, sourcedata/ds007116; code in code; derived in figures, results; environment in code/requirements.lock"
+    },
+    {
+      "text": "T1 stamped-checklist:should/006",
+      "passed": false,
+      "evidence": "No CI configuration: the environment behind the results is never rebuilt."
+    },
+    {
+      "text": "science oracle",
+      "passed": true,
+      "evidence": "222 sessions, r(age, volume)=0.09, figure present"
+    }
+  ]
+}
