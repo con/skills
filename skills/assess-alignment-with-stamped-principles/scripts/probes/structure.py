@@ -539,6 +539,44 @@ def _remote_resolves(url: str) -> bool | None:
     return None
 
 
+def _specs_without_published_content(obj: Object, paths: list[str]) -> list[str]:
+    """Of `paths`, those whose content is annexed and lives only in this clone.
+
+    must/016 asks whether others can *access* the specification, and for an
+    annexed one — a container image above all — a resolvable git remote is not
+    the answer: the history carries a symlink, and the bytes are reachable only
+    where the `git-annex` branch says a copy is, which is a different question
+    from where the git remote is. Three live runs pushed to a remote that
+    accepted the history and stored no content, and the push said "ok".
+
+    Empty when git-annex cannot answer (a plain git object, no git-annex on
+    PATH): an unanswerable question is not a finding.
+    """
+    import json
+    import os
+    import subprocess
+
+    if not paths:
+        return []
+    proc = subprocess.run(
+        ["git", "annex", "whereis", "--json", "--", *paths],
+        cwd=str(obj.root), capture_output=True, text=True, timeout=120,
+        env={**os.environ, "GIT_TERMINAL_PROMPT": "0"},
+    )
+    stranded = []
+    for line in proc.stdout.splitlines():
+        try:
+            rec = json.loads(line)
+        except ValueError:
+            continue
+        if not rec.get("success", True) or "whereis" not in rec:
+            continue
+        elsewhere = [w for w in rec["whereis"] if not w.get("here")]
+        if not elsewhere:
+            stranded.append(rec.get("file", ""))
+    return [s for s in stranded if s]
+
+
 def env_spec_tracked(obj: Object, check_remote: bool = False) -> Probe:
     """must/010 (nothing assumed pre-installed), must/013 (the spec is tracked),
     must/016 (the spec is published where others can get it)."""
@@ -627,9 +665,20 @@ def env_spec_tracked(obj: Object, check_remote: bool = False) -> Probe:
         # what it saw and leaves the asking to the reader (step 4).
         resolved = _remote_resolves(remote) if check_remote else None
         if resolved is True:
-            s016 = "met"
-            r016 = clip(f"The specification is tracked and its remote resolves ({remote}): "
-                        "`git ls-remote` reached it, so anyone who can clone it obtains the spec.")
+            from .provenance import _registered_images
+
+            stranded = _specs_without_published_content(
+                obj, sorted(set(list(found) + _registered_images(obj))))
+            if stranded:
+                s016 = "partial"
+                r016 = clip(f"The remote resolves ({remote}), but the content of "
+                            f"{', '.join(stranded[:3])} is annexed and no copy exists outside this "
+                            "clone: a clone gets the symlink and cannot obtain the specification "
+                            "itself. `git annex copy --to <remote>`, then push the `git-annex` branch.")
+            else:
+                s016 = "met"
+                r016 = clip(f"The specification is tracked and its remote resolves ({remote}): "
+                            "`git ls-remote` reached it, so anyone who can clone it obtains the spec.")
         elif resolved is False:
             s016 = "unmet"
             r016 = clip(f"The recorded remote does not resolve ({remote}): `git ls-remote` could not "

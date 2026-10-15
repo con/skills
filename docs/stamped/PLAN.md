@@ -411,7 +411,8 @@ Skills stay at `0.x` until their done criteria hold.
   - [x] R1 with the same arms (2026-10-14): the first rung with real compute, oracle met in every finished arm.
   - [x] A publishing target, so must/016 is reachable at all ([§10](#7-decisions-and-where-we-diverge) item 13) — harness, skills and probe, 2026-10-15.
   - [x] Three repeats of one cell (item 14): R0 `skill-explicit` on sonnet, 9/11, 10/11, 10/11 — **10/11, 11/11, 11/11 at the sandbox ceiling**, so two in three pass every item. Mean 0.879, spread 0.82–0.91 ([record](https://github.com/con/skills/blob/stamped-evals/stamped/blind-runs/2026-10-15-r0-three-repeats/README.md), in the `evals/` submodule).
-  - [ ] The same on a second tier, and at R1; and one run with a **real URL**, which is the only way must/016 reaches `met`.
+  - [x] A real URL for the objects, 2026-10-15: the round's three are published as branches of `con/stamped-skills-evals` (annex-capable, so content travels too), and the published clone of repeat 6 is the first must/016 `met` — of the object, not of the run.
+  - [ ] The same on a second tier, and at R1; and one run that **publishes to a real URL itself**, which is the only way *a run* reaches must/016 `met`. The remaining obstacle is a credential inside the sandbox, not a target (decision 13).
 - [ ] **Phase 3: do-full-research-loop.**
   - v0.1.
   - Outer-loop runner (container per run, pinned datalad, transcripts).
@@ -638,6 +639,44 @@ Both are now tests that build a PATH with git and without datalad rather than
 assuming one (91 tests), because on any machine where this work is done the
 broken path is the one that never runs.
 
+### 5.7 2026-10-15: the hub was the target all along
+
+`conditions/host-notes.md` tells every run there is "no credential for any
+forge", and the plan read that as "the objects have nowhere to be published".
+Those are different statements, and conflating them cost a gap note and a
+round of `partial`s: the hub repository is **Forgejo-aneksajo**, so it holds
+git history and annexed content in one place, and one repository publishes any
+number of objects as **separate branches over one shared annex** — no
+repository has to be created per object, which is the thing the token cannot
+do.
+
+So the three objects of the day's round are now
+`objects/2026-10-15-r0-explicit-sonnet-r{4,5,6}` of `con/stamped-skills-evals`,
+content included. Verified from an empty directory with no credentials and no
+global git config: the clone resolves, `git annex get` fetches the figure, and
+its sha256 matches the copy on the machine that made it. Content travels over
+https because git-annex discovers the forge's
+`annex+https://…/git-annex-p2phttp` endpoint and speaks P2P over it — a plain
+https git remote (GitHub) has no such endpoint and cannot hold content at all.
+
+Two things follow, one measured and one fixed:
+
+- **The first `met` for must/016.** The probe sweep over the published clone of
+  repeat 6 reaches the remote with `git ls-remote` over an `https://` URL. It
+  is a `met` for the *object as published*, not for the run, which pushed only
+  to the bare repository beside its sandbox; the hub push was the outer loop's,
+  with a credential the sandbox never sees.
+- **Publishing is history *and* content**, and the probe scored only the first.
+  Where the tracked specification is an annexed container image with no copy
+  outside the clone, must/016 is now `partial` — "a clone gets the symlink" —
+  instead of `met`. Not hypothetical: `datalad containers-add` annexes the
+  image it builds, and an earlier run's object carries a 42 MB one that exists
+  in exactly one place on this host. The recipe, and the trap that `git annex
+  sync` pushes your current branch and so must never be aimed at a shared
+  repository, are in `stacks/datalad.md`.
+
+### 5.2 Continuing on the compute host
+
 For a Claude Code session on typhon (under Remote Control) picking this up:
 
 1. Continue from branch `stamped-skills-impl` of con/skills (pull request #26), or branch off it; [§7.1](#51-phase-1-as-landed) says what is already there. `claude/ecstatic-cerf-nh4j6w` is the earlier branch this one diverged from.
@@ -732,6 +771,8 @@ My recommendation comes first in each item.
     - **The skills say what to do with one.** `create-stamped-project` step 3 now has a publish step (sibling, push, `git ls-remote`, **and the URL in the README**, because a remote in `.git/config` is not something a reader can see), and `do-full-research-loop` says that must/016 is *not* an unfixable gap where a target exists. Without this the item would still have measured nothing about the skill.
     - **The probe stays honest about the ceiling.** A filesystem path is a real remote — reporting it as "no remote at all" was false, and that is what a run following the conventions got, since the probe also read only `remote.origin.url` and so missed a sibling added as `published`. It now reads every remote and reports a local one as **`partial`**: "anyone with access to that filesystem can obtain the spec and nobody else can." So `met` still requires a URL, and `grade.py --publish-target local` reports the rate twice — strict, and at the sandbox ceiling.
     What is left for a **real** URL (and so for `met` and for the fresh-rerun probe to test published URLs, as [evals.md §9](evals.md#9-where-results-live) anticipates) is credentials inside the run, which is the part not to rush: a token with write access to a forge, handed to a blind agent that commits files, is a leak waiting to happen. The outer loop is where that belongs, with a per-run repository and a credential helper outside the sandbox.
+    **Half of that is now done (2026-10-15, later).** The hub repository is annex-capable (Forgejo-aneksajo), which was the point of it, and one repository publishes many objects as separate branches over one shared annex — so the *objects* now have real URLs without any repository being created: the round's three are branches `objects/2026-10-15-r0-explicit-sonnet-r{4,5,6}` of `con/stamped-skills-evals`, content included, verified by an anonymous clone and `git annex get` against the sha256 of the copy that made it. The probe sweep over the published clone of repeat 6 is the **first `met` for must/016** in this collection, and it is a `met` for the object as published, not for the run: the outer loop did the pushing with a credential the sandbox never sees. A run that earns the item by itself is still the open half, and the reason is unchanged — the blast radius of a repo-scoped token in a blind agent's reach is the whole repository, including this dataset's `main`. A per-run repository is what closes it, and that needs either a token that can create repositories or repositories created in advance.
+    One thing the hub taught, now in [`stacks/datalad.md`](../../skills/stamped-conventions/references/stacks/datalad.md) and in the publish step: **publishing is history *and* content, and they need not live together.** A GitHub repository cannot hold annexed content at all; what makes content reachable is the `git-annex` branch, whose location log says where the bytes are, so pushing history without it leaves a clone holding symlinks. The probe now says so too — where the tracked specification is an annexed container image with no copy outside the clone, must/016 is `partial` ("a clone gets the symlink") instead of `met`, which it wrongly was. That is a real datalad layout, not a hypothetical: `datalad containers-add` annexes the built image under `.datalad/environments/<name>/image`, and an earlier run's object has a 42 MB image that exists in exactly one place on this host.
 
 14. **Repeats before a tier, or a tier before repeats?** — **decided 2026-10-15: repeats.**
     2026-10-14 bought two sonnet repeats and two haiku runs at R0 and one repeat of each R1 arm. The spread within sonnet (10/11 and 8/11, same skill, same prompt) is wider than the gap between the tiers, which says the per-cell variance is not yet characterised and a tier comparison at n=1 per tier cannot be read.

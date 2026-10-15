@@ -361,14 +361,17 @@ Aneksajo is the git-annex-aware Forgejo, so git history and annexed content go t
 
 **Bootstrapped 2026-10-13** (`datalad create -c text2git`, `hub` sibling, `datalad push`, verified by an anonymous `datalad clone`).
 It carries the dataset README with the layout below, `calibration/2026-10-13-probes-0.1.0/` — the first probe calibration, 8/8 mutants and 0/15 false `unmet` — `calibration/2026-10-14-probes-0.1.0/`, which is 16/16 and 0/17 after the day's runs doubled the registry, and `calibration/2026-10-15-probes-0.1.0/` at 18/18 and 0/17 — two false-failure classes fixed, with two mutants added to show the fix cost no detection.
-Its own README states the two gaps it starts with rather than hiding them: con/skills is not yet a subdataset (pinning it at an unpublished commit would be the very `must/002`/`must/016` failure these skills catch), and the bootstrap commit is not a recorded run.
+Its own README states the gaps it starts with rather than hiding them: con/skills is not yet a subdataset (pinning it at an unpublished commit would be the very `must/002`/`must/016` failure these skills catch — closed 2026-10-15), that `runs/` groups by round rather than one subdataset per run, and that the bootstrap commit is not a recorded run.
 The default branch is `main`, matching the hub repository.
 - **Layout:** each run is a subdataset (the produced object), plus `transcript.jsonl` (annexed), `grading.json` and stamped-assessment records.
   Grading steps are `datalad run` records.
   The skills repository is a subdataset pinned per iteration.
 - **Pushing:** from typhon, as `yarikoptic-gitmate` (`datalad push --to hub`).
-  Produced-object subdatasets are published as sibling repositories under `con/` on the same hub.
+  Produced objects are published **as branches of this same repository** (`objects/<date>-<run>`), history and annexed content both, over one shared annex — sibling repositories under `con/` would be tidier, but a branch needs no repository to be created, and the token cannot create one.
   That way `subdatasets-resolvable` and `fresh-rerun` test real published URLs rather than paths on typhon.
+  Done for the first time 2026-10-15 for the three objects of the R0 three-repeat round, and verified the only way that counts: an anonymous clone with no global git config, `git annex get`, and the figure's sha256 against the copy on the machine that made it.
+  Content travels over https because git-annex finds the forge's `annex+https://…/git-annex-p2phttp` endpoint; what makes it *findable* is the `git-annex` branch, so push that too (`datalad push` does; by hand it is `git annex merge` then `git push <remote> git-annex:refs/heads/git-annex`).
+  Never `git annex sync` at this repository: `sync` pushes the current branch under its own name, and an object's `master` would land on the dataset's.
 - **Mirroring:** optional, read-only, to GitHub for visibility; the hub stays authoritative.
 - **Cloud sessions** can read and push too.
   This was verified 2026-10-13: Forgejo 16.0.5 + git-annex, `push: true`, and a `git push --dry-run` was accepted.
@@ -421,7 +424,8 @@ These are initial targets, to be revised after the first two iterations.
   - **judgement mutants:** ≥ 80 % detected (flagged *and* named) on the frontier tier and ≥ 60 % on the smaller tier, with no collateral accusation on the clean fixture — the scripted-mutant bar applied to the half of the skill made of sentences.
 - **create / align / do-full-research-loop v1.0:**
   - at R0–R2, explicit-skill runs — which are blind runs with a PROMPT as their scope — pass every mechanically checkable MUST probe, including `fresh-rerun`, in ≥ 2 of 3 repeats on two model tiers.
-    **must/016 is read at the ceiling of the target the run was given** (`run.py --publish-target`): `met` where that was a URL, `partial` where it was the default bare repository beside the sandbox, and `unmet` where a target existed and the run did not publish. A run given no target at all cannot be counted against this criterion — that was the condition until 2026-10-15, under which no repeat on any tier could score 11/11 and the item measured the harness rather than the skill ([PLAN §10](PLAN.md#7-decisions-and-where-we-diverge) item 13);
+    **must/016 is read at the ceiling of the target the run was given** (`run.py --publish-target`): `met` where that was a URL, `partial` where it was the default bare repository beside the sandbox, and `unmet` where a target existed and the run did not publish. A run given no target at all cannot be counted against this criterion — that was the condition until 2026-10-15, under which no repeat on any tier could score 11/11 and the item measured the harness rather than the skill ([PLAN §10](PLAN.md#7-decisions-and-where-we-diverge) item 13).
+    A `met` also wants the *content* of the specification to be obtainable, not only its history: where the spec is an annexed container image with no copy outside the clone, the probe answers `partial`, because a clone gets the symlink;
   - they clearly beat `pointer`;
   - the oracle agrees;
   - no regression against vN-1;

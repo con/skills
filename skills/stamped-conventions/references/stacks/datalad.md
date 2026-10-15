@@ -119,4 +119,34 @@ none of them is discoverable from the error message alone.
   history lands and every annexed file stays behind. `git ls-remote` cannot see the
   difference; `git annex whereis` can. Run `git annex init` in the target (or create it
   with `datalad create --no-annex=false`) before pushing, and check `whereis` afterwards.
-- A sibling and a push as soon as there is anywhere to push to (`datalad siblings add --name published --url <url>` then `datalad push --to published`), with the URL in `README.md` and `git ls-remote` as the proof. A local bare repository is a target too: it exercises the same mechanism, and `datalad push` carries annexed content to it.
+- A sibling and a push as soon as there is anywhere to push to (`datalad siblings add --name published --url <url>` then `datalad push --to published`), with the URL in `README.md` and `git annex whereis` as the proof. A local bare repository is a target too: it exercises the same mechanism, and `datalad push` carries annexed content to it.
+- **Publishing is two things — history and content — and they need not live in the
+  same place.** A GitHub repository holds history and *cannot* hold annexed content;
+  an annex-capable forge (Forgejo-aneksajo, e.g.
+  `hub.centerforopenneuroscience.org`), a RIA store or a special remote holds
+  content. What makes content reachable is the **`git-annex` branch**: it carries the
+  location log, so once it is pushed, anyone who clones from that remote — or adds it
+  to a clone of the history — can `git annex get`. Name that remote in `README.md`
+  alongside the clone URL, or the reader has the history and no way to the bytes.
+- **Content moves over https to an annex-capable forge**, no ssh needed: git-annex
+  discovers a `annexurl = annex+https://<host>:443/git-annex-p2phttp` endpoint and
+  speaks its P2P protocol over it, which is how `git annex copy --to` works against
+  Forgejo-aneksajo with only an API token. A plain https git remote (GitHub) has no
+  such endpoint, and content cannot go there at all.
+- **One repository can publish many objects**, each as its own branch over one shared
+  annex. Verified recipe, with explicit refspecs throughout:
+
+  ```console
+  git remote add hub <url>
+  git push hub master:refs/heads/objects/<name>      # history, under its own branch
+  git fetch hub git-annex:refs/remotes/hub/git-annex
+  git annex merge                                    # union-merge their location log
+  git annex copy --to hub <products>                 # content
+  git push hub git-annex:refs/heads/git-annex        # accessibility, as a fast-forward
+  ```
+
+- **Never `git annex sync <remote>` against a repository that holds anything else.**
+  `sync` pushes the *current* branch under its own name, so an object whose branch is
+  `master` or `main` lands on that repository's `master` or `main`. On a shared
+  publishing repository that overwrites somebody else's work. The explicit refspecs
+  above are the reason the recipe is five commands and not one.
