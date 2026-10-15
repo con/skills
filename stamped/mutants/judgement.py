@@ -204,7 +204,13 @@ JUDGEMENT_MUTANTS: dict[str, dict] = {
         "flag_any": ["stamped-checklist:must/015", "stamped-checklist:must/017",
                      "stamped-checklist:must/012", "stamped-checklist:must/003"],
         "mention_any": ["neurodesk", "repronim/containers", "not registered", "no such container"],
-        "stay_met": ["stamped-checklist:must/006", "stamped-checklist:must/013"],
+        # must/006 is *not* in `stay_met`: `verdicts.md` rule 10 sends a
+        # mechanism-against-records disagreement there, so a run that follows
+        # the rule lands on it. A run was scored as a miss for obeying the
+        # skill — the same defect round 1 found in this mutant's `flag_any`,
+        # and the same answer: which item a reader pins a prose defect on is
+        # not under test.
+        "stay_met": ["stamped-checklist:must/013"],
         "tests": "E/D: prose promising an environment nobody can get. The run records name a "
                  "different, pinned image, so every probe is satisfied.",
     },
