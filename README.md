@@ -1,7 +1,6 @@
 # CON Skills
 
-A collection of [Claude Code Agent Skills](https://agentskills.io/) for
-software project maintenance, triage, and automation.
+A collection of [Claude Code Agent Skills](https://agentskills.io/) for software project maintenance, triage, and automation.
 
 ## Included Skills
 
@@ -10,9 +9,13 @@ software project maintenance, triage, and automation.
 | [analyze-duplicates](analyze-duplicates/) | Detect code and documentation duplication using jscpd, generate a Markdown report with collapsible `<details>` sections (suitable for GitHub/Gitea issues), and propose a mediation plan with refactoring strategies. |
 | [assess-alignment-with-stamped-principles](skills/assess-alignment-with-stamped-principles/) | Assess a project, dataset or analysis against the [STAMPED principles](https://github.com/stamped-principles/stamped-paper) and leave a filled checklist behind: a dated report, a response JSON with per-item evidence, and a link that opens the answers in the [checklist app](https://checklist.stamped-principles.org/). Read-only; ships eleven scripted probes over committed state. |
 | [code-quality-report-conventions](code-quality-report-conventions/) | Shared report conventions read by the `review-*` skills (report location, provenance stamp, evidence rules, security-sensitive findings, re-review, confidence/status labels). Not invoked directly; install alongside them. |
-| [align-with-stamped-principles](skills/align-with-stamped-principles/) | Align an existing project with [STAMPED](https://github.com/stamped-principles/stamped-paper): assess it, then write a proportionate STAMPED section into its own `AGENTS.md`/`CLAUDE.md` and install executable guards (a pre-commit guard against committing during a recorded run, a preflight check, a CI rerun job), then re-assess. |
-| [create-stamped-project](skills/create-stamped-project/) | Start a new research project that satisfies the STAMPED principles from its first commit: inputs linked as modules, a pinned environment, a recorded execution mechanism, the guards that keep them true, and a README a stranger can follow. Hands off to `align-with-stamped-principles`. |
-| [do-full-research-loop](skills/do-full-research-loop/) | Carry a study through to results inside a STAMPED project — plan, pilot, batches with QC, aggregate, controls, independent review, write-up, and a closing assessment. Deliberately quick and dirty; not a virtual scientist. |
+| [align-with-stamped-principles](skills/align-with-stamped-principles/) | Assess, repair scoped workflow gaps using the existing stack, and reassess with the same rubric. |
+| [create-stamped-project](skills/create-stamped-project/) | Create the smallest executable research object with versioned inputs, an environment/replay route and tested delivery; preserve existing prepared projects. |
+| [create-repronim-stamped-project](skills/create-repronim-stamped-project/) | Adapt project creation to ReproNim, BIDS-aware inputs and community neuroimaging workflows. |
+| [datalad-annex](skills/datalad-annex/) | Preserve native DataLad records, test native rerun, and verify delivery of annex content and requested task logs. |
+| [do-full-research-loop](skills/do-full-research-loop/) | Carry a study through protocol, inspected pilot, bounded batches, useful figures, scientific checks, fresh replay and a separate STAMPED assessment. |
+| [entire-worktrees](skills/entire-worktrees/) | Prepare native capture and verify session identity across branches, worktrees, clones and delegated children. |
+| [pixi-with-stamped](skills/pixi-with-stamped/) | Declare dependencies and actionable tasks, retain the chosen environment identity, and verify fresh replay. |
 | [github-project-status](github-project-status/) | Assess whether a GitHub project is healthy, in maintenance mode, stagnant, or abandoned. Checks commits, releases, issues, PRs, forks, and package registries to produce a structured status report. |
 | [introduce-codespell](introduce-codespell/) | Add [codespell](https://github.com/codespell-project/codespell) spell-checking to a project end-to-end: config, GitHub Actions workflow, pre-commit hook, exclusion tuning, ambiguous-typo review, and automated fixes via `datalad run`. |
 | [introduce-git-bug](introduce-git-bug/) | Set up [git-bug](https://github.com/git-bug/git-bug) distributed issue tracking: configure GitHub bridge, sync issues, push `refs/bugs/*`, and document the workflow in DEVELOPMENT.md / CLAUDE.md. |
@@ -27,23 +30,24 @@ software project maintenance, triage, and automation.
 | [stamped-conventions](skills/stamped-conventions/) | Shared conventions for the STAMPED skills (not invoked directly): the checklist pinned at 0.3.1 with a vendoring lock, the verdict vocabulary, the response/report format and its URL encoder, project kinds, and the per-stack references. |
 | [tinuous-analyzer](tinuous-analyzer/) | Analyze CI log collections gathered by [con/tinuous](https://github.com/con/tinuous/) to pinpoint when a test started failing, diff environment/dependency changes between passing and failing runs, and recommend investigation steps. |
 
+## STAMPED working branch
+
+This branch builds on [Yarik's PR #26](https://github.com/con/skills/pull/26) at `6f013956fe52f22f151dfc54d29fbbddffc259fd`, retaining its probes, templates and checklist format.
+The research protocol, ReproNim adapter, scientific validation and comparison guidance incorporate the [first research skill bundle](https://github.com/con/skills/tree/8f3acaa4a7c353b6c8ea6928c278478f95328fc5) and its [compressed revisions](https://github.com/con/skills/tree/e31edc77078b78c9ce415bd41dc9e7e98de451b4).
+The linked skills above include the working research workflow and common Pixi, DataLad/annex and Entire guidance; assessment is pinned separately by projects that compare evolving skill conditions.
+
 ## Installation
 
-Copy or symlink the desired skill directories into `~/.claude/skills/`, or
-point your Claude Code configuration to this repository.
+Copy or symlink the desired skill directories into `~/.claude/skills/`, or point your Claude Code configuration to this repository.
 
 ## Configuration
 
-Some skills require user-specific configuration. Following the
-[Agent Skills specification](https://agentskills.io/specification),
-configuration is handled via documented variables in each skill's
-`SKILL.md` rather than environment variables or config files — the
-Claude agent reads these values and substitutes them at runtime.
+Some skills require user-specific configuration.
+Following the [Agent Skills specification](https://agentskills.io/specification), configuration is handled via documented variables in each skill's `SKILL.md` rather than environment variables or config files — the Claude agent reads these values and substitutes them at runtime.
 
 ### pr-review-update
 
-This skill has a `## Configuration` section at the top of its `SKILL.md`
-with the following variables:
+This skill has a `## Configuration` section at the top of its `SKILL.md` with the following variables:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -56,8 +60,7 @@ Edit the defaults in `pr-review-update/SKILL.md` to match your setup.
 
 ### pr-feedback-review
 
-This skill has a `## Configuration` section at the top of its `SKILL.md`
-with the following variables:
+This skill has a `## Configuration` section at the top of its `SKILL.md` with the following variables:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -69,13 +72,11 @@ Edit the defaults in `pr-feedback-review/SKILL.md` to match your setup.
 
 ### Other skills
 
-The remaining skills use runtime discovery (e.g., `git remote -v`,
-`gh auth status`) and do not require pre-configuration.
+The remaining skills use runtime discovery (e.g., `git remote -v`, `gh auth status`) and do not require pre-configuration.
 
 ## Tests
 
-Structural lint of every skill, and the STAMPED probe tests and mutant
-calibration:
+Structural lint of every skill, and the STAMPED probe tests and mutant calibration:
 
 ```console
 git submodule update --init evals   # the STAMPED eval harness and run records
@@ -83,22 +84,13 @@ tox -e validate        # frontmatter, size budgets, duplicate blocks, bundled Py
 tox -e stamped-evals   # pytest over the probes + the defect-mutant calibration
 ```
 
-Tests live outside the skill directories, under `evals/`, so a skill ships its
-instructions and scripts without its test suite. For the STAMPED skills that
-directory is a **submodule**: the
-[`stamped-evals`](https://github.com/con/skills/tree/stamped-evals) branch of
-this same repository, which carries the graders, the fixtures, the defect
-mutants and the record of every blind run. It is a branch rather than a second
-repository so the work stays self-contained, and a submodule rather than a
-directory because the records are append-only and were 85% of the diff that
-introduced the skills.
+Tests live outside the skill directories, under `evals/`, so a skill ships its instructions and scripts without its test suite.
+For the STAMPED skills that directory is a **submodule**: the [`stamped-evals`](https://github.com/con/skills/tree/stamped-evals) branch of this same repository, which carries the graders, the fixtures, the defect mutants and the record of every blind run.
+It is a branch rather than a second repository so the work stays self-contained, and a submodule rather than a directory because the records are append-only and were 85% of the diff that introduced the skills.
 
 ## Repo-wide conventions
 
-See [`AGENTS.md`](AGENTS.md) (alias `CLAUDE.md`) for cross-cutting rules
-that apply to every skill in this collection — most notably the rule
-that any skill preparing a pull request must respect the upstream
-project's `PULL_REQUEST_TEMPLATE.md` and `CONTRIBUTING.md`.
+See [`AGENTS.md`](AGENTS.md) (alias `CLAUDE.md`) for cross-cutting rules that apply to every skill in this collection — most notably the rule that any skill preparing a pull request must respect the upstream project's `PULL_REQUEST_TEMPLATE.md` and `CONTRIBUTING.md`.
 
 ## License
 
