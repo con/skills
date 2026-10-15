@@ -17,6 +17,7 @@ Expose useful operations as named tasks with inputs, outputs and parameters appr
 Reuse the project's scripts behind those tasks; verify the task actually runs.
 Keep host credentials, scheduler choices and external runtime paths in replaceable host configuration.
 Declare supported platforms and test only the coverage claimed.
+Check binary wheel OS requirements: when they exceed Pixi's default platform floor, declare the verified minimum in `system-requirements` before solving.
 
 ## Environment identity
 
