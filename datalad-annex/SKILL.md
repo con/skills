@@ -25,6 +25,7 @@ pixi run --locked python .agents/skills/datalad-annex/scripts/replay.py rerun \
 
 The adapter rejects unsupported versions/message shapes and requires an actual run result.
 Before replay, put the recorded lock in the recipient checkout and verify that its hash and manifest match the recorded run.
+After checking out a replay base, run `git submodule update --init --recursive` and confirm a clean dataset; installed children must match that revision's gitlinks.
 Checkout transitions must not substitute another manifest or silently solve.
 Report compatibility replay separately from unmodified native discovery.
 
