@@ -162,7 +162,11 @@ the authoring session walking through its own procedure.
 6. **Record the run** so the next iteration can be compared with it: for
    skills with an eval harness, as a run under `evals/`; for everything
    else, at minimum the diff and the classification in the commit
-   message that follows.
+   message that follows. **Keep the prompt you gave it**, verbatim and
+   beside the run: the snapshot pins what the subagent read, and the
+   prompt is the other half of the input. A run record without it cannot
+   be replayed on another model or another day, and the authoring
+   session is exactly the wrong party to reconstruct it from memory.
 
 Run it with more than one model tier where the skill may be used by one,
 and keep at least one target out of the loop you tune against, so the
