@@ -1178,6 +1178,66 @@ def test_the_harness_records_an_absent_tool_rather_than_crashing(tmp_path):
     assert meta["host"]["datalad"] is None, meta["host"]
 
 
+def test_a_spec_whose_content_never_left_the_clone_is_not_met(tmp_path, monkeypatch):
+    """must/016 asked only whether the git remote resolves, so an object whose
+    specification is an annexed container image — content in this clone and
+    nowhere else — was told "anyone who can clone it obtains the spec". The
+    history carries a symlink; the bytes are wherever the `git-annex` branch
+    says, which is a different question and the one the hub exists to answer.
+    """
+    if not shutil.which("git-annex"):
+        pytest.skip("git-annex is not installed (CI); the probe answers [] there by design")
+    env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@e.org",
+           "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@e.org"}
+    root = tmp_path / "annexed-spec"
+    root.mkdir()
+    for args in (["init", "-q", "-b", "main"], ["annex", "init", "-q", "test"]):
+        subprocess.run(["git", *args], cwd=root, check=True, env=env)
+    # The state under test is a remote that *resolves* and holds no content, so
+    # the URL has to be a real one (a filesystem path is `partial` for its own
+    # reason, before this check) and its reachability is stubbed rather than
+    # dialled: whether example.org answers is not what this test is about.
+    bare = tmp_path / "remote.git"
+    subprocess.run(["git", "init", "-q", "--bare", str(bare)], check=True, env=env)
+    subprocess.run(["git", "annex", "init", "-q", "target"], cwd=bare, check=True, env=env)
+    subprocess.run(["git", "remote", "add", "origin", "https://example.org/con/thing"],
+                   cwd=root, check=True, env=env)
+    subprocess.run(["git", "remote", "add", "store", str(bare)], cwd=root, check=True, env=env)
+    import probes.structure as structure_probe
+    monkeypatch.setattr(structure_probe, "_remote_resolves", lambda url: True)
+    (root / "README.md").write_text("# object\n\n## Reproduce\n\n    make all\n")
+    # What `datalad containers-add` leaves behind: a registration in
+    # `.datalad/config` pointing at the image, which is annexed.
+    image = root / "code" / "containers" / "analysis.sif"
+    image.parent.mkdir(parents=True)
+    image.write_bytes(b"not really a container, but annexed\n" * 64)
+    (root / ".datalad").mkdir()
+    (root / ".datalad" / "config").write_text(
+        "[datalad \"containers.analysis\"]\n"
+        "\timage = code/containers/analysis.sif\n"
+        "\tcmdexec = apptainer exec {img} {cmd}\n")
+    subprocess.run(["git", "annex", "add", str(image)], cwd=root, check=True, env=env,
+                   capture_output=True)
+    subprocess.run(["git", "add", "-A"], cwd=root, check=True, env=env)
+    subprocess.run(["git", "commit", "-qm", "an annexed specification"], cwd=root, check=True, env=env)
+
+    probe = REGISTRY["env-spec-tracked"](Object(root), check_remote=True)
+    status = probe.status_of("stamped-checklist:must/016")
+    reason = probe.reason_of("stamped-checklist:must/016")
+    assert status == "partial", f"{status}: {reason}"
+    assert "code/containers/analysis.sif" in reason, reason
+    assert "no copy exists outside this clone" in reason, reason
+
+    # Publishing the content is what closes it: `copy --to` plus the git-annex
+    # branch, which is the accessibility half of a push.
+    subprocess.run(["git", "annex", "copy", "--to", "store",
+                    "code/containers/analysis.sif"], cwd=root,
+                   check=True, env=env, capture_output=True)
+    probe = REGISTRY["env-spec-tracked"](Object(root), check_remote=True)
+    assert probe.status_of("stamped-checklist:must/016") == "met", probe.reason_of(
+        "stamped-checklist:must/016")
+
+
 def test_the_harness_gives_every_run_a_publishing_target(tmp_path):
     """must/016 was `unmet` in every repeat on every tier, whatever the run did.
 
