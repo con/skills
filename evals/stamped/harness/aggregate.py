@@ -64,9 +64,16 @@ def aggregate(gradings: list[dict]) -> dict:
             "oracle_ok": _rate(oracle_ok, oracle_known) if oracle_known else "0/0 (not checked)",
             "process": {
                 "transcripts": f"{len(process)}/{len(runs)}",
-                "skill_was_read": _rate(sum(1 for p in process if p.get("skill_was_read")), len(process))
-                if process else "0/0",
-                "commits_during_run": sum(p.get("counts", {}).get("commit_during_run", 0) for p in process),
+                # No transcript is not zero reads: an inner-loop run has no
+                # stream-json to scan, and printing "0/0" in a column headed
+                # "skill read" says the skills were never opened, which is a
+                # different and false claim.
+                "skill_was_read": (
+                    _rate(sum(1 for p in process if p.get("skill_was_read")), len(process))
+                    if process else "no transcript"),
+                "commits_during_run": (
+                    sum(p.get("counts", {}).get("commit_during_run", 0) for p in process)
+                    if process else "no transcript"),
                 "absolute_home_paths": sum(p.get("counts", {}).get("absolute_home_path", 0) for p in process),
                 "questions_asked_median": (
                     statistics.median([p.get("questions_asked", 0) for p in process]) if process else None
