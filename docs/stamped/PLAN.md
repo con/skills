@@ -453,8 +453,8 @@ What exists in con/skills as of 2026-10-13, on branch `claude/ecstatic-cerf-nh4j
 - false `unmet`/`partial` on the clean fixture **0/15** answered items;
 - on `compression-comparisons-t261-study` (1265 commits, 22286 tracked derivatives) the probe sweep takes **3.6 s** and finds the `url = ../..` gap the plan predicted;
 - after one blind run and the fixes it forced, an independent subagent's 31 verdicts and the reference answer agree on **30 of 31** items;
-- **6/6 judgement mutants** detected and named, with the control's unexplained accusations down from 7/19 to 3/19;
-- **18/18 scripted mutants**, 81 tests, 26 `pytest-evals` cases.
+- **6/6 judgement mutants** detected and named, with the control run's unexplained accusations at 2/18 then 3/19 (the first number the scorer produced before it was fixed to ignore probe drafts is not comparable with either, so it is not quoted);
+- **18/18 scripted mutants**, 91 tests, 26 `pytest-evals` cases.
 
 Two rounds of calibration paid for themselves.
 Running the probes on a real object caught must/009 counting host paths inside duct traces as script defects, must/005 calling 12 MiB of JSONL "binary data", must/006 ignoring environment *capture* as distinct from an environment *specification*, and four probes reporting `unmet` with no evidence of absence.
@@ -470,7 +470,7 @@ Still open before `assess` can be called v1.0: agreement with a human's answers 
 **Measured on 2026-10-14**, on typhon, with everything below recorded under `evals/stamped/blind-runs/`:
 
 - **agreement across model tiers:** the same object, the same snapshot, the same prompt on the smaller tier — 27 of 31 items and **15 of 17 MUST items** agree with the reference answer (88%, above the 80% criterion), and neither MUST difference is a pass/fail flip. It also found the first defect that only a *packaging* test could find: the conventions card linked a path that exists in this repository and not in an installed skill.
-- **judgement mutants:** two more rounds, 2/2 and 1/1 detected, one per tier — and the control run on the unmutated fixture reached **0/19 unexplained accusations** (7/19 → 3/19 → 6/22 → 0/19), which is the §10.1 criterion "no collateral accusation on the clean fixture". The ratchet in `tests/test_eval_cases.py` is now that gate.
+- **judgement mutants:** two more rounds, 2/2 and 1/1 detected, one per tier — and the control run on the unmutated fixture reached **0/19 unexplained accusations** (2/18 → 3/19 → 6/22 → 0/19, as the kept score files count them), which is the §10.1 criterion "no collateral accusation on the clean fixture". The ratchet in `tests/test_eval_cases.py` is now that gate.
 - **a new object, outside the tuning loop:** ReproNim/simple_workflow, which found **five probe defects in one run**, three of them false *failures* — a numbered README losing must/007, `${HOME}` in a CI config losing must/009, and a fully pinned `environment.yml` called unpinned. An assessor people distrust is worse than none, and only an untuned object finds that class.
 - **R0 and R1 with four arms each**, with the skills clearing both baselines at both rungs ([§7.3](#73-2026-10-14-the-day-r1-ran)).
 
