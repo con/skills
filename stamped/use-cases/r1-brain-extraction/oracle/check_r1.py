@@ -180,8 +180,13 @@ def main(argv: list[str] | None = None) -> int:
 
     # (1) the product
     tables = [p for p in paths if p.endswith((".tsv", ".csv")) and not _is_input(p)]
-    figures = [p for p in paths if p.endswith(FIGURES) and not _is_input(p)
-               and (root / p).exists() and (root / p).stat().st_size > 0]
+    figure_paths = [p for p in paths if p.endswith(FIGURES) and not _is_input(p)]
+    figures = [p for p in figure_paths if (root / p).exists() and (root / p).stat().st_size > 0]
+    # A tracked figure whose content is not in *this* clone is an annexed file
+    # nobody fetched, which is a fact about the clone and not about the run.
+    # Graded from a bundle restored off the results dataset, every arm looked
+    # as if it had produced no figure at all.
+    figures_without_content = [p for p in figure_paths if p not in figures]
     best: dict | None = None
     for relpath in tables:
         try:
@@ -227,9 +232,14 @@ def main(argv: list[str] | None = None) -> int:
     report["product"] = {k: v for k, v in best.items() if k not in ("measured", "ages")}
     report["subjects_measured"] = len(best["measured"])
     report["figures"] = figures
+    report["figures_without_content"] = figures_without_content
     if len(best["measured"]) < args.min_subjects:
         findings.append(f"only {len(best['measured'])} subjects with a volume (<{args.min_subjects})")
-    if not figures:
+    if not figures and figures_without_content:
+        findings.append(f"{len(figures_without_content)} figure(s) are tracked but their content is not in "
+                        f"this clone (annexed, not fetched): e.g. {figures_without_content[0]} — "
+                        "`datalad get` it before judging the product")
+    elif not figures:
         findings.append("no non-empty figure outside the input modules")
     if not best["ages"]:
         findings.append("no age column in the product table, so brain size cannot be plotted against age")
