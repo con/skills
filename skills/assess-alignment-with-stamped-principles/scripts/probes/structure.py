@@ -539,42 +539,68 @@ def _remote_resolves(url: str) -> bool | None:
     return None
 
 
-def _specs_without_published_content(obj: Object, paths: list[str]) -> list[str]:
-    """Of `paths`, those whose content is annexed and lives only in this clone.
+def _spec_publication_evidence(obj: Object, paths: list[str]) -> dict:
+    """Inspect committed representations and local location logs, not retrieval.
 
-    must/016 asks whether others can *access* the specification, and for an
-    annexed one — a container image above all — a resolvable git remote is not
-    the answer: the history carries a symlink, and the bytes are reachable only
-    where the `git-annex` branch says a copy is, which is a different question
-    from where the git remote is. Three live runs pushed to a remote that
-    accepted the history and stored no content, and the push said "ok".
-
-    Empty when git-annex cannot answer (a plain git object, no git-annex on
-    PATH): an unanswerable question is not a finding.
+    A remote location in `whereis` is historical metadata, not a remote check:
+    https://git-annex.branchable.com/git-annex-whereis/
+    Read committed pointers so unlocked working-tree content cannot hide annex:
+    https://git-annex.branchable.com/internals/pointer_file/
     """
     import json
     import os
     import subprocess
 
-    if not paths:
-        return []
-    proc = subprocess.run(
-        ["git", "annex", "whereis", "--json", "--", *paths],
-        cwd=str(obj.root), capture_output=True, text=True, timeout=120,
-        env={**os.environ, "GIT_TERMINAL_PROMPT": "0"},
-    )
-    stranded = []
+    blobs = {p: (size, mode) for p, size, mode in obj.blobs()}
+    files = {}
+    annexed = []
+    for path in paths:
+        if path not in blobs:
+            files[path] = {"kind": "unknown", "reason": "not a blob in HEAD"}
+            continue
+        size, mode = blobs[path]
+        pointer = obj.git("show", f"HEAD:{path}") if size <= 32768 else ""
+        first = pointer.splitlines()[0] if pointer else ""
+        if first.startswith("/annex/objects/") or ".git/annex/objects/" in first:
+            files[path] = {"kind": "annex", "location_status": "unavailable"}
+            annexed.append(path)
+        elif mode == "120000":
+            files[path] = {"kind": "unknown", "reason": "symlink target requires review"}
+        else:
+            files[path] = {"kind": "git-blob"}
+    result = {"files": files, "retrieval_verified": False}
+    if not annexed:
+        return result
+    try:
+        proc = subprocess.run(
+            ["git", "annex", "whereis", "--json", "--", *annexed],
+            cwd=str(obj.root), capture_output=True, text=True, timeout=120,
+            env={**os.environ, "GIT_TERMINAL_PROMPT": "0"},
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        result["location_check_error"] = type(exc).__name__
+        return result
+    result["location_check_returncode"] = proc.returncode
+    if proc.returncode:
+        return result
     for line in proc.stdout.splitlines():
         try:
             rec = json.loads(line)
         except ValueError:
             continue
-        if not rec.get("success", True) or "whereis" not in rec:
+        if not isinstance(rec, dict) or rec.get("file") not in annexed:
             continue
-        elsewhere = [w for w in rec["whereis"] if not w.get("here")]
-        if not elsewhere:
-            stranded.append(rec.get("file", ""))
-    return [s for s in stranded if s]
+        locations = rec.get("whereis")
+        if rec.get("success") is not True or not isinstance(locations, list):
+            continue
+        if any(not isinstance(w, dict) or not isinstance(w.get("here"), bool)
+               for w in locations):
+            continue
+        row = files[rec["file"]]
+        row["location_status"] = "recorded"
+        row["recorded_here"] = any(w["here"] for w in locations)
+        row["recorded_elsewhere"] = sum(not w["here"] for w in locations)
+    return result
 
 
 def env_spec_tracked(obj: Object, check_remote: bool = False) -> Probe:
@@ -645,14 +671,15 @@ def env_spec_tracked(obj: Object, check_remote: bool = False) -> Probe:
         # A floating specification can include every dependency; a lockfile
         # alone does not establish completeness. This remains a heuristic:
         # the assessor must review dependencies the host-tool scan cannot see.
-        s010 = "met"
-        r010 = clip(f"Dependencies are declared in {', '.join(sorted(found)[:3])}; "
-                    "no recognized pre-installed-tool requirement was found. "
-                    "Review dependency completeness; version pinning is assessed separately.")
+        s010 = "not-checked"
+        r010 = clip(f"Specification found: {', '.join(sorted(found)[:3])}. "
+                    "Dependency completeness is not checked: compare imports and invoked tools "
+                    "with declarations, including local/vendored code. Version pins are separate.")
     else:
         s010 = s013
         r010 = r013
 
+    publication = None
     # must/016 — can someone else obtain the specification?
     if not found:
         s016, r016 = s013, clip("Nothing to share: " + r013)
@@ -665,18 +692,25 @@ def env_spec_tracked(obj: Object, check_remote: bool = False) -> Probe:
         if resolved is True:
             from .provenance import _registered_images
 
-            stranded = _specs_without_published_content(
+            publication = _spec_publication_evidence(
                 obj, sorted(set(list(found) + _registered_images(obj))))
-            if stranded:
+            uncertain = [p for p, row in publication["files"].items()
+                         if row["kind"] == "unknown" or row.get("location_status") == "unavailable"]
+            annexed = [p for p, row in publication["files"].items() if row["kind"] == "annex"]
+            if uncertain:
+                s016 = "not-checked"
+                r016 = clip(f"Remote responds; content/location inspection unavailable for "
+                            f"{', '.join(uncertain[:2])}. Publication requires independent retrieval evidence.")
+            elif annexed:
                 s016 = "partial"
-                r016 = clip(f"The remote resolves ({remote}), but the content of "
-                            f"{', '.join(stranded[:3])} is annexed and no copy exists outside this "
-                            "clone: a clone gets the symlink and cannot obtain the specification "
-                            "itself. `git annex copy --to <remote>`, then push the `git-annex` branch.")
+                r016 = clip(f"Remote responds; annex location logs for {', '.join(annexed[:2])} "
+                            "are metadata, not verified access. Independently retrieve and verify "
+                            "the specification content before marking met.")
             else:
-                s016 = "met"
-                r016 = clip(f"The specification is tracked and its remote resolves ({remote}): "
-                            "`git ls-remote` reached it, so anyone who can clone it obtains the spec.")
+                s016 = "partial"
+                r016 = clip("Remote responds and specifications are Git blobs in local HEAD; "
+                            "the remote's exact revision/content was not retrieved. Verify a fresh "
+                            "clone at the assessed revision before marking met.")
         elif resolved is False:
             s016 = "unmet"
             r016 = clip(f"The recorded remote does not resolve ({remote}): `git ls-remote` could not "
@@ -708,7 +742,7 @@ def env_spec_tracked(obj: Object, check_remote: bool = False) -> Probe:
         clip(f"must/010 {s010}: {r010} must/013 {s013}. must/016 {s016}."),
         evidence,
         {"specs": found, "uninstalled_modules": uninstalled, "preconditions": preconditions,
-         "remote": remote or None},
+         "remote": remote or None, "publication": publication},
         item_status={i010: s010, i013: s013, i016: s016},
         item_reason={i010: r010, i013: r013, i016: r016},
     )
