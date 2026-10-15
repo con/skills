@@ -1,0 +1,678 @@
+{
+ "checklist_version": "0.3.1",
+ "responses": {
+  "stamped-checklist:must/001": {
+   "status": "partial",
+   "value": "no",
+   "reason": "Essential inputs sit outside the root: the paper reference CSV is read from a /data/yoh fallback, and the .specify-ref file it names is not tracked.",
+   "evidence": [
+    {
+     "uri": "code/partial_report.sh#L47-L49",
+     "description": "reads .specify-ref/paper-reference-lossless.csv, else /data/yoh/compression-comparisons/.specify/... on the host",
+     "sha256": null
+    },
+    {
+     "uri": "git ls-files",
+     "description": "no .specify/ or .specify-ref/ path tracked at HEAD f2f0802",
+     "sha256": null
+    }
+   ],
+   "source": "judgement",
+   "flags": []
+  },
+  "stamped-checklist:must/002": {
+   "status": "unmet",
+   "value": "no",
+   "reason": "Recorded url ../.. for code/compression-comparisons-tools: a fresh clone of origin fails with 'repository dandi/.. not found'; the module is unreachable.",
+   "evidence": [
+    {
+     "uri": ".gitmodules",
+     "description": "url = ../.. for code/compression-comparisons-tools",
+     "sha256": null
+    },
+    {
+     "uri": "scratch clone of origin f2f0802 + git submodule update --init",
+     "description": "fatal: repository 'https://github.com/dandi/..' not found",
+     "sha256": null
+    },
+    {
+     "uri": "git fetch --depth=1 https://github.com/dandi/compression-comparisons 915cb4c",
+     "description": "pinned commit 915cb4c is fetchable upstream, so the fault is the url, not the pin",
+     "sha256": null
+    }
+   ],
+   "source": "probe:subdatasets-resolvable+judgement",
+   "flags": []
+  },
+  "stamped-checklist:must/003": {
+   "status": "partial",
+   "value": "no",
+   "reason": "WavPack is vendored in the tool module for run_sweep.sh, but run_sorting_sweep.sh hardcodes a host WavPack path; datalad is a host install.",
+   "evidence": [
+    {
+     "uri": "code/run_sorting_sweep.sh#L48",
+     "description": "WV=/data/yoh/compression-comparisons/vendor/wavpack",
+     "sha256": null
+    },
+    {
+     "uri": "code/run_sweep.sh#L83-L84",
+     "description": "vendor/wavpack in the module first, /data/yoh fallback second",
+     "sha256": null
+    },
+    {
+     "uri": "code/run_sweep.sh#L24-L35",
+     "description": "pinned datalad installed on the host, not in a spec",
+     "sha256": null
+    }
+   ],
+   "source": "judgement",
+   "flags": []
+  },
+  "stamped-checklist:must/004": {
+   "value": "yes",
+   "reason": "git tracks 4422 text, code and configuration file(s), and `git status` is empty including submodules: the committed state is the whole state.",
+   "status": "met",
+   "evidence": [
+    {
+     "uri": "git ls-files",
+     "description": "4422 tracked text/code/config paths of 22863 tracked paths",
+     "sha256": null
+    },
+    {
+     "uri": "git status --porcelain",
+     "description": "no output",
+     "sha256": null
+    }
+   ],
+   "source": "probe:tree-clean",
+   "flags": []
+  },
+  "stamped-checklist:must/005": {
+   "value": "yes",
+   "reason": "git-annex carries the binary content (13407 pointer(s) tracked) and no binary blob over 10 MiB is in git.",
+   "status": "met",
+   "evidence": [
+    {
+     "uri": "git ls-tree -r -l HEAD",
+     "description": "no binary blob over 10485760 bytes",
+     "sha256": null
+    },
+    {
+     "uri": ".datalad/config",
+     "description": "git-annex in use for large content",
+     "sha256": null
+    }
+   ],
+   "source": "probe:large-in-annex",
+   "flags": []
+  },
+  "stamped-checklist:must/006": {
+   "status": "unmet",
+   "value": "no",
+   "reason": "No run record names an environment: the probe counted duct resource profiles as capture; none names a lockfile, image or package set.",
+   "evidence": [
+    {
+     "uri": "probes.json: run-env-linked details",
+     "description": "with_env 1095/1216 counted via duct; duct measures resources, it does not capture the environment",
+     "sha256": null
+    },
+    {
+     "uri": "commit 7733465 [DATALAD RUNCMD] body",
+     "description": "record carries cmd, inputs, outputs, dsid, pwd, exit; no env spec, image or lock",
+     "sha256": null
+    },
+    {
+     "uri": "probes.json: derived-have-records",
+     "description": "1218 of 22286 derived files lack a record (mostly reports and profiler outputs); a T-property, not the env question",
+     "sha256": null
+    }
+   ],
+   "source": "probe:run-env-linked+probe:derived-have-records+judgement",
+   "flags": [
+    "mapping-questioned",
+    "probe-overridden"
+   ]
+  },
+  "stamped-checklist:must/007": {
+   "value": "yes",
+   "reason": "README.md has an install/usage/reproduce section.",
+   "status": "met",
+   "evidence": [
+    {
+     "uri": "README.md",
+     "description": "instructions",
+     "sha256": null
+    },
+    {
+     "uri": "code/run_sorting_sweep.sh",
+     "description": "entry point named in the instructions and present",
+     "sha256": null
+    },
+    {
+     "uri": "code/run_sweep.sh",
+     "description": "entry point named in the instructions and present",
+     "sha256": null
+    }
+   ],
+   "source": "probe:entry-point",
+   "flags": []
+  },
+  "stamped-checklist:must/008": {
+   "value": "yes",
+   "reason": "Starting point present: code/run_sorting_sweep.sh.",
+   "status": "met",
+   "evidence": [
+    {
+     "uri": "README.md",
+     "description": "instructions",
+     "sha256": null
+    },
+    {
+     "uri": "code/run_sorting_sweep.sh",
+     "description": "entry point named in the instructions and present",
+     "sha256": null
+    },
+    {
+     "uri": "code/run_sweep.sh",
+     "description": "entry point named in the instructions and present",
+     "sha256": null
+    }
+   ],
+   "source": "probe:entry-point",
+   "flags": []
+  },
+  "stamped-checklist:must/009": {
+   "status": "unmet",
+   "value": "no",
+   "reason": "Four scripts hardcode host paths under /data/yoh (plus a /tmp generated dir), so the sweep cannot run on another host unchanged.",
+   "evidence": [
+    {
+     "uri": "code/partial_report.sh#L47",
+     "description": "/data/yoh/compression-comparisons/.specify/specs/...",
+     "sha256": null
+    },
+    {
+     "uri": "code/run_sorting_sweep.sh#L48",
+     "description": "WV=/data/yoh/compression-comparisons/vendor/wavpack",
+     "sha256": null
+    },
+    {
+     "uri": "code/run_sorting_sweep.sh#L76",
+     "description": "Path(\"/tmp/sorting-gen\")",
+     "sha256": null
+    }
+   ],
+   "source": "probe:no-abs-paths",
+   "flags": []
+  },
+  "stamped-checklist:must/010": {
+   "status": "unmet",
+   "value": "no",
+   "reason": "Host tools (patched datalad, cmake, uv, GPU driver for Kilosort) are required and named only in scripts or prose, not in any tracked spec.",
+   "evidence": [
+    {
+     "uri": "code/run_sweep.sh#L24-L35",
+     "description": "datalad pinned install command, printed on mismatch, not in a spec",
+     "sha256": null
+    },
+    {
+     "uri": "README.md#L111-L114",
+     "description": "cmake build of the BWC codec, host toolchain",
+     "sha256": null
+    }
+   ],
+   "source": "probe:env-spec-tracked",
+   "flags": []
+  },
+  "stamped-checklist:must/011": {
+   "status": "partial",
+   "value": "no",
+   "reason": "Patched datalad, cmake and a GPU are named; hardcoded /data/yoh and /tmp paths, the OS and the C++ toolchain are not written down.",
+   "evidence": [
+    {
+     "uri": "README.md#L80",
+     "description": "Requires a patched datalad",
+     "sha256": null
+    },
+    {
+     "uri": "README.md#L111-L114",
+     "description": "cmake, -Wno-restrict",
+     "sha256": null
+    },
+    {
+     "uri": "README.md#L123",
+     "description": "GPU for Kilosort 4",
+     "sha256": null
+    },
+    {
+     "uri": "code/run_sorting_sweep.sh#L48",
+     "description": "host WavPack path",
+     "sha256": null
+    }
+   ],
+   "source": "judgement",
+   "flags": []
+  },
+  "stamped-checklist:must/012": {
+   "status": "partial",
+   "value": "no",
+   "reason": "No system-requirements list: cmake, a GPU and a patched datalad appear only inline in the reproduction steps; no OS or version list.",
+   "evidence": [
+    {
+     "uri": "README.md#L80, #L111-L114, #L123",
+     "description": "requirements stated inline, in three places",
+     "sha256": null
+    },
+    {
+     "uri": "README.md",
+     "description": "no Requirements section found",
+     "sha256": null
+    }
+   ],
+   "source": "judgement",
+   "flags": []
+  },
+  "stamped-checklist:must/013": {
+   "status": "partial",
+   "value": "no",
+   "reason": "No environment spec tracked in this object; the tool's pyproject sits in module code/compression-comparisons-tools, uninitialised and not read.",
+   "evidence": [
+    {
+     "uri": ".gitmodules",
+     "description": "code/compression-comparisons-tools not initialised in the clone",
+     "sha256": null
+    },
+    {
+     "uri": "git ls-files",
+     "description": "no lock, pyproject, requirements or Dockerfile at root",
+     "sha256": null
+    }
+   ],
+   "source": "probe:env-spec-tracked+judgement",
+   "flags": []
+  },
+  "stamped-checklist:must/014": {
+   "status": "partial",
+   "value": "no",
+   "reason": "Declared: README re-install after checkout, and 17 tool re-pin commits in history; no tracked environment spec here to update.",
+   "evidence": [
+    {
+     "uri": "README.md 'Reproducing' step 2",
+     "description": "uv pip install after checking out the tool commit",
+     "sha256": null
+    },
+    {
+     "uri": "git log -- code/compression-comparisons-tools",
+     "description": "17 commits, e.g. 40aa933 'Re-pin the tool submodule'",
+     "sha256": null
+    },
+    {
+     "uri": "git ls-files",
+     "description": "no spec file that a dependency change would edit",
+     "sha256": null
+    }
+   ],
+   "source": "judgement",
+   "flags": [
+    "upstream-duplicate"
+   ]
+  },
+  "stamped-checklist:must/015": {
+   "status": "unmet",
+   "value": "no",
+   "reason": "Run records capture the process but pin nothing: no image digest or frozen manifest another person could replicate from.",
+   "evidence": [
+    {
+     "uri": "probes.json: run-env-linked",
+     "description": "no container or lockfile reference found as an environment pin",
+     "sha256": null
+    }
+   ],
+   "source": "probe:run-env-linked",
+   "flags": []
+  },
+  "stamped-checklist:must/016": {
+   "status": "partial",
+   "value": "no",
+   "reason": "Tool repo is public and pin 915cb4c fetchable, but the recorded module url is broken and no environment spec or archive is published from this object.",
+   "evidence": [
+    {
+     "uri": "git ls-remote https://github.com/dandi/compression-comparisons",
+     "description": "HEAD 9722504, public",
+     "sha256": null
+    },
+    {
+     "uri": ".gitmodules",
+     "description": "url = ../.. (broken, see must/002)",
+     "sha256": null
+    }
+   ],
+   "source": "judgement",
+   "flags": []
+  },
+  "stamped-checklist:must/017": {
+   "status": "partial",
+   "value": "no",
+   "reason": "README gives build steps, but the clone step is the placeholder <this-repo-url>, and the patched-datalad install lives only in run_sweep.sh.",
+   "evidence": [
+    {
+     "uri": "README.md 'Reproducing' step 1",
+     "description": "datalad clone <this-repo-url> study",
+     "sha256": null
+    },
+    {
+     "uri": "code/run_sweep.sh#L24-L35",
+     "description": "datalad install command",
+     "sha256": null
+    }
+   ],
+   "source": "judgement",
+   "flags": []
+  },
+  "stamped-checklist:should/001": {
+   "status": "met",
+   "value": "yes",
+   "reason": "One stack: git plus git-annex in every component; root carries .datalad/config and both modules carry a datalad-id.",
+   "evidence": [
+    {
+     "uri": ".datalad/config",
+     "description": "datalad dataset id",
+     "sha256": null
+    },
+    {
+     "uri": ".gitmodules",
+     "description": "datalad-id for both modules",
+     "sha256": null
+    },
+    {
+     "uri": "git log -5 --oneline",
+     "description": "all commits on one git history; submodule internals not read",
+     "sha256": null
+    }
+   ],
+   "source": "judgement",
+   "flags": [
+    "unverified-claim"
+   ]
+  },
+  "stamped-checklist:should/002": {
+   "status": "unmet",
+   "value": "no",
+   "reason": "No CI config: nothing re-runs the README reproduction route or any unit test.",
+   "evidence": [
+    {
+     "uri": "git ls-files",
+     "description": "no .github/, .gitlab-ci.yml or other CI file tracked",
+     "sha256": null
+    }
+   ],
+   "source": "probe:ci-present",
+   "flags": []
+  },
+  "stamped-checklist:should/003": {
+   "status": "partial",
+   "value": "no",
+   "reason": "Inputs, code and derived sit apart, but the environment definition has no separate module here: the only spec is in an uninitialised module.",
+   "evidence": [
+    {
+     "uri": "probes.json: modules-separated",
+     "description": "probe found environment: [] yet returned met",
+     "sha256": null
+    },
+    {
+     "uri": ".gitmodules; README 'Layout'",
+     "description": "tool module is the only place a spec could live",
+     "sha256": null
+    }
+   ],
+   "source": "probe:modules-separated+judgement",
+   "flags": [
+    "probe-overridden",
+    "mapping-questioned"
+   ]
+  },
+  "stamped-checklist:should/009": {
+   "status": "not-checked",
+   "value": null,
+   "reason": "Upstream terms of the BWC reference code (src/bwc, uninitialised module) were not read, so an empty subject cannot be shown.",
+   "evidence": [
+    {
+     "uri": "dataset_description.json",
+     "description": "'see sourcedata/ and src/ for upstream terms'; src/ is not in the tree",
+     "sha256": null
+    }
+   ],
+   "source": "judgement",
+   "flags": [
+    "unverified-claim"
+   ]
+  },
+  "stamped-checklist:should/004": {
+   "status": "not-checked",
+   "value": null,
+   "reason": "No CI and no record of a fresh-environment run; a fresh rerun was not attempted (cost), so not-checked, not unmet.",
+   "evidence": [
+    {
+     "uri": "git ls-files",
+     "description": "no CI",
+     "sha256": null
+    },
+    {
+     "uri": "fresh_rerun.py",
+     "description": "not run",
+     "sha256": null
+    }
+   ],
+   "source": "judgement",
+   "flags": []
+  },
+  "stamped-checklist:should/005": {
+   "status": "unmet",
+   "value": "no",
+   "reason": "One long-lived venv (envs/compbench) serves all 912 cells; no per-run disposable environment.",
+   "evidence": [
+    {
+     "uri": "code/run_sweep.sh#L48",
+     "description": "VENV=$STUDY/envs/compbench, shared across cells",
+     "sha256": null
+    },
+    {
+     "uri": "README.md 'Status'",
+     "description": "912 cells in one sweep",
+     "sha256": null
+    }
+   ],
+   "source": "judgement",
+   "flags": []
+  },
+  "stamped-checklist:should/006": {
+   "status": "unmet",
+   "value": "no",
+   "reason": "No CI config: the environment behind the results is never rebuilt and tested.",
+   "evidence": [
+    {
+     "uri": "git ls-files",
+     "description": "no CI file tracked",
+     "sha256": null
+    }
+   ],
+   "source": "probe:ci-present",
+   "flags": []
+  },
+  "stamped-checklist:should/007": {
+   "status": "unmet",
+   "value": "no",
+   "reason": "No container image or built binary archived: the BWC build and the venv are rebuilt from prose, nothing is archived.",
+   "evidence": [
+    {
+     "uri": "git ls-files",
+     "description": "no .sif, image, .so or binary blob tracked",
+     "sha256": null
+    },
+    {
+     "uri": "README.md 'Reproducing' step 2",
+     "description": "cmake build from source",
+     "sha256": null
+    }
+   ],
+   "source": "judgement",
+   "flags": []
+  },
+  "stamped-checklist:should/008": {
+   "status": "partial",
+   "value": "no",
+   "reason": "Same question as must/014: declared in README and tracked through 17 re-pin commits; no tracked environment spec here to update.",
+   "evidence": [
+    {
+     "uri": "README.md 'Reproducing'",
+     "description": "re-install after checkout",
+     "sha256": null
+    },
+    {
+     "uri": "git log -- code/compression-comparisons-tools",
+     "description": "17 re-pin commits",
+     "sha256": null
+    }
+   ],
+   "source": "judgement",
+   "flags": [
+    "upstream-duplicate"
+   ]
+  },
+  "stamped-checklist:may/001": {
+   "value": "yes",
+   "reason": "2 external component(s) are linked as modules: code/compression-comparisons-tools, sourcedata/aind-ephys-compression",
+   "status": "met",
+   "evidence": [
+    {
+     "uri": ".gitmodules",
+     "description": "code/compression-comparisons-tools: url=../.. — relative url: resolves only next to this superdataset",
+     "sha256": null
+    }
+   ],
+   "source": "probe:subdatasets-resolvable",
+   "flags": []
+  },
+  "stamped-checklist:may/002": {
+   "status": "met",
+   "value": "yes",
+   "reason": "Modular structure is documented: the Layout field and the README 'Layout' section name each module and its role.",
+   "evidence": [
+    {
+     "uri": "dataset_description.json",
+     "description": "Layout field",
+     "sha256": null
+    },
+    {
+     "uri": "README.md",
+     "description": "Layout section",
+     "sha256": null
+    }
+   ],
+   "source": "judgement",
+   "flags": []
+  },
+  "stamped-checklist:may/003": {
+   "status": "met",
+   "value": "yes",
+   "reason": "run_sweep.sh refuses a drifted tool checkout, sourcedata is never modified, and 17 re-pins show independent updates.",
+   "evidence": [
+    {
+     "uri": "code/run_sweep.sh#L1-L30",
+     "description": "pin guard",
+     "sha256": null
+    },
+    {
+     "uri": "dataset_description.json",
+     "description": "sourcedata never modified",
+     "sha256": null
+    }
+   ],
+   "source": "judgement",
+   "flags": []
+  },
+  "stamped-checklist:may/004": {
+   "status": "met",
+   "value": "yes",
+   "reason": "Composition by git submodules and datalad subdatasets, recorded in .gitmodules with datalad-ids.",
+   "evidence": [
+    {
+     "uri": ".gitmodules",
+     "description": "two modules with datalad-id",
+     "sha256": null
+    }
+   ],
+   "source": "judgement",
+   "flags": []
+  },
+  "stamped-checklist:may/005": {
+   "status": "met",
+   "value": "yes",
+   "reason": "README 'Layout' section and dataset_description Layout field document how the parts relate.",
+   "evidence": [
+    {
+     "uri": "README.md",
+     "description": "Layout section",
+     "sha256": null
+    },
+    {
+     "uri": "dataset_description.json",
+     "description": "Layout field",
+     "sha256": null
+    }
+   ],
+   "source": "judgement",
+   "flags": []
+  }
+ },
+ "schema_version": "0.2.0",
+ "principles_version": "0.2.0",
+ "checklist_source": {
+  "repo": "https://github.com/stamped-principles/stamped-checklist-schema",
+  "tag": "v0.3.1",
+  "commit": "af259bad237fa57b856417db8dba45a1b283a527"
+ },
+ "object": {
+  "url": "https://github.com/dandi/compression-comparisons-t261-study",
+  "commit": "f2f0802449095025b589337f8cb6f13be5112b25",
+  "captured_at": "2026-10-15T02:45:45Z",
+  "kind": "study"
+ },
+ "assessor": {
+  "skill": "assess-alignment-with-stamped-principles",
+  "version": "0.1.0",
+  "harness": "claude-code (blind run; harness version not recorded)",
+  "model": "claude-haiku-5-5",
+  "date": "2026-10-15",
+  "dependencies": [
+   "stamped-conventions@0.1.0"
+  ]
+ },
+ "scope": "Assessed the committed state at f2f0802 (clean tree). Submodules code/compression-comparisons-tools and sourcedata/aind-ephys-compression are uninitialised, so their contents were not read. Tool pin 915cb4c was checked by fetch only. fresh_rerun not run. gh not used (unauthenticated). No user available: goals and kind are labelled assumptions.",
+ "extra_items": [
+  {
+   "key": "clone-weight",
+   "status": "partial",
+   "reason": "22 text blobs over 10 MiB (239 MiB) tracked in git; each clone carries them in full.",
+   "evidence": []
+  },
+  {
+   "key": "inputs-untouched",
+   "status": "not-checked",
+   "reason": "Both modules uninitialised, so their state cannot be read.",
+   "evidence": []
+  },
+  {
+   "key": "license-declared",
+   "status": "partial",
+   "reason": "MIT declared in dataset_description.json; no LICENSE file tracked at the root.",
+   "evidence": [
+    {
+     "uri": "dataset_description.json",
+     "description": "License field",
+     "sha256": null
+    }
+   ]
+  }
+ ]
+}
