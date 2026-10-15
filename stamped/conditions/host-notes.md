@@ -23,6 +23,10 @@ than another, and nothing here says anything about how to organise a project.
   run pulled several GB by accident with a too-broad `datalad run -i` glob.
 - `gh` is not authenticated, and there is no push access to anything. Nothing
   here needs to be published.
+- **This host is shared with other runs happening right now.** Never kill by
+  pattern (`pkill -f 'datalad run'`): sibling runs are in the same process
+  table and one arm's cleanup has already killed another's jobs. Kill the pid
+  you started.
 - Wall-clock guidance: skull-stripping one T1w takes seconds to a couple of
   minutes on this host, so ten subjects is minutes, not hours. If something
   looks like it will take an hour, it is the wrong approach.
