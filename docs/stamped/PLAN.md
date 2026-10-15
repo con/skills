@@ -189,7 +189,8 @@ skills/create-stamped-project/{SKILL.md, templates/…}
 skills/create-repronim-stamped-project/SKILL.md
 skills/do-full-research-loop/SKILL.md
 skills/self-assess-alignment-with-stamped-principles/SKILL.md
-evals/stamped/                  # kept outside the skills (K-Dense convention)
+evals/stamped/                  # a submodule: the `stamped-evals` branch of this
+                                # repository, kept outside the skills (K-Dense convention)
   conditions/pointer-CLAUDE.md  # the `pointer` baseline, verbatim from the issue
   fixtures/make_r0_object.py    # a known-good object, built with plain git
   mutants/mutate.py             # defect injectors for calibrating the assessor
@@ -201,6 +202,16 @@ docs/stamped/PLAN.md            # this file
 ```
 
 Eval *results* are large and binary (produced projects, transcripts, container logs), so they live in a separate DataLad dataset, not here ([evals.md §9](evals.md#9-where-results-live)).
+
+`evals/` is a **submodule**: the `stamped-evals` branch of con/skills itself,
+mounted at the same path it used to occupy, so every path quoted in a record,
+a commit message or this file still resolves. A branch rather than a second
+repository keeps the effort self-contained; a submodule rather than a
+directory keeps the review of the skills readable — at the split the skills
+were 4.6k lines of the pull request and the records were 41k, and the records
+only ever grow. Recording a run is therefore two commits, submodule first:
+a pointer pushed ahead of what it points at is exactly the `must/002` failure
+the assessor exists to catch.
 
 ### 4.2 Skill specifications
 
@@ -399,7 +410,7 @@ Skills stay at `0.x` until their done criteria hold.
   - [x] R0 with `bare` / `pointer` / `skill-implicit` / `skill-explicit` (2026-10-13), plus sonnet repeats 2–3 and haiku (2026-10-14).
   - [x] R1 with the same arms (2026-10-14): the first rung with real compute, oracle met in every finished arm.
   - [x] A publishing target, so must/016 is reachable at all ([§10](#7-decisions-and-where-we-diverge) item 13) — harness, skills and probe, 2026-10-15.
-  - [x] Three repeats of one cell (item 14): R0 `skill-explicit` on sonnet, 9/11, 10/11, 10/11 — **10/11, 11/11, 11/11 at the sandbox ceiling**, so two in three pass every item. Mean 0.879, spread 0.82–0.91 ([record](../../evals/stamped/blind-runs/2026-10-15-r0-three-repeats/README.md)).
+  - [x] Three repeats of one cell (item 14): R0 `skill-explicit` on sonnet, 9/11, 10/11, 10/11 — **10/11, 11/11, 11/11 at the sandbox ceiling**, so two in three pass every item. Mean 0.879, spread 0.82–0.91 ([record](https://github.com/con/skills/blob/stamped-evals/stamped/blind-runs/2026-10-15-r0-three-repeats/README.md), in the `evals/` submodule).
   - [ ] The same on a second tier, and at R1; and one run with a **real URL**, which is the only way must/016 reaches `met`.
 - [ ] **Phase 3: do-full-research-loop.**
   - v0.1.
@@ -419,13 +430,17 @@ Skills stay at `0.x` until their done criteria hold.
 
 ### 5.1 Phase 1 as landed
 
+All five skills read `version: 0.1.0`, and stay there while this pull request
+is open: `AGENTS.md` counts versions from the first merge, so the procedures
+have changed many times without a bump that a consumer could pin to.
+
 What exists in con/skills as of 2026-10-13, on branch `claude/ecstatic-cerf-nh4j6w`:
 
-- **`skills/stamped-conventions/` 0.2.0** — the five references, the checklist vendored at `v0.3.1` (`af259ba`) with a `lock.json` carrying tag, commit and sha256, `vendor_checklist.py` (`--check` verifies the files against the lock) and `encode_response.py` (`items`, `validate`, `encode`, `decode`, `template`).
+- **`skills/stamped-conventions/` 0.1.0** — the five references, the checklist vendored at `v0.3.1` (`af259ba`) with a `lock.json` carrying tag, commit and sha256, `vendor_checklist.py` (`--check` verifies the files against the lock) and `encode_response.py` (`items`, `validate`, `encode`, `decode`, `template`).
   The encoder is the only writer of an app URL, and `decode` is what turns a checklist a person filled in the web app into reference answers.
 - **`skills/create-stamped-project/` 0.1.0, `skills/align-with-stamped-principles/` 0.1.0 and `skills/do-full-research-loop/` 0.1.0** — the three skills R0 exercises, with the guards shipped as templates rather than described: `pre-commit-run-guard` (refuses a commit while a recorded run is in flight, and allows the run's own), `run-recorded.sh` (sets the marker, refuses a dirty tree, falls back to a plain recorded commit without datalad) and `preflight.sh` (eight checks, each naming the checklist item it protects).
   All three guards are tested: `preflight.sh` passes on the clean fixture and refuses three mutants; the hook refuses an outside commit and admits `IN_FLIGHT_OK=1`.
-- **`skills/assess-alignment-with-stamped-principles/` 0.2.0** — the skill, thirteen probes in `scripts/probes/`, `scripts/run_probes.py` (which also writes a draft response JSON) and `scripts/fresh_rerun.py`.
+- **`skills/assess-alignment-with-stamped-principles/` 0.1.0** — the skill, thirteen probes in `scripts/probes/`, `scripts/run_probes.py` (which also writes a draft response JSON) and `scripts/fresh_rerun.py`.
   The probes answer **11 of the 17 MUST items**, 2 SHOULD items and may/001 from committed state; the other six MUST items are judgement, listed in the skill.
   Three probes answer no checklist item and are reported as extras: `license-declared`, `clone-weight` and `inputs-untouched`.
   One probe can answer two items differently — `entry-point` separates must/007 (instructions) from must/008 (a starting point), `run-env-linked` separates must/006 (the record names an environment) from must/015 (that environment is pinned).
@@ -709,6 +724,25 @@ My recommendation comes first in each item.
     second glob can go. `apm.yml` includes the whole `skills` tree, so these
     five need no per-skill entry there. `evals/` stays at the root: it is not a
     skill and APM should not publish it.
+
+15. ~~**Where does the experimentation live, now that the pull request has to be
+    reviewable?**~~ **Decided 2026-10-15: a submodule on a branch of this same
+    repository.** `evals/` is the `stamped-evals` branch of con/skills, mounted
+    at the path it already occupied, so nothing that quotes a path had to move
+    with it — and the history came along, because the branch was made with
+    `git subtree split -P evals`, not by copying a tree.
+    The alternatives and why not: *leave it in the pull request* — 41k of the
+    48k lines under review were run records, which only grow, and a reviewer
+    cannot see the 4.6k lines of skills through them; *a second repository* —
+    the work stops being self-contained, and the one thing the hub dataset
+    already demonstrates is how easily a pin to another repository goes
+    unfetchable; *delete the records* — they are the evidence for every number
+    in the plan.
+    The cost is honest and is written into `AGENTS.md`: a run record is now two
+    commits, submodule first, and a pointer pushed ahead of what it points at
+    is unresolvable for everybody else. `tox -e stamped-evals` refuses with
+    that instruction rather than an import error when the submodule is absent,
+    and CI checks it out.
 
 ---
 

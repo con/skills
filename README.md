@@ -78,13 +78,20 @@ Structural lint of every skill, and the STAMPED probe tests and mutant
 calibration:
 
 ```console
+git submodule update --init evals   # the STAMPED eval harness and run records
 tox -e validate        # frontmatter, size budgets, duplicate blocks, bundled Python
 tox -e stamped-evals   # pytest over the probes + the defect-mutant calibration
 ```
 
-Tests live outside the skill directories, under
-[`evals/`](evals/stamped/README.md), so a skill ships its instructions and
-scripts without its test suite.
+Tests live outside the skill directories, under `evals/`, so a skill ships its
+instructions and scripts without its test suite. For the STAMPED skills that
+directory is a **submodule**: the
+[`stamped-evals`](https://github.com/con/skills/tree/stamped-evals) branch of
+this same repository, which carries the graders, the fixtures, the defect
+mutants and the record of every blind run. It is a branch rather than a second
+repository so the work stays self-contained, and a submodule rather than a
+directory because the records are append-only and were 85% of the diff that
+introduced the skills.
 
 ## Repo-wide conventions
 

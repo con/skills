@@ -205,7 +205,7 @@ Where the products go:
 
 ## Validation scope
 
-This version is calibrated on the three things below, which live in the [con/skills](https://github.com/con/skills) repository rather than in an installed copy of this skill: nothing outside this directory and its `../stamped-conventions/` sibling is needed to run the procedure, and a link into the repository that does not resolve where you are reading is a note, not a stop.
+This version is calibrated on the three things below, which live in the [con/skills](https://github.com/con/skills) repository (in its `evals/` submodule, the `stamped-evals` branch) rather than in an installed copy of this skill: nothing outside this directory and its `../stamped-conventions/` sibling is needed to run the procedure, and a link into the repository that does not resolve where you are reading is a note, not a stop.
 
 - the defect-injection mutants in `evals/stamped/mutants/` (one injected defect, one expected item flip) — which test the probes, not this procedure;
 - blind runs of this skill by fresh subagents on real objects, diffed per item against the reference answers in `evals/stamped/gold/` (`evals/stamped/harness/blind_run.py`) — which are what test the procedure;

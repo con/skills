@@ -174,6 +174,12 @@ the authoring session walking through its own procedure.
    until it was established the number could not be defended. A grading
    that does not say which commit it describes cannot be corrected, only
    distrusted.
+   For the STAMPED skills `evals/` is a submodule — this repository's
+   `stamped-evals` branch — so recording a run is two commits: the record
+   inside `evals/`, then the moved pointer in the superproject. Push the
+   submodule first. A pointer pushed ahead of what it points at is
+   unresolvable for everybody else, which is the `must/002` failure these
+   skills exist to catch.
 
 Run it with more than one model tier where the skill may be used by one,
 and keep at least one target out of the loop you tune against, so the
@@ -188,7 +194,8 @@ judgement) and require the blind run to *name* the specific defect, not
 merely to look unhappy. That is a regression artifact for a sentence,
 and it is the only kind of test that keeps prose honest. The STAMPED
 collection's are in `evals/stamped/mutants/judgement.py`, driven by
-`evals/stamped/harness/judgement_calibrate.py`.
+`evals/stamped/harness/judgement_calibrate.py` (both in the `evals/`
+submodule; the paths are the same as before the split).
 
 ### Scripts are the fast half, not the whole test
 

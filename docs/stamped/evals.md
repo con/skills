@@ -3,6 +3,9 @@
 Companion to [PLAN.md](PLAN.md): how each skill version is tested, calibrated
 and reviewed. The platform question — what to adopt rather than grow — is in
 [eval-platforms.md](eval-platforms.md).
+Everything described here lives in the `evals/` submodule (the `stamped-evals`
+branch of con/skills); `git submodule update --init evals` before running any
+command below.
 The cycle is closest to skill-creator's loop combined with @asmacdo's audit loop, but its test fixtures are scientific use cases and its grader is the checklist.
 
 ```mermaid

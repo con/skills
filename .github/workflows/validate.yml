@@ -8,7 +8,9 @@ on:
       - '*/**.py'
       - 'skills/**'
       - 'ci/validate_skills.py'
+      - 'evals'
       - 'evals/**'
+      - '.gitmodules'
       - 'tox.ini'
       - '.github/workflows/validate.yml'
   push:
@@ -18,7 +20,9 @@ on:
       - '*/**.py'
       - 'skills/**'
       - 'ci/validate_skills.py'
+      - 'evals'
       - 'evals/**'
+      - '.gitmodules'
   workflow_dispatch:
 
 concurrency:
@@ -34,7 +38,13 @@ jobs:
     timeout-minutes: 10
 
     steps:
+      # The eval harness and the run records are the `evals/` submodule (the
+      # `stamped-evals` branch of this repository), and `tox -e stamped-evals`
+      # is nothing without it. A change there reaches this workflow as a moved
+      # submodule pointer, which `evals` above matches.
       - uses: actions/checkout@v4
+        with:
+          submodules: true
 
       - uses: actions/setup-python@v5
         with:
