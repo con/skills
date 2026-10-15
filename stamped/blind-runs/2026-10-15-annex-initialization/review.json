@@ -1,0 +1,46 @@
+{
+  "source_commit": "54a4030581262997200de50038fe84c6613fa2f3",
+  "scope": "Working datalad-annex skill only; preserve selected assessor0208f825 unchanged",
+  "native_result": {
+    "raw_initial_uuid_absent": true,
+    "single_before_returncode": 1,
+    "single_before_stderr": "git-annex: First run: git-annex init\n\n",
+    "single_after_stdout": "{\"command\":\"whereis\",\"error-messages\":[],\"file\":\"code/containers/analysis.sif\",\"input\":[\"code/containers/analysis.sif\"],\"key\":\"SHA256E-s2304--7a3838d9d993f455975a9a9eac0cf5107aa92f0750b3d1aaacfb193fbd210ce1.sif\",\"note\":\"0 copies\",\"success\":false,\"untrusted\":[],\"whereis\":[]}\n",
+    "single_after_stderr": "whereis: 1 failed\n",
+    "raw_whereis_before_returncode": 0,
+    "raw_whereis_before_stderr": "",
+    "raw_whereis_after_returncode": 0,
+    "raw_dotgit_native_layout": "/private/tmp/stamped-annex-init-check-v3/raw/.git/modules/selected",
+    "raw_head_and_blob_preserved": true,
+    "native_get_no_data_succeeded": true,
+    "payloads_not_fetched": true,
+    "unrelated_not_initialized": true,
+    "fixture_parent": "068ebbf86b96b96e4fdbadb85aa155d66cc63172"
+  },
+  "official_references": [
+    "https://git-annex.branchable.com/git-annex-init/",
+    "https://docs.datalad.org/en/stable/generated/man/datalad-get.html"
+  ],
+  "friction": [
+    {
+      "classification": "harness fault",
+      "finding": "First probe named pixi.toml, but the existing fixture annexes code/containers/analysis.sif. Wrong-path command evidence retained."
+    },
+    {
+      "classification": "skill wording",
+      "finding": "Initial wording required preserving .git files. Native git-annex converts the submodule Git file into a symlink; corrected to let native tools manage Git metadata layout while preserving tracked input links. Failed invariant retained."
+    }
+  ],
+  "limits": [
+    "Full-clone whereis may implicitly initialize annex; single-branch clone lacking remote annex metadata reproduced initialization failure. Initialization alone does not recover missing location logs.",
+    "Metadata-only preparation; no payload retrieval or scientific execution.",
+    "Structural validation:27skills,0errors,10preexistingwarnings. Existing assessor calibration not rerun for prose-only working skill change."
+  ],
+  "fixture_replay": "source.bundle retains source Git and annex metadata without payloads. To rerun native-probe.py, clone the bundle to a new source path, substitute that path for source and use a new base directory. Run under the declared project Pixi environment; synthetic fixture commits require fresh local provenance resolver.",
+  "fixture_bundle_sha256": "61daf34960642e0dc77b80f5ce3ea5f27539fb886df1189393cd688db9883bc6",
+  "independent_reviews": {
+    "frontier": "Fresh independent agent followed exact snapshot; selected metadata only, unchanged HEAD and symlink, no unrelated initialization; no blocking friction.",
+    "smaller": "gpt-6-luna high; same outcome; harmless redundant annex init after native installation, no skill change warranted."
+  },
+  "snapshot_hashes_verified": true
+}

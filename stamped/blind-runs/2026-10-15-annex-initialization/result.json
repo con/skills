@@ -1,0 +1,16 @@
+{
+  "raw_initial_uuid_absent": true,
+  "single_before_returncode": 1,
+  "single_before_stderr": "git-annex: First run: git-annex init\n\n",
+  "single_after_stdout": "{\"command\":\"whereis\",\"error-messages\":[],\"file\":\"code/containers/analysis.sif\",\"input\":[\"code/containers/analysis.sif\"],\"key\":\"SHA256E-s2304--7a3838d9d993f455975a9a9eac0cf5107aa92f0750b3d1aaacfb193fbd210ce1.sif\",\"note\":\"0 copies\",\"success\":false,\"untrusted\":[],\"whereis\":[]}\n",
+  "single_after_stderr": "whereis: 1 failed\n",
+  "raw_whereis_before_returncode": 0,
+  "raw_whereis_before_stderr": "",
+  "raw_whereis_after_returncode": 0,
+  "raw_dotgit_native_layout": "/private/tmp/stamped-annex-init-check-v3/raw/.git/modules/selected",
+  "raw_head_and_blob_preserved": true,
+  "native_get_no_data_succeeded": true,
+  "payloads_not_fetched": true,
+  "unrelated_not_initialized": true,
+  "fixture_parent": "068ebbf86b96b96e4fdbadb85aa155d66cc63172"
+}

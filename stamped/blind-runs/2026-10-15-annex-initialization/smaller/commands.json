@@ -1,0 +1,230 @@
+[
+  {
+    "label": "subdatasets-containment-probe",
+    "argv": [
+      "GIT_ALLOW_PROTOCOL=file",
+      "pixi",
+      "run",
+      "--manifest-path",
+      "/Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/pixi.toml",
+      "datalad",
+      "-C",
+      "/tmp/stamped-annex-init-blind/smaller/project",
+      "subdatasets",
+      "--contains",
+      "."
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "subdataset(impossible): /tmp/stamped-annex-init-blind/smaller/project [path not contained in any matching subdataset]\n"
+  },
+  {
+    "label": "list-root-subdatasets",
+    "argv": [
+      "GIT_ALLOW_PROTOCOL=file",
+      "pixi",
+      "run",
+      "--manifest-path",
+      "/Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/pixi.toml",
+      "datalad",
+      "-C",
+      "/tmp/stamped-annex-init-blind/smaller/project",
+      "subdatasets"
+    ],
+    "returncode": 0,
+    "stdout": "subdataset(ok): selected (dataset)\nsubdataset(ok): unrelated (dataset)\n",
+    "stderr": ""
+  },
+  {
+    "label": "parent-status-before",
+    "argv": [
+      "git",
+      "status",
+      "--short"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "label": "parent-selected-gitlink-before",
+    "argv": [
+      "git",
+      "ls-files",
+      "-s",
+      "--",
+      "selected"
+    ],
+    "returncode": 0,
+    "stdout": "160000 77dedfe19f21ec17fc704fc5aa30e782345a98d8 0\tselected\n",
+    "stderr": ""
+  },
+  {
+    "label": "selected-get-metadata",
+    "argv": [
+      "pixi",
+      "run",
+      "--manifest-path",
+      "/Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/pixi.toml",
+      "datalad",
+      "-C",
+      "/tmp/stamped-annex-init-blind/smaller/project",
+      "get",
+      "-n",
+      "selected"
+    ],
+    "returncode": 0,
+    "stdout": "install(ok): /tmp/stamped-annex-init-blind/smaller/project/selected (dataset) [Installed subdataset in order to get /tmp/stamped-annex-init-blind/smaller/project/selected]\n",
+    "stderr": "[INFO] Attempting a clone into /tmp/stamped-annex-init-blind/smaller/project/selected \n[INFO] Attempting to clone from /tmp/stamped-assessment-evidence-fixtures/test_a_spec_whose_content_neve0/annexed-spec to /tmp/stamped-annex-init-blind/smaller/project/selected \n[INFO] Completed clone attempts for Dataset(/tmp/stamped-annex-init-blind/smaller/project/selected) \n"
+  },
+  {
+    "label": "selected-annex-init",
+    "argv": [
+      "pixi",
+      "run",
+      "--manifest-path",
+      "/Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/pixi.toml",
+      "git",
+      "-C",
+      "/tmp/stamped-annex-init-blind/smaller/project/selected",
+      "annex",
+      "init",
+      "metadata-inspection"
+    ],
+    "returncode": 0,
+    "stdout": "init metadata-inspection ok\n(recording state in git...)\n",
+    "stderr": ""
+  },
+  {
+    "label": "selected-head",
+    "argv": [
+      "git",
+      "-C",
+      "/tmp/stamped-annex-init-blind/smaller/project/selected",
+      "rev-parse",
+      "HEAD"
+    ],
+    "returncode": 0,
+    "stdout": "77dedfe19f21ec17fc704fc5aa30e782345a98d8\n",
+    "stderr": ""
+  },
+  {
+    "label": "selected-tracked-files",
+    "argv": [
+      "git",
+      "-C",
+      "/tmp/stamped-annex-init-blind/smaller/project/selected",
+      "ls-files",
+      "-s"
+    ],
+    "returncode": 0,
+    "stdout": "100644 bba25111c666d3529cd159702b0e6856b8d36c4b 0\t.datalad/config\n100644 dac9235d755c836543dd037a911effd1f5f54838 0\tREADME.md\n120000 62bd5c1f034ff7236fed5242a3d5f45a577d1b18 0\tcode/containers/analysis.sif\n",
+    "stderr": ""
+  },
+  {
+    "label": "selected-status",
+    "argv": [
+      "git",
+      "-C",
+      "/tmp/stamped-annex-init-blind/smaller/project/selected",
+      "status",
+      "--short"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "label": "parent-selected-gitlink-after",
+    "argv": [
+      "git",
+      "ls-files",
+      "-s",
+      "--",
+      "selected"
+    ],
+    "returncode": 0,
+    "stdout": "160000 77dedfe19f21ec17fc704fc5aa30e782345a98d8 0\tselected\n",
+    "stderr": ""
+  },
+  {
+    "label": "parent-status-after",
+    "argv": [
+      "git",
+      "status",
+      "--short"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "label": "selected-file-names",
+    "argv": [
+      "git",
+      "-C",
+      "/tmp/stamped-annex-init-blind/smaller/project/selected",
+      "ls-files"
+    ],
+    "returncode": 0,
+    "stdout": ".datalad/config\nREADME.md\ncode/containers/analysis.sif\n",
+    "stderr": ""
+  },
+  {
+    "label": "annex-whereis-0",
+    "argv": [
+      "pixi",
+      "run",
+      "--manifest-path",
+      "/Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/pixi.toml",
+      "git",
+      "-C",
+      "/tmp/stamped-annex-init-blind/smaller/project/selected",
+      "annex",
+      "whereis",
+      "--json",
+      ".datalad/config"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "label": "annex-whereis-1",
+    "argv": [
+      "pixi",
+      "run",
+      "--manifest-path",
+      "/Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/pixi.toml",
+      "git",
+      "-C",
+      "/tmp/stamped-annex-init-blind/smaller/project/selected",
+      "annex",
+      "whereis",
+      "--json",
+      "README.md"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "label": "annex-whereis-2",
+    "argv": [
+      "pixi",
+      "run",
+      "--manifest-path",
+      "/Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/pixi.toml",
+      "git",
+      "-C",
+      "/tmp/stamped-annex-init-blind/smaller/project/selected",
+      "annex",
+      "whereis",
+      "--json",
+      "code/containers/analysis.sif"
+    ],
+    "returncode": 0,
+    "stdout": "{\"command\":\"whereis\",\"error-messages\":[],\"file\":\"code/containers/analysis.sif\",\"input\":[\"code/containers/analysis.sif\"],\"key\":\"SHA256E-s2304--7a3838d9d993f455975a9a9eac0cf5107aa92f0750b3d1aaacfb193fbd210ce1.sif\",\"note\":\"2 copies\\n\\t2b4a96f1-fa74-4fde-b902-3df0bc4933ac\\n\\t5cc56a23-e45a-4f43-a8d6-96b1d237b818 -- test [origin]\\n\",\"success\":true,\"untrusted\":[],\"whereis\":[{\"description\":\"\",\"here\":false,\"urls\":[],\"uuid\":\"2b4a96f1-fa74-4fde-b902-3df0bc4933ac\"},{\"description\":\"test [origin]\",\"here\":false,\"urls\":[],\"uuid\":\"5cc56a23-e45a-4f43-a8d6-96b1d237b818\"}]}\n",
+    "stderr": ""
+  }
+]

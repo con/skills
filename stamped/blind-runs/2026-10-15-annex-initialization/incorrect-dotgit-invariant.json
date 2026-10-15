@@ -1,0 +1,154 @@
+[
+  {
+    "args": [
+      "git",
+      "init",
+      "/tmp/stamped-annex-init-check-v2/parent"
+    ],
+    "cwd": "/tmp/stamped-annex-init-check-v2",
+    "returncode": 0,
+    "stdout": "Initialized empty Git repository in /private/tmp/stamped-annex-init-check-v2/parent/.git/\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "git",
+      "-c",
+      "protocol.file.allow=always",
+      "submodule",
+      "add",
+      "/tmp/stamped-assessment-evidence-fixtures/test_a_spec_whose_content_neve0/annexed-spec",
+      "selected"
+    ],
+    "cwd": "/tmp/stamped-annex-init-check-v2/parent",
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "Cloning into '/private/tmp/stamped-annex-init-check-v2/parent/selected'...\ndone.\n"
+  },
+  {
+    "args": [
+      "git",
+      "-c",
+      "protocol.file.allow=always",
+      "submodule",
+      "add",
+      "/tmp/stamped-assessment-evidence-fixtures/test_a_spec_whose_content_neve0/annexed-spec",
+      "unrelated"
+    ],
+    "cwd": "/tmp/stamped-annex-init-check-v2/parent",
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "Cloning into '/private/tmp/stamped-annex-init-check-v2/parent/unrelated'...\ndone.\n"
+  },
+  {
+    "args": [
+      "git",
+      "commit",
+      "-m",
+      "test: register annex initialization fixture\n\nCo-Authored-By: Codex Desktop 26.1007.71326 (runtime codex-cli 0.162.0-alpha.17.2) / gpt-6-astra <codex@openai.com>\nCodex-Reasoning-Effort: high\n"
+    ],
+    "cwd": "/tmp/stamped-annex-init-check-v2/parent",
+    "returncode": 0,
+    "stdout": "[main (root-commit) e9d3b2c] test: register annex initialization fixture\n 3 files changed, 8 insertions(+)\n create mode 100644 .gitmodules\n create mode 160000 selected\n create mode 160000 unrelated\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "git",
+      "clone",
+      "/tmp/stamped-annex-init-check-v2/parent",
+      "/tmp/stamped-annex-init-check-v2/raw"
+    ],
+    "cwd": "/tmp/stamped-annex-init-check-v2",
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "Cloning into '/tmp/stamped-annex-init-check-v2/raw'...\ndone.\n"
+  },
+  {
+    "args": [
+      "git",
+      "-c",
+      "protocol.file.allow=always",
+      "submodule",
+      "update",
+      "--init",
+      "--",
+      "selected"
+    ],
+    "cwd": "/tmp/stamped-annex-init-check-v2/raw",
+    "returncode": 0,
+    "stdout": "Submodule path 'selected': checked out '77dedfe19f21ec17fc704fc5aa30e782345a98d8'\n",
+    "stderr": "Submodule 'selected' (/tmp/stamped-assessment-evidence-fixtures/test_a_spec_whose_content_neve0/annexed-spec) registered for path 'selected'\nCloning into '/private/tmp/stamped-annex-init-check-v2/raw/selected'...\ndone.\n"
+  },
+  {
+    "args": [
+      "git",
+      "config",
+      "--get",
+      "annex.uuid"
+    ],
+    "cwd": "/tmp/stamped-annex-init-check-v2/raw/selected",
+    "returncode": 1,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "git",
+      "annex",
+      "whereis",
+      "--json",
+      "code/containers/analysis.sif"
+    ],
+    "cwd": "/tmp/stamped-annex-init-check-v2/raw/selected",
+    "returncode": 0,
+    "stdout": "{\"command\":\"whereis\",\"error-messages\":[],\"file\":\"code/containers/analysis.sif\",\"input\":[\"code/containers/analysis.sif\"],\"key\":\"SHA256E-s2304--7a3838d9d993f455975a9a9eac0cf5107aa92f0750b3d1aaacfb193fbd210ce1.sif\",\"note\":\"2 copies\\n\\t2b4a96f1-fa74-4fde-b902-3df0bc4933ac\\n\\t5cc56a23-e45a-4f43-a8d6-96b1d237b818 -- test [origin]\\n\",\"success\":true,\"untrusted\":[],\"whereis\":[{\"description\":\"\",\"here\":false,\"urls\":[],\"uuid\":\"2b4a96f1-fa74-4fde-b902-3df0bc4933ac\"},{\"description\":\"test [origin]\",\"here\":false,\"urls\":[],\"uuid\":\"5cc56a23-e45a-4f43-a8d6-96b1d237b818\"}]}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "cwd": "/tmp/stamped-annex-init-check-v2/raw/selected",
+    "returncode": 0,
+    "stdout": "77dedfe19f21ec17fc704fc5aa30e782345a98d8\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "git",
+      "show",
+      "HEAD:code/containers/analysis.sif"
+    ],
+    "cwd": "/tmp/stamped-annex-init-check-v2/raw/selected",
+    "returncode": 0,
+    "stdout": "../../.git/annex/objects/vF/qP/SHA256E-s2304--7a3838d9d993f455975a9a9eac0cf5107aa92f0750b3d1aaacfb193fbd210ce1.sif/SHA256E-s2304--7a3838d9d993f455975a9a9eac0cf5107aa92f0750b3d1aaacfb193fbd210ce1.sif",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "git",
+      "annex",
+      "init"
+    ],
+    "cwd": "/tmp/stamped-annex-init-check-v2/raw/selected",
+    "returncode": 0,
+    "stdout": "init  ok\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "git",
+      "annex",
+      "whereis",
+      "--json",
+      "code/containers/analysis.sif"
+    ],
+    "cwd": "/tmp/stamped-annex-init-check-v2/raw/selected",
+    "returncode": 0,
+    "stdout": "{\"command\":\"whereis\",\"error-messages\":[],\"file\":\"code/containers/analysis.sif\",\"input\":[\"code/containers/analysis.sif\"],\"key\":\"SHA256E-s2304--7a3838d9d993f455975a9a9eac0cf5107aa92f0750b3d1aaacfb193fbd210ce1.sif\",\"note\":\"2 copies\\n\\t2b4a96f1-fa74-4fde-b902-3df0bc4933ac\\n\\t5cc56a23-e45a-4f43-a8d6-96b1d237b818 -- test [origin]\\n\",\"success\":true,\"untrusted\":[],\"whereis\":[{\"description\":\"\",\"here\":false,\"urls\":[],\"uuid\":\"2b4a96f1-fa74-4fde-b902-3df0bc4933ac\"},{\"description\":\"test [origin]\",\"here\":false,\"urls\":[],\"uuid\":\"5cc56a23-e45a-4f43-a8d6-96b1d237b818\"}]}\n",
+    "stderr": ""
+  }
+]
