@@ -92,7 +92,7 @@ if [ "$SUBCMD" = run ]; then
     case " $* " in
         *" --no-env-input "*) : ;;
         *)
-            for spec in requirements.lock code/requirements.lock requirements.txt                         code/requirements.txt pixi.lock environment.yml code/containers.json; do
+            for spec in requirements.lock code/requirements.lock requirements.txt                         code/requirements.txt pixi.lock pixi.toml pyproject.toml environment.yml code/containers.json; do
                 if git ls-files --error-unmatch "$spec" >/dev/null 2>&1; then
                     ENV_INPUT="$spec"
                     break
