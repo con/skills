@@ -1,15 +1,18 @@
 # CON Skills
 
-A collection of [Claude Code Agent Skills](https://agentskills.io/) for
-software project maintenance, triage, and automation.
+A collection of [Claude Code Agent Skills](https://agentskills.io/) for software project maintenance, triage, and automation.
 
 ## Included Skills
 
 | Skill | Description |
 |-------|-------------|
-| [align-stamped](align-stamped/) | Align a project with the [STAMPED](https://stamped-principles.org/) principles: run `assess-stamped`, write a proportionate STAMPED section into its agent harness, and propose options for each gap. |
+| [align-stamped](align-stamped/) | Align a project with the [STAMPED](https://stamped-principles.org/) principles: assess it, write proportionate agent guidance, implement authorized improvements, and reassess. |
 | [analyze-duplicates](analyze-duplicates/) | Detect code and documentation duplication using jscpd, generate a Markdown report with collapsible `<details>` sections (suitable for GitHub/Gitea issues), and propose a mediation plan with refactoring strategies. |
 | [assess-stamped](assess-stamped/) | Assess a project against the [STAMPED](https://stamped-principles.org/) checklist: profile it, answer every item yes/no/unknown with evidence, and list the gaps. Writes a report outside the target. |
+| [create-stamped-project](create-stamped-project/) | Create a usable research project with explicit inputs, an executable workflow, task environment and scoped replay checks. |
+| [create-repronim-stamped-project](create-repronim-stamped-project/) | Apply ReproNim, BIDS and DataLad conventions to project creation, preserving the scientific scope and chosen tools. |
+| [datalad-annex](datalad-annex/) | Record and replay DataLad commands with Conventional Commits; verify annex payload delivery. |
+| [do-full-research-loop](do-full-research-loop/) | Carry a study through analysis, independent checks, useful rendered figures, replay and an evidence-linked report. |
 | [github-project-status](github-project-status/) | Assess whether a GitHub project is healthy, in maintenance mode, stagnant, or abandoned. Checks commits, releases, issues, PRs, forks, and package registries to produce a structured status report. |
 | [introduce-codespell](introduce-codespell/) | Add [codespell](https://github.com/codespell-project/codespell) spell-checking to a project end-to-end: config, GitHub Actions workflow, pre-commit hook, exclusion tuning, ambiguous-typo review, and automated fixes via `datalad run`. |
 | [introduce-git-bug](introduce-git-bug/) | Set up [git-bug](https://github.com/git-bug/git-bug) distributed issue tracking: configure GitHub bridge, sync issues, push `refs/bugs/*`, and document the workflow in DEVELOPMENT.md / CLAUDE.md. |
@@ -23,21 +26,18 @@ software project maintenance, triage, and automation.
 
 ## Installation
 
-Copy or symlink the desired skill directories into `~/.claude/skills/`, or
-point your Claude Code configuration to this repository.
+Copy or symlink the desired skill directories into `~/.claude/skills/`, or point your Claude Code configuration to this repository.
+The five STAMPED workflows use sibling links: install `assess-stamped`, `align-stamped`, `create-stamped-project`, `create-repronim-stamped-project` and `do-full-research-loop` together when using the complete collection.
+Keep their references with them and record the source commit; individual assessment use only requires `assess-stamped`.
 
 ## Configuration
 
-Some skills require user-specific configuration. Following the
-[Agent Skills specification](https://agentskills.io/specification),
-configuration is handled via documented variables in each skill's
-`SKILL.md` rather than environment variables or config files — the
-Claude agent reads these values and substitutes them at runtime.
+Some skills require user-specific configuration.
+Following the [Agent Skills specification](https://agentskills.io/specification), configuration is handled via documented variables in each skill's `SKILL.md` rather than environment variables or config files — the Claude agent reads these values and substitutes them at runtime.
 
 ### pr-review-update
 
-This skill has a `## Configuration` section at the top of its `SKILL.md`
-with the following variables:
+This skill has a `## Configuration` section at the top of its `SKILL.md` with the following variables:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -50,8 +50,7 @@ Edit the defaults in `pr-review-update/SKILL.md` to match your setup.
 
 ### pr-feedback-review
 
-This skill has a `## Configuration` section at the top of its `SKILL.md`
-with the following variables:
+This skill has a `## Configuration` section at the top of its `SKILL.md` with the following variables:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -63,16 +62,13 @@ Edit the defaults in `pr-feedback-review/SKILL.md` to match your setup.
 
 ### Other skills
 
-The remaining skills use runtime discovery (e.g., `git remote -v`,
-`gh auth status`) and do not require pre-configuration.
+The remaining skills use runtime discovery (e.g., `git remote -v`, `gh auth status`) and do not require pre-configuration.
 
 ## Repo-wide conventions
 
-See [`AGENTS.md`](AGENTS.md) (alias `CLAUDE.md`) for cross-cutting rules
-that apply to every skill in this collection — most notably the rule
-that any skill preparing a pull request must respect the upstream
-project's `PULL_REQUEST_TEMPLATE.md` and `CONTRIBUTING.md`.
+See [`AGENTS.md`](AGENTS.md) (alias `CLAUDE.md`) for cross-cutting rules that apply to every skill in this collection — most notably the rule that any skill preparing a pull request must respect the upstream project's `PULL_REQUEST_TEMPLATE.md` and `CONTRIBUTING.md`.
 
 ## License
 
 TBD
+
