@@ -28,6 +28,9 @@ A tracked lock is suitable when requested; a developing shared manifest may inst
 For the latter policy: preserve the final lock bytes without re-solving, commit them as ordinary Git on a snapshot branch one commit above the task commit, and record immutable code/snapshot IDs, lock hash and platform.
 Keep that snapshot separate from main; set ignore and annex rules before the task commit.
 
+When inspecting or archiving another research object, retain and hash its manifest and any lock, including ignored files, and run bookkeeping tools from an explicitly selected operational environment against the target path.
+Verify those evidence files remain unchanged; test or repair the target environment only in a separate replay copy, recording any changes.
+
 Choose what stays fixed across data, code, dependencies and host before reassessment or reproduction.
 To hold dependencies fixed, restore the matching manifest and retained lock, then synchronize with `pixi install --locked -e <recorded-env>`; a code change alone need not change this selection.
 To test current requirements, deliberately solve afresh and record the new selection.
