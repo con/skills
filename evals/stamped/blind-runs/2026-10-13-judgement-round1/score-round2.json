@@ -28,7 +28,8 @@
         "stamped-checklist:must/008": "partial",
         "stamped-checklist:must/017": "partial"
       },
-      "false_accusation_rate": "3/19"
+      "false_accusation_rate": "3/19",
+      "model": "sonnet"
     },
     "dataset-description-contradicts-layout": {
       "scored": true,
@@ -49,7 +50,8 @@
       },
       "collateral": {},
       "injected": "dataset-description-contradicts-layout: dataset_description.json says DatasetType raw, credits fMRIPrep, and points at ds000003: none of which matches an object whose own records show a Makefile and ds007116",
-      "response": "/tmp/claude-1000/-home-yoh-proj-CON-skills/06cf38e7-2332-4b50-89cf-572cc5e2ab24/scratchpad/jcal3/dataset-description-contradicts-layout/out/2026-10-13-response.json"
+      "response": "/tmp/claude-1000/-home-yoh-proj-CON-skills/06cf38e7-2332-4b50-89cf-572cc5e2ab24/scratchpad/jcal3/dataset-description-contradicts-layout/out/2026-10-13-response.json",
+      "model": "sonnet"
     },
     "readme-host-path-in-instructions": {
       "scored": true,
@@ -67,7 +69,8 @@
       },
       "collateral": {},
       "injected": "readme-host-path-in-instructions: the documented route depends on /mnt/labshare and a host FreeSurfer install, neither of which travels with the object, and the input is already a subdataset",
-      "response": "/tmp/claude-1000/-home-yoh-proj-CON-skills/06cf38e7-2332-4b50-89cf-572cc5e2ab24/scratchpad/jcal3/readme-host-path-in-instructions/out/2026-10-13-response.json"
+      "response": "/tmp/claude-1000/-home-yoh-proj-CON-skills/06cf38e7-2332-4b50-89cf-572cc5e2ab24/scratchpad/jcal3/readme-host-path-in-instructions/out/2026-10-13-response.json",
+      "model": "sonnet"
     },
     "readme-steps-out-of-order": {
       "scored": true,
@@ -84,7 +87,8 @@
       },
       "collateral": {},
       "injected": "readme-steps-out-of-order: the reproduce steps are in an impossible order: build before clone, plot before the table it plots, inputs fetched last",
-      "response": "/tmp/claude-1000/-home-yoh-proj-CON-skills/06cf38e7-2332-4b50-89cf-572cc5e2ab24/scratchpad/jcal3/readme-steps-out-of-order/out/2026-10-14-response.json"
+      "response": "/tmp/claude-1000/-home-yoh-proj-CON-skills/06cf38e7-2332-4b50-89cf-572cc5e2ab24/scratchpad/jcal3/readme-steps-out-of-order/out/2026-10-14-response.json",
+      "model": "sonnet"
     },
     "readme-wrong-tool": {
       "scored": true,
@@ -101,8 +105,11 @@
       },
       "collateral": {},
       "injected": "readme-wrong-tool: the documented environment and entry point are pixi, but the object tracks requirements.lock and a Makefile and has no pixi.toml",
-      "response": "/tmp/claude-1000/-home-yoh-proj-CON-skills/06cf38e7-2332-4b50-89cf-572cc5e2ab24/scratchpad/jcal3/readme-wrong-tool/out/2026-10-13-response.json"
+      "response": "/tmp/claude-1000/-home-yoh-proj-CON-skills/06cf38e7-2332-4b50-89cf-572cc5e2ab24/scratchpad/jcal3/readme-wrong-tool/out/2026-10-13-response.json",
+      "model": "sonnet"
     }
   },
-  "detection": "4/4"
+  "detection": "4/4",
+  "model": "sonnet",
+  "model_note": "backfilled from this round's README table; `judgement_calibrate.py score --model` records it at scoring time from now on"
 }

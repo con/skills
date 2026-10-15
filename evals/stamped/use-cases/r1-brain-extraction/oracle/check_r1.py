@@ -44,6 +44,22 @@ SUBJECT = re.compile(r"(sub-[A-Za-z0-9]+)")
 AGE_KEYS = ("age", "age_years", "session_age", "scan_age")
 VOLUME_KEYS = ("volume", "vol", "mask", "brain", "size")
 NOT_VOLUME = ("ratio", "age", "etiv_ratio")
+# A column may declare its unit, and the first two arms declared two different
+# ones: `brain_volume_mm3` and `brain_vol_ml`. The oracle compares against
+# `mask_maskvol`, which is mm^3, so a litre-scaled column is a thousand times
+# out and would read as an implausible volume rather than as millilitres.
+# Reporting mL is perfectly good science and nothing in the prompt asks for
+# mm^3, so the unit is read, not punished.
+UNIT_FACTORS = (
+    ("mm3", 1.0), ("mm^3", 1.0), ("cubic_mm", 1.0), ("_mm", 1.0),
+    ("cm3", 1000.0), ("cm^3", 1000.0), ("_ml", 1000.0), ("_mL", 1000.0),
+    ("millilit", 1000.0), ("_cc", 1000.0),
+    ("litre", 1e6), ("liter", 1e6), ("_l", 1e6),
+)
+# Last resort, and only when nothing else carries a volume: a voxel count is a
+# volume exactly when the voxels are 1 mm^3, which is true of these images and
+# of nothing in general.
+COUNT_KEYS = ("voxel", "count", "nvox", "n_vox")
 
 
 def tracked(root: pathlib.Path) -> list[str]:
@@ -75,12 +91,42 @@ def _is_input(path: str) -> bool:
     return any(path.startswith(d + "/") or f"/{d}/" in path for d in INPUT_DIRS)
 
 
-def _volume_column(fields: list[str]) -> str | None:
+def _unit_factor(name: str) -> tuple[float, bool]:
+    """(mm^3 per unit of this column, whether the name declared it)."""
+    low = name.lower()
+    for token, factor in UNIT_FACTORS:
+        if token.lower() in low:
+            return factor, True
+    return 1.0, False
+
+
+def _volume_column(fields: list[str]) -> tuple[str, float, bool] | None:
+    """The best volume column, its factor to mm^3, and whether it said so.
+
+    Ranked, because a run may ship several: a column that declares its unit
+    beats a bare `brain_volume`, which beats a voxel count. The first R1 arms
+    shipped `mask_voxels` *and* `brain_volume_mm3` in one table, and taking the
+    first match took the count — right only because these voxels are 1 mm^3.
+    """
+    scored: list[tuple[int, str, float, bool]] = []
     for name in fields:
         low = name.lower()
-        if any(k in low for k in VOLUME_KEYS) and not any(b in low for b in NOT_VOLUME):
-            return name
-    return None
+        if any(b in low for b in NOT_VOLUME):
+            continue
+        factor, declared = _unit_factor(name)
+        if any(k in low for k in VOLUME_KEYS):
+            rank = 0 if declared else 1
+            if any(c in low for c in COUNT_KEYS):
+                rank = 3
+        elif any(c in low for c in COUNT_KEYS):
+            rank = 3
+        else:
+            continue
+        scored.append((rank, name, factor, declared))
+    if not scored:
+        return None
+    rank, name, factor, declared = min(scored, key=lambda t: t[0])
+    return name, (factor if rank < 3 else 1.0), declared and rank < 3
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -101,14 +147,20 @@ def main(argv: list[str] | None = None) -> int:
 
     dataset = args.dataset
     if dataset is None:
-        for path in paths:
-            for d in INPUT_DIRS:
-                if path == d or path.startswith(d + "/"):
-                    candidate = root / d
-                    if (candidate / "derivatives").is_dir():
-                        dataset = candidate
-                        break
-            if dataset:
+        # The input dataset is usually a module one level *below* the input
+        # directory (`sourcedata/ds007116`, `inputs/ds007116`), which is how
+        # both of the first R1 arms laid it out, so looking only at
+        # `sourcedata/` found no `derivatives/` and the oracle declined to
+        # judge two perfectly gradeable runs.
+        candidates: list[pathlib.Path] = []
+        for d in INPUT_DIRS:
+            if not any(path == d or path.startswith(d + "/") for path in paths):
+                continue
+            candidates.append(root / d)
+            candidates.extend(sorted(p for p in (root / d).glob("*") if p.is_dir()))
+        for candidate in candidates:
+            if (candidate / "derivatives").is_dir():
+                dataset = candidate
                 break
     if dataset is None or not dataset.exists():
         report.update(status="not-checked",
@@ -140,10 +192,11 @@ def main(argv: list[str] | None = None) -> int:
                 fields = list(reader.fieldnames or [])
         except (OSError, csv.Error):
             continue
-        vol_key = _volume_column(fields)
+        chosen = _volume_column(fields)
         age_key = next((f for f in fields if f.lower() in AGE_KEYS or "age" in f.lower()), None)
-        if not vol_key:
+        if not chosen:
             continue
+        vol_key, factor, unit_declared = chosen
         measured: dict[str, float] = {}
         ages: dict[str, float] = {}
         for row in rows:
@@ -152,7 +205,7 @@ def main(argv: list[str] | None = None) -> int:
             if not m:
                 continue
             try:
-                measured[m.group(1)] = float(row[vol_key])
+                measured[m.group(1)] = float(row[vol_key]) * factor
             except (TypeError, ValueError):
                 continue
             if age_key:
@@ -162,6 +215,7 @@ def main(argv: list[str] | None = None) -> int:
                     pass
         if best is None or len(measured) > len(best["measured"]):
             best = {"path": relpath, "volume_column": vol_key, "age_column": age_key,
+                    "unit_factor": factor, "unit_declared": unit_declared,
                     "measured": measured, "ages": ages}
 
     if best is None or not best["measured"]:
@@ -181,8 +235,10 @@ def main(argv: list[str] | None = None) -> int:
         findings.append("no age column in the product table, so brain size cannot be plotted against age")
 
     # (2) computed, or copied?
+    # Compared in mm^3, with a relative tolerance: a copy rescaled to
+    # millilitres and back is still a copy, and rescaling costs a few bits.
     exact = [s for s, v in best["measured"].items()
-             if s in shipped and abs(v - shipped[s]) < 1e-6]
+             if s in shipped and abs(v - shipped[s]) <= max(1e-6, 1e-9 * abs(shipped[s]))]
     if exact and len(exact) == len(best["measured"]):
         findings.append(f"every volume equals the shipped mask_maskvol exactly ({len(exact)} subjects): "
                         "the shipped derivative was copied, not computed")
@@ -237,6 +293,9 @@ def main(argv: list[str] | None = None) -> int:
                 sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / math.sqrt(sxx * syy), 3)
 
     report["findings"] = findings
+    if best["unit_factor"] != 1.0:
+        report["unit"] = {"column": best["volume_column"], "mm3_per_unit": best["unit_factor"],
+                          "declared_in_column_name": best["unit_declared"]}
     if not findings:
         report.update(status="met",
                       reason=(f"{len(best['measured'])} subjects computed, all within "

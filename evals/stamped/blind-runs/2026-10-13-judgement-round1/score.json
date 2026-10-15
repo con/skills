@@ -20,7 +20,8 @@
       },
       "collateral": {},
       "injected": "readme-claims-absent-container: README promises a `neurodesk-freesurfer` container from ///repronim/containers that is registered nowhere in the object, while the tracked registration names another image",
-      "response": "/tmp/claude-1000/-home-yoh-proj-CON-skills/06cf38e7-2332-4b50-89cf-572cc5e2ab24/scratchpad/jcal/readme-claims-absent-container/out/2026-10-13-response.json"
+      "response": "/tmp/claude-1000/-home-yoh-proj-CON-skills/06cf38e7-2332-4b50-89cf-572cc5e2ab24/scratchpad/jcal/readme-claims-absent-container/out/2026-10-13-response.json",
+      "model": "haiku"
     },
     "readme-host-path-in-instructions": {
       "scored": false,
@@ -43,7 +44,8 @@
       },
       "collateral": {},
       "injected": "readme-platform-specific-steps: the documented install uses Homebrew, BSD `sed -i ''` and `sysctl -n hw.ncpu`: it runs on one developer's macOS and nowhere else",
-      "response": "/tmp/claude-1000/-home-yoh-proj-CON-skills/06cf38e7-2332-4b50-89cf-572cc5e2ab24/scratchpad/jcal/readme-platform-specific-steps/out/2026-10-13-response.json"
+      "response": "/tmp/claude-1000/-home-yoh-proj-CON-skills/06cf38e7-2332-4b50-89cf-572cc5e2ab24/scratchpad/jcal/readme-platform-specific-steps/out/2026-10-13-response.json",
+      "model": "sonnet"
     },
     "readme-steps-out-of-order": {
       "scored": false,
@@ -58,5 +60,7 @@
       "why": "no response JSON in the run's outdir"
     }
   },
-  "detection": "2/2"
+  "detection": "2/2",
+  "model": "sonnet",
+  "model_note": "backfilled from this round's README table; `judgement_calibrate.py score --model` records it at scoring time from now on"
 }

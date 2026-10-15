@@ -474,10 +474,12 @@ def test_preflight_ignores_installed_tooling(tmp_path, clean):
 R1 = EVALS / "use-cases" / "r1-brain-extraction"
 
 
-def _r1_object(root: pathlib.Path, rows: list[tuple[str, float, float]]) -> pathlib.Path:
+def _r1_object(root: pathlib.Path, rows: list[tuple[str, float, float]],
+               header: str = "subject\tage\tmask_volume_mm3",
+               fmt=lambda v: f"{v:.0f}") -> pathlib.Path:
     (root / "results").mkdir(parents=True)
     (root / "figures").mkdir(parents=True)
-    lines = ["subject\tage\tmask_volume_mm3"] + [f"{s}\t{a}\t{v:.0f}" for s, a, v in rows]
+    lines = [header] + [f"{s}\t{a}\t{fmt(v)}" for s, a, v in rows]
     (root / "results" / "brain_size.tsv").write_text("\n".join(lines) + "\n")
     (root / "figures" / "brain_size_vs_age.png").write_bytes(b"PNG-placeholder")
     env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@e.org",
@@ -560,3 +562,53 @@ def test_r1_oracle_will_not_pass_a_product_it_could_not_compare(tmp_path):
     result = _run_r1_oracle(_r1_object(tmp_path / "obj2", rows), tmp_path / "half")
     assert result["status"] != "met"
     assert "no comparator for" in result["reason"]
+
+
+def test_r1_oracle_reads_the_unit_the_column_declares(tmp_path):
+    """Millilitres are good science; a thousandfold ratio is not a finding.
+
+    The first two R1 arms shipped `brain_volume_mm3` and `brain_vol_ml`. With
+    the unit ignored, the second read as ten implausible volumes (worst ratio
+    0.0009) rather than as the same brain in other units.
+    """
+    shipped = {f"sub-{i:05d}": 1_500_000.0 for i in range(1, 11)}
+    _fake_dataset(tmp_path / "ds", shipped)
+    rows = [(s, 9.0 + i * 0.8, v * 1.06) for i, (s, v) in enumerate(shipped.items())]
+    obj = _r1_object(tmp_path / "ml", rows, header="subject\tage\tbrain_vol_ml",
+                     fmt=lambda v: f"{v / 1000:.1f}")
+    result = _run_r1_oracle(obj, tmp_path / "ds")
+    assert result["status"] == "met", result["reason"]
+    assert result["unit"]["mm3_per_unit"] == 1000.0
+    assert 1.05 < result["ratio_mean"] < 1.07
+
+    # And the copy check still bites through the unit conversion: the shipped
+    # column in millilitres is still the shipped column.
+    copied = [(s, 9.0 + i, v) for i, (s, v) in enumerate(shipped.items())]
+    obj = _r1_object(tmp_path / "ml-copy", copied, header="subject\tage\tbrain_vol_ml",
+                     fmt=lambda v: f"{v / 1000:.6f}")
+    result = _run_r1_oracle(obj, tmp_path / "ds")
+    assert result["status"] != "met" and "copied, not computed" in result["reason"]
+
+
+def test_r1_oracle_prefers_a_volume_over_a_voxel_count(tmp_path):
+    """A count is a volume only when the voxels happen to be 1 mm^3."""
+    shipped = {f"sub-{i:05d}": 1_500_000.0 for i in range(1, 11)}
+    _fake_dataset(tmp_path / "ds", shipped)
+    root = tmp_path / "obj"
+    (root / "results").mkdir(parents=True)
+    (root / "figures").mkdir(parents=True)
+    lines = ["subject\tage\tmask_voxels\tbrain_volume_mm3"]
+    for i, (sub, vol) in enumerate(shipped.items()):
+        # 2 mm isotropic: the count is an eighth of the volume in mm^3.
+        lines.append(f"{sub}\t{9.0 + i * 0.8}\t{vol * 1.06 / 8:.0f}\t{vol * 1.06:.0f}")
+    (root / "results" / "brain_size.tsv").write_text("\n".join(lines) + "\n")
+    (root / "figures" / "brain_size_vs_age.png").write_bytes(b"PNG-placeholder")
+    env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@e.org",
+           "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@e.org"}
+    subprocess.run(["git", "init", "-q", "-b", "main"], cwd=root, check=True, env=env)
+    subprocess.run(["git", "add", "-A"], cwd=root, check=True, env=env)
+    subprocess.run(["git", "commit", "-qm", "product"], cwd=root, check=True, env=env)
+
+    result = _run_r1_oracle(root, tmp_path / "ds")
+    assert result["product"]["volume_column"] == "brain_volume_mm3", result["product"]
+    assert result["status"] == "met", result["reason"]

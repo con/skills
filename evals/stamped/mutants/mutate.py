@@ -312,6 +312,11 @@ MUTANTS: dict[str, dict] = {
     "readme-platform-specific-steps": {
         "apply": readme_platform_specific_steps,
         "expect": {"stamped-checklist:must/011": "partial"},
+        # `brew`, `sysctl` and macOS `sed -i` are undocumented host assumptions
+        # (must/011) *and* an incomplete list of system requirements
+        # (must/012). The live judgement run that first caught this mutant said
+        # both, in that order.
+        "also": {"stamped-checklist:must/012": "partial"},
         "probe": "platform-assumptions",
     },
     "readme-wrong-make-target": {
@@ -333,6 +338,13 @@ MUTANTS: dict[str, dict] = {
         # superdataset is dirty (its pointer still names the old commit), and
         # this object's product sits inside the input module.
         "expect": {"stamped-checklist:must/004": "unmet", "stamped-checklist:should/003": "unmet"},
+        # And a third, declared rather than tolerated: with the product
+        # committed inside the module, the superdataset's pointer names a
+        # commit that no longer holds the state, so the inputs are not
+        # reachable at a consistent root. `also` says "expected consequence",
+        # which is how a knock-on effect is distinguished from a probe that is
+        # too eager.
+        "also": {"stamped-checklist:must/002": "unmet"},
         "probe": "inputs-untouched",
     },
     "outputs-into-inputs-pointer-updated": {
