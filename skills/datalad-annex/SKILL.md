@@ -10,7 +10,9 @@ max-lines: 90
 
 Use the project's declared environment and task entry points; add missing packages there.
 For Pixi, apply [pixi-with-stamped](../pixi-with-stamped/SKILL.md).
-Initialize submodules at recorded commits before running and after checkout transitions.
+Install selected subdatasets at recorded commits with `datalad get -n PATH` when only their metadata is needed.
+After a plain Git clone or `git submodule update --init`, initialize each selected annex repository with `git -C PATH annex init` before annex queries or retrieval; Git checkout alone does not initialize its annex.
+Keep initialization scoped to required datasets; retrieve payloads separately and preserve ordinary submodule `.git` files and tracked input links.
 Separate concurrent writers into external worktrees with their own writable children.
 
 Use native `datalad run --explicit` or `containers-run` with declared code, data, environment inputs and generated outputs.
