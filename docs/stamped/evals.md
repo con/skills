@@ -357,7 +357,7 @@ A separate DataLad dataset, [`con/stamped-skills-evals`](https://hub.centerforop
 Aneksajo is the git-annex-aware Forgejo, so git history and annexed content go to the same remote with no separate special remote.
 
 **Bootstrapped 2026-10-13** (`datalad create -c text2git`, `hub` sibling, `datalad push`, verified by an anonymous `datalad clone`).
-It carries the dataset README with the layout below, `calibration/2026-10-13-probes-0.1.0/` — the first probe calibration, 8/8 mutants and 0/15 false `unmet` — and `calibration/2026-10-14-probes-0.1.0/`, which is 16/16 and 0/17 after the day's runs doubled the registry.
+It carries the dataset README with the layout below, `calibration/2026-10-13-probes-0.1.0/` — the first probe calibration, 8/8 mutants and 0/15 false `unmet` — `calibration/2026-10-14-probes-0.1.0/`, which is 16/16 and 0/17 after the day's runs doubled the registry, and `calibration/2026-10-15-probes-0.1.0/` at 18/18 and 0/17 — two false-failure classes fixed, with two mutants added to show the fix cost no detection.
 Its own README states the two gaps it starts with rather than hiding them: con/skills is not yet a subdataset (pinning it at an unpublished commit would be the very `must/002`/`must/016` failure these skills catch), and the bootstrap commit is not a recorded run.
 The default branch is `main`, matching the hub repository.
 - **Layout:** each run is a subdataset (the produced object), plus `transcript.jsonl` (annexed), `grading.json` and stamped-assessment records.

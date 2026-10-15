@@ -436,7 +436,7 @@ What exists in con/skills as of 2026-10-13, on branch `claude/ecstatic-cerf-nh4j
 - on `compression-comparisons-t261-study` (1265 commits, 22286 tracked derivatives) the probe sweep takes **3.6 s** and finds the `url = ../..` gap the plan predicted;
 - after one blind run and the fixes it forced, an independent subagent's 31 verdicts and the reference answer agree on **30 of 31** items;
 - **6/6 judgement mutants** detected and named, with the control's unexplained accusations down from 7/19 to 3/19;
-- **16/16 scripted mutants**, 49 tests.
+- **18/18 scripted mutants**, 81 tests, 26 `pytest-evals` cases.
 
 Two rounds of calibration paid for themselves.
 Running the probes on a real object caught must/009 counting host paths inside duct traces as script defects, must/005 calling 12 MiB of JSONL "binary data", must/006 ignoring environment *capture* as distinct from an environment *specification*, and four probes reporting `unmet` with no evidence of absence.
@@ -524,6 +524,15 @@ fixed: `run.py` gives every run a scratch directory beside its sandbox and
 names it in the prompt, and the assessor says what to do where writing outside
 is forbidden — gitignore it, and say in the report which rule had to bend.
 
+The blindness lasted two days because **the fixture had only one of the two
+layouts**: every record in it named a `.sif`. The clean fixture now carries a
+registered container as well, and two mutants guard the loosening from the
+other side — `record-env-stripped` (a record naming no environment at all must
+still cost must/006) and `record-container-floating` (`docker run x:latest`,
+which was invisible before must/006 credited a bare runtime invocation). 18/18
+mutants, and still 0/17 false accusations: that the numbers did not move is the
+claim a loosening has to support.
+
 And the recovered run gave the harness its **first T1-against-T2 reading on one
 object**: four items disagree out of 31, and three of the four are the division
 of labour working (must/011 and must/012 are judgement by construction;
@@ -542,7 +551,7 @@ For a Claude Code session on typhon (under Remote Control) picking this up:
    - free scratch space (R1 needs a few GB per container image, R3 much more);
    - `claude --version` for headless outer-loop runs;
    - `uv`.
-3. **Install the pinned tooling** for the harness from `evals/stamped/requirements.txt` (datalad 1.7.1 with the concurrent-run fix, datalad-container, the git-annex wheel, con-duct), and run `tox -e stamped-evals` once to confirm the host reproduces the current calibration (16/16 mutants, 0/17 false accusations on the clean fixture).
+3. **Install the pinned tooling** for the harness from `evals/stamped/requirements.txt` (datalad 1.7.1 with the concurrent-run fix, datalad-container, the git-annex wheel, con-duct), and run `tox -e stamped-evals` once to confirm the host reproduces the current calibration (18/18 mutants, 0/17 false accusations on the clean fixture).
 4. **Bootstrap `con/stamped-skills-evals`** (phase 1):
    1. `datalad create -c text2git`;
    2. add con/skills as a subdataset;

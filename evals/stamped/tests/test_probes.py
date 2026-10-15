@@ -896,8 +896,13 @@ def test_env_spec_pinned_when_every_dependency_is(tmp_path, clean):
     )
     env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@e.org",
            "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@e.org"}
-    # The lockfile goes, so must/010 can only be answered from the conda file.
+    # The lockfile and the registered container both go, so must/010 can only
+    # be answered from the conda file. (The fixture carries a container
+    # registration, which is itself a pinned specification — leaving it in
+    # would make both halves of this test pass for the wrong reason.)
     subprocess.run(["git", "rm", "-q", "requirements.lock"], cwd=target, check=True, env=env)
+    subprocess.run(["git", "rm", "-q", "-r", ".datalad", "code/containers"],
+                   cwd=target, check=True, env=env)
     subprocess.run(["git", "add", "-A"], cwd=target, check=True, env=env)
     subprocess.run(["git", "commit", "-qm", "conda environment, fully pinned"],
                    cwd=target, check=True, env=env)
