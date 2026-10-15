@@ -904,7 +904,7 @@ def test_entry_point_accepts_numbered_instructions(tmp_path, clean):
     assert result.status_of("stamped-checklist:must/007") == "met", result.reason
 
 
-def test_env_spec_pinned_when_every_dependency_is(tmp_path, clean):
+def test_dependency_inclusion_does_not_require_version_pins(tmp_path, clean):
     """`environment.yml` pinned to build strings is pinned, not a loose spec."""
     target = tmp_path / "conda"
     shutil.copytree(clean, target, symlinks=True)
@@ -928,13 +928,16 @@ def test_env_spec_pinned_when_every_dependency_is(tmp_path, clean):
     result = REGISTRY["env-spec-tracked"](Object(target))
     assert result.status_of("stamped-checklist:must/010") == "met", result.reason
 
-    # And a floating one is still a floating one.
+    assert result.details["specs"]["environment.yml"] == "pinned"
+
+    # Removing only version pins must not change dependency inclusion.
     (target / "environment.yml").write_text(
         "name: demo\nchannels:\n  - conda-forge\ndependencies:\n  - python\n  - numpy\n")
     subprocess.run(["git", "add", "-A"], cwd=target, check=True, env=env)
     subprocess.run(["git", "commit", "-qm", "unpinned"], cwd=target, check=True, env=env)
     result = REGISTRY["env-spec-tracked"](Object(target))
-    assert result.status_of("stamped-checklist:must/010") != "met", result.reason
+    assert result.status_of("stamped-checklist:must/010") == "met", result.reason
+    assert result.details["specs"]["environment.yml"] == "spec"
 
 
 def test_other_tools_provenance_counts_and_a_paper_is_not_a_product(tmp_path, clean):
@@ -1476,3 +1479,27 @@ def test_fresh_rerun_learned_four_things_from_its_first_real_run():
     # 4. The content budget is all-or-nothing, so one 175 GiB input module left
     #    a 300 KB figure unfetched and therefore uncompared.
     assert "output candidate(s) for comparison" in text
+
+
+@pytest.mark.parametrize("filename,content", [
+    ("requirements.txt", "numpy\n"),
+    ("pixi.toml", '[workspace]\nname = "demo"\n[dependencies]\npython = "*"\nnumpy = "*"\n'),
+    ("analysis.py", '# /// script\n# dependencies = ["numpy"]\n# ///\nimport numpy\n'),
+])
+def test_unpinned_dependency_inclusion_is_not_exact_environment_evidence(tmp_path, filename, content):
+    """Floating declarations answer inclusion, not reproducible run identity."""
+    root = tmp_path / "floating"
+    root.mkdir()
+    (root / filename).write_text(content)
+    env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@e.org",
+           "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@e.org"}
+    for command in (["git", "init", "-q"], ["git", "add", "."],
+                    ["git", "commit", "-qm", "test: declare floating dependencies"]):
+        subprocess.run(command, cwd=root, env=env, check=True)
+    obj = Object(root)
+    inclusion = REGISTRY["env-spec-tracked"](obj)
+    assert inclusion.status_of("stamped-checklist:must/010") == "met", inclusion.reason
+    assert inclusion.details["specs"][filename] == "spec"
+    assert "completeness" in inclusion.reason_of("stamped-checklist:must/010")
+    identity = REGISTRY["run-env-linked"](obj)
+    assert identity.status_of("stamped-checklist:must/015") != "met", identity.reason

@@ -1,0 +1,16 @@
+[
+  {
+    "path": "/tmp/stamped-dependency-inclusion-fixtures/test_unpinned_dependency_inclu1/floating",
+    "commit": "3604a10db0005bd635a46e041dde64fbc5098d96",
+    "files": {
+      "pixi.toml": "[workspace]\nname = \"demo\"\n[dependencies]\npython = \"*\"\nnumpy = \"*\"\n"
+    }
+  },
+  {
+    "path": "/tmp/stamped-dependency-inclusion-fixtures/test_unpinned_dependency_inclu2/floating",
+    "commit": "8318f6c3f26337094fa4febcbd9026e81963ddfa",
+    "files": {
+      "analysis.py": "# /// script\n# dependencies = [\"numpy\"]\n# ///\nimport numpy\n"
+    }
+  }
+]

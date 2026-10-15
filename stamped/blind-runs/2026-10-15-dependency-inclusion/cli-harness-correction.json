@@ -1,0 +1,51 @@
+[
+  {
+    "name": "items",
+    "argv": [
+      "/Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/skills/.tox/stamped-evals/bin/python",
+      "/tmp/stamped-dependency-inclusion-blind/skills/stamped-conventions/scripts/encode_response.py",
+      "items",
+      "--level",
+      "must"
+    ],
+    "exit_status": 0,
+    "stdout": "stamped-checklist:must/001\tmust\tS.1\tAre all files and directories nested under a common root?\nstamped-checklist:must/002\tmust\tS.1\tAre datasets included, linked, or referenced reachable from the code and environment specifications without crossing the boundary of a common root?\nstamped-checklist:must/003\tmust\tS.1\tIs external software included in the environment or linked as submodules within the project boundary?\nstamped-checklist:must/004\tmust\tT.1,T.3,T.5\tAre version control systems such as `Git` used for code, text, documentation, and configuration files?\nstamped-checklist:must/005\tmust\tT.1,T.3,T.5\tAre version control systems such as `git-annex`, DataLad, or `Git` LFS used for large binary data?\nstamped-checklist:must/006\tmust\tT.1,T.3,T.5\tAre the exact environment specifications used to generate a set of results included in the provenance records to link computational actions to particular environments?\nstamped-checklist:must/007\tmust\tA.1\tIs a `README.md` or `Makefile` included with instructions for installation and usage?\nstamped-checklist:must/008\tmust\tA.1\tIs there a clear starting point for users to start reproducing results (e.g., a main script, a workflow definition, or a container image)?\nstamped-checklist:must/009\tmust\tP.1\tAre relative paths used in scripts, avoiding hardcoded or system-specific paths like `C:\\Users\\...` or `/home/user/...`?\nstamped-checklist:must/010\tmust\tP.1\tAre all software dependencies included in the environment specification, rather than relying on pre-installed tools?\nstamped-checklist:must/011\tmust\tP.1\tHave all assumptions about the host system's configuration been documented (e.g., specific OS versions, required system libraries, or environment variables)?\nstamped-checklist:must/012\tmust\tP.2\tIs there a clear list of system requirements and dependencies documented in the README or environment specifications?\nstamped-checklist:must/013\tmust\tP.3\tAre environment specifications (e.g., Dockerfiles, `pyproject.toml`, `package.json`) included in the version control system alongside code and data?\nstamped-checklist:must/014\tmust\tP.3\tIs there a process for updating environment specifications when dependencies change, and are these updates tracked in version control?\nstamped-checklist:must/015\tmust\tD.1\tAre environment specifications (e.g., container digests, frozen package manifests) included to ensure others can attempt to exactly replicate the environment?\nstamped-checklist:must/016\tmust\tD.1\tAre environment specifications shared in a way that others can access and use them (e.g., published container images, archived environment files)?\nstamped-checklist:must/017\tmust\tD.1\tIs there documentation on how to obtain and use the environment specifications for reproduction?\n",
+    "stderr": ""
+  },
+  {
+    "name": "fixture1",
+    "argv": [
+      "/Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/skills/.tox/stamped-evals/bin/python",
+      "/tmp/stamped-dependency-inclusion-blind/skills/assess-alignment-with-stamped-principles/scripts/run_probes.py",
+      "/tmp/stamped-dependency-inclusion-fixtures/test_unpinned_dependency_inclu1/floating",
+      "--kind",
+      "component",
+      "--only",
+      "env-spec-tracked",
+      "run-env-linked",
+      "-o",
+      "/tmp/stamped-dependency-inclusion-blind/fixture1-cli-probes.json"
+    ],
+    "exit_status": 0,
+    "stdout": "probe                    status          items\nenv-spec-tracked         unmet           must/010, must/013, must/016\nrun-env-linked           not-checked     must/006, must/015\n\nprobes cover 5/17 MUST items; inspect statuses for completed verdicts\n\nwrote /tmp/stamped-dependency-inclusion-blind/fixture1-cli-probes.json\n",
+    "stderr": ""
+  },
+  {
+    "name": "fixture2",
+    "argv": [
+      "/Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/skills/.tox/stamped-evals/bin/python",
+      "/tmp/stamped-dependency-inclusion-blind/skills/assess-alignment-with-stamped-principles/scripts/run_probes.py",
+      "/tmp/stamped-dependency-inclusion-fixtures/test_unpinned_dependency_inclu2/floating",
+      "--kind",
+      "component",
+      "--only",
+      "env-spec-tracked",
+      "run-env-linked",
+      "-o",
+      "/tmp/stamped-dependency-inclusion-blind/fixture2-cli-probes.json"
+    ],
+    "exit_status": 0,
+    "stdout": "probe                    status          items\nenv-spec-tracked         unmet           must/010, must/013, must/016\nrun-env-linked           not-checked     must/006, must/015\n\nprobes cover 5/17 MUST items; inspect statuses for completed verdicts\n\nwrote /tmp/stamped-dependency-inclusion-blind/fixture2-cli-probes.json\n",
+    "stderr": ""
+  }
+]

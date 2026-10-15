@@ -1,0 +1,85 @@
+validate: commands[0] /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/skills> python3 /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/skills/ci/validate_skills.py
+✅ analyze-duplicates
+
+⚠️  bisect-and-patch-git-annex
+  WARN  W003  /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/skills/bisect-and-patch-git-annex/SKILL.md  file is 629 lines (>600); consider splitting
+✅ code-quality-report-conventions
+✅ credit-contributions
+✅ github-project-status
+
+⚠️  introduce-codespell
+  WARN  W003  /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/skills/introduce-codespell/SKILL.md  file is 1583 lines (>600); consider splitting
+✅ introduce-git-bug
+
+⚠️  introduce-intuit-auto
+  WARN  W003  /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/skills/introduce-intuit-auto/SKILL.md  file is 655 lines (>600); consider splitting
+
+⚠️  introduce-reuse-compliance
+  WARN  W003  /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/skills/introduce-reuse-compliance/SKILL.md  file is 891 lines (>600); consider splitting
+✅ issue-triage
+
+⚠️  make-scriv-changelog
+  WARN  W001  /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/skills/make-scriv-changelog/SKILL.md  frontmatter missing recommended field 'name'
+  WARN  W002  /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/skills/make-scriv-changelog/SKILL.md  frontmatter missing recommended field 'allowed-tools'
+✅ pr-feedback-review
+
+⚠️  pr-review-update
+  WARN  W002  /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/skills/pr-review-update/SKILL.md  frontmatter missing recommended field 'allowed-tools'
+  WARN  W003  /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/skills/pr-review-update/SKILL.md  file is 1461 lines (>600); consider splitting
+✅ review-org-code-quality
+✅ review-repo-code-quality
+
+⚠️  scan-projects
+  WARN  W002  /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/skills/scan-projects/SKILL.md  frontmatter missing recommended field 'allowed-tools'
+✅ setup-chromatic
+✅ align-with-stamped-principles
+✅ assess-alignment-with-stamped-principles
+✅ create-repronim-stamped-project
+✅ create-stamped-project
+✅ datalad-annex
+✅ do-full-research-loop
+✅ entire-worktrees
+✅ pixi-with-stamped
+✅ stamped-conventions
+
+⚠️  tinuous-analyzer
+  WARN  W002  /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/skills/tinuous-analyzer/SKILL.md  frontmatter missing recommended field 'allowed-tools'
+
+────────────────────────────────────────────────────────────
+Skills checked: 27  Errors: 0  Warnings: 10
+validate: OK ✔ in 0.99 seconds
+stamped-evals: commands[0] /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/skills> python3 -c 'import pathlib, sys; sys.exit(0 if (pathlib.Path(r'"'"'/Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/skills'"'"') / '"'"'evals'"'"' / '"'"'stamped'"'"' / '"'"'tests'"'"').is_dir() else '"'"'error: evals/ is not checked out. run: git submodule update --init evals'"'"')'
+stamped-evals: commands[1] /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/skills> python3 -m pytest /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/skills/evals/stamped/tests -q
+.........................ssssssssssssssssssssssssss..................... [ 48%]
+...............................................................ss....... [ 97%]
+....                                                                     [100%]
+120 passed, 28 skipped in 47.56s
+stamped-evals: commands[2] /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/skills> python3 -m pytest /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/skills/evals/stamped/tests -q --run-eval --run-eval-analysis --out-path /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/skills/.tox/stamped-evals/tmp/eval-out
+..........................                                               [100%]
+26 passed in 17.80s
+stamped-evals: commands[3] /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/skills> python3 /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/skills/evals/stamped/harness/calibrate.py
+detected  abs-path-in-script         must/009=unmet
+detected  container-latest           must/015=unmet
+detected  derived-without-record     must/006=partial
+detected  host-mount-path-in-script  must/009=unmet
+detected  host-tool-precondition     must/010=unmet
+detected  large-binary-in-git        must/005=unmet
+detected  large-text-in-git          must/005=met | clone-weight=partial
+detected  outputs-into-inputs        must/004=unmet, should/003=unmet
+detected  outputs-into-inputs-pointer-updated should/003=unmet, must/002=unmet
+detected  outputs-under-inputs       should/003=unmet
+detected  readme-platform-specific-steps must/011=partial
+detected  readme-reproduce-removed   must/007=partial
+detected  readme-wrong-make-target   must/007=partial
+detected  record-container-floating  must/015=unmet
+detected  record-env-stripped        must/006=partial
+detected  relative-subdataset-url    must/002=unmet
+detected  remote-removed             must/016=unmet
+detected  untracked-figure           must/004=unmet
+
+mutants detected: 18/18
+false unmet/partial on the clean object: 0/17 answered items (1 more are the fixture's declared simulations)
+  (expected) stamped-checklist:must/016 = partial: the object's own remote is not published
+  validate: OK (0.99=setup[0.04]+cmd[0.94] seconds)
+  stamped-evals: OK (90.21=setup[0.01]+cmd[0.03,47.82,18.08,24.27] seconds)
+  congratulations :) (91.23 seconds)

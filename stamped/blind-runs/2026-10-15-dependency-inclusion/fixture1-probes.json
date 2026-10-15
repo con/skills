@@ -1,0 +1,73 @@
+{
+  "invocation": "Direct snapshot probe API; CLI report writer unavailable because jsonschema is missing.",
+  "object": {
+    "path": "/tmp/stamped-dependency-inclusion-fixtures/test_unpinned_dependency_inclu1/floating",
+    "commit": "3604a10db0005bd635a46e041dde64fbc5098d96"
+  },
+  "probes": [
+    {
+      "probe": "env-spec-tracked",
+      "status": "unmet",
+      "items": [
+        "stamped-checklist:must/010",
+        "stamped-checklist:must/013",
+        "stamped-checklist:must/016"
+      ],
+      "reason": "must/010 met: Dependencies are declared in pixi.toml; no recognized pre-installed-tool requirement was found. Review dependency completeness; version pinning is assessed separately. must/013 met. must/016 unmet.",
+      "evidence": [
+        {
+          "uri": "pixi.toml",
+          "description": "spec environment specification",
+          "sha256": null
+        }
+      ],
+      "details": {
+        "specs": {
+          "pixi.toml": "spec"
+        },
+        "uninstalled_modules": [],
+        "preconditions": [],
+        "remote": null
+      },
+      "item_status": {
+        "stamped-checklist:must/010": "met",
+        "stamped-checklist:must/013": "met",
+        "stamped-checklist:must/016": "unmet"
+      },
+      "item_reason": {
+        "stamped-checklist:must/010": "Dependencies are declared in pixi.toml; no recognized pre-installed-tool requirement was found. Review dependency completeness; version pinning is assessed separately.",
+        "stamped-checklist:must/013": "Tracked: pixi.toml.",
+        "stamped-checklist:must/016": "The specification is tracked, but this checkout records no remote at all, so nothing says where anyone else could obtain it."
+      }
+    },
+    {
+      "probe": "run-env-linked",
+      "status": "not-checked",
+      "items": [
+        "stamped-checklist:must/006",
+        "stamped-checklist:must/015"
+      ],
+      "reason": "must/006 not-checked: No run records, so no record names the environment it ran in. must/015 not-checked: Nothing names an environment to check for a pin.",
+      "evidence": [],
+      "details": {
+        "records": 0,
+        "with_env": 0,
+        "without_env": [],
+        "by_mechanism": {
+          "container": 0,
+          "lockfile": 0,
+          "capture": 0
+        },
+        "unpinned": []
+      },
+      "item_status": {
+        "stamped-checklist:must/006": "not-checked",
+        "stamped-checklist:must/015": "not-checked"
+      },
+      "item_reason": {
+        "stamped-checklist:must/006": "No run records, so no record names the environment it ran in.",
+        "stamped-checklist:must/015": "Nothing names an environment to check for a pin."
+      }
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "kind": "engineering-regression-and-followability",
+  "source_commit": "9ef00c19618a168aa2f9d322ff71457fa6b046f2",
+  "upstream_base": "4fe5d7be82ed6c297747e8b838031aec88e75903",
+  "integrated_base": "496d4702937a1264bcd95d1c7657c0d9f5558079",
+  "checklist": "0.3.1",
+  "scope": [
+    "must/010",
+    "must/013",
+    "must/015"
+  ],
+  "change": "Do not penalize dependency inclusion merely because dependency versions float. Preserve specification-kind evidence and host-tool precondition detection; exact run-environment scoring remains separate.",
+  "mechanical_validation": {
+    "ordinary_passed": 120,
+    "ordinary_skipped": 28,
+    "eval_cases_passed": 26,
+    "mutants_detected": 18,
+    "mutants_total": 18,
+    "clean_false_unmet_partial": 0,
+    "clean_answered": 17,
+    "no_datalad_passed": 2,
+    "structural_skills_checked": 27,
+    "structural_errors": 0,
+    "preexisting_warnings": 10
+  },
+  "independent_review": {
+    "objects": 2,
+    "expected": "Dependency inclusion and tracked specification can be satisfied without establishing exact environment replication.",
+    "observed": "Both objects judged must/010 met, must/013 met, must/015 unmet; reviewer explicitly distinguished probe suggestions from judgments.",
+    "snapshot_files": 19,
+    "snapshot_hashes_match": true,
+    "documented_cli": "All three documented commands exited0 using installed interpreter; probe JSON matched original direct-import results; judgments unchanged."
+  },
+  "friction_classification": [
+    {
+      "classification": "harness fault",
+      "observation": "Initial system Python lacked declared jsonschema dependency; corrected by supplying existing interpreter and retaining original failure."
+    },
+    {
+      "classification": "harness fault",
+      "observation": "Prompt incorrectly said full checklist has 29 items; actual pinned checklist has 31. Scope named three exact IDs and was unaffected; original prompt retained."
+    },
+    {
+      "classification": "missing artifact",
+      "observation": "Existing run-env-linked probe leaves exact-environment item not-checked when no run record exists; reviewer can judge visibly floating standalone specs directly. Separate coverage limitation, unchanged here."
+    },
+    {
+      "classification": "defect in test target",
+      "observation": "Pixi synthetic target declares dependencies but has no computation; inclusion finding is bounded to the supplied one-file object, not an unstated implementation."
+    }
+  ],
+  "limits": [
+    "Heuristic probe suggestions still require assessor review of actual dependency completeness.",
+    "One independent agent and two synthetic targets, not scientific validation or live-judge reliability measurement.",
+    "Historical assessments were not regraded or overwritten.",
+    "Annex publication probe evidence boundary remains unresolved.",
+    "Skill versions remain 0.1.0 while introducing PR is open; exact source commits distinguish snapshots."
+  ]
+}
