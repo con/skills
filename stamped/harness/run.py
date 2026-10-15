@@ -246,7 +246,13 @@ def main(argv: list[str] | None = None) -> int:
 
     have_datalad = bool(shutil.which("datalad"))
     if have_datalad:
-        sh(["datalad", "create", "-c", "text2git", str(sandbox)])
+        sh(["datalad", "create", str(sandbox)])
+        # Filename/size policies work with standalone annex builds that do
+        # not include MagicMime (required by DataLad's text2git procedure).
+        with (sandbox / ".gitattributes").open("a") as stream:
+            stream.write("* annex.largefiles=largerthan=100kb\n")
+            for suffix in ("md", "py", "sh", "toml", "yaml", "yml", "json", "lock"):
+                stream.write(f"*.{suffix} annex.largefiles=nothing\n")
     else:
         sandbox.mkdir(parents=True)
         sh(["git", "init", "-q", "-b", "main"], cwd=sandbox)
