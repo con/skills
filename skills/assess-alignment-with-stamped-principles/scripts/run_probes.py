@@ -230,7 +230,7 @@ def summarise(results: list[dict], checklist) -> str:
     must = [i["id"] for i in checklist.items if i["level"] == "must"]
     covered = {i for r in results for i in r["items"] if i in must}
     lines.append("")
-    lines.append(f"probes answer {len(covered)}/{len(must)} MUST items; the rest need judgement")
+    lines.append(f"probes cover {len(covered)}/{len(must)} MUST items; inspect statuses for completed verdicts")
     return "\n".join(lines)
 
 

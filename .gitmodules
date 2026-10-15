@@ -1,4 +1,4 @@
 [submodule "evals"]
 	path = evals
 	url = https://github.com/con/skills.git
-	branch = codex/pr26-stamped-next-evals
+	branch = codex/pr26-harmonized-evals

@@ -72,6 +72,8 @@ The app ignores keys it does not know, so one file serves both.
 - The `assessor` block may also carry `drafted_by` (the script or step that produced a draft, where that differs from the skill — `scripts/run_probes.py` sets it) and `note` (anything a reader needs about the assessor itself rather than about the object). Both are provenance *within* the assessor, not a second assessor.
 - `extra_items[]` carries findings with no checklist id (licences, T.4) so they are reported without bending an existing id.
 
+`validate` checks the complete record against [`response-schema.json`](response-schema.json), using `jsonschema`, then checks checklist pins and verdict semantics. Stamp the response before final validation. The metadata is required for a completed assessment, even though the web app itself reads only the compact payload.
+
 ## The provenance stamp
 
 `assessor` plus `object` plus `checklist_source` **is** the stamp, and every report repeats it in prose at its foot:
@@ -83,7 +85,7 @@ A report without the stamp cannot be compared against another iteration, so it i
 
 ## Report layout
 
-One page, in this order, so the reader meets the actionable part first:
+Use this order, so the reader meets the actionable part first:
 
 1. **Verdict line** — `MUST: n met / n partial / n unmet / n not-checked`, then SHOULD and MAY, each with its denominator.
    No single overall score, ever.
@@ -111,4 +113,4 @@ Facts, from [stamped-checklist](https://github.com/stamped-principles/stamped-ch
 
 ## When the full assessment record matters
 
-For eval runs and reviewed assessments, the same run also writes [stamped-skills-assessment](https://github.com/stamped-principles/stamped-skills-assessment) records (`use_case`, `object`, `rubric`, `assessment`, `review`) from this same JSON, so the two can never diverge.
+The response JSON is the canonical assessment record. When a calling evaluation harness supplies pinned export schemas, derive its additional records from that JSON; do not invent formats or make an absent exporter block the assessment.
