@@ -21,7 +21,10 @@ TMP_PATH = re.compile(r"(?<![\w.:])/(?:tmp|var/tmp)/[\w.${}-]+")
 # cluster mount, a second disk, somebody's scratch space.  `/data/<user>/...`
 # is exactly as unportable as a home directory, and missing that was this
 # probe's worst false negative (see evals/stamped/blind-runs/).
-ABSOLUTE_PATH = re.compile(r"(?<![\w.:$])/([a-zA-Z][\w.-]*)(/[\w.${}-]+)+")
+# The lookbehind also excludes `}` and `~`: `${HOME}/work`, `$CI_DIR/out` and
+# `~/data` are *relative to a variable*, which is the portable way to write
+# them, and counting them cost a real object must/009 for its CI config.
+ABSOLUTE_PATH = re.compile(r"(?<![\w.:$}~])/([a-zA-Z][\w.-]*)(/[\w.${}-]+)+")
 # Roots that exist on any POSIX host, so an absolute path into them is not a
 # portability defect: interpreters, system tools, container-internal trees.
 SYSTEM_ROOTS = {
@@ -318,8 +321,15 @@ def entry_point(obj: Object) -> Probe:
                       or p.endswith(".smk"))
     named = sorted(p for p in tracked if p.endswith(RUNNABLE_SUFFIXES)
                    and (p in text or p.rsplit("/", 1)[-1] in text))
-    has_section = bool(re.search(r"(?i)^#+.*\b(reproduc|rerun|usage|quick\s*start|install|how to run|getting started)",
-                                 readme_text, re.M))
+    # A heading is the common shape, not the only one: `1. Install FSL`,
+    # `**Usage**` and a numbered list of steps are all instructions, and a real
+    # README (ReproNim/simple_workflow) lost must/007 for using the second
+    # form. The question the item asks is whether instructions exist, not
+    # whether they are under a Markdown heading.
+    has_section = bool(re.search(
+        r"(?im)^(?:#+|\s*\d+[.)]|\s*[-*]|\*\*|__)?\s*\**\b"
+        r"(reproduc|rerun|usage|quick\s*start|install|how to (?:run|use)|getting started|run the)",
+        readme_text))
     # Commands the instructions tell a reader to run, checked against what the
     # tracked workflow actually defines. The probe used to hold both lists and
     # never compare them.
@@ -425,6 +435,35 @@ def _host_tool_preconditions(obj: Object) -> list[dict]:
     return found
 
 
+# `name=version=build` (conda) or `name==version` (pip): a dependency line that
+# fixes the version. Anything else on a dependency line leaves it floating.
+PINNED_DEP = re.compile(r"^\s*-?\s*[A-Za-z0-9_.+/-]+\s*(?:==|=\d)[\w.*+!-]*")
+DEP_LINE = re.compile(r"^\s*-\s+[A-Za-z]")
+
+
+def _is_fully_pinned(name: str, text: str) -> bool:
+    """Does this specification fix a version for every dependency it lists?"""
+    if name not in {"environment.yml", "environment.yaml", "requirements.txt"}:
+        return False
+    if name == "requirements.txt":
+        lines = [l for l in text.splitlines()
+                 if l.strip() and not l.lstrip().startswith(("#", "-r", "--"))]
+        return bool(lines) and all(PINNED_DEP.match(l) for l in lines)
+    deps: list[str] = []
+    in_deps = False
+    for line in text.splitlines():
+        if re.match(r"^\s*dependencies\s*:", line):
+            in_deps = True
+            continue
+        if in_deps:
+            if line.strip() and not line.startswith((" ", "\t", "-")):
+                break
+            if DEP_LINE.match(line):
+                deps.append(line)
+    # A nested `- pip:` block's own entries are dependency lines too.
+    return bool(deps) and all(PINNED_DEP.match(d) or d.strip().rstrip(":") == "- pip" for d in deps)
+
+
 def _remote_resolves(url: str) -> bool | None:
     """Does this remote exist? None when we did not get to ask.
 
@@ -468,6 +507,14 @@ def env_spec_tracked(obj: Object, check_remote: bool = False) -> Probe:
         if kind is None and name.startswith("requirements") and name.endswith(".txt"):
             kind = "spec"
         if kind:
+            # A `spec` whose contents actually pin everything is pinned. An
+            # `environment.yml` with `pkg=1.2.3=py311h0` on every line is as
+            # pinned as a lockfile, and reporting "lists dependencies but pins
+            # no versions" about it is simply false — found on
+            # ReproNim/simple_workflow, whose every conda package carries its
+            # build string.
+            if kind == "spec" and _is_fully_pinned(name, obj.read(relpath)):
+                kind = "pinned"
             found[relpath] = kind
     if obj.exists(".datalad/config") and "containers." in obj.read(".datalad/config"):
         found[".datalad/config"] = "pinned"

@@ -55,6 +55,7 @@ The app ignores keys it does not know, so one file serves both.
 - Every one of the 31 pinned ids appears exactly once.
   A missing id is not "no answer"; it is a bug the validator catches.
 - `status` is the richer verdict from [`verdicts.md`](verdicts.md); `value` is derived from it, never set by hand.
+- **Cite a line only if you opened it.** `path#L12` is a promise that line 12 says what the reason claims; a run that cited line numbers it had not read then had to strip them all. Without that, cite the file (or `path#section`), which is still a citation a reader can follow.
 - `evidence[]` uses stamped-skills-assessment's `Evidence` shape: `{uri, description, sha256?}`.
   `uri` is relative to the object's root, or absolute for anything outside it.
   **The argument lives here, not in `reason`.** 250 characters does not hold two cited accounts plus "the probe's heuristic said X but Y is true", and an override needs all three. Make `reason` the one-line verdict a reader sees in the app, and put each account, each command you ran and each number in an `evidence[]` entry with its own `description`.

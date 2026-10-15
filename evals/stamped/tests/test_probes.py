@@ -292,6 +292,12 @@ def test_fresh_rerun_reports_a_difference_as_such(tmp_path):
     ('"SourceDatasets": [{"URL": "///openneuro/ds000003"}]', None),
     ('datalad clone ///repronim/containers code/containers', None),
     ('url = ria+http://store.datalad.org#~abc', None),
+    # A path relative to a variable is portable, and three of these cost a
+    # real object its must/009 in a blind run.
+    ('- run: cp results ${HOME}/artifacts/out.tsv', None),
+    ('TMPDIR=${RUNNER_TEMP}/work', None),
+    ('out="$CI_PROJECT_DIR/results/table.tsv"', None),
+    ('cd ~/scratch/ds007116', None),
     # System roots and URLs are not host paths.
     ('#!/usr/bin/env python3', None),
     ('export FREESURFER_HOME=/opt/local/freesurfer-7.4.1', None),
@@ -848,3 +854,87 @@ def test_remote_check_does_not_prompt_or_hang(tmp_path):
     # never a prompt and never a wait.
     assert _remote_resolves("https://github.com/con/this-repo-does-not-exist-9q7.git") in (False, None)
     assert time.monotonic() - started < 60, "the remote check should not block a run"
+
+
+def test_entry_point_accepts_numbered_instructions(tmp_path, clean):
+    """Instructions are instructions, heading or not.
+
+    A real object (ReproNim/simple_workflow) lost must/007 because its README
+    numbers its steps instead of putting them under a Markdown heading, and a
+    blind run had to override the probe to say so.
+    """
+    target = tmp_path / "numbered"
+    shutil.copytree(clean, target, symlinks=True)
+    (target / "README.md").write_text(
+        "# A simple workflow\n\n"
+        "1. Install FSL and curl.\n"
+        "2. Run `make all` to produce the table and the figure.\n"
+        "3. Compare with `expected_output/`.\n"
+    )
+    env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@e.org",
+           "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@e.org"}
+    subprocess.run(["git", "add", "-A"], cwd=target, check=True, env=env)
+    subprocess.run(["git", "commit", "-qm", "numbered instructions"], cwd=target, check=True, env=env)
+
+    result = REGISTRY["entry-point"](Object(target))
+    assert result.status_of("stamped-checklist:must/007") == "met", result.reason
+
+
+def test_env_spec_pinned_when_every_dependency_is(tmp_path, clean):
+    """`environment.yml` pinned to build strings is pinned, not a loose spec."""
+    target = tmp_path / "conda"
+    shutil.copytree(clean, target, symlinks=True)
+    (target / "environment.yml").write_text(
+        "name: demo\nchannels:\n  - conda-forge\ndependencies:\n"
+        "  - python=3.11.9=h0755675_0\n  - numpy=1.26.4=py311h64a7726_0\n"
+    )
+    env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@e.org",
+           "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@e.org"}
+    # The lockfile goes, so must/010 can only be answered from the conda file.
+    subprocess.run(["git", "rm", "-q", "requirements.lock"], cwd=target, check=True, env=env)
+    subprocess.run(["git", "add", "-A"], cwd=target, check=True, env=env)
+    subprocess.run(["git", "commit", "-qm", "conda environment, fully pinned"],
+                   cwd=target, check=True, env=env)
+
+    result = REGISTRY["env-spec-tracked"](Object(target))
+    assert result.status_of("stamped-checklist:must/010") == "met", result.reason
+
+    # And a floating one is still a floating one.
+    (target / "environment.yml").write_text(
+        "name: demo\nchannels:\n  - conda-forge\ndependencies:\n  - python\n  - numpy\n")
+    subprocess.run(["git", "add", "-A"], cwd=target, check=True, env=env)
+    subprocess.run(["git", "commit", "-qm", "unpinned"], cwd=target, check=True, env=env)
+    result = REGISTRY["env-spec-tracked"](Object(target))
+    assert result.status_of("stamped-checklist:must/010") != "met", result.reason
+
+
+def test_other_tools_provenance_counts_and_a_paper_is_not_a_product(tmp_path, clean):
+    """Rule 7: name the mechanism you found, not the one you expected.
+
+    A real object ships nipype PROV exports and a paper PDF. The probe called
+    it `unmet` ("no run record"), counting the publication as a derived file it
+    could not explain — two mistakes in one verdict, and a blind run had to
+    talk it out of both.
+    """
+    target = tmp_path / "prov"
+    shutil.copytree(clean, target, symlinks=True)
+    env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@e.org",
+           "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@e.org"}
+    # Strip the [DATALAD RUNCMD] history by re-creating the tree in a fresh
+    # repository: what is left is files, a workflow-free layout and PROV.
+    plain = tmp_path / "plain"
+    plain.mkdir()
+    for name in ("results", "figures"):
+        shutil.copytree(target / name, plain / name)
+    (plain / "README.md").write_text("# demo\n\n## Usage\n\nSee the provenance exports.\n")
+    (plain / "results" / "workflow.provn").write_text(
+        'document prefix nipype <http://nipy.org/nipype/terms/> entity(nipype:a) endDocument\n')
+    (plain / "AVerySimplePublication_v3.pdf").write_bytes(b"%PDF-1.4 paper\n")
+    for cmd in (["git", "init", "-q", "-b", "main"], ["git", "add", "-A"],
+                ["git", "commit", "-qm", "products, provenance and the paper"]):
+        subprocess.run(cmd, cwd=plain, check=True, env=env, capture_output=True)
+
+    result = REGISTRY["derived-have-records"](Object(plain))
+    assert result.status == "partial", (result.status, result.reason)
+    assert "provenance artefact" in result.reason or "provenance" in result.reason
+    assert "AVerySimplePublication_v3.pdf" not in str(result.details.get("candidates"))

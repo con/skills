@@ -22,8 +22,13 @@ DERIVED_SUFFIXES = (
 NOT_DERIVED = (
     "sourcedata/", "rawbids/", "rawdata/", "inputs/", "input/", "sub-", "docs/",
     "doc/", ".github/", "templates/", "template/", "assets/", "stories/", "tests/",
-    "test/", "code/containers/", "fixtures/",
+    "test/", "code/containers/", "fixtures/", "paper/", "manuscript/", "expected_output/",
 )
+# A tracked PDF at the root of a project is its paper or poster, not an output
+# of its pipeline: a blind run had to explain to the probe that
+# `AVERYSimpleRe-ExecutableNeuroimagingPublication_v3.pdf` is the publication.
+NOT_DERIVED_NAMES = re.compile(r"(?i)(?:paper|manuscript|poster|preprint|publication|slides|"
+                               r"README|LICENSE|CITATION)[\w.-]*\.(?:pdf|docx?|pptx?)$")
 CONTAINER_IMAGE = re.compile(r"(?:\.sif|\.simg|\.img\b|docker://|shub://|oras://|sha256:[0-9a-f]{12,})")
 # A per-run environment *capture* (duct, reprozip, a recorded `pip freeze`) is
 # weaker evidence than a specification that reconstitutes the environment, but
@@ -37,6 +42,8 @@ def _derived_candidates(obj: Object) -> list[str]:
     out = []
     for relpath in obj.tracked():
         if any(relpath.startswith(p) or f"/{p}" in relpath for p in NOT_DERIVED):
+            continue
+        if NOT_DERIVED_NAMES.search(relpath.rsplit("/", 1)[-1]):
             continue
         lower = relpath.lower()
         if any(relpath.startswith(d) or f"/{d}" in relpath for d in DERIVED_DIRS) or lower.endswith(DERIVED_SUFFIXES):
@@ -83,18 +90,45 @@ def _workflow_targets(obj: Object) -> tuple[list[str], list[str]]:
     return patterns, sources
 
 
+# Provenance a tool other than datalad recorded: nipype's PROV export, a
+# CWL/WDL provenance bundle, an RO-Crate. `verdicts.md` rule 7 — equivalent
+# evidence counts — and a real object (ReproNim/simple_workflow) ships nipype
+# `.provn`/`.trig` files that this probe did not know how to see.
+PROV_FILES = (".provn", ".trig", ".ttl", "prov.json", "ro-crate-metadata.json", ".nidm.ttl")
+
+
+def _prov_artifacts(obj: Object) -> list[str]:
+    return [p for p in obj.tracked()
+            if p.endswith(PROV_FILES) or p.rsplit("/", 1)[-1] in {"prov.json", "ro-crate-metadata.json"}]
+
+
 def derived_have_records(obj: Object) -> Probe:
     """must/006 and A.2 — every derived file traces back to a re-executable record."""
     items = ["stamped-checklist:must/006"]
     candidates = _derived_candidates(obj)
     records = obj.run_records()
     wf_patterns, wf_sources = _workflow_targets(obj)
+    prov = _prov_artifacts(obj)
 
     if not candidates:
         return Probe(
             "derived-have-records", "not-applicable", items,
             "N/A: no tracked file looks like a product of this object (no derivatives, tables or figures).",
             [], {"records": len(records), "workflow_sources": wf_sources},
+        )
+    if not records and not wf_patterns and prov:
+        # Provenance in another tool's format: enough to link results to what
+        # produced them, not enough to re-execute from the history, so
+        # `partial` with the mechanism named rather than `unmet` for "no
+        # [DATALAD RUNCMD] here".
+        return Probe(
+            "derived-have-records", "partial", items,
+            clip(f"{len(candidates)} derived file(s) and no run record or tracked workflow, but "
+                 f"{len(prov)} provenance artefact(s) record what produced them "
+                 f"(e.g. {prov[0]}): a reader can see the tools and versions, not re-execute them."),
+            [Evidence(p, "provenance artefact from another tool") for p in prov[:5]]
+            + [Evidence(p, "derived file") for p in candidates[:5]],
+            {"candidates": candidates, "provenance_artifacts": prov},
         )
     if not records and not wf_patterns:
         return Probe(
