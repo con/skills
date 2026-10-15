@@ -18,11 +18,13 @@ Steps
 1. clone from the published location (``datalad clone`` when available, else
    ``git clone``) — a clone that fails is already D.1 ``unmet``;
 2. install the modules without content (``datalad get -n -r``) and fetch only
-   what fits under ``--max-get-gb``: an unbounded ``datalad get -r .`` pulled
-   **87 GB** of container images on its first real R1 object before it was
-   stopped, because a module of ``///repronim/containers`` carries every image
-   the registry knows. The entry point fetches its own declared inputs;
-3. record the checksums the clone *shipped* for the output files;
+   what fits under ``--max-get-gb``: an unbounded ``datalad get -r .`` started
+   on the **3.7 TiB** a module of ``///repronim/containers`` makes reachable —
+   87 GB of it had landed before anyone noticed — because that module carries
+   every image the registry knows. The entry point fetches its own declared
+   inputs;
+3. record the checksums the clone *shipped* for the output files, then **remove
+   them**, so that only re-creation counts (``--keep-outputs`` to opt out);
 4. run the entry point, in a container when ``--in-container`` is given;
 5. compare: identical checksums, or numeric agreement within ``--rtol`` for
    tables, and report anything else as a difference for a human to look at.
@@ -59,8 +61,8 @@ def _annexed_bytes_missing(clone: pathlib.Path) -> int:
     """Bytes of annexed content not here yet, this dataset and its modules.
 
     Asked *before* fetching, because the honest answer to "how much is this
-    about to download" is the one number nobody had: the first real R1 rerun
-    pulled 87 GB of container images and had to be killed by hand.
+    about to download" is the one number nobody had: on the first real R1
+    object it is 3.7 TiB, and the run had to be killed by hand at 87 GB.
     """
     total = 0
     for gitdir in [clone, *sorted(p.parent for p in clone.rglob(".git") if p.parent != clone)]:
@@ -148,6 +150,10 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--rtol", type=float, default=1e-6, help="relative tolerance for tables")
     ap.add_argument("--workdir", type=pathlib.Path, help="keep the clone here instead of a temp dir")
     ap.add_argument("--timeout", type=int, default=7200)
+    ap.add_argument("--keep-outputs", action="store_true",
+                    help="do not delete the shipped outputs before the rerun (for an entry point that "
+                         "regenerates them in place); by default they are removed so that only "
+                         "re-creation counts as reproduction")
     ap.add_argument("--max-get-gb", type=float, default=5.0,
                     help="skip the up-front content fetch when it would exceed this (default 5 GiB); "
                          "a module of a container registry can be hundreds of GB")
@@ -210,6 +216,21 @@ def main(argv: list[str] | None = None) -> int:
             shutil.copy2(clone / path, target, follow_symlinks=True)
         except OSError:
             pass  # annexed content that is not present; recorded as None above
+    # Then take them out of the clone, so that only *re-creation* counts. An
+    # entry point that does nothing at all left the shipped files untouched and
+    # the probe called them reproduced: `--entry true` scored `met`, which is
+    # the one answer this probe must never give for free. `--keep-outputs`
+    # restores the old behaviour for an entry point that regenerates in place.
+    removed: list[str] = []
+    if not args.keep_outputs:
+        for path in before:
+            try:
+                (clone / path).unlink()
+                removed.append(path)
+            except OSError:
+                pass
+        if removed:
+            step(f"removed {len(removed)} shipped output(s) before the rerun", 0, "\n".join(removed[:20]))
     if not before:
         report.update(status="not-checked",
                       reason="The clone ships no file matching --outputs, so there is nothing to compare.")
