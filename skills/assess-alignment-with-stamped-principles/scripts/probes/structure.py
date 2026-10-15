@@ -610,7 +610,6 @@ def env_spec_tracked(obj: Object, check_remote: bool = False) -> Probe:
         if block:
             found[relpath] = "pinned" if PEP723_PINNED.search(block.group(0)) else "spec"
 
-    pinned = sorted(p for p, k in found.items() if k == "pinned")
     uninstalled = [m.get("path", m["name"]) for m in obj.submodules() if not m.get("initialized", False)]
     preconditions = _host_tool_preconditions(obj)
     remote, local_remote = _remotes(obj)
@@ -641,16 +640,15 @@ def env_spec_tracked(obj: Object, check_remote: bool = False) -> Probe:
         r010 = clip(f"{len(preconditions)} tracked script(s) require a tool to be installed on the host "
                     f"already, e.g. {first['path']} line {first['line']} ({first['tool'] or 'see line'}); "
                     "that dependency is not in any tracked specification.")
-    elif pinned:
-        s010 = "met"
-        r010 = clip(f"Dependencies are pinned in {', '.join(pinned[:3])}, and no tracked script expects a "
-                    "tool to be present already.")
     elif found:
-        s010 = "partial"
-        inline = [p for p, k in found.items() if p.endswith(".py")]
-        r010 = clip(f"{', '.join(sorted(found)[:3])} lists dependencies but pins no versions "
-                    + ("(inline PEP 723 metadata with unpinned requirements; `uv lock --script` "
-                       "would pin it)." if inline else "(no lockfile or digest)."))
+        # Inclusion and exact version pinning are different checklist items.
+        # A floating specification can include every dependency; a lockfile
+        # alone does not establish completeness. This remains a heuristic:
+        # the assessor must review dependencies the host-tool scan cannot see.
+        s010 = "met"
+        r010 = clip(f"Dependencies are declared in {', '.join(sorted(found)[:3])}; "
+                    "no recognized pre-installed-tool requirement was found. "
+                    "Review dependency completeness; version pinning is assessed separately.")
     else:
         s010 = s013
         r010 = r013
