@@ -490,13 +490,14 @@ def test_run_recorded_leaves_the_worktree_clean_for_datalad(tmp_path):
     root = tmp_path / "wrapper-clean"
     env = _guarded_repo(root)
     script = root / "probe-worktree.sh"
-    script.write_text("#!/bin/sh\ngit status --porcelain --untracked-files=all > /tmp/wt-status\n")
+    status_file = tmp_path / "wt-status"
+    script.write_text(f"#!/bin/sh\ngit status --porcelain --untracked-files=all > {status_file}\n")
     script.chmod(0o755)
     subprocess.run(["git", "add", "-A"], cwd=root, check=True, env=env)
     subprocess.run(["git", "commit", "-qm", "add probe"], cwd=root, check=True, env=env)
     subprocess.run(["sh", "./run-recorded.sh", "-m", "check", "--", "sh", "./probe-worktree.sh"],
                    cwd=root, check=True, capture_output=True, text=True, env=env)
-    status = pathlib.Path("/tmp/wt-status").read_text()
+    status = status_file.read_text()
     assert "datalad-run-in-flight" not in status, f"marker is visible in the worktree: {status}"
 
 
@@ -1109,6 +1110,72 @@ def test_must016_reads_every_remote_and_names_a_local_one(tmp_path, clean):
     status, reason = status_and_reason()
     assert status == "partial" and "not checked" in reason, reason
     assert "https://example.org/con/thing" in reason, reason
+
+
+def _path_without(tool: str) -> str | None:
+    """A PATH that still has git but not `tool`, or None if one cannot be built.
+
+    CI is such a machine — nothing installs datalad there — and it is the only
+    place the datalad-free fallbacks in this project ever run, so the tests for
+    them have to build that PATH rather than assume it.
+    """
+    keep = ["/usr/bin", "/bin"]
+    git = shutil.which("git")
+    if git:
+        keep.append(str(pathlib.Path(git).parent))
+    path = os.pathsep.join(dict.fromkeys(keep))
+    if not shutil.which("git", path=path) or shutil.which(tool, path=path):
+        return None
+    return path
+
+
+def test_run_recorded_without_datalad_does_not_fail_on_an_unchanged_tree(tmp_path):
+    """The fallback committed unconditionally, so a command that changed
+    nothing exited 1: the wrapper reporting failure for a run that succeeded.
+
+    Green for two days on every machine with datalad, and red in CI on every
+    push, because CI is the only place that runs this path.
+    """
+    path = _path_without("datalad")
+    if path is None:
+        pytest.skip("cannot build a PATH with git but without datalad")
+    root = tmp_path / "wrapper-nochange"
+    env = {**_guarded_repo(root), "PATH": path}
+    script = root / "probe.sh"
+    script.write_text(f"#!/bin/sh\ngit status --porcelain > {tmp_path / 'wt-status'}\n")
+    script.chmod(0o755)
+    subprocess.run(["git", "add", "-A"], cwd=root, check=True, env=env)
+    subprocess.run(["git", "commit", "-qm", "add probe"], cwd=root, check=True, env=env)
+    before = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, capture_output=True,
+                            text=True, env=env).stdout.strip()
+    done = subprocess.run(["sh", "./run-recorded.sh", "-m", "check", "--", "sh", "./probe.sh"],
+                          cwd=root, capture_output=True, text=True, env=env)
+    assert done.returncode == 0, done.stderr
+    assert "no commit made" in done.stderr, done.stderr
+    after = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, capture_output=True,
+                           text=True, env=env).stdout.strip()
+    assert before == after, "an empty run moved HEAD"
+    # and the marker is gone, so the next commit is not blocked
+    assert not (root / ".git" / "datalad-run-in-flight").exists()
+
+
+def test_the_harness_records_an_absent_tool_rather_than_crashing(tmp_path):
+    """`sh(["datalad", "--version"], check=False)` raised FileNotFoundError, so
+    preparing a run died on a host without datalad — the host every run is
+    told may not have it."""
+    path = _path_without("datalad")
+    if path is None:
+        pytest.skip("cannot build a PATH with git but without datalad")
+    run_py = EVALS / "harness" / "run.py"
+    workdir = tmp_path / "wd-no-datalad"
+    done = subprocess.run(
+        [sys.executable, str(run_py), "--use-case", str(EVALS / "use-cases" / "r0-freesurfer-plot"),
+         "--condition", "skill-explicit", "--workdir", str(workdir), "--model", "sonnet"],
+        capture_output=True, text=True, env={**os.environ, "PATH": path},
+    )
+    assert done.returncode == 0, done.stderr
+    meta = json.loads((workdir / "r0-freesurfer-plot--skill-explicit--sonnet--r1.run.json").read_text())
+    assert meta["host"]["datalad"] is None, meta["host"]
 
 
 def test_the_harness_gives_every_run_a_publishing_target(tmp_path):

@@ -143,7 +143,17 @@ CONDITION_PARAGRAPH = {
 
 
 def sh(cmd: list[str], cwd: pathlib.Path | None = None, check: bool = True) -> subprocess.CompletedProcess:
-    proc = subprocess.run(cmd, cwd=str(cwd) if cwd else None, capture_output=True, text=True)
+    try:
+        proc = subprocess.run(cmd, cwd=str(cwd) if cwd else None, capture_output=True, text=True)
+    except FileNotFoundError:
+        # An absent tool is an answer, not a crash. `conditions/host-notes.md`
+        # tells every run that datalad, git-annex and uv may or may not be on
+        # this host's PATH, and the run record's job is to say which — so a
+        # `check=False` probe for a version must come back empty rather than
+        # take the harness down with it. 127 is what a shell reports.
+        if check:
+            raise RuntimeError(f"{cmd[0]} not found on PATH")
+        return subprocess.CompletedProcess(cmd, 127, "", f"{cmd[0]}: not found")
     if check and proc.returncode != 0:
         raise RuntimeError(f"{' '.join(cmd[:4])}… failed: {(proc.stderr or proc.stdout).strip()[:600]}")
     return proc
