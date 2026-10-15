@@ -77,13 +77,33 @@ if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
     exit 1
 fi
 
-: > "$MARKER"
+# The marker carries the pid, so a marker left behind by a killed run can be
+# told from a live one. A run that dies with SIGKILL skips the trap below, and
+# an undetectable stale marker then refuses every later commit.
+echo "$$" > "$MARKER"
 trap cleanup EXIT INT TERM HUP
 export IN_FLIGHT_OK=1
 
 if command -v datalad >/dev/null 2>&1; then
+    # `set +e` around the call, and `$?` captured on the next line: after a
+    # failed `if cmd; then` the shell reports the *if statement's* status, which
+    # is 0, so the obvious spelling swallowed the failure.
+    set +e
     datalad "$SUBCMD" "$@"
-    exit $?
+    status=$?
+    set -e
+    if [ "$status" -eq 0 ]; then
+        exit 0
+    fi
+    # A failed `datalad run` can leave the tree partly staged (a type change on
+    # an output it had unlocked, for instance), and the next attempt then
+    # refuses for a reason that looks unrelated. Say so here rather than
+    # letting the next command be the messenger.
+    printf '\ndatalad %s failed (exit %s). The tree may be partly staged:\n' "$SUBCMD" "$status" >&2
+    git status --short >&2
+    printf 'Reset what the run touched before retrying, e.g. `git reset HEAD <paths>` then\n' >&2
+    printf '`git checkout -- <paths>`.\n' >&2
+    exit $status
 fi
 
 printf 'warning: datalad not found; recording the command in a plain commit.\n' >&2

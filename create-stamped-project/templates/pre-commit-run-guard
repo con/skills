@@ -22,6 +22,24 @@ GITDIR="$(git rev-parse --git-dir)"
 MARKER="$GITDIR/datalad-run-in-flight"
 [ -e "$MARKER" ] || MARKER=".datalad-run-in-flight"
 
+# A marker whose process is gone is bookkeeping from a killed run, not a run.
+# Honouring it would be the guard inflicting the hazard it exists to prevent —
+# which has happened, and cost an agent its next three commits.
+if [ -e "$MARKER" ] && [ "${IN_FLIGHT_OK:-}" != "1" ]; then
+    marker_pid="$(cat "$MARKER" 2>/dev/null || true)"
+    case "$marker_pid" in
+        ''|*[!0-9]*) : ;;                       # no pid recorded: treat as live
+        *)
+            if ! kill -0 "$marker_pid" 2>/dev/null; then
+                printf 'note: %s names pid %s, which is gone; removing a stale marker and\n' \
+                    "$MARKER" "$marker_pid" >&2
+                printf 'allowing this commit. The run that set it was killed before its cleanup.\n' >&2
+                rm -f "$MARKER"
+            fi
+            ;;
+    esac
+fi
+
 if [ -e "$MARKER" ] && [ "${IN_FLIGHT_OK:-}" != "1" ]; then
     printf 'refusing to commit: a recorded run is in flight (%s exists).\n' "$MARKER" >&2
     printf '\n' >&2

@@ -178,7 +178,14 @@ def no_abs_paths(obj: Object, allow: tuple[str, ...] = ()) -> Probe:
 
     # A script that names a path only one machine has cannot run elsewhere.
     blocking = [h for h in hits if h["kind"] in {"home", "host"} and h["where"] == "code"]
-    softer = [h for h in hits if h not in blocking]
+    # `/tmp` exists on every POSIX host, so it is not an assumption about *this*
+    # machine and does not belong to must/009: a live run lost the item for
+    # `/tmp/` in a CI workflow, which is portable. It is still worth saying,
+    # because it is a write outside the object, so it is reported as a note.
+    tmp_hits = [h for h in hits if h["kind"] == "tmp" and h not in blocking]
+    softer = [h for h in hits if h not in blocking and h not in tmp_hits]
+    tmp_note = (f" Plus {len(tmp_hits)} /tmp path(s), portable but writing outside the object."
+                if tmp_hits else "")
     if blocking:
         first = blocking[0]
         files = sorted({h["path"] for h in blocking})
@@ -197,15 +204,18 @@ def no_abs_paths(obj: Object, allow: tuple[str, ...] = ()) -> Probe:
                   if records else f"e.g. {first['path']} line {first['line']} ({label}, in {first['where']})")
         return Probe(
             "no-abs-paths", "partial", ["stamped-checklist:must/009"],
-            clip(f"No script depends on a host-specific path, but {len(softer)} such mention(s) remain: {detail}"),
+            clip(f"No script depends on a host-specific path, but {len(softer)} such mention(s) remain: "
+                 f"{detail}.{tmp_note}"),
             [Evidence(f"{h['path']}#L{h['line']}", f"{h['kind']} path in {h['where']}: {h['text']}")
              for h in softer[:10]],
             {"hits": hits},
         )
     return Probe(
         "no-abs-paths", "met", ["stamped-checklist:must/009"],
-        "No host-specific absolute paths in tracked text files.",
-        [Evidence("probe:no-abs-paths", f"scanned {len(obj.tracked())} tracked paths, 0 hits")],
+        clip(f"No host-specific absolute paths in tracked text files.{tmp_note}"),
+        [Evidence("probe:no-abs-paths", f"scanned {len(obj.tracked())} tracked paths, "
+                  f"{len(tmp_hits)} /tmp hit(s), 0 host-specific")],
+        {"tmp_hits": tmp_hits} if tmp_hits else None,
     )
 
 

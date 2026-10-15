@@ -150,12 +150,20 @@ A known, tracked gap is reported differently from one nobody has noticed: say "a
 
 ## Step 6. Write the three products
 
-Merge your judgement into the draft response, keeping the probe verdicts and evidence, then:
+Merge your judgement into the draft response, keeping the probe verdicts and evidence.
+**Do not write a merge script**: `set` writes one answer in place, with the one status-to-value mapping there is, and `table` renders the per-item table the report layout asks for.
 
 ```console
+python3 ../stamped-conventions/scripts/encode_response.py set <date>-response.json \
+    --item must/011 --status met --source judgement \
+    --reason 'no host assumptions beyond a POSIX shell and the tracked lockfile' \
+    --evidence 'README.md#requirements=the documented list'
 python3 ../stamped-conventions/scripts/encode_response.py validate <date>-response.json
+python3 ../stamped-conventions/scripts/encode_response.py table    <date>-response.json
 python3 ../stamped-conventions/scripts/encode_response.py encode   <date>-response.json
 ```
+
+Three runs in a row wrote their own merge script for this, and one of them crashed in its own copy of the mapping.
 
 `validate` must pass before you report anything: it catches an unanswered item, an item still carrying the probe draft's "No probe covers this item" placeholder, a status without evidence, a reason over the app's 250 characters, and an id the app would reject.
 Every one of the 31 items gets your answer — the judgement items in [Step 4](#step-4-judge-what-no-probe-can) are not optional, and a smaller model skipping the `may/*` items is the observed failure this check exists to stop.

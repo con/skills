@@ -87,6 +87,7 @@ One page, in this order, so the reader meets the actionable part first:
 2. **What to fix first** — at most five, highest leverage first, each as *what to change* → *why it matters to this project* → *the item ids it closes*.
 3. **What the project already does well** — two or three, with citations.
 4. **Per-item table** — MUST first, then SHOULD, then MAY: id, principle codes, status, evidence, reason.
+   `scripts/encode_response.py table <response>.json` renders exactly this from the response; it is not a table to type by hand.
 5. **Flagged items** — every item carrying a `flags` entry, with one line each: what the probe measured versus what the item asks, or what the override was.
    An empty list is worth stating as "none".
 6. **Not checked** — each with what would settle it.

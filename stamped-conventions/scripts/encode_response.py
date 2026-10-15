@@ -11,6 +11,9 @@ script is the only writer of a checklist-app URL.  See
 Subcommands
 -----------
 items      list the pinned items (id, level, principle codes, text)
+set        answer one item in a response JSON, in place (what every run was
+           otherwise writing a merge script for)
+table      the per-item markdown table response-format.md section 4 asks for
 validate   check a response JSON against the pin and the app's constraints
 encode     response JSON -> checklist-app URL
 decode     checklist-app URL -> response JSON (how a filled web form becomes
@@ -152,6 +155,56 @@ def app_payload(response: dict, cl: Checklist) -> dict:
     return {"checklist_version": cl.version, "responses": responses}
 
 
+def set_answer(response: dict, cl: Checklist, item_id: str, status: str, reason: str,
+               source: str | None = None, evidence: list[str] | None = None,
+               flags: list[str] | None = None) -> dict:
+    """Write one answer into a response, replacing whatever was there.
+
+    Every blind run so far has hand-written a script to merge its judgement
+    answers into the probe draft, and one of them hit a `KeyError` writing its
+    own copy of the status-to-value mapping. There is one mapping; it lives
+    here.
+    """
+    if item_id not in cl.by_id:
+        raise KeyError(f"{item_id} is not an item of checklist {cl.version}")
+    if status not in STATUS_VALUE:
+        raise ValueError(f"unknown status {status!r}; see ../references/verdicts.md")
+    answer: dict = {"status": status, "reason": reason}
+    if source:
+        answer["source"] = source
+    if evidence:
+        answer["evidence"] = [
+            # `uri=description` or a bare uri; sha256 stays the caller's job.
+            {"uri": e.split("=", 1)[0], "description": (e.split("=", 1)[1] if "=" in e else None),
+             "sha256": None}
+            for e in evidence
+        ]
+    if flags:
+        answer["flags"] = flags
+    response.setdefault("responses", {})[item_id] = answer
+    return response
+
+
+def table(response: dict, cl: Checklist) -> str:
+    """The per-item table, MUST then SHOULD then MAY, as the report layout asks."""
+    rows = ["| item | principles | status | source | evidence | reason |",
+            "|---|---|---|---|---|---|"]
+    order = {"must": 0, "should": 1, "may": 2}
+    for item in sorted(cl.items, key=lambda i: (order.get(i["level"], 3), i["id"])):
+        answer = (response.get("responses") or {}).get(item["id"]) or {}
+        evidence = ", ".join(
+            f"`{e.get('uri')}`" for e in (answer.get("evidence") or []) if e.get("uri")
+        ) or "—"
+        status = answer.get("status", "(unanswered)")
+        if item["level"] == "must" and status == "partial":
+            status = "partial ⚠ (a MUST is not satisfied by partial)"
+        rows.append(
+            f"| {item['id'].split(':')[-1]} | {','.join(item['principle_codes'])} | {status} | "
+            f"{answer.get('source', '—')} | {evidence} | {(answer.get('reason') or '').strip() or '—'} |"
+        )
+    return "\n".join(rows) + "\n"
+
+
 def encode(response: dict, cl: Checklist, base_url: str = APP_URL) -> str:
     params = [
         ("checklist", cl.version),
@@ -243,6 +296,20 @@ def main(argv: list[str] | None = None) -> int:
     p_tpl = sub.add_parser("template", help="emit an all-not-checked response JSON")
     p_tpl.add_argument("-o", "--output", type=pathlib.Path)
 
+    p_set = sub.add_parser("set", help="answer one item in a response JSON, in place")
+    p_set.add_argument("response", type=pathlib.Path)
+    p_set.add_argument("--item", required=True, help="item id, with or without the 'stamped-checklist:' prefix")
+    p_set.add_argument("--status", required=True, choices=sorted(STATUS_VALUE))
+    p_set.add_argument("--reason", required=True)
+    p_set.add_argument("--source", help="probe:<name>, judgement, probe:<name>+judgement, human:web-app")
+    p_set.add_argument("--evidence", action="append", default=[],
+                       help="uri, or uri=description; repeatable")
+    p_set.add_argument("--flag", action="append", default=[], dest="flags")
+
+    p_table = sub.add_parser("table", help="print the per-item markdown table")
+    p_table.add_argument("response", type=pathlib.Path)
+    p_table.add_argument("-o", "--output", type=pathlib.Path)
+
     args = ap.parse_args(argv)
     cl = Checklist()
 
@@ -278,6 +345,31 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     response = json.loads(args.response.read_text())
+
+    if args.cmd == "set":
+        item_id = args.item if ":" in args.item else f"stamped-checklist:{args.item}"
+        try:
+            set_answer(response, cl, item_id, args.status, args.reason,
+                       args.source, args.evidence, args.flags)
+        except (KeyError, ValueError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
+        args.response.write_text(json.dumps(response, indent=2) + "\n")
+        remaining = [p for p in validate(response, cl) if item_id in p]
+        for p in remaining:
+            print(f"warning: {p}", file=sys.stderr)
+        print(f"{item_id} = {args.status}")
+        return 0 if not remaining else 1
+
+    if args.cmd == "table":
+        out = table(response, cl)
+        if args.output:
+            args.output.write_text(out)
+            print(f"wrote {args.output}")
+        else:
+            sys.stdout.write(out)
+        return 0
+
     problems = validate(response, cl)
 
     if args.cmd == "validate":
