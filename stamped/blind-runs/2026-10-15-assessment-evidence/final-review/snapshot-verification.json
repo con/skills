@@ -1,0 +1,122 @@
+{
+  "source": {
+    "source_commit": "c29acfc115ad880030b2c42c0941d0d58c4739f3"
+  },
+  "files": [
+    {
+      "path": "skills/assess-alignment-with-stamped-principles/SKILL.md",
+      "expected": "e5537e6006934a9601ec810bc4d95f69e7585271342401e3233186ea8036d441",
+      "actual": "e5537e6006934a9601ec810bc4d95f69e7585271342401e3233186ea8036d441",
+      "match": true
+    },
+    {
+      "path": "skills/stamped-conventions/SKILL.md",
+      "expected": "cfc23e8c24096ec55668d2ccfbda961586fc320081e6ec82e6ed4dbbd555c981",
+      "actual": "cfc23e8c24096ec55668d2ccfbda961586fc320081e6ec82e6ed4dbbd555c981",
+      "match": true
+    },
+    {
+      "path": "skills/stamped-conventions/references/response-schema.json",
+      "expected": "3ec46b6f8b2ab267c1d0fac94a9a55cca47d4a76c8a6922eaf947f3f0dd6bec2",
+      "actual": "3ec46b6f8b2ab267c1d0fac94a9a55cca47d4a76c8a6922eaf947f3f0dd6bec2",
+      "match": true
+    },
+    {
+      "path": "skills/stamped-conventions/references/verdicts.md",
+      "expected": "1a5895f9e947472a8a3e4ceff72a6b5e70c619900e28c60541922452d516642b",
+      "actual": "1a5895f9e947472a8a3e4ceff72a6b5e70c619900e28c60541922452d516642b",
+      "match": true
+    },
+    {
+      "path": "skills/stamped-conventions/references/project-kinds.md",
+      "expected": "f87736407abf57761213fb9b631d1876345bcf13cd52998e206d9da5df4ecf3d",
+      "actual": "f87736407abf57761213fb9b631d1876345bcf13cd52998e206d9da5df4ecf3d",
+      "match": true
+    },
+    {
+      "path": "skills/stamped-conventions/references/principles-card.md",
+      "expected": "7b7d090a8b3167b1bc1090adaf76e694a17a19dd57bfcbe16fb48949ea5ded61",
+      "actual": "7b7d090a8b3167b1bc1090adaf76e694a17a19dd57bfcbe16fb48949ea5ded61",
+      "match": true
+    },
+    {
+      "path": "skills/stamped-conventions/references/response-format.md",
+      "expected": "a59d59f009f81e9164f5fea657ed972ab3e99ad2a65c5ec124b03f83907c9281",
+      "actual": "a59d59f009f81e9164f5fea657ed972ab3e99ad2a65c5ec124b03f83907c9281",
+      "match": true
+    },
+    {
+      "path": "skills/stamped-conventions/scripts/encode_response.py",
+      "expected": "10533d443b75dc1456bc4e080b03a8fd3822782e785a08eab9ef0db8006e3d27",
+      "actual": "10533d443b75dc1456bc4e080b03a8fd3822782e785a08eab9ef0db8006e3d27",
+      "match": true
+    },
+    {
+      "path": "skills/stamped-conventions/scripts/vendor_checklist.py",
+      "expected": "d47751678b7a6d1e585c6e54d01a967739db5a1840cde9ccafaf09e7e0cc289f",
+      "actual": "d47751678b7a6d1e585c6e54d01a967739db5a1840cde9ccafaf09e7e0cc289f",
+      "match": true
+    },
+    {
+      "path": "skills/stamped-conventions/checklist/lock.json",
+      "expected": "4c353484adcb2210b8041f21366c7de04c4eaace7f8f52e7a30f6a279110a2ad",
+      "actual": "4c353484adcb2210b8041f21366c7de04c4eaace7f8f52e7a30f6a279110a2ad",
+      "match": true
+    },
+    {
+      "path": "skills/stamped-conventions/checklist/stamped-checklist-0.3.1.json",
+      "expected": "da2eb88ed49dff64f098ad92200dec81c1b4404cc2d3ba1e1e1404d0e10e7bba",
+      "actual": "da2eb88ed49dff64f098ad92200dec81c1b4404cc2d3ba1e1e1404d0e10e7bba",
+      "match": true
+    },
+    {
+      "path": "skills/stamped-conventions/references/stacks/datalad.md",
+      "expected": "7c733e4e6cde63cdf78cf35c2890e5f3b2b8f9dd31e2576e31a3678657c6f0cc",
+      "actual": "7c733e4e6cde63cdf78cf35c2890e5f3b2b8f9dd31e2576e31a3678657c6f0cc",
+      "match": true
+    },
+    {
+      "path": "skills/assess-alignment-with-stamped-principles/scripts/fresh_rerun.py",
+      "expected": "79ab73d9a0c468fd2cd32cc2e4bd0a12385f44e7b120da1ec2052d370bf67e9a",
+      "actual": "79ab73d9a0c468fd2cd32cc2e4bd0a12385f44e7b120da1ec2052d370bf67e9a",
+      "match": true
+    },
+    {
+      "path": "skills/assess-alignment-with-stamped-principles/scripts/run_probes.py",
+      "expected": "e08917cdc94bafd00f0d3c034f4c8aa24a397e45f32c5b8242c0a662d96cb3b3",
+      "actual": "e08917cdc94bafd00f0d3c034f4c8aa24a397e45f32c5b8242c0a662d96cb3b3",
+      "match": true
+    },
+    {
+      "path": "skills/assess-alignment-with-stamped-principles/scripts/probes/__init__.py",
+      "expected": "a1ac553469f884a00af4d0795d1a53be3bf8bc5f8ac428aceba9357502d3e593",
+      "actual": "a1ac553469f884a00af4d0795d1a53be3bf8bc5f8ac428aceba9357502d3e593",
+      "match": true
+    },
+    {
+      "path": "skills/assess-alignment-with-stamped-principles/scripts/probes/common.py",
+      "expected": "c2083bc266a1d9155bb2876c31a02584b04bc73046bb70b680c684f54aa1b825",
+      "actual": "c2083bc266a1d9155bb2876c31a02584b04bc73046bb70b680c684f54aa1b825",
+      "match": true
+    },
+    {
+      "path": "skills/assess-alignment-with-stamped-principles/scripts/probes/structure.py",
+      "expected": "bd0f555b30095a5e4db65b99ea67d055b1ced99dd64d6e01e6f547cf661d79cf",
+      "actual": "bd0f555b30095a5e4db65b99ea67d055b1ced99dd64d6e01e6f547cf661d79cf",
+      "match": true
+    },
+    {
+      "path": "skills/assess-alignment-with-stamped-principles/scripts/probes/modules.py",
+      "expected": "ccc865b8237ff2365c1214333f16a3f6a1b18e183a2ac95e1f7ebadd18b4461f",
+      "actual": "ccc865b8237ff2365c1214333f16a3f6a1b18e183a2ac95e1f7ebadd18b4461f",
+      "match": true
+    },
+    {
+      "path": "skills/assess-alignment-with-stamped-principles/scripts/probes/provenance.py",
+      "expected": "6fdd74a8ac2d88b9790128ce9c205082c399365407e551d8af7f2a01d640d40f",
+      "actual": "6fdd74a8ac2d88b9790128ce9c205082c399365407e551d8af7f2a01d640d40f",
+      "match": true
+    }
+  ],
+  "all_match": true
+}

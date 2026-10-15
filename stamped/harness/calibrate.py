@@ -98,11 +98,14 @@ def main(argv: list[str] | None = None) -> int:
     # other. The list lives with the fixture (`SIMULATED`).
     expected = {i: a for i, a in accused.items() if i in SIMULATED}
     false_unmet = {i: a for i, a in accused.items() if i not in SIMULATED}
+    answered = {i: a for i, a in baseline.items() if a["status"] != "not-checked"}
     report: dict = {
         "clean_object": {
-            "answered_items": len(baseline),
+            "covered_items": len(baseline),
+            "not_checked_items": sorted(set(baseline) - set(answered)),
+            "answered_items": len(answered),
             "false_unmet": false_unmet,
-            "false_unmet_rate": f"{len(false_unmet)}/{len(baseline)}",
+            "false_unmet_rate": f"{len(false_unmet)}/{len(answered)}",
             "expected_by_the_fixture": {i: SIMULATED[i] for i in expected},
         },
         "mutants": {},
@@ -157,8 +160,9 @@ def main(argv: list[str] | None = None) -> int:
 
     report["sensitivity"] = f"{detected}/{len(names)}"
     print(f"\nmutants detected: {detected}/{len(names)}")
-    print(f"false unmet/partial on the clean object: {len(false_unmet)}/{len(baseline)} answered items"
-          + (f" ({len(expected)} more are the fixture's declared simulations)" if expected else ""))
+    print(f"false unmet/partial on the clean object: {len(false_unmet)}/{len(answered)} answered items"
+          + (f" ({len(expected)} are declared simulations included in that count)" if expected else ""))
+    print(f"coverage: {len(baseline)} items; {len(baseline) - len(answered)} left not-checked")
     for item, answer in false_unmet.items():
         print(f"  {item} = {answer['status']} ({answer['probe']}): {answer['reason']}")
     for item in expected:

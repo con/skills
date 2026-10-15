@@ -1,0 +1,92 @@
+{
+  "kind": "assessor-engineering-validation",
+  "source_commit": "c29acfc115ad880030b2c42c0941d0d58c4739f3",
+  "initial_blind_source": "afd2c0ff8b556788a3ab9e7d35eb0e4b24cd5d59",
+  "base_skills": "fdf31feecb4ee37a8487188447d61c006b11099f",
+  "base_evals": "d2ec49a784eea8667abf0231b53e178bc1c7c4f1",
+  "scope": [
+    "Dependency-completeness evidence boundary",
+    "Annex publication evidence boundary"
+  ],
+  "mechanical_validation": {
+    "ordinary_passed": 137,
+    "ordinary_skipped": 28,
+    "eval_cases_passed": 26,
+    "mutants_detected": 18,
+    "mutants_total": 18,
+    "clean_covered_items": 17,
+    "clean_answered_items": 14,
+    "clean_not_checked_items": 3,
+    "clean_false_unmet_partial": 0,
+    "fallback_checks_passed": 10,
+    "final_reason_checks_passed": 8,
+    "lint_skills": 27,
+    "lint_errors": 0,
+    "preexisting_lint_warnings": 10
+  },
+  "mechanical_scope": "Full validate/stamped-evals suite passed on final source c29acfc: 137 ordinary tests, 26 evaluation cases, 18/18 mutants; 27 skills linted with zero errors and 10 preexisting warnings. Ten fallback checks and eight publication/coverage checks also passed. No source edits followed.",
+  "observations": [
+    {
+      "kind": "known complete declaration",
+      "initial_reviews": "Both independently judged must/010 and must/013 met; probe leaves completeness not-checked."
+    },
+    {
+      "kind": "SciPy declaration with NumPy import",
+      "initial_reviews": "Frontier reviewer retained not-checked without dependency-closure evidence; smaller reviewer judged met on known transitive dependency semantics. This is retained disagreement, not a confirmed missing dependency."
+    },
+    {
+      "kind": "empty declaration and documented fresh venv",
+      "initial_reviews": "Both reviewers judged must/010 unmet and must/013 met. Synthetic execution receipt records ModuleNotFoundError for numpy at matching source commit."
+    },
+    {
+      "kind": "annex publication",
+      "initial_reviews": "Both distinguished location metadata from matching-byte recipient retrieval on one host and retained partial for broader publication."
+    }
+  ],
+  "friction_classification": [
+    {
+      "classification": "defect in test target",
+      "observation": "The initially intended omitted-import example declared SciPy, which can supply NumPy transitively. Retained original fixture/reviews and added a distinct empty-spec fresh-venv example; no rewritten original evidence."
+    },
+    {
+      "classification": "skill wording",
+      "observation": "Shared DataLad reference called whereis proof, contradicting the assessor verification rule. Final revision requires recipient retrieval and identifies locations as metadata."
+    },
+    {
+      "classification": "skill wording",
+      "observation": "Explicitly require verification of import aliases and transitive requirements, rather than equating top-level declaration absence with missing dependency."
+    },
+    {
+      "classification": "harness fault",
+      "observation": "Initial blanket no-install wording was superseded by preserved prompt amendment permitting dependencies in isolated reviewer runtimes while keeping assessment targets read-only."
+    },
+    {
+      "classification": "model limit",
+      "observation": "Initial reviewers differed on evidence sufficiency for an unpinned transitive dependency. Preserve that disagreement; do not infer general judge reliability from this small scoped check."
+    },
+    {
+      "classification": "harness fault",
+      "observation": "Intended overall publication audience was not predeclared. Reviewers agreed on facts but differed between overall partial and local-context met. Reported to coordinator for formal protocol selection; do not pool these scoped outcomes."
+    }
+  ],
+  "limits": [
+    "No scientific research or historical regrading performed.",
+    "No public network publication tested; actual retrieval was from a local store to a separate clone on the same host. Git history was cloned from the source checkout; the receipt does not prove history publication to the store.",
+    "Probes do not resolve arbitrary dependency graphs or execute workloads; completed judgments require appropriate evidence and may stay not-checked.",
+    "Existing host-tool-precondition heuristics remain and must be reviewed against the actual environment declarations; this candidate does not establish complete cross-language dependency analysis.",
+    "Assessor source/runtime/model/prompt/settings and scientific rubric still need selection and validation for a formal run.",
+    "The missing-import receipt uses a fresh --without-pip venv, not a complete replay of the README pip-install route; it corroborates absent NumPy, while the omission judgment also follows the committed code and empty declaration.",
+    "Intended recipient/access scope and treatment of narrower verified access must be predeclared in the formal judging contract; this engineering check does not decide that policy."
+  ],
+  "references": [
+    "https://git-annex.branchable.com/git-annex-whereis/",
+    "https://git-annex.branchable.com/internals/pointer_file/"
+  ],
+  "final_independent_review": {
+    "source_commit": "c29acfc115ad880030b2c42c0941d0d58c4739f3",
+    "snapshot_files_verified": 19,
+    "dependency_outcomes": "Complete declaration met; empty declaration unmet; both tracked specs met.",
+    "publication_outcome": "Met only for assumed supplied local recipient context; broader/public access not-checked.",
+    "scope_disagreement": "Initial reviews called overall publication partial; final reviewer scoped the item to the verified local recipient and called that limited claim met. Factual evidence agrees. Formal contract must fix intended recipient/access scope and aggregation before comparing scores."
+  }
+}

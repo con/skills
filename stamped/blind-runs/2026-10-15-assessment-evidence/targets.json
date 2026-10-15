@@ -1,0 +1,54 @@
+[
+  {
+    "path": "/tmp/stamped-assessment-evidence-fixtures/test_a_manifest_does_not_prove0/dependency-review",
+    "commit": "a4427bc0d4abcc0b8b299e194b2b20d74a506c12",
+    "files": {
+      "analysis.py": "import numpy\nprint(numpy.arange(3))\n",
+      "requirements.txt": "numpy\n"
+    }
+  },
+  {
+    "path": "/tmp/stamped-assessment-evidence-fixtures/test_a_manifest_does_not_prove1/dependency-review",
+    "commit": "9058af8e7eba4450bae7758be98b22d461eae765",
+    "files": {
+      "analysis.py": "import numpy\nprint(numpy.arange(3))\n",
+      "requirements.txt": "scipy\n"
+    }
+  },
+  {
+    "path": "/tmp/stamped-assessment-evidence-final-fixtures/test_a_manifest_does_not_prove0/dependency-review",
+    "commit": "dbcff95b4eb45cb33837c5eaf3ff79bf83d9dadf",
+    "files": {
+      "README.md": "# Numerical tool\n\nCreate a fresh Python virtual environment without system site packages:\n\n```sh\npython3 -m venv .venv\n.venv/bin/python -m pip install -r requirements.txt\n.venv/bin/python analysis.py\n```\n",
+      "analysis.py": "import numpy\nprint(numpy.arange(3))\n",
+      "requirements.txt": "numpy\n"
+    }
+  },
+  {
+    "path": "/tmp/stamped-assessment-evidence-final-fixtures/test_a_manifest_does_not_prove1/dependency-review",
+    "commit": "8c218854a77e1821508f0a4dbec82f27dee7793c",
+    "files": {
+      "README.md": "# Numerical tool\n\nCreate a fresh Python virtual environment without system site packages:\n\n```sh\npython3 -m venv .venv\n.venv/bin/python -m pip install -r requirements.txt\n.venv/bin/python analysis.py\n```\n",
+      "analysis.py": "import numpy\nprint(numpy.arange(3))\n",
+      "requirements.txt": "scipy\n"
+    }
+  },
+  {
+    "path": "/tmp/stamped-assessment-evidence-final-fixtures/test_a_manifest_does_not_prove2/dependency-review",
+    "commit": "5697076be929f539b770d19efa899044e38d58b9",
+    "files": {
+      "README.md": "# Numerical tool\n\nCreate a fresh Python virtual environment without system site packages:\n\n```sh\npython3 -m venv .venv\n.venv/bin/python -m pip install -r requirements.txt\n.venv/bin/python analysis.py\n```\n",
+      "analysis.py": "import numpy\nprint(numpy.arange(3))\n",
+      "requirements.txt": "# no packages declared\n"
+    }
+  },
+  {
+    "path": "/tmp/stamped-assessment-evidence-fixtures/test_a_spec_whose_content_neve0/annexed-spec",
+    "commit": "77dedfe19f21ec17fc704fc5aa30e782345a98d8",
+    "files": {
+      ".datalad/config": "[datalad \"containers.analysis\"]\n\timage = code/containers/analysis.sif\n\tcmdexec = apptainer exec {img} {cmd}\n",
+      "README.md": "# object\n\n## Reproduce\n\n    make all\n",
+      "code/containers/analysis.sif": "../../.git/annex/objects/vF/qP/SHA256E-s2304--7a3838d9d993f455975a9a9eac0cf5107aa92f0750b3d1aaacfb193fbd210ce1.sif/SHA256E-s2304--7a3838d9d993f455975a9a9eac0cf5107aa92f0750b3d1aaacfb193fbd210ce1.sif"
+    }
+  }
+]

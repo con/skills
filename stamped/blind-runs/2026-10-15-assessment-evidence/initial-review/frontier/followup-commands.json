@@ -1,0 +1,90 @@
+[
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "cwd": "/tmp/stamped-assessment-evidence-final-fixtures/test_a_manifest_does_not_prove2/dependency-review",
+    "returncode": 0,
+    "stdout": "5697076be929f539b770d19efa899044e38d58b9\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "status",
+      "--porcelain=v1"
+    ],
+    "cwd": "/tmp/stamped-assessment-evidence-final-fixtures/test_a_manifest_does_not_prove2/dependency-review",
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "ls-tree",
+      "-r",
+      "HEAD"
+    ],
+    "cwd": "/tmp/stamped-assessment-evidence-final-fixtures/test_a_manifest_does_not_prove2/dependency-review",
+    "returncode": 0,
+    "stdout": "100644 blob 9567e25f63bdc5b2db05978db9e5cf78c71fdb2c\tREADME.md\n100644 blob fca648ca1d0df68e2d4f1b0345c06f0a179dd297\tanalysis.py\n100644 blob 9153ba9d9c0a5ecf7f88f5224d239e979996db03\trequirements.txt\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "show",
+      "HEAD:README.md"
+    ],
+    "cwd": "/tmp/stamped-assessment-evidence-final-fixtures/test_a_manifest_does_not_prove2/dependency-review",
+    "returncode": 0,
+    "stdout": "# Numerical tool\n\nCreate a fresh Python virtual environment without system site packages:\n\n```sh\npython3 -m venv .venv\n.venv/bin/python -m pip install -r requirements.txt\n.venv/bin/python analysis.py\n```\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "show",
+      "HEAD:analysis.py"
+    ],
+    "cwd": "/tmp/stamped-assessment-evidence-final-fixtures/test_a_manifest_does_not_prove2/dependency-review",
+    "returncode": 0,
+    "stdout": "import numpy\nprint(numpy.arange(3))\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "show",
+      "HEAD:requirements.txt"
+    ],
+    "cwd": "/tmp/stamped-assessment-evidence-final-fixtures/test_a_manifest_does_not_prove2/dependency-review",
+    "returncode": 0,
+    "stdout": "# no packages declared\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "pixi",
+      "run",
+      "--manifest-path",
+      "/Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/pixi.toml",
+      "python",
+      "/tmp/stamped-assessment-evidence-blind/skills/assess-alignment-with-stamped-principles/scripts/run_probes.py",
+      "/tmp/stamped-assessment-evidence-final-fixtures/test_a_manifest_does_not_prove2/dependency-review",
+      "--kind",
+      "component",
+      "--only",
+      "env-spec-tracked",
+      "-o",
+      "/tmp/stamped-assessment-evidence-blind/frontier/followup-probes.json"
+    ],
+    "cwd": "/tmp/stamped-assessment-evidence-final-fixtures/test_a_manifest_does_not_prove2/dependency-review",
+    "returncode": 0,
+    "stdout": "probe                    status          items\nenv-spec-tracked         unmet           must/010, must/013, must/016\n\nprobes cover 3/17 MUST items; inspect statuses for completed verdicts\n\nwrote /tmp/stamped-assessment-evidence-blind/frontier/followup-probes.json\n",
+    "stderr": ""
+  }
+]

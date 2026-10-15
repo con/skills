@@ -1,0 +1,355 @@
+{
+  "clean_object": {
+    "covered_items": 17,
+    "not_checked_items": [
+      "stamped-checklist:must/010",
+      "stamped-checklist:must/011",
+      "stamped-checklist:must/012"
+    ],
+    "answered_items": 14,
+    "false_unmet": {},
+    "false_unmet_rate": "0/14",
+    "expected_by_the_fixture": {
+      "stamped-checklist:must/016": "the object's own remote is not published"
+    }
+  },
+  "mutants": {
+    "abs-path-in-script": {
+      "expected": {
+        "stamped-checklist:must/009": "unmet"
+      },
+      "expected_extra": {},
+      "observed": {
+        "stamped-checklist:must/009": "unmet"
+      },
+      "observed_extra": {},
+      "detected": true,
+      "by_probe": {
+        "stamped-checklist:must/009": "no-abs-paths"
+      },
+      "reasons": {
+        "stamped-checklist:must/009": "1 host-specific absolute path(s) in 1 script(s) or config(s), e.g. code/plot_volumes.py line 13: fallback = \"/home/researcher/data/ds007116\" # where the inputs live"
+      },
+      "collateral_flips": {}
+    },
+    "container-latest": {
+      "expected": {
+        "stamped-checklist:must/015": "unmet"
+      },
+      "expected_extra": {},
+      "observed": {
+        "stamped-checklist:must/015": "unmet"
+      },
+      "observed_extra": {},
+      "detected": true,
+      "by_probe": {
+        "stamped-checklist:must/015": "run-env-linked"
+      },
+      "reasons": {
+        "stamped-checklist:must/015": "1 environment reference(s) use the floating ':latest' tag, e.g. code/containers.json#L4 \u2014 a rerun cannot land in the same environment."
+      },
+      "collateral_flips": {}
+    },
+    "derived-without-record": {
+      "expected": {
+        "stamped-checklist:must/006": "partial"
+      },
+      "expected_extra": {},
+      "observed": {
+        "stamped-checklist:must/006": "partial"
+      },
+      "observed_extra": {},
+      "detected": true,
+      "by_probe": {
+        "stamped-checklist:must/006": "derived-have-records"
+      },
+      "reasons": {
+        "stamped-checklist:must/006": "1 of 4 derived file(s) have no re-executable record, e.g. results/volumes-by-hand.tsv; last touched by an ordinary commit."
+      },
+      "collateral_flips": {}
+    },
+    "host-mount-path-in-script": {
+      "expected": {
+        "stamped-checklist:must/009": "unmet"
+      },
+      "expected_extra": {},
+      "observed": {
+        "stamped-checklist:must/009": "unmet"
+      },
+      "observed_extra": {},
+      "detected": true,
+      "by_probe": {
+        "stamped-checklist:must/009": "no-abs-paths"
+      },
+      "reasons": {
+        "stamped-checklist:must/009": "1 host-specific absolute path(s) in 1 script(s) or config(s), e.g. code/collect_volumes.py line 13: freesurfer = \"/data/yoh/ds007116/vendor/freesurfer\" # tables live here"
+      },
+      "collateral_flips": {}
+    },
+    "host-tool-precondition": {
+      "expected": {
+        "stamped-checklist:must/010": "unmet"
+      },
+      "expected_extra": {},
+      "observed": {
+        "stamped-checklist:must/010": "unmet"
+      },
+      "observed_extra": {},
+      "detected": true,
+      "by_probe": {
+        "stamped-checklist:must/010": "env-spec-tracked"
+      },
+      "reasons": {
+        "stamped-checklist:must/010": "1 tracked script(s) require a tool to be installed on the host already, e.g. code/run.sh line 4 (mri_segstats); that dependency is not in any tracked specification."
+      },
+      "collateral_flips": {}
+    },
+    "large-binary-in-git": {
+      "expected": {
+        "stamped-checklist:must/005": "unmet"
+      },
+      "expected_extra": {},
+      "observed": {
+        "stamped-checklist:must/005": "unmet"
+      },
+      "observed_extra": {},
+      "detected": true,
+      "by_probe": {
+        "stamped-checklist:must/005": "large-in-annex"
+      },
+      "reasons": {
+        "stamped-checklist:must/005": "1 binary blob(s) over 10 MiB committed to git, largest results/sub-01_T1w_brain.nii.gz at 50 MiB"
+      },
+      "collateral_flips": {}
+    },
+    "large-text-in-git": {
+      "expected": {
+        "stamped-checklist:must/005": "met"
+      },
+      "expected_extra": {
+        "clone-weight": "partial"
+      },
+      "observed": {
+        "stamped-checklist:must/005": "met"
+      },
+      "observed_extra": {
+        "clone-weight": "partial"
+      },
+      "detected": true,
+      "by_probe": {
+        "stamped-checklist:must/005": "large-in-annex"
+      },
+      "reasons": {
+        "stamped-checklist:must/005": "git-annex carries the binary content (0 pointer(s) tracked) and no binary blob over 10 MiB is in git."
+      },
+      "collateral_flips": {}
+    },
+    "outputs-into-inputs": {
+      "expected": {
+        "stamped-checklist:must/004": "unmet",
+        "stamped-checklist:should/003": "unmet"
+      },
+      "expected_extra": {},
+      "observed": {
+        "stamped-checklist:must/004": "unmet",
+        "stamped-checklist:should/003": "unmet"
+      },
+      "observed_extra": {},
+      "detected": true,
+      "by_probe": {
+        "stamped-checklist:must/004": "tree-clean",
+        "stamped-checklist:should/003": "inputs-untouched"
+      },
+      "reasons": {
+        "stamped-checklist:must/004": "2 path(s) are not committed, so the repository is not the whole state: M sourcedata/ds007116",
+        "stamped-checklist:should/003": "1 commit(s) inside the input module sourcedata/ds007116 add this object's own products, e.g. derivatives/freesurfer-post/volumes-recomputed.tsv in 4ffe3ee: raw and derived data are the same module, and the recorded input commit is on no remote."
+      },
+      "collateral_flips": {}
+    },
+    "outputs-into-inputs-pointer-updated": {
+      "expected": {
+        "stamped-checklist:should/003": "unmet",
+        "stamped-checklist:must/002": "unmet"
+      },
+      "expected_extra": {},
+      "observed": {
+        "stamped-checklist:should/003": "unmet",
+        "stamped-checklist:must/002": "unmet"
+      },
+      "observed_extra": {},
+      "detected": true,
+      "by_probe": {
+        "stamped-checklist:should/003": "inputs-untouched",
+        "stamped-checklist:must/002": "subdatasets-resolvable"
+      },
+      "reasons": {
+        "stamped-checklist:should/003": "1 commit(s) inside the input module sourcedata/ds007116 add this object's own products, e.g. code/aggregate.py in 8be4639: raw and derived data are the same module, and the recorded input commit is on no remote.",
+        "stamped-checklist:must/002": "1 module(s) are pinned to a commit that exists only in this checkout (sourcedata/ds007116): the url resolves, a fresh clone of the recorded state does not."
+      },
+      "collateral_flips": {}
+    },
+    "outputs-under-inputs": {
+      "expected": {
+        "stamped-checklist:should/003": "unmet"
+      },
+      "expected_extra": {},
+      "observed": {
+        "stamped-checklist:should/003": "unmet"
+      },
+      "observed_extra": {},
+      "detected": true,
+      "by_probe": {
+        "stamped-checklist:should/003": "modules-separated"
+      },
+      "reasons": {
+        "stamped-checklist:should/003": "1 derived file(s) live inside an input tree, e.g. sourcedata/derivatives/volumes.tsv: raw and processed data are not separate modules."
+      },
+      "collateral_flips": {}
+    },
+    "readme-platform-specific-steps": {
+      "expected": {
+        "stamped-checklist:must/011": "partial"
+      },
+      "expected_extra": {},
+      "observed": {
+        "stamped-checklist:must/011": "partial"
+      },
+      "observed_extra": {},
+      "detected": true,
+      "by_probe": {
+        "stamped-checklist:must/011": "platform-assumptions"
+      },
+      "reasons": {
+        "stamped-checklist:must/011": "3 command(s) that exist on one platform only, with no platform named in the same file: README.md line 11 needs macOS (Homebrew) (also: macOS (Homebrew), macOS/BSD)"
+      },
+      "collateral_flips": {}
+    },
+    "readme-reproduce-removed": {
+      "expected": {
+        "stamped-checklist:must/007": "partial"
+      },
+      "expected_extra": {},
+      "observed": {
+        "stamped-checklist:must/007": "partial"
+      },
+      "observed_extra": {},
+      "detected": true,
+      "by_probe": {
+        "stamped-checklist:must/007": "entry-point"
+      },
+      "reasons": {
+        "stamped-checklist:must/007": "README.md has no install or usage section; usage is only implied by Makefile."
+      },
+      "collateral_flips": {}
+    },
+    "readme-wrong-make-target": {
+      "expected": {
+        "stamped-checklist:must/007": "partial"
+      },
+      "expected_extra": {},
+      "observed": {
+        "stamped-checklist:must/007": "partial"
+      },
+      "observed_extra": {},
+      "detected": true,
+      "by_probe": {
+        "stamped-checklist:must/007": "entry-point"
+      },
+      "reasons": {
+        "stamped-checklist:must/007": "README.md tells the reader to run `make brain-volumes`, which Makefile does not define (targets: all, clean, figures/brain-volume-vs-age.png, results/volumes.tsv)."
+      },
+      "collateral_flips": {}
+    },
+    "record-container-floating": {
+      "expected": {
+        "stamped-checklist:must/015": "unmet"
+      },
+      "expected_extra": {},
+      "observed": {
+        "stamped-checklist:must/015": "unmet"
+      },
+      "observed_extra": {},
+      "detected": true,
+      "by_probe": {
+        "stamped-checklist:must/015": "run-env-linked"
+      },
+      "reasons": {
+        "stamped-checklist:must/015": "1 environment reference(s) use the floating ':latest' tag, e.g. commit:64215c9 \u2014 a rerun cannot land in the same environment."
+      },
+      "collateral_flips": {}
+    },
+    "record-env-stripped": {
+      "expected": {
+        "stamped-checklist:must/006": "partial"
+      },
+      "expected_extra": {},
+      "observed": {
+        "stamped-checklist:must/006": "partial"
+      },
+      "observed_extra": {},
+      "detected": true,
+      "by_probe": {
+        "stamped-checklist:must/006": "run-env-linked"
+      },
+      "reasons": {
+        "stamped-checklist:must/006": "1 of 4 run record(s) name no container or lockfile (3 name a container, 0 a lockfile, 0 only a capture), e.g. 51f796e: python3 code/summarise.py results/volumes.tsv results/summary.txt"
+      },
+      "collateral_flips": {}
+    },
+    "relative-subdataset-url": {
+      "expected": {
+        "stamped-checklist:must/002": "unmet"
+      },
+      "expected_extra": {},
+      "observed": {
+        "stamped-checklist:must/002": "unmet"
+      },
+      "observed_extra": {},
+      "detected": true,
+      "by_probe": {
+        "stamped-checklist:must/002": "subdatasets-resolvable"
+      },
+      "reasons": {
+        "stamped-checklist:must/002": "1 of 1 linked module(s) do not resolve elsewhere: sourcedata/ds007116 url=../.. \u2014 relative url: resolves only next to this superdataset"
+      },
+      "collateral_flips": {}
+    },
+    "remote-removed": {
+      "expected": {
+        "stamped-checklist:must/016": "unmet"
+      },
+      "expected_extra": {},
+      "observed": {
+        "stamped-checklist:must/016": "unmet"
+      },
+      "observed_extra": {},
+      "detected": true,
+      "by_probe": {
+        "stamped-checklist:must/016": "env-spec-tracked"
+      },
+      "reasons": {
+        "stamped-checklist:must/016": "The specification is tracked, but this checkout records no remote at all, so nothing says where anyone else could obtain it."
+      },
+      "collateral_flips": {}
+    },
+    "untracked-figure": {
+      "expected": {
+        "stamped-checklist:must/004": "unmet"
+      },
+      "expected_extra": {},
+      "observed": {
+        "stamped-checklist:must/004": "unmet"
+      },
+      "observed_extra": {},
+      "detected": true,
+      "by_probe": {
+        "stamped-checklist:must/004": "tree-clean"
+      },
+      "reasons": {
+        "stamped-checklist:must/004": "1 path(s) are not committed, so the repository is not the whole state: ?? figures/gm-wm-ratio-vs-age.png"
+      },
+      "collateral_flips": {}
+    }
+  },
+  "sensitivity": "18/18"
+}

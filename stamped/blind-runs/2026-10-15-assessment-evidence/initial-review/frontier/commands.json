@@ -1,0 +1,419 @@
+[
+  {
+    "argv": [
+      "pixi",
+      "run",
+      "--manifest-path",
+      "/Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/pixi.toml",
+      "python",
+      "/tmp/stamped-assessment-evidence-blind/skills/stamped-conventions/scripts/vendor_checklist.py",
+      "--check"
+    ],
+    "cwd": null,
+    "returncode": 0,
+    "stdout": "ok: checklist 0.3.1 (31 items) matches lock.json\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "pixi",
+      "run",
+      "--manifest-path",
+      "/Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/pixi.toml",
+      "python",
+      "/tmp/stamped-assessment-evidence-blind/skills/stamped-conventions/scripts/encode_response.py",
+      "items",
+      "--level",
+      "must"
+    ],
+    "cwd": null,
+    "returncode": 0,
+    "stdout": "stamped-checklist:must/001\tmust\tS.1\tAre all files and directories nested under a common root?\nstamped-checklist:must/002\tmust\tS.1\tAre datasets included, linked, or referenced reachable from the code and environment specifications without crossing the boundary of a common root?\nstamped-checklist:must/003\tmust\tS.1\tIs external software included in the environment or linked as submodules within the project boundary?\nstamped-checklist:must/004\tmust\tT.1,T.3,T.5\tAre version control systems such as `Git` used for code, text, documentation, and configuration files?\nstamped-checklist:must/005\tmust\tT.1,T.3,T.5\tAre version control systems such as `git-annex`, DataLad, or `Git` LFS used for large binary data?\nstamped-checklist:must/006\tmust\tT.1,T.3,T.5\tAre the exact environment specifications used to generate a set of results included in the provenance records to link computational actions to particular environments?\nstamped-checklist:must/007\tmust\tA.1\tIs a `README.md` or `Makefile` included with instructions for installation and usage?\nstamped-checklist:must/008\tmust\tA.1\tIs there a clear starting point for users to start reproducing results (e.g., a main script, a workflow definition, or a container image)?\nstamped-checklist:must/009\tmust\tP.1\tAre relative paths used in scripts, avoiding hardcoded or system-specific paths like `C:\\Users\\...` or `/home/user/...`?\nstamped-checklist:must/010\tmust\tP.1\tAre all software dependencies included in the environment specification, rather than relying on pre-installed tools?\nstamped-checklist:must/011\tmust\tP.1\tHave all assumptions about the host system's configuration been documented (e.g., specific OS versions, required system libraries, or environment variables)?\nstamped-checklist:must/012\tmust\tP.2\tIs there a clear list of system requirements and dependencies documented in the README or environment specifications?\nstamped-checklist:must/013\tmust\tP.3\tAre environment specifications (e.g., Dockerfiles, `pyproject.toml`, `package.json`) included in the version control system alongside code and data?\nstamped-checklist:must/014\tmust\tP.3\tIs there a process for updating environment specifications when dependencies change, and are these updates tracked in version control?\nstamped-checklist:must/015\tmust\tD.1\tAre environment specifications (e.g., container digests, frozen package manifests) included to ensure others can attempt to exactly replicate the environment?\nstamped-checklist:must/016\tmust\tD.1\tAre environment specifications shared in a way that others can access and use them (e.g., published container images, archived environment files)?\nstamped-checklist:must/017\tmust\tD.1\tIs there documentation on how to obtain and use the environment specifications for reproduction?\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "cwd": "/tmp/stamped-assessment-evidence-fixtures/test_a_manifest_does_not_prove0/dependency-review",
+    "returncode": 0,
+    "stdout": "a4427bc0d4abcc0b8b299e194b2b20d74a506c12\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "status",
+      "--porcelain=v1"
+    ],
+    "cwd": "/tmp/stamped-assessment-evidence-fixtures/test_a_manifest_does_not_prove0/dependency-review",
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "ls-tree",
+      "-r",
+      "HEAD"
+    ],
+    "cwd": "/tmp/stamped-assessment-evidence-fixtures/test_a_manifest_does_not_prove0/dependency-review",
+    "returncode": 0,
+    "stdout": "100644 blob fca648ca1d0df68e2d4f1b0345c06f0a179dd297\tanalysis.py\n100644 blob 24ce15ab7ead32f98c7ac3edcd34bb2010ff4326\trequirements.txt\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "remote",
+      "-v"
+    ],
+    "cwd": "/tmp/stamped-assessment-evidence-fixtures/test_a_manifest_does_not_prove0/dependency-review",
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "show",
+      "HEAD:analysis.py"
+    ],
+    "cwd": "/tmp/stamped-assessment-evidence-fixtures/test_a_manifest_does_not_prove0/dependency-review",
+    "returncode": 0,
+    "stdout": "import numpy\nprint(numpy.arange(3))\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "show",
+      "HEAD:requirements.txt"
+    ],
+    "cwd": "/tmp/stamped-assessment-evidence-fixtures/test_a_manifest_does_not_prove0/dependency-review",
+    "returncode": 0,
+    "stdout": "numpy\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "pixi",
+      "run",
+      "--manifest-path",
+      "/Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/pixi.toml",
+      "python",
+      "/tmp/stamped-assessment-evidence-blind/skills/assess-alignment-with-stamped-principles/scripts/run_probes.py",
+      "/tmp/stamped-assessment-evidence-fixtures/test_a_manifest_does_not_prove0/dependency-review",
+      "--kind",
+      "component",
+      "--only",
+      "env-spec-tracked",
+      "-o",
+      "/tmp/stamped-assessment-evidence-blind/frontier/object-0-probes.json"
+    ],
+    "cwd": null,
+    "returncode": 0,
+    "stdout": "probe                    status          items\nenv-spec-tracked         unmet           must/010, must/013, must/016\n\nprobes cover 3/17 MUST items; inspect statuses for completed verdicts\n\nwrote /tmp/stamped-assessment-evidence-blind/frontier/object-0-probes.json\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "cwd": "/tmp/stamped-assessment-evidence-fixtures/test_a_manifest_does_not_prove1/dependency-review",
+    "returncode": 0,
+    "stdout": "9058af8e7eba4450bae7758be98b22d461eae765\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "status",
+      "--porcelain=v1"
+    ],
+    "cwd": "/tmp/stamped-assessment-evidence-fixtures/test_a_manifest_does_not_prove1/dependency-review",
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "ls-tree",
+      "-r",
+      "HEAD"
+    ],
+    "cwd": "/tmp/stamped-assessment-evidence-fixtures/test_a_manifest_does_not_prove1/dependency-review",
+    "returncode": 0,
+    "stdout": "100644 blob fca648ca1d0df68e2d4f1b0345c06f0a179dd297\tanalysis.py\n100644 blob 9a635b910d93ff2d9b1c24b7bc7ce15600b65d31\trequirements.txt\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "remote",
+      "-v"
+    ],
+    "cwd": "/tmp/stamped-assessment-evidence-fixtures/test_a_manifest_does_not_prove1/dependency-review",
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "show",
+      "HEAD:analysis.py"
+    ],
+    "cwd": "/tmp/stamped-assessment-evidence-fixtures/test_a_manifest_does_not_prove1/dependency-review",
+    "returncode": 0,
+    "stdout": "import numpy\nprint(numpy.arange(3))\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "show",
+      "HEAD:requirements.txt"
+    ],
+    "cwd": "/tmp/stamped-assessment-evidence-fixtures/test_a_manifest_does_not_prove1/dependency-review",
+    "returncode": 0,
+    "stdout": "scipy\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "pixi",
+      "run",
+      "--manifest-path",
+      "/Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/pixi.toml",
+      "python",
+      "/tmp/stamped-assessment-evidence-blind/skills/assess-alignment-with-stamped-principles/scripts/run_probes.py",
+      "/tmp/stamped-assessment-evidence-fixtures/test_a_manifest_does_not_prove1/dependency-review",
+      "--kind",
+      "component",
+      "--only",
+      "env-spec-tracked",
+      "-o",
+      "/tmp/stamped-assessment-evidence-blind/frontier/object-1-probes.json"
+    ],
+    "cwd": null,
+    "returncode": 0,
+    "stdout": "probe                    status          items\nenv-spec-tracked         unmet           must/010, must/013, must/016\n\nprobes cover 3/17 MUST items; inspect statuses for completed verdicts\n\nwrote /tmp/stamped-assessment-evidence-blind/frontier/object-1-probes.json\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "cwd": "/tmp/stamped-assessment-evidence-fixtures/test_a_spec_whose_content_neve0/annexed-spec",
+    "returncode": 0,
+    "stdout": "77dedfe19f21ec17fc704fc5aa30e782345a98d8\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "status",
+      "--porcelain=v1"
+    ],
+    "cwd": "/tmp/stamped-assessment-evidence-fixtures/test_a_spec_whose_content_neve0/annexed-spec",
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "ls-tree",
+      "-r",
+      "HEAD"
+    ],
+    "cwd": "/tmp/stamped-assessment-evidence-fixtures/test_a_spec_whose_content_neve0/annexed-spec",
+    "returncode": 0,
+    "stdout": "100644 blob bba25111c666d3529cd159702b0e6856b8d36c4b\t.datalad/config\n100644 blob dac9235d755c836543dd037a911effd1f5f54838\tREADME.md\n120000 blob 62bd5c1f034ff7236fed5242a3d5f45a577d1b18\tcode/containers/analysis.sif\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "remote",
+      "-v"
+    ],
+    "cwd": "/tmp/stamped-assessment-evidence-fixtures/test_a_spec_whose_content_neve0/annexed-spec",
+    "returncode": 0,
+    "stdout": "origin\thttps://example.org/con/thing (fetch)\norigin\thttps://example.org/con/thing (push)\nstore\t/private/tmp/stamped-assessment-evidence-fixtures/test_a_spec_whose_content_neve0/remote.git (fetch)\nstore\t/private/tmp/stamped-assessment-evidence-fixtures/test_a_spec_whose_content_neve0/remote.git (push)\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "show",
+      "HEAD:.datalad/config"
+    ],
+    "cwd": "/tmp/stamped-assessment-evidence-fixtures/test_a_spec_whose_content_neve0/annexed-spec",
+    "returncode": 0,
+    "stdout": "[datalad \"containers.analysis\"]\n\timage = code/containers/analysis.sif\n\tcmdexec = apptainer exec {img} {cmd}\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "show",
+      "HEAD:README.md"
+    ],
+    "cwd": "/tmp/stamped-assessment-evidence-fixtures/test_a_spec_whose_content_neve0/annexed-spec",
+    "returncode": 0,
+    "stdout": "# object\n\n## Reproduce\n\n    make all\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "pixi",
+      "run",
+      "--manifest-path",
+      "/Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/pixi.toml",
+      "python",
+      "/tmp/stamped-assessment-evidence-blind/skills/assess-alignment-with-stamped-principles/scripts/run_probes.py",
+      "/tmp/stamped-assessment-evidence-fixtures/test_a_spec_whose_content_neve0/annexed-spec",
+      "--kind",
+      "component",
+      "--only",
+      "env-spec-tracked",
+      "-o",
+      "/tmp/stamped-assessment-evidence-blind/frontier/object-2-probes.json"
+    ],
+    "cwd": null,
+    "returncode": 0,
+    "stdout": "probe                    status          items\nenv-spec-tracked         partial         must/010, must/013, must/016\n\nprobes cover 3/17 MUST items; inspect statuses for completed verdicts\n\nwrote /tmp/stamped-assessment-evidence-blind/frontier/object-2-probes.json\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "show",
+      "HEAD:code/containers/analysis.sif"
+    ],
+    "cwd": "/tmp/stamped-assessment-evidence-fixtures/test_a_spec_whose_content_neve0/annexed-spec",
+    "returncode": 0,
+    "stdout": "../../.git/annex/objects/vF/qP/SHA256E-s2304--7a3838d9d993f455975a9a9eac0cf5107aa92f0750b3d1aaacfb193fbd210ce1.sif/SHA256E-s2304--7a3838d9d993f455975a9a9eac0cf5107aa92f0750b3d1aaacfb193fbd210ce1.sif",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "cwd": "/tmp/stamped-assessment-evidence-fixtures/test_a_spec_whose_content_neve0/recipient",
+    "returncode": 0,
+    "stdout": "77dedfe19f21ec17fc704fc5aa30e782345a98d8\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "status",
+      "--porcelain=v1"
+    ],
+    "cwd": "/tmp/stamped-assessment-evidence-fixtures/test_a_spec_whose_content_neve0/recipient",
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "ls-tree",
+      "-r",
+      "HEAD"
+    ],
+    "cwd": "/tmp/stamped-assessment-evidence-fixtures/test_a_spec_whose_content_neve0/recipient",
+    "returncode": 0,
+    "stdout": "100644 blob bba25111c666d3529cd159702b0e6856b8d36c4b\t.datalad/config\n100644 blob dac9235d755c836543dd037a911effd1f5f54838\tREADME.md\n120000 blob 62bd5c1f034ff7236fed5242a3d5f45a577d1b18\tcode/containers/analysis.sif\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "remote",
+      "-v"
+    ],
+    "cwd": "/tmp/stamped-assessment-evidence-fixtures/test_a_spec_whose_content_neve0/recipient",
+    "returncode": 0,
+    "stdout": "origin\t/private/tmp/stamped-assessment-evidence-fixtures/test_a_spec_whose_content_neve0/remote.git (fetch)\norigin\t/private/tmp/stamped-assessment-evidence-fixtures/test_a_spec_whose_content_neve0/remote.git (push)\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "show",
+      "HEAD:.datalad/config"
+    ],
+    "cwd": "/tmp/stamped-assessment-evidence-fixtures/test_a_spec_whose_content_neve0/recipient",
+    "returncode": 0,
+    "stdout": "[datalad \"containers.analysis\"]\n\timage = code/containers/analysis.sif\n\tcmdexec = apptainer exec {img} {cmd}\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "show",
+      "HEAD:README.md"
+    ],
+    "cwd": "/tmp/stamped-assessment-evidence-fixtures/test_a_spec_whose_content_neve0/recipient",
+    "returncode": 0,
+    "stdout": "# object\n\n## Reproduce\n\n    make all\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "show",
+      "HEAD:code/containers/analysis.sif"
+    ],
+    "cwd": "/tmp/stamped-assessment-evidence-fixtures/test_a_spec_whose_content_neve0/recipient",
+    "returncode": 0,
+    "stdout": "../../.git/annex/objects/vF/qP/SHA256E-s2304--7a3838d9d993f455975a9a9eac0cf5107aa92f0750b3d1aaacfb193fbd210ce1.sif/SHA256E-s2304--7a3838d9d993f455975a9a9eac0cf5107aa92f0750b3d1aaacfb193fbd210ce1.sif",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "pixi",
+      "run",
+      "--manifest-path",
+      "/Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/pixi.toml",
+      "python",
+      "-c",
+      "import sys,pathlib,json; sys.path.insert(0,\"/tmp/stamped-assessment-evidence-blind/skills/assess-alignment-with-stamped-principles/scripts\"); from probes.common import Object; from probes.structure import _spec_publication_evidence; print(json.dumps(_spec_publication_evidence(Object(pathlib.Path(sys.argv[1])),[\".datalad/config\",\"code/containers/analysis.sif\"]),indent=2))",
+      "/tmp/stamped-assessment-evidence-fixtures/test_a_spec_whose_content_neve0/annexed-spec"
+    ],
+    "cwd": null,
+    "returncode": 0,
+    "stdout": "{\n  \"files\": {\n    \".datalad/config\": {\n      \"kind\": \"git-blob\"\n    },\n    \"code/containers/analysis.sif\": {\n      \"kind\": \"annex\",\n      \"location_status\": \"recorded\",\n      \"recorded_here\": true,\n      \"recorded_elsewhere\": 1\n    }\n  },\n  \"retrieval_verified\": false,\n  \"location_check_returncode\": 0\n}\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "pixi",
+      "run",
+      "--manifest-path",
+      "/Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/pixi.toml",
+      "python",
+      "-c",
+      "import sys,pathlib,json; sys.path.insert(0,\"/tmp/stamped-assessment-evidence-blind/skills/assess-alignment-with-stamped-principles/scripts\"); from probes.common import Object; from probes.structure import _spec_publication_evidence; print(json.dumps(_spec_publication_evidence(Object(pathlib.Path(sys.argv[1])),[\".datalad/config\",\"code/containers/analysis.sif\"]),indent=2))",
+      "/tmp/stamped-assessment-evidence-fixtures/test_a_spec_whose_content_neve0/recipient"
+    ],
+    "cwd": null,
+    "returncode": 0,
+    "stdout": "{\n  \"files\": {\n    \".datalad/config\": {\n      \"kind\": \"git-blob\"\n    },\n    \"code/containers/analysis.sif\": {\n      \"kind\": \"annex\",\n      \"location_status\": \"recorded\",\n      \"recorded_here\": true,\n      \"recorded_elsewhere\": 2\n    }\n  },\n  \"retrieval_verified\": false,\n  \"location_check_returncode\": 0\n}\n",
+    "stderr": ""
+  }
+]

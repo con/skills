@@ -1,0 +1,48 @@
+# Separate follow-up: empty specification on a fresh-venv route
+
+Scoped MUST decisions: **1 met / 0 partial / 1 unmet / 0 not-checked**, across two items. All other items remain unassessed. This is a synthetic engineering boundary case, not scientific evidence. The original report is unchanged.
+
+**Final judgments:** must/010 is **unmet**; must/013 is **met**. The documented fresh virtual environment has no declared package that supplies the code's required NumPy import, while the deficient requirements specification itself is tracked in Git.
+
+## Object and evidence
+
+Target: `/tmp/stamped-assessment-evidence-final-fixtures/test_a_manifest_does_not_prove2/dependency-review`.
+
+Assessed commit: **`5697076be929f539b770d19efa899044e38d58b9`**. The working tree was clean. Complete committed boundary:
+
+| File | Git blob | Observed content |
+| --- | --- | --- |
+| `README.md` | `9567e25f63bdc5b2db05978db9e5cf78c71fdb2c` | Create a fresh Python virtual environment without system site packages; run `python3 -m venv .venv`, install `requirements.txt`, then execute `analysis.py` with that environment's Python. |
+| `analysis.py` | `fca648ca1d0df68e2d4f1b0345c06f0a179dd297` | `import numpy`, followed by `print(numpy.arange(3))`. |
+| `requirements.txt` | `9153ba9d9c0a5ecf7f88f5224d239e979996db03` | Only `# no packages declared`; no package requirement. |
+
+The supplied goal identifies this as a numerical tool; the README makes its execution route explicit. Git versions the code, documentation and environment declaration together. There are no local or vendored packages, alternative manifests, or shipped result records in the three-file committed tree. Retrieval and licensing were outside this follow-up scope.
+
+The synthetic [execution receipt](../../stamped-assessment-evidence-final-fixtures/test_a_manifest_does_not_prove2/execution-receipt.json) identifies the same source commit and records execution with a separate `empty-runtime/bin/python`. It reports exit code **1** and `ModuleNotFoundError: No module named 'numpy'` at `analysis.py`'s import. Its scope expressly says “Synthetic missing-import regression in fresh venv; no research execution.” A copy of the receipt content and its SHA-256 is preserved in [followup-receipt-evidence.json](followup-receipt-evidence.json).
+
+## Probe suggestions versus final judgments
+
+| Item | Probe suggestion | Final judgment | Basis |
+| --- | --- | --- | --- |
+| must/010 | not-checked | **unmet** | The documented isolated route installs a comment-only requirements file, but the committed code unconditionally imports NumPy. There is no declared dependency or vendored provider. The matching-commit receipt corroborates the resulting missing import. |
+| must/013 | met | **met** | The environment specification is a tracked Git blob alongside the code and is explicitly used by the README. An incomplete specification can still satisfy the tracking property. |
+
+Raw output is preserved in [followup-probes.json](followup-probes.json). The probe's aggregate terminal status is `unmet`, but its must/010 suggestion is actually `not-checked`; the aggregate incorporates an out-of-scope must/016 suggestion. No must/016 judgment is made here.
+
+must/010 has source `probe:env-spec-tracked+judgement` and flag **`probe-overridden`**. Its change is grounded in an actual omitted requirement on the documented route, not in a missing version pin or a general rule requiring direct declarations. Here there are **no package declarations at all**, so there is no declared package whose transitive dependencies might supply NumPy. must/013 retains the probe's tracking judgment, independently confirmed against the committed tree.
+
+The smallest relevant repair is to include NumPy in the environment specification used by the documented route, then verify that route in a fresh environment. No repair was made.
+
+## Remaining uncertainty and procedure
+
+The assessor did not execute this target, create its environment, or independently replay the supplied receipt. The receipt contains the Python invocation and failure, but no complete environment-creation/install transcript or runtime version inventory. Thus its exact environment construction is a supplied claim, not independently reconstructed evidence. The static omission is independently visible in the committed README, code and complete specification; the final unmet judgment does not require treating the receipt as proof of every setup step.
+
+This result establishes a dependency-inclusion defect, not a claim about numerical correctness, every possible Python installation, or exact environment reproducibility. Deliberately preloading NumPy in an ambient environment would not validate the documented fresh-environment route. No dependencies were installed, no target content changed, and no external service was contacted.
+
+Evidence collection commands, return codes and outputs are in [followup-commands.json](followup-commands.json), generated by [followup-collect.py](followup-collect.py). The exact task is [followup-prompt.txt](followup-prompt.txt). The original report hash is preserved in [original-report-sha256.json](original-report-sha256.json) and was checked after this report was written.
+
+## Source stamp
+
+Assessment date: **2026-10-15 UTC**. Assessor skill `assess-alignment-with-stamped-principles` **0.1.0**; conventions **0.1.0**; source snapshot commit **`afd2c0ff8b556788a3ab9e7d35eb0e4b24cd5d59`**. Snapshot hash manifest SHA-256: `1fa714aee462b175d0ecd78cec55169fd07554abd5da5c8095a1e603cf7cd5c2`; all 19 snapshot file hashes verified in the original [snapshot verification](snapshot-verification.json).
+
+Checklist **0.3.1**, upstream pin `af259bad237fa57b856417db8dba45a1b283a527`, vendored SHA-256 `da2eb88ed49dff64f098ad92200dec81c1b4404cc2d3ba1e1e1404d0e10e7bba`. Harness: Codex Desktop subagent; exact runtime/model build and reasoning-effort metadata unavailable and not guessed. The permitted Pixi runtime executed only the snapshot probe helper; originating repository source, tests, reports and plans were not read. Full checklist validation/URL generation was omitted to preserve the expressly limited scope.

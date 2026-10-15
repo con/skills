@@ -1,0 +1,15 @@
+{
+  "files": {
+    ".datalad/config": {
+      "kind": "git-blob"
+    },
+    "code/containers/analysis.sif": {
+      "kind": "annex",
+      "location_status": "recorded",
+      "recorded_here": true,
+      "recorded_elsewhere": 1
+    }
+  },
+  "retrieval_verified": false,
+  "location_check_returncode": 0
+}

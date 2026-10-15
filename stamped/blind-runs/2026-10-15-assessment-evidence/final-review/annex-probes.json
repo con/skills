@@ -1,0 +1,46 @@
+{
+  "object": {
+    "path": "/private/tmp/stamped-assessment-evidence-fixtures/test_a_spec_whose_content_neve0/annexed-spec",
+    "commit": "77dedfe19f21ec17fc704fc5aa30e782345a98d8",
+    "is_datalad": true
+  },
+  "checklist_version": "0.3.1",
+  "probes": [
+    {
+      "probe": "env-spec-tracked",
+      "status": "partial",
+      "items": [
+        "stamped-checklist:must/010",
+        "stamped-checklist:must/013",
+        "stamped-checklist:must/016"
+      ],
+      "reason": "must/010 not-checked: Specification found: .datalad/config. Dependency completeness is not checked: compare imports and invoked tools with declarations, including local/vendored code. Version pins are separate. must/013 met. must/016 partial.",
+      "evidence": [
+        {
+          "uri": ".datalad/config",
+          "description": "pinned environment specification",
+          "sha256": null
+        }
+      ],
+      "details": {
+        "specs": {
+          ".datalad/config": "pinned"
+        },
+        "uninstalled_modules": [],
+        "preconditions": [],
+        "remote": "https://example.org/con/thing",
+        "publication": null
+      },
+      "item_status": {
+        "stamped-checklist:must/010": "not-checked",
+        "stamped-checklist:must/013": "met",
+        "stamped-checklist:must/016": "partial"
+      },
+      "item_reason": {
+        "stamped-checklist:must/010": "Specification found: .datalad/config. Dependency completeness is not checked: compare imports and invoked tools with declarations, including local/vendored code. Version pins are separate.",
+        "stamped-checklist:must/013": "Tracked: .datalad/config.",
+        "stamped-checklist:must/016": "Remote recorded (https://example.org/con/thing); reachability was not established. A remote check alone cannot verify publication: independently retrieve the assessed revision and required specification payloads."
+      }
+    }
+  ]
+}

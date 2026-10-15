@@ -1,0 +1,25 @@
+{
+  "checked_at": "2026-10-15T21:58:15.866666+00:00",
+  "manifest_sha256": "1fa714aee462b175d0ecd78cec55169fd07554abd5da5c8095a1e603cf7cd5c2",
+  "files": {
+    "skills/assess-alignment-with-stamped-principles/SKILL.md": true,
+    "skills/stamped-conventions/SKILL.md": true,
+    "skills/stamped-conventions/references/response-schema.json": true,
+    "skills/stamped-conventions/references/verdicts.md": true,
+    "skills/stamped-conventions/references/project-kinds.md": true,
+    "skills/stamped-conventions/references/principles-card.md": true,
+    "skills/stamped-conventions/references/response-format.md": true,
+    "skills/stamped-conventions/scripts/encode_response.py": true,
+    "skills/stamped-conventions/scripts/vendor_checklist.py": true,
+    "skills/stamped-conventions/checklist/lock.json": true,
+    "skills/stamped-conventions/checklist/stamped-checklist-0.3.1.json": true,
+    "skills/stamped-conventions/references/stacks/datalad.md": true,
+    "skills/assess-alignment-with-stamped-principles/scripts/fresh_rerun.py": true,
+    "skills/assess-alignment-with-stamped-principles/scripts/run_probes.py": true,
+    "skills/assess-alignment-with-stamped-principles/scripts/probes/__init__.py": true,
+    "skills/assess-alignment-with-stamped-principles/scripts/probes/common.py": true,
+    "skills/assess-alignment-with-stamped-principles/scripts/probes/structure.py": true,
+    "skills/assess-alignment-with-stamped-principles/scripts/probes/modules.py": true,
+    "skills/assess-alignment-with-stamped-principles/scripts/probes/provenance.py": true
+  }
+}

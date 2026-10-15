@@ -1,0 +1,46 @@
+{
+  "object": {
+    "path": "/private/tmp/stamped-assessment-evidence-fixtures/test_a_manifest_does_not_prove1/dependency-review",
+    "commit": "9058af8e7eba4450bae7758be98b22d461eae765",
+    "is_datalad": false
+  },
+  "checklist_version": "0.3.1",
+  "probes": [
+    {
+      "probe": "env-spec-tracked",
+      "status": "unmet",
+      "items": [
+        "stamped-checklist:must/010",
+        "stamped-checklist:must/013",
+        "stamped-checklist:must/016"
+      ],
+      "reason": "must/010 not-checked: Specification found: requirements.txt. Dependency completeness is not checked: compare imports and invoked tools with declarations, including local/vendored code. Version pins are separate. must/013 met. must/016 unmet.",
+      "evidence": [
+        {
+          "uri": "requirements.txt",
+          "description": "spec environment specification",
+          "sha256": null
+        }
+      ],
+      "details": {
+        "specs": {
+          "requirements.txt": "spec"
+        },
+        "uninstalled_modules": [],
+        "preconditions": [],
+        "remote": null,
+        "publication": null
+      },
+      "item_status": {
+        "stamped-checklist:must/010": "not-checked",
+        "stamped-checklist:must/013": "met",
+        "stamped-checklist:must/016": "unmet"
+      },
+      "item_reason": {
+        "stamped-checklist:must/010": "Specification found: requirements.txt. Dependency completeness is not checked: compare imports and invoked tools with declarations, including local/vendored code. Version pins are separate.",
+        "stamped-checklist:must/013": "Tracked: requirements.txt.",
+        "stamped-checklist:must/016": "The specification is tracked, but this checkout records no remote at all, so nothing says where anyone else could obtain it."
+      }
+    }
+  ]
+}

@@ -65,7 +65,8 @@ def _statuses(root: pathlib.Path) -> dict[str, str]:
 # silence is a prompt to read, not a pass — an earlier version claimed `met` and
 # a blind run took that at face value, missing a documented route through a lab
 # mount. The items it covers are therefore expected to come back `not-checked`.
-PROBE_NEVER_MET = {"stamped-checklist:must/011", "stamped-checklist:must/012"}
+PROBE_NEVER_MET = {"stamped-checklist:must/010", "stamped-checklist:must/011",
+                   "stamped-checklist:must/012"}
 
 
 def test_fixture_is_clean_and_all_probes_pass(clean):
@@ -926,7 +927,7 @@ def test_dependency_inclusion_does_not_require_version_pins(tmp_path, clean):
                    cwd=target, check=True, env=env)
 
     result = REGISTRY["env-spec-tracked"](Object(target))
-    assert result.status_of("stamped-checklist:must/010") == "met", result.reason
+    assert result.status_of("stamped-checklist:must/010") == "not-checked", result.reason
 
     assert result.details["specs"]["environment.yml"] == "pinned"
 
@@ -936,7 +937,7 @@ def test_dependency_inclusion_does_not_require_version_pins(tmp_path, clean):
     subprocess.run(["git", "add", "-A"], cwd=target, check=True, env=env)
     subprocess.run(["git", "commit", "-qm", "unpinned"], cwd=target, check=True, env=env)
     result = REGISTRY["env-spec-tracked"](Object(target))
-    assert result.status_of("stamped-checklist:must/010") == "met", result.reason
+    assert result.status_of("stamped-checklist:must/010") == "not-checked", result.reason
     assert result.details["specs"]["environment.yml"] == "spec"
 
 
@@ -1121,7 +1122,7 @@ def test_must016_reads_every_remote_and_names_a_local_one(tmp_path, clean):
     subprocess.run(["git", "remote", "add", "hub", "https://example.org/con/thing"],
                    cwd=target, check=True, env=env)
     status, reason = status_and_reason()
-    assert status == "partial" and "not checked" in reason, reason
+    assert status == "partial" and "not established" in reason, reason
     assert "https://example.org/con/thing" in reason, reason
 
 
@@ -1199,7 +1200,7 @@ def test_a_spec_whose_content_never_left_the_clone_is_not_met(tmp_path, monkeypa
     says, which is a different question and the one the hub exists to answer.
     """
     if not shutil.which("git-annex"):
-        pytest.skip("git-annex is not installed (CI); the probe answers [] there by design")
+        pytest.skip("git-annex is not installed; unavailable-tool behavior is tested separately")
     env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@e.org",
            "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@e.org"}
     root = tmp_path / "annexed-spec"
@@ -1239,16 +1240,42 @@ def test_a_spec_whose_content_never_left_the_clone_is_not_met(tmp_path, monkeypa
     reason = probe.reason_of("stamped-checklist:must/016")
     assert status == "partial", f"{status}: {reason}"
     assert "code/containers/analysis.sif" in reason, reason
-    assert "no copy exists outside this clone" in reason, reason
+    assert "metadata, not verified access" in reason, reason
+    assert probe.details["publication"]["files"]["code/containers/analysis.sif"]["recorded_elsewhere"] == 0
 
-    # Publishing the content is what closes it: `copy --to` plus the git-annex
-    # branch, which is the accessibility half of a push.
+    # A recorded external copy still does not prove recipient retrieval.
     subprocess.run(["git", "annex", "copy", "--to", "store",
                     "code/containers/analysis.sif"], cwd=root,
                    check=True, env=env, capture_output=True)
     probe = REGISTRY["env-spec-tracked"](Object(root), check_remote=True)
-    assert probe.status_of("stamped-checklist:must/016") == "met", probe.reason_of(
+    assert probe.status_of("stamped-checklist:must/016") == "partial", probe.reason_of(
         "stamped-checklist:must/016")
+    assert probe.details["publication"]["files"]["code/containers/analysis.sif"]["recorded_elsewhere"] == 1
+    assert probe.details["publication"]["retrieval_verified"] is False
+
+    # Exercise a real recipient retrieval separately from the location probe.
+    # Remove the source remote so payload retrieval has only the copied store.
+    import hashlib
+    recipient = tmp_path / "recipient"
+    commands = [["git", "clone", "--no-local", str(root), str(recipient)],
+                ["git", "remote", "set-url", "origin", str(bare)],
+                ["git", "annex", "init", "-q", "recipient"],
+                ["git", "annex", "get", "--from", "origin", "code/containers/analysis.sif"]]
+    receipt = []
+    for index, command in enumerate(commands):
+        cwd = tmp_path if index == 0 else recipient
+        done = subprocess.run(command, cwd=cwd, env=env, capture_output=True, text=True)
+        receipt.append({"argv": command, "cwd": str(cwd), "returncode": done.returncode,
+                        "stdout": done.stdout, "stderr": done.stderr})
+        assert done.returncode == 0, done.stderr
+    source_hash = hashlib.sha256(image.read_bytes()).hexdigest()
+    retrieved_hash = hashlib.sha256((recipient / "code/containers/analysis.sif").read_bytes()).hexdigest()
+    assert retrieved_hash == source_hash
+    (tmp_path / "retrieval-receipt.json").write_text(json.dumps({
+        "scope": "Separate recipient clone and local store on one host; not public network access",
+        "source_commit": Object(root).head, "recipient_commit": Object(recipient).head,
+        "commands": receipt, "source_sha256": source_hash, "retrieved_sha256": retrieved_hash,
+    }, indent=2) + "\n")
 
 
 def test_the_harness_gives_every_run_a_publishing_target(tmp_path):
@@ -1498,8 +1525,119 @@ def test_unpinned_dependency_inclusion_is_not_exact_environment_evidence(tmp_pat
         subprocess.run(command, cwd=root, env=env, check=True)
     obj = Object(root)
     inclusion = REGISTRY["env-spec-tracked"](obj)
-    assert inclusion.status_of("stamped-checklist:must/010") == "met", inclusion.reason
+    assert inclusion.status_of("stamped-checklist:must/010") == "not-checked", inclusion.reason
     assert inclusion.details["specs"][filename] == "spec"
     assert "completeness" in inclusion.reason_of("stamped-checklist:must/010")
     identity = REGISTRY["run-env-linked"](obj)
     assert identity.status_of("stamped-checklist:must/015") != "met", identity.reason
+
+
+@pytest.mark.parametrize("requirements", ["numpy\n", "scipy\n", "# no packages declared\n"])
+def test_a_manifest_does_not_prove_imported_dependencies_are_included(tmp_path, requirements):
+    """Declared, transitive and missing requirements need source-aware judgment."""
+    root = tmp_path / "dependency-review"
+    root.mkdir()
+    (root / "requirements.txt").write_text(requirements)
+    (root / "README.md").write_text("# Numerical tool\n\nCreate a fresh Python virtual environment without system site packages:\n\n```sh\npython3 -m venv .venv\n.venv/bin/python -m pip install -r requirements.txt\n.venv/bin/python analysis.py\n```\n")
+    (root / "analysis.py").write_text("import numpy\nprint(numpy.arange(3))\n")
+    env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@e.org",
+           "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@e.org"}
+    for command in (["git", "init", "-q"], ["git", "add", "."],
+                    ["git", "commit", "-qm", "test: dependency declaration boundary"]):
+        subprocess.run(command, cwd=root, env=env, check=True)
+    probe = REGISTRY["env-spec-tracked"](Object(root))
+    assert probe.status_of("stamped-checklist:must/010") == "not-checked"
+    assert "compare imports" in probe.reason_of("stamped-checklist:must/010")
+    assert probe.status_of("stamped-checklist:must/013") == "met"
+    if requirements.startswith("#"):
+        runtime = tmp_path / "empty-runtime"
+        runtime_env = {k: v for k, v in env.items() if k not in {"PYTHONPATH", "PYTHONHOME"}}
+        runtime_env["PYTHONNOUSERSITE"] = "1"
+        subprocess.run([sys.executable, "-m", "venv", "--without-pip", str(runtime)],
+                       env=runtime_env, check=True, capture_output=True)
+        command = [str(runtime / "bin/python"), str(root / "analysis.py")]
+        done = subprocess.run(command, env=runtime_env, capture_output=True, text=True)
+        assert done.returncode != 0
+        assert "ModuleNotFoundError" in done.stderr and "numpy" in done.stderr
+        (tmp_path / "execution-receipt.json").write_text(json.dumps({
+            "scope": "Synthetic missing-import regression in fresh venv; no research execution",
+            "source_commit": Object(root).head, "argv": command,
+            "returncode": done.returncode, "stdout": done.stdout, "stderr": done.stderr,
+        }, indent=2) + "\n")
+
+
+@pytest.mark.parametrize("failure", ["missing", "timeout", "nonzero", "empty", "malformed", "failed-record"])
+def test_annex_location_check_failures_remain_unavailable(tmp_path, monkeypatch, failure):
+    from types import SimpleNamespace
+    import probes.structure as structure
+
+    # Committed pointer remains visible even with no annex executable or payload.
+    obj = SimpleNamespace(root=tmp_path,
+                          blobs=lambda: [("analysis.sif", 60, "120000")],
+                          git=lambda *args: "../.git/annex/objects/key/key")
+
+    def run(*args, **kwargs):
+        if failure == "missing":
+            raise FileNotFoundError("git unavailable")
+        if failure == "timeout":
+            raise subprocess.TimeoutExpired(args[0], 120)
+        output = {"empty": "", "malformed": "broken\n[]\n",
+                  "failed-record": json.dumps({"file": "analysis.sif", "success": False,
+                                                "whereis": []})}.get(failure, "")
+        return subprocess.CompletedProcess(args[0], 1 if failure == "nonzero" else 0, output, "")
+
+    monkeypatch.setattr(subprocess, "run", run)
+    evidence = structure._spec_publication_evidence(obj, ["analysis.sif"])
+    assert evidence["files"]["analysis.sif"]["location_status"] == "unavailable"
+    assert evidence["retrieval_verified"] is False
+
+
+@pytest.mark.parametrize("pointer,mode", [
+    ("../.git/annex/objects/key/key", "120000"),
+    ("/annex/objects/key\n", "100644"),
+])
+def test_annex_location_metadata_is_never_retrieval_evidence(tmp_path, monkeypatch, pointer, mode):
+    from types import SimpleNamespace
+    import probes.structure as structure
+
+    obj = SimpleNamespace(root=tmp_path, blobs=lambda: [("spec", len(pointer), mode)],
+                          git=lambda *args: pointer)
+    record = {"file": "spec", "success": True,
+              "whereis": [{"here": True}, {"here": False, "description": "unreachable old store"}]}
+    monkeypatch.setattr(subprocess, "run", lambda *a, **k:
+                        subprocess.CompletedProcess(a[0], 0, json.dumps(record), ""))
+    evidence = structure._spec_publication_evidence(obj, ["spec"])
+    assert evidence["files"]["spec"]["recorded_elsewhere"] == 1
+    assert evidence["retrieval_verified"] is False
+
+
+def test_plain_git_spec_does_not_require_annex_to_inspect(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    import probes.structure as structure
+
+    obj = SimpleNamespace(root=tmp_path, blobs=lambda: [("requirements.txt", 6, "100644")],
+                          git=lambda *args: "numpy\n")
+    def unexpected(*args, **kwargs):
+        pytest.fail("plain Git content must not need an annex executable")
+    monkeypatch.setattr(subprocess, "run", unexpected)
+    evidence = structure._spec_publication_evidence(obj, ["requirements.txt", "missing.sif"])
+    assert evidence["files"]["requirements.txt"]["kind"] == "git-blob"
+    assert evidence["files"]["missing.sif"]["kind"] == "unknown"
+    assert evidence["retrieval_verified"] is False
+
+
+@pytest.mark.parametrize("row,status", [
+    ({"kind": "git-blob"}, "partial"),
+    ({"kind": "annex", "location_status": "recorded", "recorded_elsewhere": 0}, "partial"),
+    ({"kind": "annex", "location_status": "recorded", "recorded_elsewhere": 1}, "partial"),
+    ({"kind": "annex", "location_status": "unavailable"}, "not-checked"),
+    ({"kind": "unknown"}, "not-checked"),
+])
+def test_publication_requires_more_than_a_responding_remote(clean, monkeypatch, row, status):
+    import probes.structure as structure
+    monkeypatch.setattr(structure, "_remote_resolves", lambda url: True)
+    monkeypatch.setattr(structure, "_spec_publication_evidence", lambda *args:
+                        {"files": {"requirements.lock": row}, "retrieval_verified": False})
+    result = REGISTRY["env-spec-tracked"](Object(clean), check_remote=True)
+    assert result.status_of("stamped-checklist:must/016") == status
+    assert result.details["publication"]["retrieval_verified"] is False

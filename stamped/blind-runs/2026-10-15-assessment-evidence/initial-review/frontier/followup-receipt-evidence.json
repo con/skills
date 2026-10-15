@@ -1,0 +1,15 @@
+{
+  "path": "/tmp/stamped-assessment-evidence-final-fixtures/test_a_manifest_does_not_prove2/execution-receipt.json",
+  "sha256": "e40c0ea2429317933d81af6f2fc326d0ac42c3f77383f26f3bf0bbab6e35d37e",
+  "content": {
+    "scope": "Synthetic missing-import regression in fresh venv; no research execution",
+    "source_commit": "5697076be929f539b770d19efa899044e38d58b9",
+    "argv": [
+      "/private/tmp/stamped-assessment-evidence-final-fixtures/test_a_manifest_does_not_prove2/empty-runtime/bin/python",
+      "/private/tmp/stamped-assessment-evidence-final-fixtures/test_a_manifest_does_not_prove2/dependency-review/analysis.py"
+    ],
+    "returncode": 1,
+    "stdout": "",
+    "stderr": "Traceback (most recent call last):\n  File \"/private/tmp/stamped-assessment-evidence-final-fixtures/test_a_manifest_does_not_prove2/dependency-review/analysis.py\", line 1, in <module>\n    import numpy\nModuleNotFoundError: No module named 'numpy'\n"
+  }
+}

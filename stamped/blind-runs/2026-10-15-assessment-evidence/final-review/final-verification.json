@@ -1,0 +1,17 @@
+{
+  "snapshot_all_match": true,
+  "snapshot_count": 19,
+  "source_metadata_sha256": "a69297e24d7b7d360b3800f22d961ce5fc3c25bb798a864b7ae43705eaaef782",
+  "snapshot_manifest_sha256": "627de6fe18eb6c04896049fdbdd809b1191dddf5232bc02162e7a92774a95b16",
+  "all_objects_still_clean": true,
+  "receipts": [
+    {
+      "path": "/tmp/stamped-assessment-evidence-final-fixtures/test_a_manifest_does_not_prove2/execution-receipt.json",
+      "sha256": "e40c0ea2429317933d81af6f2fc326d0ac42c3f77383f26f3bf0bbab6e35d37e"
+    },
+    {
+      "path": "/tmp/stamped-assessment-evidence-fixtures/test_a_spec_whose_content_neve0/retrieval-receipt.json",
+      "sha256": "c8647a4f6e7fa2e4ac7faec8389ca928f6a1a039a8b1adbf17aa84035b3c52c6"
+    }
+  ]
+}

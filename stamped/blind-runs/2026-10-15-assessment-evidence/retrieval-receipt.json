@@ -1,0 +1,62 @@
+{
+  "scope": "Separate recipient clone and local store on one host; not public network access",
+  "source_commit": "77dedfe19f21ec17fc704fc5aa30e782345a98d8",
+  "recipient_commit": "77dedfe19f21ec17fc704fc5aa30e782345a98d8",
+  "commands": [
+    {
+      "argv": [
+        "git",
+        "clone",
+        "--no-local",
+        "/private/tmp/stamped-assessment-evidence-fixtures/test_a_spec_whose_content_neve0/annexed-spec",
+        "/private/tmp/stamped-assessment-evidence-fixtures/test_a_spec_whose_content_neve0/recipient"
+      ],
+      "cwd": "/private/tmp/stamped-assessment-evidence-fixtures/test_a_spec_whose_content_neve0",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "Cloning into '/private/tmp/stamped-assessment-evidence-fixtures/test_a_spec_whose_content_neve0/recipient'...\n"
+    },
+    {
+      "argv": [
+        "git",
+        "remote",
+        "set-url",
+        "origin",
+        "/private/tmp/stamped-assessment-evidence-fixtures/test_a_spec_whose_content_neve0/remote.git"
+      ],
+      "cwd": "/private/tmp/stamped-assessment-evidence-fixtures/test_a_spec_whose_content_neve0/recipient",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "annex",
+        "init",
+        "-q",
+        "recipient"
+      ],
+      "cwd": "/private/tmp/stamped-assessment-evidence-fixtures/test_a_spec_whose_content_neve0/recipient",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "annex",
+        "get",
+        "--from",
+        "origin",
+        "code/containers/analysis.sif"
+      ],
+      "cwd": "/private/tmp/stamped-assessment-evidence-fixtures/test_a_spec_whose_content_neve0/recipient",
+      "returncode": 0,
+      "stdout": "get code/containers/analysis.sif (from origin...) \n\n100%  2.25 KiB         16 MiB/s 0s\n                                  \nok\n(recording state in git...)\n",
+      "stderr": ""
+    }
+  ],
+  "source_sha256": "7a3838d9d993f455975a9a9eac0cf5107aa92f0750b3d1aaacfb193fbd210ce1",
+  "retrieved_sha256": "7a3838d9d993f455975a9a9eac0cf5107aa92f0750b3d1aaacfb193fbd210ce1"
+}
