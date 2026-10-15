@@ -13,11 +13,17 @@ the SKILL.md does not repeat them verbatim.
 
 ## Respect upstream PR conventions when preparing a pull request
 
-Any skill that prepares a pull request (currently:
+Any skill that prepares a pull request **for another project** (currently:
 `introduce-codespell`, `introduce-git-bug`, `introduce-reuse-compliance`,
 plus any future skill that does the same) MUST, before drafting the PR
 body and BEFORE handing the user a `gh pr create` / push command, perform
 the steps below and report the result to the user.
+
+For a PR **against con/skills itself** this section does not apply: this
+repository has no PR template and no contributing guide. What a PR here
+owes instead is `tox -e validate` and `tox -e stamped-evals` passing, a
+README table row for every skill added, and a `version:` in the
+frontmatter of every skill it touches.
 
 ### 1. Look for a PR description template
 
@@ -117,6 +123,97 @@ should — when next touched — offer to rewrite the PR body to the
 template, *preserving* any maintainer dialogue that already happened
 in PR comments (those live in comments, not in the body, so a body
 rewrite is safe).
+
+---
+
+## Test a skill by handing it to an independent subagent
+
+A `SKILL.md` is instructions for somebody else. The session that wrote
+the wording is the worst possible judge of whether the wording can be
+followed, because it knows what it meant. So **every non-trivial change
+to a skill in this repository is tested by handing the skill to a fresh
+subagent, with a concrete scope, and reading what comes back** — not by
+the authoring session walking through its own procedure.
+
+### The pattern
+
+1. **Snapshot** the skill, together with any sibling conventions skill
+   it reads, into a directory outside this repository, and point the
+   subagent at that copy. The snapshot is what makes the run
+   reproducible and keeps the repository's own state out of it.
+2. **Scope it concretely.** Give the subagent what a real invocation
+   would give it: a repository or path to work on, a PROMPT, or both.
+   "Try the skill" is not a test; "`/assess-alignment-with-stamped-principles
+   <path to this clone>`" is.
+3. **Blind it.** The subagent must not read this repository: no
+   reference answers, no earlier reports on the same target, no plan or
+   design documents. Say so in its prompt, and say why, or it will
+   helpfully go looking.
+4. **Ask for two things back.** The work product (the report, the diff,
+   the PR body — whatever the skill is for), and its **friction**: every
+   place the instructions were ambiguous, missing, contradictory or
+   slow, quoting the wording at fault. The friction is usually the more
+   valuable half.
+5. **Diff** the product against the reference answer or against what you
+   expected, and classify every difference as one of: skill wording,
+   missing artifact (a script, template or hook the skill should ship),
+   harness fault, model limit, or defect in the test target. **Only the
+   first two change the skill.**
+6. **Record the run** so the next iteration can be compared with it: for
+   skills with an eval harness, as a run under `evals/`; for everything
+   else, at minimum the diff and the classification in the commit
+   message that follows. **Keep the prompt you gave it**, verbatim and
+   beside the run: the snapshot pins what the subagent read, and the
+   prompt is the other half of the input. A run record without it cannot
+   be replayed on another model or another day, and the authoring
+   session is exactly the wrong party to reconstruct it from memory.
+   **And name the commit you graded.** A subagent that goes quiet is not
+   necessarily finished: one came back 35 minutes after it had been
+   graded. It turned out to have committed nothing more, so the grading
+   had been fair — but establishing that took comparing checksums, and
+   until it was established the number could not be defended. A grading
+   that does not say which commit it describes cannot be corrected, only
+   distrusted.
+   For the STAMPED skills `evals/` is a submodule — this repository's
+   `stamped-evals` branch — so recording a run is two commits: the record
+   inside `evals/`, then the moved pointer in the superproject. Push the
+   submodule first. A pointer pushed ahead of what it points at is
+   unresolvable for everybody else, which is the `must/002` failure these
+   skills exist to catch.
+
+Run it with more than one model tier where the skill may be used by one,
+and keep at least one target out of the loop you tune against, so the
+wording is not fitted to a single fixture.
+
+**When the defect can only be caught by reading, make it a fixture.**
+Inject it into a copy of a known-good target — instructions naming a
+command that does not exist, steps that work on one operating system,
+prose promising something the project does not carry — then verify the
+skill's own scripts stay green on it (otherwise it is not testing
+judgement) and require the blind run to *name* the specific defect, not
+merely to look unhappy. That is a regression artifact for a sentence,
+and it is the only kind of test that keeps prose honest. The STAMPED
+collection's are in `evals/stamped/mutants/judgement.py`, driven by
+`evals/stamped/harness/judgement_calibrate.py` (both in the `evals/`
+submodule; the paths are the same as before the split).
+
+### Scripts are the fast half, not the whole test
+
+Bundled scripts — probes, validators, generators — exist so that the
+deterministic part of a job is cheap, repeatable and identical between
+the skill and its graders. Use them, and prefer them wherever a check
+can be mechanical. But they are a **first pass whose output tells the
+skill where to look harder**, not the answer: a skill reports what the
+scripts found *and* what reading the target showed, says which produced
+each conclusion, and flags the disagreements instead of averaging them.
+
+Two consequences:
+
+- A passing script suite is **not** evidence that the instructions are
+  followable. Only a subagent run shows that.
+- When a subagent run exposes a gap, the first fix to reach for is a
+  script, template or hook — prose in the `SKILL.md` is the last resort,
+  because prose is what grows back.
 
 ---
 

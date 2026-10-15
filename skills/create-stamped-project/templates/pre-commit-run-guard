@@ -1,0 +1,62 @@
+#!/bin/sh
+# Refuse a commit while a recorded run is in flight.
+#
+# Install:  cp this to .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+#           (or add it to .pre-commit-config.yaml as a local hook)
+#
+# Why this exists: a commit that lands inside a `datalad run` window makes the
+# run fail with "command created commits that include files not declared as
+# --output", and a workflow engine then deletes the *completed* outputs of that
+# cell. In the project this guard comes from, that cost finished compute three
+# times before the cause was found.
+#
+# How it works: the wrapper that starts a recorded run (`run-recorded.sh`)
+# creates the marker below and exports IN_FLIGHT_OK=1 for its own children, so
+# the run's own commit passes while a commit from any other shell is refused.
+set -eu
+
+# The wrapper keeps the marker inside the git directory, so that `datalad run`
+# (which refuses to start with untracked files in the worktree) is not tripped
+# by the guard's own bookkeeping. The old worktree path is still honoured.
+GITDIR="$(git rev-parse --git-dir)"
+MARKER="$GITDIR/datalad-run-in-flight"
+[ -e "$MARKER" ] || MARKER=".datalad-run-in-flight"
+
+# A marker whose process is gone is bookkeeping from a killed run, not a run.
+# Honouring it would be the guard inflicting the hazard it exists to prevent —
+# which has happened, and cost an agent its next three commits.
+if [ -e "$MARKER" ] && [ "${IN_FLIGHT_OK:-}" != "1" ]; then
+    marker_pid="$(cat "$MARKER" 2>/dev/null || true)"
+    case "$marker_pid" in
+        ''|*[!0-9]*) : ;;                       # no pid recorded: treat as live
+        *)
+            if ! kill -0 "$marker_pid" 2>/dev/null; then
+                printf 'note: %s names pid %s, which is gone; removing a stale marker and\n' \
+                    "$MARKER" "$marker_pid" >&2
+                printf 'allowing this commit. The run that set it was killed before its cleanup.\n' >&2
+                rm -f "$MARKER"
+            fi
+            ;;
+    esac
+fi
+
+if [ -e "$MARKER" ] && [ "${IN_FLIGHT_OK:-}" != "1" ]; then
+    printf 'refusing to commit: a recorded run is in flight (%s exists).\n' "$MARKER" >&2
+    printf '\n' >&2
+    printf 'A commit on this branch now lands inside that run and can destroy its\n' >&2
+    printf 'completed outputs. Options:\n' >&2
+    printf '  * wait for the run to finish (it commits its own result);\n' >&2
+    printf '  * write to a gitignored scratch directory instead;\n' >&2
+    printf '  * if you are certain no run is active, remove %s.\n' "$MARKER" >&2
+    printf '\nIf that marker is stale, the wrapper was killed in a way that skipped its\n' >&2
+    printf 'cleanup trap (SIGKILL, or a crash): removing it by hand is correct.\n' >&2
+    exit 1
+fi
+
+# A second, cheaper check: datalad leaves this behind mid-run.
+if [ -d ".git/datalad" ] && [ -e ".git/datalad/.run-in-progress" ] && [ "${IN_FLIGHT_OK:-}" != "1" ]; then
+    printf 'refusing to commit: datalad reports a run in progress.\n' >&2
+    exit 1
+fi
+
+exit 0

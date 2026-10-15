@@ -1,0 +1,128 @@
+{
+  "checklist_version": "0.3.1",
+  "responses": {
+    "stamped-checklist:must/002": {
+      "value": "no",
+      "reason": "1 of 2 linked module(s) do not resolve elsewhere: code/compression-comparisons-tools url=../.. \u2014 relative url: resolves only next to this superdataset",
+      "status": "unmet",
+      "evidence": [
+        {
+          "uri": ".gitmodules",
+          "description": "code/compression-comparisons-tools: url=../.. \u2014 relative url: resolves only next to this superdataset",
+          "sha256": null
+        }
+      ],
+      "source": "probe:subdatasets-resolvable"
+    },
+    "stamped-checklist:must/006": {
+      "value": "no",
+      "reason": "1218 of 22286 derived file(s) have no re-executable record, e.g. derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/AUTO_TABLE.md; last touched by an ordinary commit.",
+      "status": "partial",
+      "evidence": [
+        {
+          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/AUTO_TABLE.md",
+          "description": "no run record or workflow rule produces this file",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/RESULTS.md",
+          "description": "no run record or workflow rule produces this file",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/aind-ibl-np1-CSHZAD026-slice10__blosc-lz4-level_3-shuffle_byte/duct-info.json",
+          "description": "no run record or workflow rule produces this file",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/aind-ibl-np1-CSHZAD026-slice10__blosc-lz4-level_3-shuffle_byte/duct-stderr",
+          "description": "no run record or workflow rule produces this file",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/aind-ibl-np1-CSHZAD026-slice10__blosc-lz4-level_3-shuffle_byte/duct-stdout",
+          "description": "no run record or workflow rule produces this file",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/aind-ibl-np1-CSHZAD026-slice10__blosc-lz4-level_3-shuffle_byte/duct-usage.jsonl",
+          "description": "no run record or workflow rule produces this file",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/aind-ibl-np1-CSHZAD026-slice10__blosc-lz4-level_3-shuffle_byte/manifest.json",
+          "description": "no run record or workflow rule produces this file",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/aind-ibl-np1-CSHZAD026-slice10__blosc-lz4-level_3-shuffle_byte/metrics.json",
+          "description": "no run record or workflow rule produces this file",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/aind-ibl-np1-CSHZAD026-slice10__blosc-lz4-level_9-shuffle_byte/duct-info.json",
+          "description": "no run record or workflow rule produces this file",
+          "sha256": null
+        },
+        {
+          "uri": "derivatives/compbench-2026-08-19-CSHZAD026-slice10s-bandpass/aind-ibl-np1-CSHZAD026-slice10__blosc-lz4-level_9-shuffle_byte/duct-stderr",
+          "description": "no run record or workflow rule produces this file",
+          "sha256": null
+        }
+      ],
+      "source": "probe:derived-have-records"
+    },
+    "stamped-checklist:should/004": {
+      "value": null,
+      "reason": "Nothing in the object records a fresh-environment rerun, and attempting one here needs 523 GB of inputs and a GPU. fresh_rerun.py was not run.",
+      "status": "not-checked",
+      "evidence": [],
+      "source": "judgement"
+    },
+    "stamped-checklist:should/009": {
+      "value": null,
+      "reason": "N/A: every component is public (AIND open data, MIT code); there are no restricted data or software to isolate.",
+      "status": "not-applicable",
+      "evidence": [],
+      "source": "judgement"
+    }
+  },
+  "schema_version": "0.2.0",
+  "principles_version": "0.2.0",
+  "checklist_source": {
+    "repo": "https://github.com/stamped-principles/stamped-checklist-schema",
+    "tag": "v0.3.1",
+    "commit": "af259bad237fa57b856417db8dba45a1b283a527"
+  },
+  "object": {
+    "url": "https://github.com/dandi/compression-comparisons-t261-study",
+    "commit": "f2f0802449095025b589337f8cb6f13be5112b25",
+    "captured_at": "2026-10-13T04:00:00+00:00",
+    "kind": "study"
+  },
+  "assessor": {
+    "skill": "assess-alignment-with-stamped-principles",
+    "version": "0.1.0",
+    "harness": "claude-code (cloud session)",
+    "model": "claude-opus-5[1m]",
+    "date": "2026-10-13",
+    "dependencies": [
+      "stamped-conventions@0.1.0"
+    ]
+  },
+  "scope": "Committed state of the superdataset at the commit above. The two linked modules were not installed, so their contents were not read; no container was pulled and no rerun attempted.",
+  "extra_items": [
+    {
+      "key": "license-declared",
+      "status": "partial",
+      "reason": "dataset_description.json states MIT for code and derivatives, but no LICENSE file, LICENSES/ directory or REUSE.toml makes that machine-readable. Paper S.2/D.3 have no checklist item in 0.3.1.",
+      "evidence": [
+        {
+          "uri": "dataset_description.json#License",
+          "description": "MIT (code and derivatives)",
+          "sha256": null
+        }
+      ]
+    }
+  ]
+}

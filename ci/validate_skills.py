@@ -17,6 +17,12 @@ Every SKILL.md:
         (pattern ``/home/<word>/`` or ``/Users/<Word>/``; tilde paths are fine)
   E004  Hardcoded secret-like assignment outside a code-block fence
         (pattern ``KEY = "..."``, ``token = '...'``, etc.)
+  E007  File exceeds the skill's own ``max-lines`` budget, when it declares one
+        (opt-in: skills that set no budget are only subject to W003)
+  W004  A block of >= 8 identical non-trivial lines appears in two places among
+        the Markdown files checked in this run (SKILL.md and references/).
+        One-screen operating cards go stale when a paragraph is kept in two
+        files; move it to the conventions skill and link it instead.
 
 Every *.py bundled alongside a SKILL.md:
   E005  Python syntax error (py_compile)
@@ -29,8 +35,9 @@ Warnings never affect the exit code.
 Usage:
     python3 ci/validate_skills.py [<skill-dir> ...]
 
-    If no directories are given, scans every immediate subdirectory of the
-    repo root that contains a SKILL.md.
+    If no directories are given, scans every directory containing a SKILL.md
+    under `skills/` and every immediate subdirectory of the repo root that
+    contains one (the collection is mid-move to a single `skills/` tree).
 """
 
 from __future__ import annotations
@@ -143,6 +150,15 @@ def check_skill_md(skill_md: Path, result: Result) -> None:
     if len(lines) > 600:
         result.warn("W003", skill_md, f"file is {len(lines)} lines (>600); consider splitting")
 
+    # E007 — the skill's own size budget, when it declares one
+    budget = fm.get("max-lines")
+    if isinstance(budget, int) and len(lines) > budget:
+        result.error(
+            "E007", skill_md,
+            f"file is {len(lines)} lines, over its own max-lines budget of {budget}; "
+            "move detail into references/ or drop it",
+        )
+
     # E003 — hardcoded absolute home paths
     for i, line in enumerate(lines, 1):
         if _ABS_HOME.search(line):
@@ -210,10 +226,81 @@ def check_python_file(py_path: Path, result: Result) -> None:
 # ---------------------------------------------------------------------------
 
 def find_skill_dirs(repo_root: Path) -> list[Path]:
-    return sorted(
+    """Every skill directory, in either layout.
+
+    con/skills is moving to one canonical ``skills/`` tree (con/skills#13, so
+    that `apm.yml` can publish the collection); the skills that have not been
+    moved yet are still immediate children of the repository root. Scanning
+    both means neither half goes unvalidated while the move is half done, and
+    nothing here needs touching when it finishes.
+    """
+    found = {
+        p.parent for p in repo_root.glob("skills/*/SKILL.md")
+    } | {
         p.parent for p in repo_root.glob("*/SKILL.md")
         if p.parent.name not in {"ci"}
-    )
+    }
+    return sorted(found)
+
+
+# ---------------------------------------------------------------------------
+# Duplicate-block detection (W004)
+# ---------------------------------------------------------------------------
+
+_BLOCK = 8          # identical non-trivial lines in a row to count as a duplicate
+_TRIVIAL = re.compile(r"^(?:\s*|---+|```.*|#+\s*\S.*|\|[\s|:-]*\|)$")
+
+
+def _significant(lines: list[str]) -> list[tuple[int, str]]:
+    """(1-based line number, normalised text) for lines worth comparing."""
+    out = []
+    for i, line in enumerate(lines, 1):
+        stripped = line.strip()
+        if not stripped or _TRIVIAL.match(line) or len(stripped) < 20:
+            continue
+        out.append((i, " ".join(stripped.split())))
+    return out
+
+
+def check_duplicate_blocks(md_paths: list[Path], result: Result) -> None:
+    seen: dict[tuple[str, ...], tuple[Path, int]] = {}
+    reported: set[tuple[str, str]] = set()
+    for path in md_paths:
+        try:
+            lines = path.read_text(encoding="utf-8").splitlines()
+        except OSError:
+            continue
+        significant = _significant(lines)
+        skip_until = -1
+        for start in range(len(significant) - _BLOCK + 1):
+            if start <= skip_until:
+                continue  # still inside a region already reported
+            window = significant[start:start + _BLOCK]
+            key = tuple(text for _, text in window)
+            where = (path, window[0][0])
+            if key in seen:
+                first_path, first_line = seen[key]
+                if first_path == path and abs(first_line - where[1]) < _BLOCK:
+                    continue
+                pair = (f"{first_path}:{first_line}", f"{path}:{where[1]}")
+                if pair in reported:
+                    continue
+                reported.add(pair)
+                skip_until = start + _BLOCK - 1
+                result.warn(
+                    "W004", path,
+                    f"{_BLOCK} lines repeated from {first_path}:{first_line}; "
+                    "keep one copy and link to it",
+                    where[1],
+                )
+            else:
+                seen[key] = where
+
+
+def markdown_files(skill_dir: Path) -> list[Path]:
+    paths = [skill_dir / "SKILL.md"]
+    paths += sorted(p for p in skill_dir.rglob("*.md") if p.name != "SKILL.md")
+    return [p for p in paths if p.exists()]
 
 
 def validate_skill(skill_dir: Path) -> Result:
@@ -225,8 +312,12 @@ def validate_skill(skill_dir: Path) -> Result:
 
     check_skill_md(skill_md, result)
 
-    for py_path in sorted(skill_dir.glob("*.py")):
+    for py_path in sorted(skill_dir.rglob("*.py")):
+        if "__pycache__" in py_path.parts:
+            continue
         check_python_file(py_path, result)
+
+    check_duplicate_blocks(markdown_files(skill_dir), result)
 
     return result
 
