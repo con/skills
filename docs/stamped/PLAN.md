@@ -465,17 +465,18 @@ within-arm spread is as large as the gap between tiers.
 | | `bare` | `pointer` | `skill-implicit` | `skill-explicit` |
 |---|---|---|---|---|
 | **R0** (2026-10-13) MUST | 3/11 | 5/11 | 8/11 | 7/11 |
-| **R0** repeats (2026-10-14) | | | | 10/11, 8/11 (sonnet), 8/11 (haiku) |
-| **R1** MUST | 4/11 | 8/11 | **10/11** | (still running when this was written) |
-| **R1** science oracle | met | met | met | |
+| **R0** repeats (2026-10-14) | | | | 10/11, 8/11 (sonnet); 7/11, 8/11 (haiku) |
+| **R1** MUST | 5/11 | 8/11 | **10/11** | **9/11** |
+| **R1** science oracle | met | met | met | met |
 
 Both skill arms clear both baselines at both rungs, and the R1 science was
 right in every arm: ten computed mask volumes each, all inside the
-`[0.90, 1.34]` band the two-container pilot measured. The best runs' only
-remaining failure is must/016, which a sandbox cannot satisfy at all
+`[0.90, 1.34]` band the two-container pilot measured, with the three SynthStrip
+arms agreeing to the digit. The best run's only remaining failure is must/016,
+which a sandbox cannot satisfy at all
 ([§10](#7-decisions-and-where-we-diverge) item 13).
 
-**What the day cost in defects found, which is the point of running it:** six
+**What the day cost in defects found, which is the point of running it:** nine
 in the R1 arms (the wrapper could not run a container at all; the oracle could
 not find the comparator under a module; millilitres read as implausible
 volumes; a voxel count preferred over a volume; the harness's own notes costing

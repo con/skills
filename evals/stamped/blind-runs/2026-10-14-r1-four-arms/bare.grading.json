@@ -6,7 +6,7 @@
     "model": "sonnet",
     "skill_commit": "unknown",
     "repeat": 1,
-    "graded_at": "2026-10-15T02:55:45+00:00",
+    "graded_at": "2026-10-15T03:41:14+00:00",
     "checklist_version": "0.3.1"
   },
   "t1": {
@@ -24,7 +24,7 @@
       "stamped-checklist:must/006": {
         "status": "partial",
         "probe": "run-env-linked",
-        "reason": "1 of 2 run record(s) name no container or lockfile, e.g. 03d9808: uv run --with nibabel --with numpy --with pandas --with matplotlib python code/size_vs_age.py"
+        "reason": "1 of 2 run record(s) name no container or lockfile (1 name a container, 0 a lockfile, 0 only a capture), e.g. 03d9808: uv run --with nibabel --with numpy --with pandas --with matplotlib python code/size_vs_age.py"
       },
       "stamped-checklist:must/007": {
         "status": "unmet",
@@ -62,9 +62,9 @@
         "reason": "3 kinds of component live in distinct places: inputs in inputs, inputs/ds007116; code in code; derived in derivatives, results"
       },
       "stamped-checklist:must/009": {
-        "status": "unmet",
+        "status": "met",
         "probe": "no-abs-paths",
-        "reason": "1 host-specific absolute path(s) in 1 script(s) or config(s), e.g. code/size_vs_age.py line 9: m = nib.load(f\"derivatives/synthstrip/{s}/ses-1/anat/{b}_desc-brain_mask.nii.gz\")"
+        "reason": "No host-specific absolute paths in tracked text files."
       },
       "stamped-checklist:must/011": {
         "status": "not-checked",
@@ -351,37 +351,26 @@
       },
       {
         "probe": "no-abs-paths",
-        "status": "unmet",
+        "status": "met",
         "items": [
           "stamped-checklist:must/009"
         ],
-        "reason": "1 host-specific absolute path(s) in 1 script(s) or config(s), e.g. code/size_vs_age.py line 9: m = nib.load(f\"derivatives/synthstrip/{s}/ses-1/anat/{b}_desc-brain_mask.nii.gz\")",
+        "reason": "No host-specific absolute paths in tracked text files.",
         "evidence": [
           {
-            "uri": "code/size_vs_age.py#L9",
-            "description": "host path: m = nib.load(f\"derivatives/synthstrip/{s}/ses-1/anat/{b}_desc-brain_mask.nii.gz\")",
+            "uri": "probe:no-abs-paths",
+            "description": "scanned 33 tracked paths, 0 /tmp hit(s), 0 host-specific",
             "sha256": null
           }
         ],
         "details": {
-          "hits": [
-            {
-              "path": "code/size_vs_age.py",
-              "line": 9,
-              "kind": "host",
-              "where": "code",
-              "text": "m = nib.load(f\"derivatives/synthstrip/{s}/ses-1/anat/{b}_desc-brain_mask.nii.gz\")"
-            }
-          ],
-          "blocking_files": [
-            "code/size_vs_age.py"
-          ]
+          "tmp_hits": []
         },
         "item_status": {
-          "stamped-checklist:must/009": "unmet"
+          "stamped-checklist:must/009": "met"
         },
         "item_reason": {
-          "stamped-checklist:must/009": "1 host-specific absolute path(s) in 1 script(s) or config(s), e.g. code/size_vs_age.py line 9: m = nib.load(f\"derivatives/synthstrip/{s}/ses-1/anat/{b}_desc-brain_mask.nii.gz\")"
+          "stamped-checklist:must/009": "No host-specific absolute paths in tracked text files."
         }
       },
       {
@@ -418,7 +407,7 @@
           "stamped-checklist:must/006",
           "stamped-checklist:must/015"
         ],
-        "reason": "must/006 partial: 1 of 2 run record(s) name no container or lockfile, e.g. 03d9808: uv run --with nibabel --with numpy --with pandas --with matplotlib python code/size_vs_age.py must/015 met: 1 run record(s) reference a pinned image or lockfile, and\u2026",
+        "reason": "must/006 partial: 1 of 2 run record(s) name no container or lockfile (1 name a container, 0 a lockfile, 0 only a capture), e.g. 03d9808: uv run --with nibabel --with numpy --with pandas --with matplotlib python code/size_vs_age.py must/015 met: 1 ru\u2026",
         "evidence": [
           {
             "uri": "commit:4c5c130",
@@ -441,6 +430,11 @@
               "mechanism": null
             }
           ],
+          "by_mechanism": {
+            "container": 1,
+            "lockfile": 0,
+            "capture": 0
+          },
           "unpinned": []
         },
         "item_status": {
@@ -448,7 +442,7 @@
           "stamped-checklist:must/015": "met"
         },
         "item_reason": {
-          "stamped-checklist:must/006": "1 of 2 run record(s) name no container or lockfile, e.g. 03d9808: uv run --with nibabel --with numpy --with pandas --with matplotlib python code/size_vs_age.py",
+          "stamped-checklist:must/006": "1 of 2 run record(s) name no container or lockfile (1 name a container, 0 a lockfile, 0 only a capture), e.g. 03d9808: uv run --with nibabel --with numpy --with pandas --with matplotlib python code/size_vs_age.py",
           "stamped-checklist:must/015": "1 run record(s) reference a pinned image or lockfile, and no ':latest' reference is tracked."
         }
       },
@@ -526,18 +520,18 @@
         }
       }
     ],
-    "must_pass_rate": "4/11",
+    "must_pass_rate": "5/11",
     "must_passed": [
       "stamped-checklist:must/002",
       "stamped-checklist:must/004",
       "stamped-checklist:must/005",
+      "stamped-checklist:must/009",
       "stamped-checklist:must/015"
     ],
     "must_failed": [
       "stamped-checklist:must/006",
       "stamped-checklist:must/007",
       "stamped-checklist:must/008",
-      "stamped-checklist:must/009",
       "stamped-checklist:must/010",
       "stamped-checklist:must/013",
       "stamped-checklist:must/016"
@@ -562,6 +556,7 @@
     "figures": [
       "results/brain_volume_vs_age.png"
     ],
+    "figures_without_content": [],
     "identical_to_shipped": [],
     "byte_identical_products": [],
     "ratios": {
@@ -621,7 +616,7 @@
     {
       "text": "T1 stamped-checklist:must/006",
       "passed": false,
-      "evidence": "1 of 2 run record(s) name no container or lockfile, e.g. 03d9808: uv run --with nibabel --with numpy --with pandas --with matplotlib python code/size_vs_age.py"
+      "evidence": "1 of 2 run record(s) name no container or lockfile (1 name a container, 0 a lockfile, 0 only a capture), e.g. 03d9808: uv run --with nibabel --with numpy --with pandas --with matplotlib python code/size_vs_age.py"
     },
     {
       "text": "T1 stamped-checklist:must/007",
@@ -635,8 +630,8 @@
     },
     {
       "text": "T1 stamped-checklist:must/009",
-      "passed": false,
-      "evidence": "1 host-specific absolute path(s) in 1 script(s) or config(s), e.g. code/size_vs_age.py line 9: m = nib.load(f\"derivatives/synthstrip/{s}/ses-1/anat/{b}_desc-brain_mask.nii.gz\")"
+      "passed": true,
+      "evidence": "No host-specific absolute paths in tracked text files."
     },
     {
       "text": "T1 stamped-checklist:must/010",

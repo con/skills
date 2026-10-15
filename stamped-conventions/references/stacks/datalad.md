@@ -52,6 +52,9 @@ none of them is discoverable from the error message alone.
   `sub-20919: command not found`. Re-register with `exec` (`datalad containers-add
   --call-fmt '… exec {img} {cmd}'`), or pass one argument that is a file the
   command reads.
+- **A registered container's name takes only letters, digits and `-`.**
+  `datalad containers-add synthstrip-7.4.1` is refused ("only alphanumeric and
+  '-'"), so a version in the name becomes `synthstrip-7-4-1`.
 - **Pin the image, not the dataset.**
   `///repronim/containers` ships `scripts/freeze_versions`, which rewrites the
   registration to a specific image version; without it the registration names a

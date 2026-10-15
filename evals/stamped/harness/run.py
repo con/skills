@@ -217,7 +217,12 @@ def main(argv: list[str] | None = None) -> int:
     task = prompt
     if args.condition == "skill-explicit":
         task = EXPLICIT_PREFIX.get(case_id, "/do-full-research-loop ") + prompt
-    (sandbox / "prompt.md").write_text(task + "\n")
+    # The harness's own metadata goes *beside* the sandbox, not inside it: both
+    # files name absolute paths, and an R1 arm had to exclude them from its own
+    # preflight and override a probe that read them as host dependencies. The
+    # object is the agent's work; what the harness asked for belongs with the
+    # run record.
+    (sandbox.parent / f"{run_id}.prompt.md").write_text(task + "\n")
 
     meta = {
         "run_id": run_id,
@@ -241,7 +246,8 @@ def main(argv: list[str] | None = None) -> int:
             "container_exec": pathlib.Path("/dev/fuse").exists() or bool(shutil.which("unsquashfs")),
         },
     }
-    (sandbox / "run.json").write_text(json.dumps(meta, indent=2) + "\n")
+    meta_path = sandbox.parent / f"{run_id}.run.json"
+    meta_path.write_text(json.dumps(meta, indent=2) + "\n")
     sh(["git", "add", "-A"], cwd=sandbox)
     sh(["git", "-c", "user.name=stamped-evals", "-c", "user.email=evals@example.org",
         "commit", "-q", "-m", f"eval sandbox: {run_id}"], cwd=sandbox)
@@ -257,7 +263,8 @@ def main(argv: list[str] | None = None) -> int:
         (sandbox.parent / f"{run_id}.inner-prompt.md").write_text(inner)
 
     agent = (
-        'claude -p "$(cat prompt.md)" --output-format stream-json --verbose '
+        f'claude -p "$(cat {sandbox.parent / f"{run_id}.prompt.md"})" '
+        "--output-format stream-json --verbose "
         "--dangerously-skip-permissions > transcript.jsonl"
     )
     if args.model != "default":
@@ -285,7 +292,7 @@ def main(argv: list[str] | None = None) -> int:
     proc = subprocess.run(command, cwd=str(sandbox), timeout=args.timeout)
     meta["finished_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds")
     meta["returncode"] = proc.returncode
-    (sandbox / "run.json").write_text(json.dumps(meta, indent=2) + "\n")
+    meta_path.write_text(json.dumps(meta, indent=2) + "\n")
     print(f"\nagent exited {proc.returncode}; grade it with:\n"
           f"  python3 {HERE / 'grade.py'} {sandbox} --use-case {use_case} "
           f"--transcript {sandbox / 'transcript.jsonl'} --condition {args.condition} "

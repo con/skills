@@ -16,25 +16,36 @@ reconstruct).
 
 | arm | MUST (mechanically checkable) | oracle | tool it chose | mean ratio to `mask_maskvol` |
 |---|---|---|---|---|
-| `bare` | **4/11** | met | SynthStrip 8.2.0, `apptainer exec` inside `datalad run` | 1.065 |
+| `bare` | **5/11** | met | SynthStrip 8.2.0, `apptainer exec` inside `datalad run` | 1.065 |
 | `pointer` | **8/11** | met | FSL 6.0.7 `bet -R -m` via `datalad containers-run` | 0.979 |
+| `skill-explicit` | **9/11** | met | SynthStrip 7.4.1 via `datalad containers-run`, one record per subject | 1.065 |
 | `skill-implicit` | **10/11** | met | SynthStrip 8.2.0 via `datalad containers-run`, one record per subject | 1.065 |
-| `skill-explicit` | still running when this record was written | | SynthStrip, one record per subject (22 commits so far) | |
 
-**The science was right in every arm.** All three finished runs computed ten
-real mask volumes, each within the band the two-container pilot measured
-(`[0.90, 1.34]` of that subject's shipped `mask_maskvol`), and the two
-SynthStrip arms agree to the digit — the same deterministic tool on the same
-inputs. BET sits 8% lower than SynthStrip, inside the band, which is why the
-band is the union of two tools rather than one tool's spread.
+**The science was right in every arm.** All four computed ten real mask
+volumes, each within the band the two-container pilot measured (`[0.90, 1.34]`
+of that subject's shipped `mask_maskvol`), and the three SynthStrip arms agree
+to the digit — the same deterministic tool on the same inputs, two of them on
+different versions of it. BET sits 8% lower than SynthStrip, inside the band,
+which is why the band is the union of two tools rather than one tool's spread.
 
-What separates the arms is everything else: `bare` wrote no README, no plan and
-no environment specification, and its single remaining failure in the implicit
-arm is must/016 — nothing is published, because a sandbox has nowhere to
-publish to.
+What separates the arms is everything else. `bare` wrote no README, no plan and
+no environment specification. Both skill arms produced one container execution
+per subject, a plan, a write-up, an independent reviewer that reproduced their
+products, and their own assessment; the explicit arm also ran a QC pass over
+its masks. Their remaining failures are must/016 — nothing is published,
+because a sandbox has nowhere to publish to — and, in the explicit arm,
+must/006: three of its thirteen records name `.venv/bin/python` rather than the
+environment, which is the gap `run-recorded.sh` now closes by declaring the
+tracked specification as an input of every run.
+
+Graded with the probes **as of the end of the day**, after the fixes these runs
+forced (below). The glob false positive alone was worth a MUST item to two
+arms.
 
 **One repeat per arm proves nothing on its own.** Three repeats and a second
-tier are what the done criteria ask for; these numbers are smoke thresholds.
+tier are what the done criteria ask for; these numbers are smoke thresholds,
+and the R0 repeats of the same day show a within-tier spread (10/11 and 8/11)
+as wide as the gap between tiers.
 
 Numbers are **harness-corrected in one documented way**: `HOST-NOTES.md`, which
 the harness writes into every sandbox, carries an absolute cache path, and the
@@ -67,6 +78,16 @@ measured, the arms were `bare` 4/11, `pointer` 7/11, `skill-implicit` 9/11.
 6. **One arm's `pkill -f 'datalad run'` matched a sibling arm's jobs.** A
    shared host is shared; the host notes say so now, and the stack reference
    says to kill by pid.
+7. **`no-abs-paths` read the tail of a relative glob as an absolute path.**
+   `f"{maskdir}/sub-*/ses-1/anat/*_mask.nii.gz"` has three slashes after the
+   variable, and the one before `ses-1` looked like a root. The explicit arm
+   overrode the probe and said so; it cost two arms must/009.
+8. **The harness's `prompt.md` and `run.json` were tracked inside the object**,
+   both naming absolute paths, so the explicit arm had to exclude them from its
+   own preflight. They are written beside the sandbox now, with the run record.
+9. **`datalad containers-add` refuses a dot in a container name**, so
+   `synthstrip-7.4.1` has to be `synthstrip-7-4-1`. Nothing said so; the stack
+   reference does now.
 
 Plus two findings that are about the agents rather than the skills, and worth
 keeping: the `bare` arm's `-i 'inputs/ds007116/sub-*/…'` glob started fetching

@@ -21,10 +21,15 @@ TMP_PATH = re.compile(r"(?<![\w.:])/(?:tmp|var/tmp)/[\w.${}-]+")
 # cluster mount, a second disk, somebody's scratch space.  `/data/<user>/...`
 # is exactly as unportable as a home directory, and missing that was this
 # probe's worst false negative (see evals/stamped/blind-runs/).
-# The lookbehind also excludes `}` and `~`: `${HOME}/work`, `$CI_DIR/out` and
-# `~/data` are *relative to a variable*, which is the portable way to write
-# them, and counting them cost a real object must/009 for its CI config.
-ABSOLUTE_PATH = re.compile(r"(?<![\w.:$}~])/([a-zA-Z][\w.-]*)(/[\w.${}-]+)+")
+# The lookbehind excludes more than a word character, and each exclusion is a
+# false positive somebody reported:
+#   `}` `$` `~` — `${HOME}/work`, `$CI_DIR/out`, `~/data` are relative to a
+#                 variable, which is the portable way to write them;
+#   `*` `?` `]` — the *tail* of a relative glob. `f"{maskdir}/sub-*/ses-1/anat"`
+#                 has three slashes after the variable, and the one before
+#                 `ses-1` was read as the root of an absolute path, costing a
+#                 real R1 arm must/009 twice over.
+ABSOLUTE_PATH = re.compile(r"(?<![\w.:$}~*?\]])/([a-zA-Z][\w.-]*)(/[\w.${}*?-]+)+")
 # Roots that exist on any POSIX host, so an absolute path into them is not a
 # portability defect: interpreters, system tools, container-internal trees.
 SYSTEM_ROOTS = {

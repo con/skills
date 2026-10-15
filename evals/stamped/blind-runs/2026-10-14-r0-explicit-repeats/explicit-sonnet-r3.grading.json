@@ -6,7 +6,7 @@
     "model": "sonnet",
     "skill_commit": "unknown",
     "repeat": 3,
-    "graded_at": "2026-10-15T03:11:37+00:00",
+    "graded_at": "2026-10-15T03:41:16+00:00",
     "checklist_version": "0.3.1"
   },
   "t1": {
@@ -47,9 +47,9 @@
         "reason": "Tracked: code/requirements.lock."
       },
       "stamped-checklist:must/016": {
-        "status": "partial",
+        "status": "unmet",
         "probe": "env-spec-tracked",
-        "reason": "The specification is tracked, but this checkout records no published remote, so there is no evidence anyone else can obtain it."
+        "reason": "The specification is tracked, but this checkout records no remote at all, so nothing says where anyone else could obtain it."
       },
       "stamped-checklist:must/005": {
         "status": "met",
@@ -249,13 +249,13 @@
       },
       {
         "probe": "env-spec-tracked",
-        "status": "partial",
+        "status": "unmet",
         "items": [
           "stamped-checklist:must/010",
           "stamped-checklist:must/013",
           "stamped-checklist:must/016"
         ],
-        "reason": "must/010 met: Dependencies are pinned in code/requirements.lock, and no tracked script expects a tool to be present already. must/013 met. must/016 partial.",
+        "reason": "must/010 met: Dependencies are pinned in code/requirements.lock, and no tracked script expects a tool to be present already. must/013 met. must/016 unmet.",
         "evidence": [
           {
             "uri": "code/requirements.lock",
@@ -274,12 +274,12 @@
         "item_status": {
           "stamped-checklist:must/010": "met",
           "stamped-checklist:must/013": "met",
-          "stamped-checklist:must/016": "partial"
+          "stamped-checklist:must/016": "unmet"
         },
         "item_reason": {
           "stamped-checklist:must/010": "Dependencies are pinned in code/requirements.lock, and no tracked script expects a tool to be present already.",
           "stamped-checklist:must/013": "Tracked: code/requirements.lock.",
-          "stamped-checklist:must/016": "The specification is tracked, but this checkout records no published remote, so there is no evidence anyone else can obtain it."
+          "stamped-checklist:must/016": "The specification is tracked, but this checkout records no remote at all, so nothing says where anyone else could obtain it."
         }
       },
       {
@@ -875,7 +875,7 @@
     {
       "text": "T1 stamped-checklist:must/016",
       "passed": false,
-      "evidence": "The specification is tracked, but this checkout records no published remote, so there is no evidence anyone else can obtain it."
+      "evidence": "The specification is tracked, but this checkout records no remote at all, so nothing says where anyone else could obtain it."
     },
     {
       "text": "T1 stamped-checklist:should/002",

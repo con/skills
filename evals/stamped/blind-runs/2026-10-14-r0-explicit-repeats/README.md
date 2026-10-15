@@ -11,8 +11,13 @@ repeats 2 and 3, and haiku, on the same R0 prompt and the same use case.
 |---|---|---|---|
 | sonnet, repeat 2 | **10/11** | met | must/016 |
 | sonnet, repeat 3 | **8/11** | met | must/016, must/006 |
+| haiku, repeat 1 | **7/11** | met | must/016, must/006, must/013 |
 | haiku, repeat 2 | **8/11** | met | must/016, must/006 |
-| haiku, repeat 1 | still running when this record was written (24 commits) | | |
+
+Mean 0.818 on sonnet (spread 0.73–0.91) and 0.682 on haiku (0.64–0.73): the
+tiers differ, and **the spread within sonnet is as wide as the gap between
+them**, which is why item 14 of the plan's open decisions asks for three
+repeats of one cell next rather than one repeat of three.
 
 Baselines on the same use case, 2026-10-13: `bare` 3/11, `pointer` 5/11.
 

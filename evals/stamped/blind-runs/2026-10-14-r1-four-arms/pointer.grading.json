@@ -6,7 +6,7 @@
     "model": "sonnet",
     "skill_commit": "unknown",
     "repeat": 1,
-    "graded_at": "2026-10-15T02:55:46+00:00",
+    "graded_at": "2026-10-15T03:41:15+00:00",
     "checklist_version": "0.3.1"
   },
   "t1": {
@@ -24,7 +24,7 @@
       "stamped-checklist:must/006": {
         "status": "partial",
         "probe": "run-env-linked",
-        "reason": "1 of 2 run record(s) name no container or lockfile, e.g. 9ec244f: uv run --no-project --with-requirements code/requirements.txt python -I code/plot.py"
+        "reason": "1 of 2 run record(s) name no container or lockfile (1 name a container, 0 a lockfile, 0 only a capture), e.g. 9ec244f: uv run --no-project --with-requirements code/requirements.txt python -I code/plot.py"
       },
       "stamped-checklist:must/007": {
         "status": "met",
@@ -47,9 +47,9 @@
         "reason": "Tracked: code/requirements.txt."
       },
       "stamped-checklist:must/016": {
-        "status": "partial",
+        "status": "unmet",
         "probe": "env-spec-tracked",
-        "reason": "The specification is tracked, but this checkout records no published remote, so there is no evidence anyone else can obtain it."
+        "reason": "The specification is tracked, but this checkout records no remote at all, so nothing says where anyone else could obtain it."
       },
       "stamped-checklist:must/005": {
         "status": "met",
@@ -230,13 +230,13 @@
       },
       {
         "probe": "env-spec-tracked",
-        "status": "partial",
+        "status": "unmet",
         "items": [
           "stamped-checklist:must/010",
           "stamped-checklist:must/013",
           "stamped-checklist:must/016"
         ],
-        "reason": "must/010 partial: code/requirements.txt lists dependencies but pins no versions (no lockfile or digest). must/013 met. must/016 partial.",
+        "reason": "must/010 partial: code/requirements.txt lists dependencies but pins no versions (no lockfile or digest). must/013 met. must/016 unmet.",
         "evidence": [
           {
             "uri": "code/requirements.txt",
@@ -255,12 +255,12 @@
         "item_status": {
           "stamped-checklist:must/010": "partial",
           "stamped-checklist:must/013": "met",
-          "stamped-checklist:must/016": "partial"
+          "stamped-checklist:must/016": "unmet"
         },
         "item_reason": {
           "stamped-checklist:must/010": "code/requirements.txt lists dependencies but pins no versions (no lockfile or digest).",
           "stamped-checklist:must/013": "Tracked: code/requirements.txt.",
-          "stamped-checklist:must/016": "The specification is tracked, but this checkout records no published remote, so there is no evidence anyone else can obtain it."
+          "stamped-checklist:must/016": "The specification is tracked, but this checkout records no remote at all, so nothing says where anyone else could obtain it."
         }
       },
       {
@@ -400,11 +400,13 @@
         "evidence": [
           {
             "uri": "probe:no-abs-paths",
-            "description": "scanned 39 tracked paths, 0 hits",
+            "description": "scanned 39 tracked paths, 0 /tmp hit(s), 0 host-specific",
             "sha256": null
           }
         ],
-        "details": {},
+        "details": {
+          "tmp_hits": []
+        },
         "item_status": {
           "stamped-checklist:must/009": "met"
         },
@@ -446,7 +448,7 @@
           "stamped-checklist:must/006",
           "stamped-checklist:must/015"
         ],
-        "reason": "must/006 partial: 1 of 2 run record(s) name no container or lockfile, e.g. 9ec244f: uv run --no-project --with-requirements code/requirements.txt python -I code/plot.py must/015 met: 1 run record(s) reference a pinned image or lockfile, and no ':lat\u2026",
+        "reason": "must/006 partial: 1 of 2 run record(s) name no container or lockfile (1 name a container, 0 a lockfile, 0 only a capture), e.g. 9ec244f: uv run --no-project --with-requirements code/requirements.txt python -I code/plot.py must/015 met: 1 run record(\u2026",
         "evidence": [
           {
             "uri": "commit:4b74e91",
@@ -469,6 +471,11 @@
               "mechanism": null
             }
           ],
+          "by_mechanism": {
+            "container": 1,
+            "lockfile": 0,
+            "capture": 0
+          },
           "unpinned": []
         },
         "item_status": {
@@ -476,7 +483,7 @@
           "stamped-checklist:must/015": "met"
         },
         "item_reason": {
-          "stamped-checklist:must/006": "1 of 2 run record(s) name no container or lockfile, e.g. 9ec244f: uv run --no-project --with-requirements code/requirements.txt python -I code/plot.py",
+          "stamped-checklist:must/006": "1 of 2 run record(s) name no container or lockfile (1 name a container, 0 a lockfile, 0 only a capture), e.g. 9ec244f: uv run --no-project --with-requirements code/requirements.txt python -I code/plot.py",
           "stamped-checklist:must/015": "1 run record(s) reference a pinned image or lockfile, and no ':latest' reference is tracked."
         }
       },
@@ -590,6 +597,7 @@
     "figures": [
       "figures/brain_volume_vs_age.png"
     ],
+    "figures_without_content": [],
     "identical_to_shipped": [],
     "byte_identical_products": [],
     "ratios": {
@@ -649,7 +657,7 @@
     {
       "text": "T1 stamped-checklist:must/006",
       "passed": false,
-      "evidence": "1 of 2 run record(s) name no container or lockfile, e.g. 9ec244f: uv run --no-project --with-requirements code/requirements.txt python -I code/plot.py"
+      "evidence": "1 of 2 run record(s) name no container or lockfile (1 name a container, 0 a lockfile, 0 only a capture), e.g. 9ec244f: uv run --no-project --with-requirements code/requirements.txt python -I code/plot.py"
     },
     {
       "text": "T1 stamped-checklist:must/007",
@@ -694,7 +702,7 @@
     {
       "text": "T1 stamped-checklist:must/016",
       "passed": false,
-      "evidence": "The specification is tracked, but this checkout records no published remote, so there is no evidence anyone else can obtain it."
+      "evidence": "The specification is tracked, but this checkout records no remote at all, so nothing says where anyone else could obtain it."
     },
     {
       "text": "T1 stamped-checklist:should/002",
