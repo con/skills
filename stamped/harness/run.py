@@ -181,12 +181,24 @@ def skill_commit() -> str:
     return proc.stdout.strip() or "unknown"
 
 
+def skill_source(root: pathlib.Path, name: str) -> pathlib.Path:
+    """Where skill ``name`` lives in the checkout ``root``.
+
+    con/skills publishes one canonical ``skills/`` tree (con/skills#13), but a
+    run record pins a skills commit, and the ones already recorded predate the
+    move. Preferring the new layout and falling back to the old keeps
+    ``--skills-from <old checkout>`` able to replay them.
+    """
+    nested = root / "skills" / name
+    return nested if (nested / "SKILL.md").exists() else root / name
+
+
 def install_skills(sandbox: pathlib.Path, source: pathlib.Path) -> list[str]:
     target = sandbox / ".claude" / "skills"
     target.mkdir(parents=True, exist_ok=True)
     installed = []
     for name in SKILLS:
-        src = source / name
+        src = skill_source(source, name)
         if not (src / "SKILL.md").exists():
             continue
         shutil.copytree(src, target / name, dirs_exist_ok=True)

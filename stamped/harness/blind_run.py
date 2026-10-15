@@ -99,8 +99,18 @@ def git(*args: str) -> str:
     return subprocess.run(["git", *args], cwd=str(REPO), capture_output=True, text=True).stdout.strip()
 
 
+def skill_source(root: pathlib.Path, name: str) -> pathlib.Path:
+    """Where skill ``name`` lives in the checkout ``root``.
+
+    ``skills/<name>`` since con/skills#13; the flat layout is still accepted so
+    that a snapshot can be taken from a checkout that predates the move.
+    """
+    nested = root / "skills" / name
+    return nested if (nested / "SKILL.md").exists() else root / name
+
+
 def prepare(args: argparse.Namespace) -> int:
-    skill_dir = REPO / args.skill
+    skill_dir = skill_source(REPO, args.skill)
     if not (skill_dir / "SKILL.md").exists():
         print(f"error: {skill_dir}/SKILL.md not found", file=sys.stderr)
         return 2
@@ -116,7 +126,7 @@ def prepare(args: argparse.Namespace) -> int:
     snapshot.mkdir(parents=True)
     outdir.mkdir(parents=True, exist_ok=True)
     for name in (args.skill, CONVENTIONS):
-        source = REPO / name
+        source = skill_source(REPO, name)
         if not source.is_dir():
             print(f"error: {source} is missing; the snapshot must carry the conventions skill too",
                   file=sys.stderr)

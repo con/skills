@@ -21,8 +21,9 @@ import pytest
 
 REPO = pathlib.Path(__file__).resolve().parents[3]
 EVALS = REPO / "evals" / "stamped"
-ASSESS = REPO / "assess-alignment-with-stamped-principles"
-CONVENTIONS = REPO / "stamped-conventions"
+SKILLS = REPO / "skills"
+ASSESS = SKILLS / "assess-alignment-with-stamped-principles"
+CONVENTIONS = SKILLS / "stamped-conventions"
 ENCODE = CONVENTIONS / "scripts" / "encode_response.py"
 
 sys.path.insert(0, str(ASSESS / "scripts"))
@@ -373,7 +374,7 @@ def test_skill_states_the_coverage_it_actually_has(clean):
 
 # The guards create-stamped-project installs are artifacts, so they are tested
 # like artifacts: on the clean fixture they pass, on a mutant they fail.
-TEMPLATES = REPO / "create-stamped-project" / "templates"
+TEMPLATES = SKILLS / "create-stamped-project" / "templates"
 
 
 def test_preflight_passes_on_the_clean_fixture(clean):
