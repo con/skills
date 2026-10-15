@@ -393,9 +393,11 @@ Skills stay at `0.x` until their done criteria hold.
   - [x] Outside con/skills: both drafted, verified and ready to file in `docs/stamped/upstream/` — the `ChecklistResponse` schema (linted, and `linkml-validate`d against a real 31-item response, an app-exported payload and the example) with its PR body, and the paper-vs-schema drift issue with line numbers.
     Filing them is the one step left, and needs push access upstream.
 - [ ] **Phase 2: create + align.**
-  - v0.1 of both, with templates (pre-commit run guard, preflight).
-  - Inner-loop harness.
-  - R0–R1 with `bare` / `pointer` / `skill`.
+  - [x] v0.1 of both, with templates (pre-commit run guard, preflight, recorded-run wrapper).
+  - [x] Inner-loop harness, with the prompt of every arm kept beside the run (`run.py --inner-prompt`).
+  - [x] R0 with `bare` / `pointer` / `skill-implicit` / `skill-explicit` (2026-10-13), plus sonnet repeats 2–3 and haiku (2026-10-14).
+  - [x] R1 with the same arms (2026-10-14): the first rung with real compute, oracle met in every finished arm.
+  - [ ] Three repeats of one cell, to characterise the spread ([§10](#7-decisions-and-where-we-diverge) item 14), and a publishing target so must/016 is reachable (item 13).
 - [ ] **Phase 3: do-full-research-loop.**
   - v0.1.
   - Outer-loop runner (container per run, pinned datalad, transcripts).
@@ -445,7 +447,43 @@ The run is kept in `evals/stamped/blind-runs/2026-10-13-assess-t261/`, as the su
 
 `fresh_rerun.py` is exercised both ways in the test suite: `met` on an object whose entry point re-creates its output, and `not-checked` — not `unmet` — when `datalad get` cannot fetch the clone's content, because a collector failure is not an object defect.
 
-Still open before `assess` can be called v1.0: agreement with a human's answers on the gold set ([evals.md §7](evals.md#7-calibrating-the-assessor) step 2 — fill the checklist for one of the gold objects in the app and send the URL), agreement across model tiers, and the first agent runs.
+Still open before `assess` can be called v1.0: agreement with a human's answers on the gold set ([evals.md §7](evals.md#7-calibrating-the-assessor) step 2 — fill the checklist for one of the gold objects in the app and send the URL).
+
+**Measured on 2026-10-14**, on typhon, with everything below recorded under `evals/stamped/blind-runs/`:
+
+- **agreement across model tiers:** the same object, the same snapshot, the same prompt on the smaller tier — 27 of 31 items and **15 of 17 MUST items** agree with the reference answer (88%, above the 80% criterion), and neither MUST difference is a pass/fail flip. It also found the first defect that only a *packaging* test could find: the conventions card linked a path that exists in this repository and not in an installed skill.
+- **judgement mutants:** two more rounds, 2/2 and 1/1 detected, one per tier — and the control run on the unmutated fixture reached **0/19 unexplained accusations** (7/19 → 3/19 → 6/22 → 0/19), which is the §10.1 criterion "no collateral accusation on the clean fixture". The ratchet in `tests/test_eval_cases.py` is now that gate.
+- **a new object, outside the tuning loop:** ReproNim/simple_workflow, which found **five probe defects in one run**, three of them false *failures* — a numbered README losing must/007, `${HOME}` in a CI config losing must/009, and a fully pinned `environment.yml` called unpinned. An assessor people distrust is worse than none, and only an untuned object finds that class.
+- **R0 and R1 with four arms each**, with the skills clearing both baselines at both rungs ([§7.3](#73-2026-10-14-the-day-r1-ran)).
+
+### 5.3 2026-10-14: the day R1 ran
+
+What the four-arm runs measured, at both rungs, one repeat per cell on sonnet
+unless stated. Counts with denominators; **no significance is claimed** —
+within-arm spread is as large as the gap between tiers.
+
+| | `bare` | `pointer` | `skill-implicit` | `skill-explicit` |
+|---|---|---|---|---|
+| **R0** (2026-10-13) MUST | 3/11 | 5/11 | 8/11 | 7/11 |
+| **R0** repeats (2026-10-14) | | | | 10/11, 8/11 (sonnet), 8/11 (haiku) |
+| **R1** MUST | 4/11 | 8/11 | **10/11** | (still running when this was written) |
+| **R1** science oracle | met | met | met | |
+
+Both skill arms clear both baselines at both rungs, and the R1 science was
+right in every arm: ten computed mask volumes each, all inside the
+`[0.90, 1.34]` band the two-container pilot measured. The best runs' only
+remaining failure is must/016, which a sandbox cannot satisfy at all
+([§10](#7-decisions-and-where-we-diverge) item 13).
+
+**What the day cost in defects found, which is the point of running it:** six
+in the R1 arms (the wrapper could not run a container at all; the oracle could
+not find the comparator under a module; millilitres read as implausible
+volumes; a voxel count preferred over a volume; the harness's own notes costing
+two arms must/009; one arm's `pkill` hitting a sibling), five in the
+new-object run, five more from the judgement rounds, and one in `fresh_rerun.py`
+that was quietly pulling **87 GB** of container images before it was stopped.
+Every one is now a test, a declared expectation, or a sentence that says what
+it meant to say.
 
 ### 5.2 Continuing on the compute host
 
@@ -533,6 +571,15 @@ My recommendation comes first in each item.
     **Decided 2026-10-13:** R0 may use them as its result; from R1 on, the agent must compute, and shipped derivatives serve only as the oracle ([evals.md §3](evals.md#3-use-case-ladder)).
 11. **MIT talk slice (2026-10-16):** the slide only, or also the live assess link and the R0 table?
     → slide plus live link if *assess* v0.1 holds up by Wednesday; otherwise slide only.
+13. **must/016 in a sandbox run — the v1.0 gate cannot be met as written.**
+    The gate asks the explicit-skill arm to pass *every* mechanically checkable MUST probe in ≥ 2 of 3 repeats.
+    must/016 asks whether anyone else can obtain the environment specification, and an eval sandbox has no publishing target and no credentials, so the honest verdict is `unmet` in every repeat on every tier, however good the project is — it was the one failure left in the best R0 and R1 runs of 2026-10-14.
+    → **give the outer loop somewhere to push**: one repository per run under `con/` on the same hub as the results dataset, which is what [evals.md §9](evals.md#9-where-results-live) already anticipates ("produced objects are published as sibling repositories … so `subdatasets-resolvable` and `fresh-rerun` test real published URLs"). That makes must/016 and the fresh-rerun probe mean something instead of being structurally unreachable.
+    The fallback, if per-run repositories are not wanted: the gate says must/016 is out of scope for a sandbox run and the probe answers `not-checked` with that reason — which is weaker, because D.1 is then never tested at all.
+14. **Repeats before a tier, or a tier before repeats?**
+    2026-10-14 bought two sonnet repeats and two haiku runs at R0 and one repeat of each R1 arm. The spread within sonnet (10/11 and 8/11, same skill, same prompt) is as large as the gap between tiers (8/11 on haiku), which says the per-cell variance is not yet characterised.
+    → spend the next iteration's budget on **three repeats of one cell** rather than one repeat of three cells, and report the spread; a tier comparison on n=1 per tier cannot be read.
+
 12. ~~**Layout:** start at the repository root now, or wait for #13's `skills/` tree?~~
     **Decided 2026-10-13:** started at the root, as recommended; moving is one `git mv` when #13 lands.
     `evals/` sits beside the skills, outside them.
