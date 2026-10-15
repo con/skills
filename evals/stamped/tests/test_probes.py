@@ -1193,3 +1193,43 @@ def test_the_upstream_schema_carries_every_field_this_repo_emits(clean, tmp_path
         "repository's own responses contain; the PR body cites them as "
         "validating instances"
     )
+
+
+def test_a_probe_rerun_keeps_the_answers_only_a_reader_could_give(clean, tmp_path):
+    """Two runs in one round reported the same hole from opposite ends.
+
+    Both had to fix something the probes found — a LICENSE, a CI workflow, a
+    README section — and both then needed the probe verdicts refreshed, which
+    meant re-running the sweep over a response whose nineteen judgement items
+    had already been answered by reading. One patched two items back by hand;
+    the other said it had no clean way to do it at all. A probe answer is the
+    script's to replace; a judged answer is not.
+    """
+    response = tmp_path / "response.json"
+    sweep = [sys.executable, str(ASSESS / "scripts" / "run_probes.py"), str(clean),
+             "--response", str(response), "--quiet"]
+    subprocess.run(sweep, check=True, capture_output=True)
+
+    draft = json.loads(response.read_text())
+    judged = "stamped-checklist:must/011"
+    draft["responses"][judged] = {"value": "yes", "reason": "read the README and the CI config",
+                                  "status": "met", "evidence": [], "source": "judgement",
+                                  "flags": []}
+    draft["assessor"]["harness"] = "claude-code (subagent)"
+    draft["assessor"]["model"] = "sonnet"
+    response.write_text(json.dumps(draft, indent=2) + "\n")
+
+    done = subprocess.run(sweep[:-1], check=True, capture_output=True, text=True)
+    again = json.loads(response.read_text())
+    assert again["responses"][judged]["status"] == "met"
+    assert again["responses"][judged]["source"] == "judgement"
+    # And the run's own stamp survives, which the script cannot reconstruct.
+    assert again["assessor"]["harness"] == "claude-code (subagent)"
+    assert again["assessor"]["model"] == "sonnet"
+    assert "kept" in done.stdout
+
+    # A probe verdict, by contrast, is refreshed — that is the point of
+    # re-running — and `--overwrite` still gives a clean draft.
+    subprocess.run([*sweep, "--overwrite"], check=True, capture_output=True)
+    clean_draft = json.loads(response.read_text())
+    assert clean_draft["responses"][judged]["status"] == "not-checked"

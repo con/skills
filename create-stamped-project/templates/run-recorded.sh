@@ -20,6 +20,21 @@
 # word-split unquoted variables, and `datalad run` then looks for a single file
 # with ten names in it. One run per subject, or `-i` repeated, or `xargs`.
 #
+# The same zsh rule applies to the *command*, which is the half this comment
+# used to leave out: two runs in one round built a command in a variable
+# (`E="python3 code/x.py"; ... -- $E args`) and got exit 127 or "no such file
+# or directory", because `$E` arrives as one word. Write the command out, or
+# run it as `sh -c '…'`.
+#
+# Declare inputs that exist. `datalad run` refuses the whole run with "Input
+# did not match existing file" when one declared path is missing — a subject
+# with no derivatives, say — so filter the list before building it rather than
+# declaring every subject unconditionally.
+#
+# `datalad run` does not create the directories of its outputs. After a
+# `git rm` of a results directory, a rerun fails with FileNotFoundError from
+# the command itself; `mkdir -p` in the script that writes them is the fix.
+#
 # Many inputs: build the argument list, do not interpolate a string.
 #
 #   set -- -m 'collect 33 subjects'

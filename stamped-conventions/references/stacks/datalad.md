@@ -62,6 +62,13 @@ none of them is discoverable from the error message alone.
 - **`-i` globs are evaluated against the whole input dataset.**
   `-i 'sourcedata/ds/sub-*/ses-1/anat/*T1w.nii.gz'` starts fetching every
   subject. Name the files, or the subjects, explicitly.
+- **A declared input that does not exist fails the whole run.**
+  "Input did not match existing file" is `datalad run` refusing before it starts, so a
+  loop that declares one input per subject has to skip the subjects that have none.
+- **`datalad run` does not create output directories.**
+  After the outputs are removed (to re-derive them, or by `git rm`), a rerun fails
+  inside the command with `FileNotFoundError`, which reads like a bug in the script.
+  `mkdir -p` belongs in the script that writes them.
 - **`datalad run` refuses a dirty tree** with "clean dataset required to detect
   changes from command", which does not say what is dirty: commit the scripts
   first, and keep logs and scratch output *outside* the dataset.
@@ -107,4 +114,9 @@ none of them is discoverable from the error message alone.
 - Inputs as subdatasets (`datalad clone -d . <url> <path>`), never as copies and never as absolute paths.
 - An entry point named in `README.md` that a stranger can run, and a `Makefile` or workflow that calls the recorded mechanism.
 - CI that re-executes at least one unit, so A.2 and should/002 have evidence rather than intent.
+- **`datalad push` to a fresh bare repository publishes no content and says "ok".**
+  git-annex needs a uuid on the other side, and `git init --bare` leaves none, so the
+  history lands and every annexed file stays behind. `git ls-remote` cannot see the
+  difference; `git annex whereis` can. Run `git annex init` in the target (or create it
+  with `datalad create --no-annex=false`) before pushing, and check `whereis` afterwards.
 - A sibling and a push as soon as there is anywhere to push to (`datalad siblings add --name published --url <url>` then `datalad push --to published`), with the URL in `README.md` and `git ls-remote` as the proof. A local bare repository is a target too: it exercises the same mechanism, and `datalad push` carries annexed content to it.

@@ -80,10 +80,12 @@ Then:
    ```console
    datalad siblings add --name published --url <url>    # git: git remote add origin <url>
    datalad push --to published                          # git: git push -u origin HEAD
-   GIT_TERMINAL_PROMPT=0 git ls-remote <url> >/dev/null  # it answers, or you have not published
+   git annex whereis <a large product>                  # the remote must be listed as a copy
    ```
 
-   Then **write the URL into the README**: a remote in `.git/config` is not something a reader can see. Where there is no target, say so in the README as a known gap and name the one thing that would close it — never leave must/016 quietly unmet and unmentioned.
+   **`git ls-remote` is not the check.** It answers for a target that received the git history and none of the annexed content, which is what a freshly created bare repository does: `datalad push` reports "publish ok" and copies nothing, because git-annex has no uuid there (`git annex init` in the target fixes it). A run lost its figure that way and only its own reviewer noticed. Verify with `git annex whereis`, or by cloning the published location elsewhere and fetching one product.
+
+   Then **put the location in the README**, because a remote in `.git/config` is not something a reader can see — and say which kind it is. A URL goes in the reproduce section as the place to clone from. A **filesystem path is not a URL**: name it as this run's publishing target and as a known limitation (whoever shares that filesystem can obtain the project, nobody else can), and do not dress it up as distribution — it will also, correctly, be flagged as a host-specific path. Where there is no target at all, say so in the README as a known gap and name the one thing that would close it; never leave must/016 quietly unmet and unmentioned.
 7. **Commit**, and show the user the first commit.
 
 ## Step 4. Hand off

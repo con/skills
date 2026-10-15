@@ -101,6 +101,43 @@ def run(obj: Object, names: list[str], check_remote: bool, allow: tuple[str, ...
     return results
 
 
+def keep_judgement(response: dict, previous: dict) -> dict:
+    """Carry an earlier response's *judged* answers into a fresh probe draft.
+
+    Two blind runs in the same round hit this from opposite ends: both had to
+    fix something the probes found (CI, a LICENSE, a README section), both
+    needed the probe verdicts refreshed afterwards, and both found that
+    re-running the sweep would throw away the nineteen items a reading of the
+    object had already answered. One patched two items back by hand; the other
+    reported it as the one thing it had no clean way to do.
+
+    A probe answer is the script's to replace. A judged answer is not.
+    """
+    kept = 0
+    for item_id, answer in (previous.get("responses") or {}).items():
+        if item_id not in response["responses"]:
+            continue
+        source = str(answer.get("source") or "")
+        fresh = response["responses"][item_id]
+        if "judgement" not in source:
+            continue
+        # A probe that now speaks to an item a reading had judged is reported,
+        # not silently dropped: the earlier verdict stays and carries the
+        # disagreement, because only a reader can settle it.
+        if fresh.get("source", "").startswith("probe:") and answer.get("status") != fresh.get("status"):
+            answer = dict(answer)
+            answer["flags"] = sorted(set(answer.get("flags") or []) | {"probe-overridden"})
+        response["responses"][item_id] = answer
+        kept += 1
+    if previous.get("assessor"):
+        # The run's own stamp — harness, model, a note — outlives a re-draft;
+        # the script only knows the skill and the date.
+        response["assessor"] = {**response["assessor"],
+                                **{k: v for k, v in previous["assessor"].items() if v}}
+    response["_kept_judgement_answers"] = kept
+    return response
+
+
 def merge_into_response(results: list[dict], obj: Object, checklist, template, status_value: dict,
                         kind: str | None) -> dict:
     response = template(checklist)
@@ -208,6 +245,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--allow", nargs="+", default=[], metavar="GLOB",
                     help="paths no-abs-paths may skip, for files that genuinely have to carry a host path")
     ap.add_argument("--kind", choices=["dataset", "component", "study", "skill"])
+    ap.add_argument("--overwrite", action="store_true",
+                    help="replace an existing --response file instead of keeping its judged answers")
     ap.add_argument("--quiet", action="store_true")
     args = ap.parse_args(argv)
 
@@ -243,8 +282,18 @@ def main(argv: list[str] | None = None) -> int:
     }
     if args.output:
         args.output.write_text(json.dumps(payload, indent=2) + "\n")
+    kept = None
     if args.response:
         response = merge_into_response(results, obj, checklist, template, status_value, args.kind)
+        if args.response.exists() and not args.overwrite:
+            try:
+                previous = json.loads(args.response.read_text())
+            except (OSError, json.JSONDecodeError):
+                previous = {}
+            if previous:
+                response = keep_judgement(response, previous)
+                kept = response.pop("_kept_judgement_answers", 0)
+        response.pop("_kept_judgement_answers", None)
         args.response.write_text(json.dumps(response, indent=2) + "\n")
     if not args.quiet:
         print(summarise(results, checklist))
@@ -252,6 +301,9 @@ def main(argv: list[str] | None = None) -> int:
             print(f"\nwrote {args.output}")
         if args.response:
             print(f"wrote {args.response}")
+            if kept:
+                print(f"kept {kept} judged answer(s) from the response already there "
+                      "(--overwrite for a clean draft)")
     if not args.output and not args.response and args.quiet:
         sys.stdout.write(json.dumps(payload, indent=2) + "\n")
     return 0
