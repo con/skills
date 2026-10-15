@@ -30,6 +30,19 @@ NOT_DERIVED = (
 NOT_DERIVED_NAMES = re.compile(r"(?i)(?:paper|manuscript|poster|preprint|publication|slides|"
                                r"README|LICENSE|CITATION)[\w.-]*\.(?:pdf|docx?|pptx?)$")
 CONTAINER_IMAGE = re.compile(r"(?:\.sif|\.simg|\.img\b|docker://|shub://|oras://|sha256:[0-9a-f]{12,})")
+# `datalad containers-add` copies a locally built image to
+# `.datalad/environments/<name>/image` — no extension at all — and
+# `containers-run` records the *expanded* call, so neither the image regex above
+# nor the word "containers-run" appears anywhere in the record. A blind run on
+# another model tier built exactly that layout and the probe reported five of
+# its seven records as naming no environment; it had to override must/006 by
+# hand. The registration in `.datalad/config` is the authority on what the
+# object calls its image.
+REGISTERED_IMAGE = re.compile(r"\.datalad/environments/[^\s\"']+")
+# Naming a container runtime is naming an environment even when the image
+# argument is a bare tag that none of the patterns above match (`docker run
+# myimage:v1`). Whether that tag is *pinned* is must/015, below.
+CONTAINER_RUNTIME = re.compile(r"\b(?:apptainer|singularity)\s+(?:exec|run|shell)\b|\b(?:docker|podman)\s+run\b")
 # A per-run environment *capture* (duct, reprozip, a recorded `pip freeze`) is
 # weaker evidence than a specification that reconstitutes the environment, but
 # it is not nothing: it links the action to the environment it ran in.
@@ -182,11 +195,26 @@ def derived_have_records(obj: Object) -> Probe:
     )
 
 
+def _registered_images(obj: Object) -> list[str]:
+    """Image paths `datalad containers-add` registered in `.datalad/config`."""
+    if not obj.exists(".datalad/config"):
+        return []
+    out = []
+    for line in obj.read(".datalad/config").splitlines():
+        stripped = line.strip()
+        if stripped.startswith("image") and "=" in stripped:
+            value = stripped.split("=", 1)[1].strip()
+            if value:
+                out.append(value)
+    return out
+
+
 def run_env_linked(obj: Object) -> Probe:
     """must/006 (records name their environment) and must/015 (that environment is pinned)."""
     i006, i015 = "stamped-checklist:must/006", "stamped-checklist:must/015"
     items = [i006, i015]
     records = obj.run_records()
+    registered = _registered_images(obj)
     unpinned: list[tuple[str, str]] = []
     for relpath in list(obj.tracked()) + ([".datalad/config"] if obj.exists(".datalad/config") else []):
         name = relpath.rsplit("/", 1)[-1]
@@ -207,13 +235,25 @@ def run_env_linked(obj: Object) -> Probe:
             + [str(x) for x in (info.get("extra_inputs") or [])]
             + [str(x) for x in (info.get("inputs") or [])]
         )
-        has_container = bool(CONTAINER_IMAGE.search(blob)) or "containers-run" in rec["body"]
+        has_container = (
+            bool(CONTAINER_IMAGE.search(blob))
+            or "containers-run" in rec["body"]
+            or bool(REGISTERED_IMAGE.search(blob))
+            or any(img and img in blob for img in registered)
+            or bool(CONTAINER_RUNTIME.search(blob))
+        )
         has_lock = any(lock in blob for lock in LOCKFILES)
         has_capture = bool(ENV_CAPTURE.search(blob)) or any(
             "duct" in str(out) for out in (info.get("outputs") or [])
         )
         mechanism = ("container" if has_container else "lockfile" if has_lock
                      else "capture" if has_capture else None)
+        # A record is also a place a floating tag can hide: `docker run x:latest`
+        # pins nothing, and until must/006 credited a bare runtime invocation
+        # there was no way for such a record to reach must/015 at all.
+        if "latest" in blob and UNPINNED_TAG.search(blob):
+            unpinned.append((f"commit:{rec['commit'][:7]}",
+                             clip(str(info.get("cmd", ""))[:120], 120)))
         (with_env if mechanism else without_env).append(
             {"commit": rec["commit"], "cmd": clip(str(info.get("cmd", ""))[:160], 160),
              "mechanism": mechanism}

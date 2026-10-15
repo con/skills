@@ -60,7 +60,13 @@ EXPLICIT_PREFIX = {
 INNER_PROMPT = """You are a fresh session working in a sandbox. Treat this as a normal user request.
 
 **Working directory:** `{sandbox}` — a git{datalad} repository, already initialised and
-committed. Everything you produce goes inside it. Do not write outside it.
+committed. The products of the task go inside it.
+
+**Scratch directory:** `{outdir}` — for anything that is *about* the work rather than
+part of it: logs, an assessment report, notes you do not intend to commit. A recorded
+run refuses to start with untracked files in the worktree, so keeping these out of the
+object is not tidiness but a requirement. Write nowhere else: these two directories are
+the whole of your writable space.
 
 **Your task:** {task}
 
@@ -73,15 +79,15 @@ Operating constraints for this run:
 2. **The user is not available to answer questions.** Where you would ask, state the
    decision and your reason for it in the project instead, and carry on. Do not stop to
    wait for an answer.
-3. **Do NOT read or search `{repo}`**, with the single exception of your own working
-   directory above (which happens to live under it, in an ignored scratch area):
+3. **Do NOT read or search `{repo}`**, with the single exception of the two
+   directories named above (which happen to live under it, in an ignored scratch area):
    everything else under that path is off-limits for this run, including any plan,
    rubric, reference answer, or any other arm of this evaluation. This is a blind run:
    what you build is graded against criteria you must not see, and seeing them would
    destroy the measurement. Work from your task, the sandbox, and whatever you fetch from
    the network.
 4. You may install packages, pull containers and fetch data. Permissions are wide open
-   **inside the sandbox only**.
+   **inside the sandbox and the scratch directory only**.
 5. Carry the task through to its stated product. A plan with no result is a failed run.
 
 **What to return as your final message** (keep it compact — it is read by a harness):
@@ -252,8 +258,11 @@ def main(argv: list[str] | None = None) -> int:
     sh(["git", "-c", "user.name=stamped-evals", "-c", "user.email=evals@example.org",
         "commit", "-q", "-m", f"eval sandbox: {run_id}"], cwd=sandbox)
 
+    outdir = sandbox.parent / f"{run_id}.out"
+    outdir.mkdir(parents=True, exist_ok=True)
     inner = INNER_PROMPT.format(
         sandbox=sandbox,
+        outdir=outdir,
         datalad=" (DataLad dataset)" if have_datalad else "",
         task=task,
         condition_paragraph=CONDITION_PARAGRAPH[args.condition],

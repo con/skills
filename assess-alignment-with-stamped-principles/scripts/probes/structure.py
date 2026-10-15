@@ -311,6 +311,16 @@ def clone_weight(obj: Object, max_bytes: int = 10 * 1024 * 1024) -> Probe:
     )
 
 
+# What counts as instructions for install and usage. Kept as one list because
+# two patterns read it: a line that *starts* with one of these words (a
+# heading, a numbered step, a bolded label) and a Markdown heading that
+# contains one anywhere.
+INSTRUCTION_WORDS = (
+    r"reproduc|rerun|usage|quick\s*start|install|how to (?:run|use)|getting started|run the|"
+    r"entry\s*point|requirements|prerequisit|dependenc|set\s?up"
+)
+
+
 def entry_point(obj: Object) -> Probe:
     """must/007 (instructions for install and usage) and must/008 (a starting point)."""
     readmes = [p for p in obj.tracked() if p.lower() in {"readme.md", "readme.rst", "readme", "readme.txt"}]
@@ -331,10 +341,16 @@ def entry_point(obj: Object) -> Probe:
     # README (ReproNim/simple_workflow) lost must/007 for using the second
     # form. The question the item asks is whether instructions exist, not
     # whether they are under a Markdown heading.
-    has_section = bool(re.search(
-        r"(?im)^(?:#+|\s*\d+[.)]|\s*[-*]|\*\*|__)?\s*\**\b"
-        r"(reproduc|rerun|usage|quick\s*start|install|how to (?:run|use)|getting started|run the)",
-        readme_text))
+    # And a heading need not *begin* with the word: `## Entry point and
+    # reproduce` over a block of commands, with `## Requirements` above it, is
+    # install and usage however it is titled. A blind run wrote exactly that
+    # pair and still lost must/007, which is the probe grading the prose style
+    # rather than the question the item asks.
+    has_section = bool(
+        re.search(rf"(?im)^(?:#+|\s*\d+[.)]|\s*[-*]|\*\*|__)?\s*\**\b(?:{INSTRUCTION_WORDS})",
+                  readme_text)
+        or re.search(rf"(?im)^#+\s.*\b(?:{INSTRUCTION_WORDS})", readme_text)
+    )
     # Commands the instructions tell a reader to run, checked against what the
     # tracked workflow actually defines. The probe used to hold both lists and
     # never compare them.

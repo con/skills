@@ -465,7 +465,7 @@ within-arm spread is as large as the gap between tiers.
 | | `bare` | `pointer` | `skill-implicit` | `skill-explicit` |
 |---|---|---|---|---|
 | **R0** (2026-10-13) MUST | 3/11 | 5/11 | 8/11 | 7/11 |
-| **R0** repeats (2026-10-14) | | | | 10/11, 8/11 (sonnet); 7/11, 8/11 (haiku) |
+| **R0** repeats (2026-10-14) | | | | 10/11, 8/11 (sonnet); 9/11, 8/11 (haiku) |
 | **R1** MUST | 5/11 | 8/11 | **10/11** | **9/11** |
 | **R1** science oracle | met | met | met | met |
 
@@ -486,17 +486,63 @@ that was quietly pulling **87 GB** of container images before it was stopped.
 Every one is now a test, a declared expectation, or a sentence that says what
 it meant to say.
 
+### 5.4 2026-10-15: what a late report was worth
+
+The haiku `skill-explicit` repeat that went quiet for 35 minutes on 2026-10-14
+came back the next morning with the most useful report of the four, because it
+argued with its grader and was right. It had committed nothing more in the
+meantime — it was finishing its own STAMPED assessment, which the skill tells
+it to write outside the tree — so its grading had been taken at its final
+state. The whole difference is in the probes: re-graded, it is **9/11, not
+7/11**, the best haiku run rather than the worst.
+
+- **`run-env-linked` was blind to a registered container.**
+  `datalad containers-add` with a locally built image puts it at
+  `.datalad/environments/<name>/image` — no extension — and `containers-run`
+  records the expanded call, so neither the image-suffix regex nor the word
+  `containers-run` appears in the record. That is the *normal* layout for a
+  built image. must/006 read `unmet` on an object with two records naming a
+  tracked, content-addressed image; must/015 was `not-checked` because nothing
+  had been found to check. The probe now reads `.datalad/config`, credits a
+  bare container-runtime invocation, and — because crediting that would
+  otherwise weaken must/015 — scans record bodies for floating tags too.
+- **`entry-point` was grading the prose style.** `## Requirements` over
+  `## Entry point and reproduce` is install and usage by any reading, and
+  must/007 came back "neither a README with install/usage instructions nor a
+  Makefile" because the probe matched its keywords only at the start of a line.
+- **A grading did not record the commit it graded.** This one is the harness's.
+  Establishing that the 7/11 had been taken at the run's final commit, and so
+  that the whole difference was in the probes, took comparing a git-annex key
+  against a freshly made bundle. `grade.py` writes the object's HEAD into every
+  grading now.
+
+Two instructions were also in genuine contradiction, which both tiers hit and
+both papered over the same way. The skill says to write the assessment
+*outside* the object; the harness prompt said "do not write outside it"; both
+runs invented a directory inside the object that nothing tracks. Both sides are
+fixed: `run.py` gives every run a scratch directory beside its sandbox and
+names it in the prompt, and the assessor says what to do where writing outside
+is forbidden — gitignore it, and say in the report which rule had to bend.
+
+And the recovered run gave the harness its **first T1-against-T2 reading on one
+object**: four items disagree out of 31, and three of the four are the division
+of labour working (must/011 and must/012 are judgement by construction;
+must/015 is `met` to the probe and `partial` to a run that opened the container
+definition and saw the base tag float). The fourth is T2 being lenient on the
+item the whole gate is stuck on — it called "there is no published remote"
+`partial` where `verdicts.md` says `unmet`.
+
 ### 5.2 Continuing on the compute host
 
 For a Claude Code session on typhon (under Remote Control) picking this up:
 
-1. Continue from branch `claude/ecstatic-cerf-nh4j6w` of con/skills, or branch off it; [§7.1](#51-phase-1-as-landed) says what is already there.
+1. Continue from branch `stamped-skills-impl` of con/skills (pull request #26), or branch off it; [§7.1](#51-phase-1-as-landed) says what is already there. `claude/ecstatic-cerf-nh4j6w` is the earlier branch this one diverged from.
 2. **Check the host.**
    - `apptainer --version`;
    - free scratch space (R1 needs a few GB per container image, R3 much more);
    - `claude --version` for headless outer-loop runs;
    - `uv`.
-3. **Install the pinned tooling** for the harness from `evals/stamped/requirements.txt` (datalad 1.7.1 with the concurrent-run fix, datalad-container, the git-annex wheel, con-duct), and run `tox -e stamped-evals` once to confirm the host reproduces 8/8 mutant detection.
+3. **Install the pinned tooling** for the harness from `evals/stamped/requirements.txt` (datalad 1.7.1 with the concurrent-run fix, datalad-container, the git-annex wheel, con-duct), and run `tox -e stamped-evals` once to confirm the host reproduces the current calibration (16/16 mutants, 0/17 false accusations on the clean fixture).
 4. **Bootstrap `con/stamped-skills-evals`** (phase 1):
    1. `datalad create -c text2git`;
    2. add con/skills as a subdataset;

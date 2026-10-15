@@ -963,3 +963,98 @@ def test_fresh_rerun_does_not_credit_an_entry_point_that_does_nothing(tmp_path):
     result = json.loads(report.read_text())
     assert result["status"] != "met", result["reason"]
     assert "results.tsv" in str(result.get("comparison") or result["reason"])
+
+
+def test_run_env_linked_reads_a_registered_container(tmp_path):
+    """`datalad containers-add` with a locally built image leaves no `.sif`.
+
+    The image lands at `.datalad/environments/<name>/image`, with no extension
+    at all, and `containers-run` records the *expanded* call, so neither the
+    image-suffix regex nor the word "containers-run" appears in the record.
+    A blind run on the smaller model tier built exactly that layout; the probe
+    called all seven of its records environment-less and must/006 came back
+    `unmet` on an object where two records named a tracked, content-addressed
+    image. The run had to override the probe by hand, which is the failure
+    mode this probe exists to prevent.
+    """
+    root = tmp_path / "registered"
+    env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@e.org",
+           "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@e.org"}
+    root.mkdir(parents=True)
+    subprocess.run(["git", "init", "-q", "-b", "main"], cwd=root, check=True, env=env)
+    (root / ".datalad").mkdir()
+    (root / ".datalad" / "config").write_text(
+        '[datalad "dataset"]\n\tid = 170f095d-4543-43e4-8e32-0b994e987e4a\n'
+        '[datalad "containers.py313"]\n'
+        "\timage = .datalad/environments/py313/image\n"
+        "\tcmdexec = apptainer exec {img} {cmd}\n"
+    )
+    (root / ".datalad" / "environments" / "py313").mkdir(parents=True)
+    (root / ".datalad" / "environments" / "py313" / "image").write_text("not really a SIF\n")
+    (root / "results").mkdir()
+    (root / "results" / "table.tsv").write_text("a\tb\n1\t2\n")
+    subprocess.run(["git", "add", "-A"], cwd=root, check=True, env=env)
+    subprocess.run(["git", "commit", "-qm", "register the container"], cwd=root, check=True, env=env)
+
+    def record(message: str, cmd: str, outputs: list[str], extra: list[str]) -> None:
+        info = {"chain": [], "cmd": cmd, "dsid": "170f095d-4543-43e4-8e32-0b994e987e4a",
+                "exit": 0, "extra_inputs": extra, "inputs": extra, "outputs": outputs, "pwd": "."}
+        body = ("[DATALAD RUNCMD] " + message + "\n\n=== Do not change lines below ===\n"
+                + json.dumps(info, indent=1, sort_keys=True)
+                + "\n^^^ Do not change lines above ^^^\n")
+        subprocess.run(["git", "commit", "-q", "--allow-empty", "-m", body], cwd=root,
+                       check=True, env=env)
+
+    record("build the table in container py313",
+           "apptainer exec --bind ./lib:/lib .datalad/environments/py313/image "
+           "python3 code/collect.py results/table.tsv",
+           ["results/table.tsv"], [".datalad/environments/py313/image"])
+    statuses = _statuses(root)
+    assert statuses["stamped-checklist:must/006"] == "met", statuses
+    # The image is a tracked file, so it is as pinned as a digest.
+    assert statuses["stamped-checklist:must/015"] == "met", statuses
+
+    # And a bare runtime invocation now reaches must/015 at all: before the
+    # registered-image fix, a record naming a floating tag named "no
+    # environment", so the float was invisible rather than reported.
+    record("the same step, from a floating tag",
+           "docker run myorg/analysis:latest python3 code/collect.py results/table.tsv",
+           ["results/table.tsv"], [])
+    statuses = _statuses(root)
+    assert statuses["stamped-checklist:must/006"] == "met", statuses
+    assert statuses["stamped-checklist:must/015"] == "unmet", statuses
+
+
+def test_entry_point_reads_a_heading_that_is_not_a_keyword_first(tmp_path):
+    """`## Entry point and reproduce` is a usage section however it is titled.
+
+    A blind run wrote `## Requirements` (host tools, pinned image, lockfile)
+    over `## Entry point and reproduce` (five commands), and must/007 came back
+    `unmet` with "neither a README with install/usage instructions nor a
+    Makefile" — the probe matching the word only at the start of a line and so
+    grading the prose style rather than the question the item asks.
+    """
+    root = tmp_path / "headings"
+    root.mkdir(parents=True)
+    env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@e.org",
+           "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@e.org"}
+    subprocess.run(["git", "init", "-q", "-b", "main"], cwd=root, check=True, env=env)
+    (root / "code").mkdir()
+    (root / "code" / "collect.py").write_text("print('hi')\n")
+
+    def commit(readme: str) -> str:
+        (root / "README.md").write_text(readme)
+        subprocess.run(["git", "add", "-A"], cwd=root, check=True, env=env)
+        subprocess.run(["git", "commit", "-qm", "readme"], cwd=root, check=True, env=env)
+        obj = Object(root)
+        result = REGISTRY["entry-point"](obj)
+        return result.status_of("stamped-checklist:must/007")
+
+    assert commit(
+        "# A study\n\n## Requirements\n\n- Linux, git-annex, apptainer.\n\n"
+        "## Entry point and reproduce\n\n    python3 code/collect.py\n"
+    ) == "met"
+
+    # A README that genuinely says nothing about running it still fails, which
+    # is the half of this probe that must not be loosened away.
+    assert commit("# A study\n\n## Results\n\nThe brain got bigger.\n") == "unmet"

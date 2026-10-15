@@ -69,6 +69,28 @@ none of them is discoverable from the error message alone.
   Two recorded runs under one process table are indistinguishable to
   `pkill -f 'datalad run'`: in these evaluations one arm's cleanup killed
   another arm's jobs. Kill by pid.
+- **A registered image has no file extension.**
+  `datalad containers-add <name> --image <path>` copies the image to
+  `.datalad/environments/<name>/image`, and `containers-run` records the
+  *expanded* call, so the record names neither a `.sif` nor `containers-run`.
+  This is the normal layout for a locally built image; a grader that looks for
+  a suffix reports it as naming no environment (the probes here were fixed
+  after a run hit exactly that).
+- **`containers-add --url file://…` is refused.**
+  git-annex's `annex.security.allowed-url-schemes` does not include `file`, so
+  registering an image that is already on disk takes `--image <path>` (which
+  copies it) rather than a URL.
+- **A run whose outputs come out byte-identical makes no commit**, so it leaves
+  no new record. Re-running the same step inside a container to *get* a record
+  that names the container therefore records nothing: remove the output and
+  re-derive it, and say in the message that the content was re-checked rather
+  than overwritten.
+- **Building an image inside a rootless container usually fails.**
+  `apptainer build --fakeroot` needs setuid `newuidmap`/`newgidmap`, which a
+  rootless podman session does not have (`newgidmap: Could not …`). Register a
+  prebuilt image — `///repronim/containers` is the pinned route — rather than
+  installing packages into an untracked bind mount, which leaves a fresh clone
+  unable to reconstitute the environment.
 
 ## Version notes
 

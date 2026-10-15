@@ -67,7 +67,13 @@ def t1(obj: pathlib.Path) -> dict:
             if previous is None or severity[status] < severity[previous["status"]]:
                 items[item] = {"status": status, "probe": result["probe"],
                                "reason": result.get("item_reason", {}).get(item, result["reason"])}
-    return {"probes": payload["probes"], "items": items, "checklist_version": payload["checklist_version"]}
+    return {"probes": payload["probes"], "items": items,
+            "checklist_version": payload["checklist_version"],
+            # Which commit was graded. An agent that reported late kept
+            # committing after its grading was taken, and the grading file had
+            # no way to say which state it described: must/007 read `unmet` on
+            # an object whose README had since grown the section it wanted.
+            "commit": payload["object"]["commit"]}
 
 
 def oracle(obj: pathlib.Path, use_case: pathlib.Path, extra: list[str]) -> dict | None:
@@ -200,6 +206,7 @@ def main(argv: list[str] | None = None) -> int:
             "model": args.model,
             "skill_commit": args.skill_commit,
             "repeat": args.repeat,
+            "commit": t1_result["commit"],
             "graded_at": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
             "checklist_version": t1_result["checklist_version"],
         },

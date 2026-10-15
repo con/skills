@@ -167,6 +167,13 @@ the authoring session walking through its own procedure.
    prompt is the other half of the input. A run record without it cannot
    be replayed on another model or another day, and the authoring
    session is exactly the wrong party to reconstruct it from memory.
+   **And name the commit you graded.** A subagent that goes quiet is not
+   necessarily finished: one came back 35 minutes after it had been
+   graded. It turned out to have committed nothing more, so the grading
+   had been fair — but establishing that took comparing checksums, and
+   until it was established the number could not be defended. A grading
+   that does not say which commit it describes cannot be corrected, only
+   distrusted.
 
 Run it with more than one model tier where the skill may be used by one,
 and keep at least one target out of the loop you tune against, so the

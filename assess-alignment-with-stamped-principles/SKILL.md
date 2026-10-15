@@ -187,6 +187,7 @@ python3 ../stamped-conventions/scripts/encode_response.py stamp <date>-response.
 Where the products go:
 
 - **With no user available — a scripted run, an eval, a handoff from another skill — write them outside the object**, into the current directory. Not into it: an uncommitted report makes the object fail must/004 (the tree is no longer the whole state), and a committed one changes the object the assessment is about. A real run lost that item to this skill's own instruction.
+- **If writing outside the object is forbidden** — a sandbox, a container, a harness that said so — a *gitignored* directory inside it is the fallback: add the directory to `.gitignore` in the same breath, say in the report where it went and why, and do not commit it. Two runs on two model tiers hit this contradiction and both invented the same answer; what neither could do was tell a reader which rule it had broken.
 - With the user present and agreeing, into the object at `docs/stamped/assessments/` as **uncommitted files**, so they can review before anything is recorded — and say that they are uncommitted and why.
 - Never into the object's `derivatives/`, never into an input module.
 
