@@ -1,0 +1,578 @@
+{
+  "checklist_version": "0.3.1",
+  "responses": {
+    "stamped-checklist:must/001": {
+      "status": "met",
+      "reason": "Code, results, figure, docs and plan are under one root; the only input is a linked subdataset with a GitHub URL. Nothing lives on a share.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "layout and inputs",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/002": {
+      "value": "yes",
+      "reason": "All 1 linked module(s) carry urls that resolve from elsewhere: sourcedata/ds007116",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": ".gitmodules",
+          "description": "sourcedata/ds007116: https://github.com/OpenNeuroDatasets/ds007116",
+          "sha256": null
+        }
+      ],
+      "source": "probe:subdatasets-resolvable",
+      "flags": []
+    },
+    "stamped-checklist:must/003": {
+      "status": "met",
+      "reason": "No external software outside the environment: python deps are in the lockfile; datalad/git-annex pinned in code/tooling.lock; the input is a subdataset.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "code/tooling.lock",
+          "description": "tooling pin",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/004": {
+      "value": "yes",
+      "reason": "git tracks 19 text, code and configuration file(s), and `git status` is empty including submodules: the committed state is the whole state.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": "git ls-files",
+          "description": "19 tracked text/code/config paths of 28 tracked paths",
+          "sha256": null
+        },
+        {
+          "uri": "git status --porcelain",
+          "description": "no output",
+          "sha256": null
+        }
+      ],
+      "source": "probe:tree-clean",
+      "flags": []
+    },
+    "stamped-checklist:must/005": {
+      "value": "yes",
+      "reason": "git-annex carries the binary content (1 pointer(s) tracked) and no binary blob over 10 MiB is in git.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": "git ls-tree -r -l HEAD",
+          "description": "no binary blob over 10485760 bytes",
+          "sha256": null
+        },
+        {
+          "uri": ".datalad/config",
+          "description": "git-annex in use for large content",
+          "sha256": null
+        }
+      ],
+      "source": "probe:large-in-annex",
+      "flags": []
+    },
+    "stamped-checklist:must/006": {
+      "value": "yes",
+      "reason": "All 5 derived file(s) trace to a re-executable record (8 run record(s), workflows: none).",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": "figures/brain-volume-gmwm-vs-age.png",
+          "description": "run record acc8252",
+          "sha256": null
+        },
+        {
+          "uri": "results/controls.txt",
+          "description": "run record f0d51dc",
+          "sha256": null
+        },
+        {
+          "uri": "results/volumes-batch1.tsv",
+          "description": "run record 939a29d",
+          "sha256": null
+        },
+        {
+          "uri": "results/volumes-pilot.tsv",
+          "description": "run record c3d84ec",
+          "sha256": null
+        },
+        {
+          "uri": "results/volumes.tsv",
+          "description": "run record 1ef2e67",
+          "sha256": null
+        }
+      ],
+      "source": "probe:derived-have-records",
+      "flags": []
+    },
+    "stamped-checklist:must/007": {
+      "value": "yes",
+      "reason": "README.md has an install/usage/reproduce section.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "instructions",
+          "sha256": null
+        },
+        {
+          "uri": "code/extract_volumes.py",
+          "description": "entry point named in the instructions and present",
+          "sha256": null
+        },
+        {
+          "uri": "code/preflight.sh",
+          "description": "entry point named in the instructions and present",
+          "sha256": null
+        },
+        {
+          "uri": "code/run-recorded.sh",
+          "description": "entry point named in the instructions and present",
+          "sha256": null
+        }
+      ],
+      "source": "probe:entry-point",
+      "flags": []
+    },
+    "stamped-checklist:must/008": {
+      "value": "yes",
+      "reason": "Starting point present: code/extract_volumes.py.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "instructions",
+          "sha256": null
+        },
+        {
+          "uri": "code/extract_volumes.py",
+          "description": "entry point named in the instructions and present",
+          "sha256": null
+        },
+        {
+          "uri": "code/preflight.sh",
+          "description": "entry point named in the instructions and present",
+          "sha256": null
+        },
+        {
+          "uri": "code/run-recorded.sh",
+          "description": "entry point named in the instructions and present",
+          "sha256": null
+        }
+      ],
+      "source": "probe:entry-point",
+      "flags": []
+    },
+    "stamped-checklist:must/009": {
+      "value": "yes",
+      "reason": "No host-specific absolute paths in tracked text files.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": "probe:no-abs-paths",
+          "description": "scanned 28 tracked paths, 0 /tmp hit(s), 0 host-specific",
+          "sha256": null
+        }
+      ],
+      "source": "probe:no-abs-paths",
+      "flags": []
+    },
+    "stamped-checklist:must/010": {
+      "value": "yes",
+      "reason": "Dependencies are pinned in code/requirements.lock, and no tracked script expects a tool to be present already.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": "code/requirements.lock",
+          "description": "pinned environment specification",
+          "sha256": null
+        }
+      ],
+      "source": "probe:env-spec-tracked",
+      "flags": []
+    },
+    "stamped-checklist:must/011": {
+      "status": "met",
+      "reason": "Only POSIX sh, uv and datalad are needed; no brew/BSD flags/scheduler. Python 3.12 pinned in code/py.sh. OS not stated in README: minor gap.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "code/py.sh",
+          "description": "interpreter pin",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "unverified-claim"
+      ]
+    },
+    "stamped-checklist:must/012": {
+      "status": "met",
+      "reason": "README states Linux/POSIX shell, modest RAM, no GPU/container/scheduler, and network needs.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "System requirements",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/013": {
+      "value": "yes",
+      "reason": "Tracked: code/requirements.lock.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": "code/requirements.lock",
+          "description": "pinned environment specification",
+          "sha256": null
+        }
+      ],
+      "source": "probe:env-spec-tracked",
+      "flags": []
+    },
+    "stamped-checklist:must/014": {
+      "status": "met",
+      "reason": "README states updates are a separate commit via uv pip compile; history has only the initial lock (no update yet), so the process is stated, not yet exercised.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "System requirements",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/015": {
+      "value": "yes",
+      "reason": "8 run record(s) reference a pinned image or lockfile, and no ':latest' reference is tracked.",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": "commit:f0d51dc",
+          "description": "lockfile: code/py.sh code/controls.py sourcedata/ds007116 results/volumes.tsv results/controls.txt",
+          "sha256": null
+        },
+        {
+          "uri": "commit:acc8252",
+          "description": "lockfile: code/py.sh code/plot.py results/volumes.tsv figures/brain-volume-gmwm-vs-age.png",
+          "sha256": null
+        },
+        {
+          "uri": "commit:328f8b6",
+          "description": "lockfile: code/py.sh code/plot.py results/volumes.tsv figures/brain-volume-gmwm-vs-age.png",
+          "sha256": null
+        },
+        {
+          "uri": "commit:1ef2e67",
+          "description": "lockfile: code/py.sh code/aggregate.py results/volumes.tsv results/volumes-pilot.tsv results/volumes-batch1.tsv",
+          "sha256": null
+        },
+        {
+          "uri": "commit:547eba5",
+          "description": "lockfile: code/py.sh code/plot.py results/volumes.tsv figures/brain-volume-gmwm-vs-age.png",
+          "sha256": null
+        }
+      ],
+      "source": "probe:run-env-linked",
+      "flags": []
+    },
+    "stamped-checklist:must/016": {
+      "status": "partial",
+      "reason": "Published only to a bare repo on the shared filesystem: no URL a stranger can reach. Gap handed by the task; closing needs a forge remote (GitHub/Codeberg) and credentials.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "publishing section",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/017": {
+      "status": "met",
+      "reason": "README says how to install uv/datalad and that code/py.sh builds the lock-pinned environment on demand.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "System requirements",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/001": {
+      "status": "met",
+      "reason": "Code, results and the input module are all in one DataLad dataset (one VCS).",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": ".datalad/config",
+          "description": "dataset",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/002": {
+      "status": "partial",
+      "reason": "A workflow re-derives the pilot unit and diffs it, but it has not been run on any runner (no forge), so it is intent, not evidence.",
+      "source": "probe:ci-present+judgement",
+      "evidence": [
+        {
+          "uri": ".github/workflows/ci.yml",
+          "description": "pilot re-derivation",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:should/003": {
+      "value": "yes",
+      "reason": "4 kinds of component live in distinct places: inputs in sourcedata, sourcedata/ds007116; code in code; derived in figures, results; environment in code/requirements.lock",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": "sourcedata",
+          "description": "inputs module",
+          "sha256": null
+        },
+        {
+          "uri": "sourcedata/ds007116",
+          "description": "inputs module",
+          "sha256": null
+        },
+        {
+          "uri": "code",
+          "description": "code module",
+          "sha256": null
+        },
+        {
+          "uri": "figures",
+          "description": "derived module",
+          "sha256": null
+        },
+        {
+          "uri": "results",
+          "description": "derived module",
+          "sha256": null
+        },
+        {
+          "uri": "code/requirements.lock",
+          "description": "environment module",
+          "sha256": null
+        }
+      ],
+      "source": "probe:modules-separated",
+      "flags": []
+    },
+    "stamped-checklist:should/009": {
+      "status": "not-applicable",
+      "reason": "No restricted data or software; the input is a public OpenNeuro dataset.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "sourcedata/ds007116",
+          "description": "public input",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/004": {
+      "status": "not-checked",
+      "reason": "Fresh rerun not attempted by the assessor; an independent subagent reviewed a clone, but no CI runner exists.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "docs/report.md",
+          "description": "review noted",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/005": {
+      "status": "unmet",
+      "reason": "Each run reuses the host's long-lived uv cache and shell; no container or batch job per run.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "code/run-recorded.sh",
+          "description": "datalad run without container",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/006": {
+      "status": "partial",
+      "reason": "Workflow recompiles the lock from requirements.in and diffs it; it does not build a container/environment. Never executed.",
+      "source": "probe:ci-present+judgement",
+      "evidence": [
+        {
+          "uri": ".github/workflows/ci.yml",
+          "description": "lock recompile",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:should/007": {
+      "status": "unmet",
+      "reason": "No environment artifact is archived: only a lockfile is tracked; wheels and interpreters are fetched from PyPI at run time.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "code/requirements.lock",
+          "description": "reference only",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/008": {
+      "status": "partial",
+      "reason": "Process documented (as must/014) but never exercised in history.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "System requirements",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:may/001": {
+      "value": "yes",
+      "reason": "1 external component(s) are linked as modules: sourcedata/ds007116",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": ".gitmodules",
+          "description": "sourcedata/ds007116: https://github.com/OpenNeuroDatasets/ds007116",
+          "sha256": null
+        }
+      ],
+      "source": "probe:subdatasets-resolvable",
+      "flags": []
+    },
+    "stamped-checklist:may/002": {
+      "status": "partial",
+      "reason": "docs/plan.md names components (inputs, code, results, figures) and README shows the layout; no separate modularity doc.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "docs/plan.md",
+          "description": "components",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:may/003": {
+      "status": "not-checked",
+      "reason": "Only one external module; independence of boundaries is not assessable.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "none",
+          "description": "n/a",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:may/004": {
+      "status": "not-checked",
+      "reason": "Single module; composition independence not assessable.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "none",
+          "description": "n/a",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:may/005": {
+      "status": "not-applicable",
+      "reason": "A single input module is linked directly; no composition mechanism is needed.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "sourcedata/ds007116",
+          "description": "sole module",
+          "sha256": null
+        }
+      ]
+    }
+  },
+  "schema_version": "0.2.0",
+  "principles_version": "0.2.0",
+  "checklist_source": {
+    "repo": "https://github.com/stamped-principles/stamped-checklist-schema",
+    "tag": "v0.3.1",
+    "commit": "af259bad237fa57b856417db8dba45a1b283a527"
+  },
+  "extra_items": [
+    {
+      "key": "clone-weight",
+      "status": "met",
+      "reason": "No text blob in git exceeds 10 MiB.",
+      "evidence": [
+        {
+          "uri": "git ls-tree -r -l HEAD",
+          "description": "largest text blob under 10485760 bytes",
+          "sha256": null
+        }
+      ]
+    },
+    {
+      "key": "inputs-untouched",
+      "status": "met",
+      "reason": "All 1 linked module(s) are clean and at the commit the superdataset records.",
+      "evidence": [
+        {
+          "uri": "git submodule status",
+          "description": "no '+' or 'U' flags",
+          "sha256": null
+        }
+      ]
+    },
+    {
+      "key": "license-declared",
+      "status": "unmet",
+      "reason": "No LICENSE, LICENSES/, REUSE.toml or BIDS License field: reuse terms are unstated.",
+      "evidence": [
+        {
+          "uri": "probe:license-declared",
+          "description": "no licence file among 28 tracked paths, and no License field in any dataset_description.json",
+          "sha256": null
+        }
+      ]
+    }
+  ],
+  "object": {
+    "url": null,
+    "commit": "fbfa8f636ecdb62fb8db675c1a7079d6c07a2704",
+    "captured_at": "2026-10-15T14:12:04+00:00",
+    "kind": "study"
+  },
+  "assessor": {
+    "skill": "assess-alignment-with-stamped-principles",
+    "version": "0.1.0",
+    "harness": "claude-code",
+    "model": "claude-sonnet-5-5",
+    "date": "2026-10-15",
+    "drafted_by": "scripts/run_probes.py",
+    "dependencies": [
+      "stamped-conventions@0.1.0"
+    ]
+  },
+  "scope": "Committed state at 4924acb4; input module not fetched beyond text; no fresh rerun; probes run before the CI workflow was added (should/002, 006 overridden by reading)."
+}

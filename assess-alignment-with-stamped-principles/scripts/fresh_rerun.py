@@ -92,13 +92,36 @@ def _sha256(path: pathlib.Path) -> str | None:
         return None
 
 
-def _collect(root: pathlib.Path, patterns: list[str]) -> dict[str, str | None]:
+def _module_paths(root: pathlib.Path) -> tuple[str, ...]:
+    """Directories in this clone that belong to another dataset.
+
+    The first real run of this probe matched 9390 "outputs" and deleted them:
+    `**/*.tsv` reaches straight into `sourcedata/<input>`, whose shipped
+    tables are the *comparator*, not this object's products. An input module
+    is never a candidate — deleting from one mutilates the comparison and the
+    clone.
+    """
+    paths = []
+    gitmodules = root / ".gitmodules"
+    if gitmodules.exists():
+        for line in gitmodules.read_text(errors="replace").splitlines():
+            key, _, value = line.partition("=")
+            if key.strip() == "path" and value.strip():
+                paths.append(value.strip().strip("/") + "/")
+    return tuple(paths)
+
+
+def _collect(root: pathlib.Path, patterns: list[str],
+             skip: tuple[str, ...] = ()) -> dict[str, str | None]:
     out: dict[str, str | None] = {}
     for pattern in patterns:
         for match in sorted(glob.glob(str(root / pattern), recursive=True)):
             path = pathlib.Path(match)
+            relpath = str(path.relative_to(root))
+            if relpath.startswith(".git/") or any(relpath.startswith(m) for m in skip):
+                continue
             if path.is_file() or path.is_symlink():
-                out[str(path.relative_to(root))] = _sha256(path)
+                out[relpath] = _sha256(path)
     return out
 
 
@@ -204,7 +227,10 @@ def main(argv: list[str] | None = None) -> int:
                  "Left to the entry point, which fetches its own declared inputs. "
                  "Raise --max-get-gb to fetch everything up front.")
 
-    before = _collect(clone, args.outputs)
+    modules = _module_paths(clone)
+    if modules:
+        step("input modules excluded from --outputs", 0, "\n".join(modules))
+    before = _collect(clone, args.outputs, skip=modules)
     report["outputs_shipped"] = dict(before)
     # Keep the shipped copies aside: the rerun overwrites them in place, and a
     # comparison has to be against what the object published, not against itself.
@@ -231,6 +257,20 @@ def main(argv: list[str] | None = None) -> int:
                 pass
         if removed:
             step(f"removed {len(removed)} shipped output(s) before the rerun", 0, "\n".join(removed[:20]))
+            # And commit the removal. `datalad rerun` refuses a dirty tree —
+            # "clean dataset required to detect changes from command" — so the
+            # probe's own tidying made the entry point unrunnable, which is
+            # how its first real run failed.
+            if (clone / ".datalad").is_dir() and shutil.which("datalad"):
+                code, log = _run(["datalad", "save", "-m",
+                                  "fresh-rerun: remove the shipped outputs so only re-creation counts"],
+                                 cwd=clone, timeout=args.timeout)
+                step("committed the removal, so the entry point starts from a clean tree", code, log)
+            else:
+                _run(["git", "add", "-A"], cwd=clone, timeout=args.timeout)
+                _run(["git", "-c", "user.name=fresh-rerun", "-c", "user.email=probe@example.org",
+                      "commit", "-q", "-m", "fresh-rerun: remove the shipped outputs"],
+                     cwd=clone, timeout=args.timeout)
     if not before:
         report.update(status="not-checked",
                       reason="The clone ships no file matching --outputs, so there is nothing to compare.")
@@ -238,7 +278,17 @@ def main(argv: list[str] | None = None) -> int:
 
     entry = args.entry
     if not entry:
-        entry = "datalad rerun" if (clone / ".datalad").is_dir() and shutil.which("datalad") else "make"
+        if (clone / ".datalad").is_dir() and shutil.which("datalad"):
+            # `datalad rerun` with no range re-runs **the last commit only**
+            # (`master^..master`), so after the removal commit above it found
+            # "no run commits found in range" and failed — the third way this
+            # probe's own tidying broke the entry point it was testing. The
+            # range is every run commit since the root, which is what
+            # "re-execute the recorded pipeline" means.
+            root = _run(["git", "rev-list", "--max-parents=0", "HEAD"], cwd=clone, timeout=60)[1].split()
+            entry = f"datalad rerun --since={root[0]}" if root else "datalad rerun"
+        else:
+            entry = "make"
     cmd = ["sh", "-c", entry]
     if args.container:
         runtime = report["host"]["container_runtime"]

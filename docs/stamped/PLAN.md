@@ -397,7 +397,9 @@ Skills stay at `0.x` until their done criteria hold.
   - [x] Inner-loop harness, with the prompt of every arm kept beside the run (`run.py --inner-prompt`).
   - [x] R0 with `bare` / `pointer` / `skill-implicit` / `skill-explicit` (2026-10-13), plus sonnet repeats 2–3 and haiku (2026-10-14).
   - [x] R1 with the same arms (2026-10-14): the first rung with real compute, oracle met in every finished arm.
-  - [ ] Three repeats of one cell, to characterise the spread ([§10](#7-decisions-and-where-we-diverge) item 14), and a publishing target so must/016 is reachable (item 13).
+  - [x] A publishing target, so must/016 is reachable at all ([§10](#7-decisions-and-where-we-diverge) item 13) — harness, skills and probe, 2026-10-15.
+  - [x] Three repeats of one cell (item 14): R0 `skill-explicit` on sonnet, 9/11, 10/11, 10/11 — **10/11, 11/11, 11/11 at the sandbox ceiling**, so two in three pass every item. Mean 0.879, spread 0.82–0.91 ([record](../../evals/stamped/blind-runs/2026-10-15-r0-three-repeats/README.md)).
+  - [ ] The same on a second tier, and at R1; and one run with a **real URL**, which is the only way must/016 reaches `met`.
 - [ ] **Phase 3: do-full-research-loop.**
   - v0.1.
   - Outer-loop runner (container per run, pinned datalad, transcripts).
@@ -540,6 +542,52 @@ must/015 is `met` to the probe and `partial` to a run that opened the container
 definition and saw the base tag float). The fourth is T2 being lenient on the
 item the whole gate is stuck on — it called "there is no published remote"
 `partial` where `verdicts.md` says `unmet`.
+
+### 5.5 2026-10-15: three repeats, and the graders' turn
+
+Item 14's three repeats of one cell (R0 `skill-explicit`, sonnet), and the
+first round in which all eleven mechanically checkable MUST items were
+reachable, because item 13 gave every run somewhere to publish.
+
+| run | MUST | at the sandbox ceiling | oracle |
+|---|---|---|---|
+| repeat 4 | 9/11 | 10/11 | met |
+| repeat 5 | **10/11** | **11/11** | met |
+| repeat 6 | **10/11** | **11/11** | met |
+
+Mean 0.879, spread **0.82–0.91** against 0.73–0.91 for the same cell the day
+before — and two of the items that moved that day were probe defects, so the
+spread was never as wide as it looked. Two repeats in three now pass every
+item at the ceiling, which is §10.1's criterion for one tier at one rung. The
+second tier, R1, and a run with a **real URL** (the only route to must/016
+`met`) are what it still wants.
+
+**Three defects in all three runs**, which is what makes them defects rather
+than accidents: `datalad push` to a fresh bare repository publishes no content
+and reports "ok" (git-annex has no uuid there, and `git ls-remote` — the check
+the skill prescribed — cannot see it); "put the URL in the README" collides
+with must/009 when the target is a filesystem path; and zsh does not
+word-split a command built in a variable. All three are now fixed in the
+artifact rather than in prose: an annex-initialised target, a `git annex
+whereis` check, a path-is-not-a-URL rule, and a template comment.
+
+**And this is the round where the graders took the damage.** Every run had to
+fix something the probes found and then wanted the verdicts refreshed — and
+re-running the sweep threw away the nineteen items a *reading* had answered.
+One patched two back by hand; another said it had no clean way at all.
+`run_probes.py` keeps judged answers now. `should/006` could not see the
+environment a record declares as an input, which is exactly where
+`run-recorded.sh` puts it, so the fix that closed must/006 was invisible to
+the item next door: a run whose CI rebuilt from the very lockfile its records
+name was told the environment behind its results "is never tested".
+
+**`fresh-rerun` ran for the first time** — §10.1 has always named it, and
+with nowhere to clone from it had never executed — and failed three times on
+its own bugs before it failed on anything else: it deleted **9390 files from
+the input module** (`**/*.tsv` reaches into the comparator), its own tidying
+left a dirty tree that `datalad rerun` refuses, and `datalad rerun` with no
+range re-runs only the last commit, which by then was the probe's own. A probe
+in a gate and in nothing else is a probe nobody has run.
 
 ### 5.2 Continuing on the compute host
 

@@ -826,12 +826,24 @@ def ci_present(obj: Object) -> Probe:
         # A space between the command and the extra inputs. Without it the last
         # token of one ran into the first of the other, and `details` carried
         # entries like `figures/plot.pngcode/containers/plotting.sif`.
+        # `inputs` as well as `extra_inputs`, which this scan used to omit —
+        # and `run-recorded.sh` declares the tracked environment
+        # specification with `-i`, so it lands in `inputs`. The fix that
+        # closed must/006 was therefore invisible here: a run whose CI
+        # rebuilds from exactly the lockfile its records name was told the
+        # environment behind its results "is never tested".
         " ".join([str((rec.get("run_info") or {}).get("cmd", ""))]
-                 + [str(x) for x in ((rec.get("run_info") or {}).get("extra_inputs") or [])])
+                 + [str(x) for x in ((rec.get("run_info") or {}).get("extra_inputs") or [])]
+                 + [str(x) for x in ((rec.get("run_info") or {}).get("inputs") or [])])
         for rec in obj.run_records()
     )
+    # `uv pip sync` is how a uv lockfile is installed, and it was missing: the
+    # probe knew `uv sync` (the project-mode command) and not the one a project
+    # with a `requirements.lock` actually runs.
     rebuild = re.compile(r"(?:docker|apptainer|singularity)\s+(?:build|pull|exec|run)|"
                          r"containers-run|datalad\s+rerun|pixi\s+install|uv\s+sync|conda\s+env\s+create|"
+                         r"uv\s+pip\s+(?:sync|install)|pip-sync|poetry\s+install|"
+                         r"micromamba\s+(?:create|install)|"
                          r"pip\s+install\s+-r|renv::restore", re.IGNORECASE)
     rebuilders = [p for p, text in texts.items() if rebuild.search(text)]
     # Does CI rebuild the *recorded* environment, or merely some environment?
