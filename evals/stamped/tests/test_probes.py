@@ -451,6 +451,41 @@ def test_run_recorded_leaves_the_worktree_clean_for_datalad(tmp_path):
     assert "datalad-run-in-flight" not in status, f"marker is visible in the worktree: {status}"
 
 
+def _stub_datalad(root: pathlib.Path) -> pathlib.Path:
+    """A `datalad` on PATH that records how it was called and does nothing."""
+    bindir = root / "stub-bin"
+    bindir.mkdir(parents=True, exist_ok=True)
+    stub = bindir / "datalad"
+    stub.write_text("#!/bin/sh\nprintf '%s\\n' \"$*\" >> \"$DATALAD_STUB_LOG\"\n")
+    stub.chmod(0o755)
+    return bindir
+
+
+@pytest.mark.parametrize(
+    "argv, expected",
+    [
+        (["-m", "plain", "--", "true"], "run -m plain -- true"),
+        (["-n", "synthstrip", "-m", "strip", "--", "true"],
+         "containers-run -n synthstrip -m strip -- true"),
+        # The mistake an R1 arm actually made: naming the subcommand in the
+        # command position, which nested one record inside another and declared
+        # no inputs or outputs.
+        (["datalad", "containers-run", "-m", "strip", "--", "true"],
+         "containers-run -m strip -- true"),
+    ],
+)
+def test_run_recorded_dispatches_containers_run(tmp_path, argv, expected):
+    root = tmp_path / "dispatch"
+    env = _guarded_repo(root)
+    log = tmp_path / "datalad-calls.log"
+    env = {**env, "PATH": f"{_stub_datalad(tmp_path)}:{env['PATH']}",
+           "DATALAD_STUB_LOG": str(log)}
+    done = subprocess.run(["sh", "./run-recorded.sh", *argv],
+                          cwd=root, capture_output=True, text=True, env=env)
+    assert done.returncode == 0, done.stdout + done.stderr
+    assert log.read_text().strip() == expected
+
+
 def test_preflight_ignores_installed_tooling(tmp_path, clean):
     """A harness directory's own files are not the project's: flagging them
     produced a FAIL an agent could not fix."""

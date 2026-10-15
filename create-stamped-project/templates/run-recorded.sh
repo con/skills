@@ -4,7 +4,21 @@
 #   ./code/run-recorded.sh -m 'collect volumes' -o results/volumes.tsv -- \
 #       python3 code/collect_volumes.py --input sourcedata/ds007116 --output results/volumes.tsv
 #
+#   ./code/run-recorded.sh -n synthstrip -m 'strip sub-20919' \
+#       -i sourcedata/ds007116/sub-20919/ses-1/anat/sub-20919_ses-1_T1w.nii.gz \
+#       -o derivatives/masks/sub-20919_mask.nii.gz -- \
+#       mri_synthstrip -i {inputs} -m {outputs}
+#
 # Everything before `--` goes to `datalad run`; everything after is the command.
+# `-n NAME` (a registered container) switches it to `datalad containers-run`,
+# which is the only way a run record names the image it ran in (must/006,
+# must/015). Passing `datalad containers-run …` as the command instead nests
+# one record inside another and declares no inputs or outputs — found by an
+# agent doing exactly that on R1.
+#
+# Quote path lists. `-i "$FILES"` passes one argument under zsh, which does not
+# word-split unquoted variables, and `datalad run` then looks for a single file
+# with ten names in it. One run per subject, or `-i` repeated, or `xargs`.
 # Falls back to a plain recorded commit when datalad is absent, so the project
 # still records *something* rather than nothing.
 #
@@ -22,6 +36,24 @@
 #     code makes the documented usage fail out of the box.
 set -eu
 
+# `-n NAME` is a containers-run flag; `datalad run` has no such option, so its
+# presence is the dispatch. A leading `datalad` or `run`/`containers-run` word
+# is tolerated and dropped: that is how this gets called by mistake.
+SUBCMD=run
+case "${1:-}" in
+    datalad) shift ;;
+esac
+case "${1:-}" in
+    run) shift ;;
+    containers-run) SUBCMD=containers-run; shift ;;
+esac
+for arg in "$@"; do
+    case "$arg" in
+        -n|--container-name) SUBCMD=containers-run ;;
+        --) break ;;
+    esac
+done
+
 GITDIR="$(git rev-parse --git-dir)"
 MARKER="$GITDIR/datalad-run-in-flight"
 cleanup() { rm -f "$MARKER"; }
@@ -38,7 +70,7 @@ trap cleanup EXIT INT TERM HUP
 export IN_FLIGHT_OK=1
 
 if command -v datalad >/dev/null 2>&1; then
-    datalad run "$@"
+    datalad "$SUBCMD" "$@"
     exit $?
 fi
 

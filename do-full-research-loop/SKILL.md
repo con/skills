@@ -35,6 +35,7 @@ If it is missing, stop and ask for it.
 Write into the project — and commit — the question, the inputs by their recorded version, the method, the units to process, and what the products will be called.
 Name the stopping condition: every unit done, the budget spent, or a blocker.
 **Ask the user to approve this plan once.** After that, run inside the project without asking again; ask again for anything that reaches outside it (installing software, touching another dataset, publishing).
+**When no user is available to approve it** — an unattended or evaluated run — do not stall and do not silently skip the step: commit the plan into the project as `docs/plan.md` with the decisions it rests on, say in the commit message that it was carried out without approval, and go on. The plan is the thing under review either way; what changes is whether anyone has reviewed it yet.
 
 ## Step 2. Pilot one unit
 

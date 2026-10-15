@@ -34,6 +34,39 @@ A record whose `outputs` list is empty does not cover the files that commit touc
   `url = ../..` inside `.gitmodules` resolves relative to wherever the superdataset happens to sit, so a fresh clone elsewhere fails: that is must/002 and must/016 `unmet`, and it is the single most common real-world failure in the projects this collection was calibrated on.
 - **Never pin a container as `:latest`** — must/015 wants a digest or a frozen version.
 
+## Traps, each hit by a live run
+
+These cost real time in the R1 runs of this collection's own evaluation, and
+none of them is discoverable from the error message alone.
+
+- **`containers-run` with a registered container, not `datalad run` around a container command.**
+  Only the first records the image, which is what must/006 and must/015 read.
+  Wrapping `datalad containers-run …` in `datalad run` nests one record inside
+  another and declares no inputs or outputs.
+- **`run` versus `exec` in the registration.**
+  `///repronim/containers` registers images with
+  `cmdexec = {img_dspath}/scripts/singularity_cmd run {img} {cmd}`, and `run`
+  hands the command to the image's own runscript. For the neurodesk images that
+  runscript re-parses its arguments through a shell, so a Python entry point
+  fails as `import: command not found` and a bare subject id fails as
+  `sub-20919: command not found`. Re-register with `exec` (`datalad containers-add
+  --call-fmt '… exec {img} {cmd}'`), or pass one argument that is a file the
+  command reads.
+- **Pin the image, not the dataset.**
+  `///repronim/containers` ships `scripts/freeze_versions`, which rewrites the
+  registration to a specific image version; without it the registration names a
+  floating image and must/015 is `unmet`.
+- **`-i` globs are evaluated against the whole input dataset.**
+  `-i 'sourcedata/ds/sub-*/ses-1/anat/*T1w.nii.gz'` starts fetching every
+  subject. Name the files, or the subjects, explicitly.
+- **`datalad run` refuses a dirty tree** with "clean dataset required to detect
+  changes from command", which does not say what is dirty: commit the scripts
+  first, and keep logs and scratch output *outside* the dataset.
+- **A shared host is shared.**
+  Two recorded runs under one process table are indistinguishable to
+  `pkill -f 'datalad run'`: in these evaluations one arm's cleanup killed
+  another arm's jobs. Kill by pid.
+
 ## Version notes
 
 - Pin `datalad` to a release carrying the concurrent-run fix ([datalad#7899](https://github.com/datalad/datalad/issues/7899), [#7901](https://github.com/datalad/datalad/pull/7901)) wherever runs may overlap.
