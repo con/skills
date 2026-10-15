@@ -17,8 +17,8 @@ than another, and nothing here says anything about how to organise a project.
   `https://github.com/OpenNeuroDatasets/ds007116`.
 - Container images are 0.5–9 GB each. For the neurodesk images git-annex knows
   a second web source, which works here. Point `APPTAINER_CACHEDIR` at a
-  directory with room: `$STAMPED_SHARED_CACHE` is one, shared between the arms
-  of this evaluation, so an image another arm already pulled is free.
+  directory with room: `$STAMPED_CACHE_DIR` is set aside for this run, outside
+  your working directory so that it does not clutter what you build.
 - **Fetch only the files you need.** The input dataset is large, and a previous
   run pulled several GB by accident with a too-broad `datalad run -i` glob.
 - `gh` is not authenticated, and there is no push access to anything. Nothing
