@@ -81,20 +81,31 @@ test, which the suite had missed because its failure case went through the
 no-datalad fallback — and in the run that saw it the guard self-healed by
 noticing the pid was gone, which is what the pid is for.
 
-## `fresh-rerun` ran for the first time, and failed on its own two bugs
+## `fresh-rerun` ran for the first time: four of its own bugs, then `met`
 
 §10.1 asks for every MUST probe "including `fresh-rerun`", and with nowhere to
 clone from it had never executed. Pointed at repeat 6's published repository it
-found:
+failed four times on itself before it could fail on anything else:
 
 - **it deleted 9390 files from the input module.** `**/*.tsv` reaches straight
   into `sourcedata/ds007116`, whose shipped tables are the *comparator*. An
-  input module is now never a candidate.
+  input module is never a candidate now (4 outputs, not 9390).
 - **its own tidying made the entry point unrunnable.** Removing the shipped
-  outputs (so that only re-creation counts) left the tree dirty, and `datalad
+  outputs, so that only re-creation counts, left the tree dirty, and `datalad
   rerun` refuses a dirty tree. The removal is committed now.
+- **`datalad rerun` with no range re-runs the last commit only** (`master^..
+  master`) — by then the probe's own removal commit, so "no run commits found
+  in range". The range is every run commit since the root.
+- **the content budget is all-or-nothing**, so a 300 KB figure went unfetched
+  behind a 175 GiB input module and was silently not compared. The object's
+  own output candidates are fetched first, unconditionally; they are small by
+  construction.
 
-`fresh-rerun-r6.json` is the run after both fixes.
+Then it passed. **All four outputs — the three tables and the annexed figure —
+came back byte-identical** from a fresh clone of the published repository with
+the shipped copies removed first (`fresh-rerun-r6.json`). That is the only
+check in this collection that leaves the machine the results were made on, and
+it is the first time it has answered.
 
 ## Files
 

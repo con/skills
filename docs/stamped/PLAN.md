@@ -582,12 +582,20 @@ the item next door: a run whose CI rebuilt from the very lockfile its records
 name was told the environment behind its results "is never tested".
 
 **`fresh-rerun` ran for the first time** — §10.1 has always named it, and
-with nowhere to clone from it had never executed — and failed three times on
-its own bugs before it failed on anything else: it deleted **9390 files from
-the input module** (`**/*.tsv` reaches into the comparator), its own tidying
-left a dirty tree that `datalad rerun` refuses, and `datalad rerun` with no
-range re-runs only the last commit, which by then was the probe's own. A probe
-in a gate and in nothing else is a probe nobody has run.
+with nowhere to clone from it had never executed — and failed **four** times
+on its own bugs before it could fail on anything else: it deleted **9390 files
+from the input module** (`**/*.tsv` reaches into the comparator), its own
+tidying left a dirty tree that `datalad rerun` refuses, `datalad rerun` with
+no range re-runs only the last commit (by then the probe's own), and the
+content budget is all-or-nothing, so a 300 KB figure went unfetched behind a
+175 GiB input module and was silently not compared. A probe in a gate and in
+nothing else is a probe nobody has run.
+
+Then it answered, and the answer is the strongest single result of the week:
+**all four outputs, the three tables and the annexed figure, came back
+byte-identical** from a fresh clone of the published repository with the
+shipped copies removed first. One object, one repeat — but it is the only
+check here that leaves the machine the results were made on.
 
 ### 5.2 Continuing on the compute host
 

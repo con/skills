@@ -1314,3 +1314,27 @@ def test_should006_sees_the_environment_a_record_declares_as_an_input(tmp_path, 
                    cwd=target, check=True, env=env)
     again = REGISTRY["ci-present"](Object(target))
     assert str(workflow.relative_to(target)) in str(again.details.get("rebuilders")), again.details
+
+
+def test_fresh_rerun_learned_four_things_from_its_first_real_run():
+    """Every one of these made the probe fail on itself rather than on the object.
+
+    It had sat in §10.1's done criteria since the plan was written and had
+    never executed, because a sandbox run had nowhere to publish and so
+    nothing to clone from.
+    """
+    text = (ASSESS / "scripts" / "fresh_rerun.py").read_text()
+    # 1. `**/*.tsv` reached into the input module and deleted 9390 of the
+    #    comparator's files.
+    assert "_module_paths" in text
+    assert "skip=modules" in text
+    # 2. Removing the shipped outputs left a dirty tree, which `datalad rerun`
+    #    refuses outright.
+    assert "committed the removal" in text
+    # 3. `datalad rerun` with no range re-runs the last commit only — by then
+    #    the probe's own removal commit.
+    assert "--since=" in text
+    assert "rev-list" in text and "--max-parents=0" in text
+    # 4. The content budget is all-or-nothing, so one 175 GiB input module left
+    #    a 300 KB figure unfetched and therefore uncompared.
+    assert "output candidate(s) for comparison" in text

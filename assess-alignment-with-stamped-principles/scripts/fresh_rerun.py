@@ -230,6 +230,15 @@ def main(argv: list[str] | None = None) -> int:
     modules = _module_paths(clone)
     if modules:
         step("input modules excluded from --outputs", 0, "\n".join(modules))
+    # The object's own products first, and unconditionally: the budget above is
+    # all-or-nothing, so one input module holding 175 GiB left a 300 KB figure
+    # unfetched and therefore uncompared — in the probe's first real run, on
+    # the only annexed product it had. These are the files the comparison
+    # needs, and they are small by construction.
+    candidates = sorted(_collect(clone, args.outputs, skip=modules))
+    if candidates and shutil.which("datalad"):
+        code, log = _run(["datalad", "get", "--", *candidates], cwd=clone, timeout=args.timeout)
+        step(f"fetched {len(candidates)} output candidate(s) for comparison", code, log)
     before = _collect(clone, args.outputs, skip=modules)
     report["outputs_shipped"] = dict(before)
     # Keep the shipped copies aside: the rerun overwrites them in place, and a
