@@ -26,6 +26,8 @@ Compare independent expected values and declared numerical tolerances or exact d
 
 Annex pointers are not payloads.
 Inspect effective attributes before adding files; keep code and small specifications in Git and large outputs/records in annex.
+Prefer path, extension or size rules.
+Use `datalad create` without `-c text2git` when the installed annex build lacks MagicMime; MIME-based attributes require that optional build support.
 Publish required child commits and annex content before the parent gitlink.
 Verify a fresh recipient can `git annex get` the expected key from the named remote and match the content hash.
 Distinguish same-host delivery from online retrieval.
