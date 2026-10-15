@@ -67,11 +67,13 @@ Operating constraints for this run:
 2. **The user is not available to answer questions.** Where the skill asks you to settle
    something with the user, state it as an explicit, labelled assumption in your output,
    as the skill directs.
-3. **Do NOT read or search `{repo}`** — anything under that path is off-limits for this
-   run, including any reference answer, plan document or earlier report. Your conclusions
-   must come from the target itself plus the skill's own instructions and scripts under
-   `{snapshot}`. (This is a blind run: a reference answer exists and comparing against it
-   is the point, so seeing it would destroy the test.)
+3. **Do NOT read or search `{repo}`**, except the two paths this prompt names — the
+   target above and the snapshot below, which may happen to live under it in an ignored
+   scratch area. Everything else under that path is off-limits for this run, including any
+   reference answer, plan document or earlier report. Your conclusions must come from the
+   target itself plus the skill's own instructions and scripts under `{snapshot}`. (This
+   is a blind run: a reference answer exists and comparing against it is the point, so
+   seeing it would destroy the test.)
 4. {forbidden}
 5. Network access is available if you need it, but `gh` is not authenticated.
 
