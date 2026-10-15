@@ -66,6 +66,27 @@ for arg in "$@"; do
     esac
 done
 
+# must/006 wants the record to name the environment it ran in, and two runs out
+# of three forgot to declare theirs: a `datalad run` with no changed output
+# writes no commit, so adding `-i code/requirements.lock` afterwards records
+# nothing. So the wrapper declares the tracked environment specification as an
+# input of every run, which is both true and the evidence the item asks for.
+# `-n NAME` already names a container, and `--no-env-input` opts out.
+ENV_INPUT=""
+if [ "$SUBCMD" = run ]; then
+    case " $* " in
+        *" --no-env-input "*) : ;;
+        *)
+            for spec in requirements.lock code/requirements.lock requirements.txt                         code/requirements.txt pixi.lock environment.yml code/containers.json; do
+                if git ls-files --error-unmatch "$spec" >/dev/null 2>&1; then
+                    ENV_INPUT="$spec"
+                    break
+                fi
+            done
+            ;;
+    esac
+fi
+
 GITDIR="$(git rev-parse --git-dir)"
 MARKER="$GITDIR/datalad-run-in-flight"
 cleanup() { rm -f "$MARKER"; }
@@ -84,12 +105,35 @@ echo "$$" > "$MARKER"
 trap cleanup EXIT INT TERM HUP
 export IN_FLIGHT_OK=1
 
+# `--no-env-input` is this wrapper's own flag; datalad has never heard of it.
+# Dropped by rotating the positional parameters, not by rebuilding a string:
+# `set -- $(...)` would re-split a multi-word `-m`, which is the first bug this
+# template ever had.
+case " $* " in
+    *" --no-env-input "*)
+        n=$#
+        i=0
+        while [ "$i" -lt "$n" ]; do
+            arg="$1"
+            shift
+            [ "$arg" = "--no-env-input" ] || set -- "$@" "$arg"
+            i=$((i + 1))
+        done
+        ;;
+esac
+
 if command -v datalad >/dev/null 2>&1; then
     # `set +e` around the call, and `$?` captured on the next line: after a
     # failed `if cmd; then` the shell reports the *if statement's* status, which
     # is 0, so the obvious spelling swallowed the failure.
     set +e
-    datalad "$SUBCMD" "$@"
+    if [ -n "$ENV_INPUT" ]; then
+        printf 'note: declaring %s as an input, so the record names the environment (must/006).\n' \
+            "$ENV_INPUT" >&2
+        datalad "$SUBCMD" -i "$ENV_INPUT" "$@"
+    else
+        datalad "$SUBCMD" "$@"
+    fi
     status=$?
     set -e
     if [ "$status" -eq 0 ]; then
