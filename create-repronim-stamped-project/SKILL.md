@@ -1,6 +1,6 @@
 ---
 name: create-repronim-stamped-project
-description: Create a STAMPED neuroimaging research project using a ReproNim-oriented workflow, including BIDS-aware data boundaries, DataLad/git-annex, task environments and reproducible execution. Use for an explicitly ReproNim-oriented project; adapt to the user's selected tools and scientific scope.
+description: Create a STAMPED computational research project using a ReproNim-oriented workflow, including BIDS-aware data boundaries, DataLad/git-annex, task environments and reproducible execution. Use for an explicitly ReproNim-oriented project; adapt to the user's selected tools and scientific scope.
 version: 0.1.0
 ---
 
@@ -11,7 +11,7 @@ Preserve the scientific question; do not add imaging, containers or a cluster to
 These tools implement STAMPED properties, not additional normative principles.
 
 Read [references/repronim.md](references/repronim.md) for the applicable dataset, environment and execution details.
-Prepare a brief identifying source revisions, permissions, subject/session/run selection, BIDS version, raw/derivative boundaries, budget, runtime and intended deliverables.
+Prepare a brief identifying source revisions, permissions, dataset selection, applicable standards/version, raw/derivative boundaries, budget, runtime and intended deliverables.
 
 Prefer the project's established ReproNim tools: DataLad/git-annex for datasets and transformations, its task environment manager, BIDS validators and community analysis packages, and its selected BIDS App orchestration.
 Add ordinary missing dependencies to the task environment.

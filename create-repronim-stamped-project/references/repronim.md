@@ -10,7 +10,7 @@ DataLad/git-annex can preserve large-content identities and retrieval routes whi
 Each concurrent writer needs its own checkout and writable submodules.
 Keep source metadata, licenses and access terms; an annex key or Git commit does not prove content is retrievable.
 
-Follow the applicable [BIDS specification](https://bids-specification.readthedocs.io/) and derivative conventions.
+For BIDS data, follow the applicable [BIDS specification](https://bids-specification.readthedocs.io/) and derivative conventions.
 Keep raw inputs unchanged; identify derivative source links, generating software and subject/session/run exclusions.
 Use the community BIDS validator for conformance and separate checks for event semantics, units and scientific suitability.
 
