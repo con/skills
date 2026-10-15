@@ -455,7 +455,7 @@ What exists in con/skills as of 2026-10-13, on branch `claude/ecstatic-cerf-nh4j
 - on `compression-comparisons-t261-study` (1265 commits, 22286 tracked derivatives) the probe sweep takes **3.6 s** and finds the `url = ../..` gap the plan predicted;
 - after one blind run and the fixes it forced, an independent subagent's 31 verdicts and the reference answer agree on **30 of 31** items;
 - **6/6 judgement mutants** detected and named, with the control run's unexplained accusations at 2/18 then 3/19 (the first number the scorer produced before it was fixed to ignore probe drafts is not comparable with either, so it is not quoted);
-- **18/18 scripted mutants**, 91 tests, 26 `pytest-evals` cases.
+- **18/18 scripted mutants**, 92 tests, 26 `pytest-evals` cases.
 
 Two rounds of calibration paid for themselves.
 Running the probes on a real object caught must/009 counting host paths inside duct traces as script defects, must/005 calling 12 MiB of JSONL "binary data", must/006 ignoring environment *capture* as distinct from an environment *specification*, and four probes reporting `unmet` with no evidence of absence.
@@ -636,7 +636,7 @@ project ever execute:
   An absent tool is an answer, so `sh` returns 127 and the record says `null`.
 
 Both are now tests that build a PATH with git and without datalad rather than
-assuming one (91 tests), because on any machine where this work is done the
+assuming one, because on any machine where this work is done the
 broken path is the one that never runs.
 
 ### 5.7 2026-10-15: the hub was the target all along
