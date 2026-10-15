@@ -1,0 +1,51 @@
+{
+  "trial": "blind-001",
+  "date": "2026-10-15",
+  "status": "completed with observed and repaired setup friction",
+  "skill_base_commit": "6f013956fe52f22f151dfc54d29fbbddffc259fd",
+  "published_blend_commit": "5615172",
+  "instruction_snapshot": "source-snapshot",
+  "instruction_snapshot_manifest": "snapshot-sha256.json",
+  "instruction_manifest_sha256": "376878aa04e0267c57876cfbaab6280266abd8ea035e80330809eb33f9d6d49e",
+  "prompt_sha256": "26751409f4d42c777aa87522ee87c10a4bd5723a3ed58aa6952aecef5555a2c7",
+  "graded_task_commit": "9c15dfe23eb8ad03ac6420f381ca645a6c3dddda",
+  "environment_snapshot_commit": "472fbcfdcde21a4120a29ee2e6e3b13d8e72f67c",
+  "native_run_commit": "00103044a25dddb01aabda261fef06754ca5987a",
+  "native_rerun_commit": "4956203d524b814e416e87260ce4d1ae82ac176e",
+  "figure_source": "9c15dfe23eb8ad03ac6420f381ca645a6c3dddda:results/paired-change.svg",
+  "figure_sha256": "1a2b8fba14c297e062e517516e9aebb87ec8e46dff35d719deebbbe1c85c992d",
+  "assistance": [
+    {
+      "action": "Coordinator waived a further scientific reviewer for this known-answer trial, using independent numerical verification instead.",
+      "evidence": "delivery/trial-friction.md, final paragraph"
+    },
+    {
+      "action": "Worker retained the original instructions throughout; later skill fixes did not retroactively improve its condition.",
+      "evidence": "delivery/trial-friction.md, opening paragraph"
+    }
+  ],
+  "behavioral_coverage": [
+    "create-stamped-project",
+    "do-full-research-loop",
+    "pixi-with-stamped",
+    "datalad-annex",
+    "alignment/assessment handoff"
+  ],
+  "not_exercised": [
+    "create-repronim-stamped-project",
+    "entire-worktrees",
+    "cluster execution",
+    "cross-platform replay",
+    "online delivery by the original worker"
+  ],
+  "grading": "grading.json",
+  "grading_scope": "Independent arithmetic, contracts and retained evidence; original cold retrieval and actual rerun remain worker evidence.",
+  "assessment_scope": "Self-assessment using original snapshot, with unedited probes and explicit overrides; not a blind independent assessment or general skill efficacy estimate.",
+  "evidence_url": "https://github.com/leej3/stamped-ai-research-next/tree/main/experiments/skill-bundle/blind-001",
+  "grading_sha256": "36dc3dbd0a7f1bd5d6a3df77b321dedc2f79d08fcfc043473695572d4e22fa1a",
+  "independent_grading_checks_passed": 32,
+  "source_snapshot_manifest_sha256": "376878aa04e0267c57876cfbaab6280266abd8ea035e80330809eb33f9d6d49e",
+  "friction_classification_sha256": "3635631494a31d250f556b5f1ee8b247bbd59193251d5d2c7662ce542b3a1493",
+  "frozen_assessor_commit": "d867c1d04bbb58b3b0f64122ebd5f76bd8e5a7ca",
+  "source_snapshot_note": "The exact trial instructions predate that final frozen assessor and are retained by hash; later fixes are not credited to this trial."
+}

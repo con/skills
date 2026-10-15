@@ -1,0 +1,38 @@
+[
+  {
+    "item": "PyPI binary wheel minimum OS",
+    "classification": "skill wording",
+    "evidence": "delivery/trial-friction.md, item1",
+    "action": "Common Pixi guidance now requires checking wheel OS minima against the platform floor; added in skills commit9df06a3."
+  },
+  {
+    "item": "text2git assumes MagicMime",
+    "classification": "skill wording and missing artifact",
+    "evidence": "delivery/trial-friction.md, item2",
+    "action": "Common DataLad guidance now uses portable path/size attributes when MagicMime is absent; evaluator harness also removes unconditional text2git."
+  },
+  {
+    "item": "log retention conflicts with outside-dataset instruction",
+    "classification": "skill wording",
+    "evidence": "delivery/trial-friction.md, item3",
+    "action": "Shared stack guidance now declares requested logs as outputs in the owning module and separates unrelated scratch."
+  },
+  {
+    "item": "collector false positives for tasks, source data, wrapper words, historical paths and lock snapshot",
+    "classification": "harness limitation",
+    "evidence": "self-assessment/2026-10-15-assessment.md and retained probes",
+    "action": "Unedited probes and explicit evidence-backed overrides retained; this trial does not establish general collector accuracy."
+  },
+  {
+    "item": "abbreviated SHA passed to git fetch",
+    "classification": "worker error",
+    "evidence": "delivery-failed/commands.json",
+    "action": "Full immutable ID used in a new recipient; failed attempt retained. No general skill rule added."
+  },
+  {
+    "item": "instruction/setup overhead larger than tiny computation",
+    "classification": "unquantified friction",
+    "evidence": "delivery/trial-friction.md, item6",
+    "action": "No timing/token efficiency claim; core guidance stays short and resources conditional."
+  }
+]
