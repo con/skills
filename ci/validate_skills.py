@@ -10,7 +10,7 @@ Checks performed
 Every SKILL.md:
   E001  Frontmatter present and valid YAML (between opening/closing ``---`` lines)
   E002  Required field ``description`` present and non-empty
-  W001  Recommended field ``name`` missing
+  E007  Frontmatter ``name`` must equal the containing directory name
   W002  Recommended field ``allowed-tools`` missing
   W003  File exceeds 600 lines (readability concern)
   E003  Hardcoded absolute path referencing a real user home dir
@@ -30,7 +30,7 @@ Usage:
     python3 ci/validate_skills.py [<skill-dir> ...]
 
     If no directories are given, scans every immediate subdirectory of the
-    repo root that contains a SKILL.md.
+    `skills/` directory that contains a SKILL.md.
 """
 
 from __future__ import annotations
@@ -133,9 +133,9 @@ def check_skill_md(skill_md: Path, result: Result) -> None:
     if not desc or not str(desc).strip():
         result.error("E002", skill_md, "frontmatter missing required field 'description'")
 
-    # W001 — name
-    if not fm.get("name"):
-        result.warn("W001", skill_md, "frontmatter missing recommended field 'name'")
+    # E007 — published skill identity must match its directory
+    if fm.get("name") != skill_md.parent.name:
+        result.error("E007", skill_md, "frontmatter name must equal directory name")
 
     # W002 — allowed-tools
     if not fm.get("allowed-tools"):

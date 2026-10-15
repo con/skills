@@ -33,7 +33,7 @@ SEVERITY_ORDER = ["SAFE", "LOW", "MEDIUM", "HIGH", "CRITICAL"]
 
 
 def _review_prompt() -> str:
-    text = (REPO_ROOT / "skill-security-review" / "SKILL.md").read_text(encoding="utf-8")
+    text = (REPO_ROOT / "skills" / "skill-security-review" / "SKILL.md").read_text(encoding="utf-8")
     parts = text.split("---", 2)
     if len(parts) != 3 or parts[0].strip():
         raise ValueError("canonical review skill has invalid frontmatter")
