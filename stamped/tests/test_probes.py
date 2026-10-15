@@ -504,7 +504,13 @@ def _stub_datalad(root: pathlib.Path) -> pathlib.Path:
     bindir = root / "stub-bin"
     bindir.mkdir(parents=True, exist_ok=True)
     stub = bindir / "datalad"
-    stub.write_text("#!/bin/sh\nprintf '%s\\n' \"$*\" >> \"$DATALAD_STUB_LOG\"\n")
+    stub.write_text(
+        "#!/bin/sh\nprintf '%s\\n' \"$*\" >> \"$DATALAD_STUB_LOG\"\n"
+        # `DATALAD_STUB_EXIT` lets a test exercise the path where *datalad*
+        # fails rather than the command, which is where a real run reported a
+        # marker surviving.
+        "exit ${DATALAD_STUB_EXIT:-0}\n"
+    )
     stub.chmod(0o755)
     return bindir
 
@@ -1233,3 +1239,78 @@ def test_a_probe_rerun_keeps_the_answers_only_a_reader_could_give(clean, tmp_pat
     subprocess.run([*sweep, "--overwrite"], check=True, capture_output=True)
     clean_draft = json.loads(response.read_text())
     assert clean_draft["responses"][judged]["status"] == "not-checked"
+
+
+def test_run_recorded_clears_its_marker_when_datalad_itself_fails(tmp_path):
+    """The failure path a real run hit, and the one the tests had missed.
+
+    `exit 3` from the *command* goes through the no-datalad fallback when
+    datalad is not installed, so the covered case was never the one that
+    matters: `datalad run` refusing (a missing input, an output whose
+    directory no longer exists) and the wrapper exiting with its status. A run
+    reported a marker left behind after exactly that, which then made the
+    guard refuse the next commit until it noticed the pid was gone.
+    """
+    root = tmp_path / "wrapper-datalad-fails"
+    env = _guarded_repo(root)
+    log = tmp_path / "calls.log"
+    env = {**env, "PATH": f"{_stub_datalad(tmp_path)}:{env['PATH']}",
+           "DATALAD_STUB_LOG": str(log), "DATALAD_STUB_EXIT": "3"}
+    done = subprocess.run(["sh", "./run-recorded.sh", "-m", "datalad says no", "--", "true"],
+                          cwd=root, capture_output=True, text=True, env=env)
+    assert done.returncode == 3, (done.returncode, done.stdout + done.stderr)
+    assert "failed (exit 3)" in done.stderr, done.stderr
+    marker = root / ".git" / "datalad-run-in-flight"
+    assert not marker.exists(), "marker survived datalad's own failure"
+    # And the next commit is not blocked.
+    (root / "after").write_text("x\n")
+    subprocess.run(["git", "add", "after"], cwd=root, check=True, env=env)
+    after = subprocess.run(["git", "commit", "-qm", "after the failed run"], cwd=root,
+                           capture_output=True, text=True, env=env)
+    assert after.returncode == 0, after.stderr
+
+
+def test_should006_sees_the_environment_a_record_declares_as_an_input(tmp_path, clean):
+    """The must/006 fix was invisible to should/006, which is next door.
+
+    `run-recorded.sh` declares the tracked environment specification with
+    `-i`, so it lands in a record's `inputs`; this scan read `cmd` and
+    `extra_inputs` only. A run whose CI rebuilt from exactly the lockfile its
+    records name was told the environment behind its results "is never
+    tested", and reported that as friction — correctly.
+    """
+    target = tmp_path / "ci-lock"
+    shutil.copytree(clean, target, symlinks=True)
+    env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@e.org",
+           "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@e.org"}
+    workflow = target / ".github" / "workflows" / "rerun.yml"
+    workflow.write_text(
+        "name: rerun\non: [push]\njobs:\n  rerun:\n    runs-on: ubuntu-latest\n    steps:\n"
+        "      - uses: actions/checkout@v4\n"
+        "      - run: uv venv /tmp/v && uv pip sync --python /tmp/v code/requirements.lock\n"
+        "      - run: datalad rerun\n"
+    )
+    info = {"chain": [], "cmd": "python3 code/collect.py results/t.tsv",
+            "dsid": "0a1b2c3d-4e5f-6071-8293-a4b5c6d7e8f9", "exit": 0,
+            "extra_inputs": [], "inputs": ["code/requirements.lock"],
+            "outputs": ["results/t.tsv"], "pwd": "."}
+    body = ("[DATALAD RUNCMD] a step naming its environment as an input\n\n"
+            "=== Do not change lines below ===\n" + json.dumps(info, indent=1, sort_keys=True)
+            + "\n^^^ Do not change lines above ^^^\n")
+    (target / "code" / "requirements.lock").write_text("pandas==2.2.3\n")
+    subprocess.run(["git", "add", "-A"], cwd=target, check=True, env=env)
+    subprocess.run(["git", "commit", "-q", "-m", body], cwd=target, check=True, env=env)
+
+    result = REGISTRY["ci-present"](Object(target))
+    assert result.status_of("stamped-checklist:should/006") == "met", result.reason
+    # And `uv pip sync` counts as rebuilding an environment at all, which the
+    # vocabulary had missed while knowing only the project-mode `uv sync`.
+    workflow.write_text(
+        "name: env\non: [push]\njobs:\n  env:\n    runs-on: ubuntu-latest\n    steps:\n"
+        "      - run: uv venv /tmp/v && uv pip sync --python /tmp/v code/requirements.lock\n"
+    )
+    subprocess.run(["git", "add", "-A"], cwd=target, check=True, env=env)
+    subprocess.run(["git", "commit", "-qm", "no rerun step, only the rebuild"],
+                   cwd=target, check=True, env=env)
+    again = REGISTRY["ci-present"](Object(target))
+    assert str(workflow.relative_to(target)) in str(again.details.get("rebuilders")), again.details
