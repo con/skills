@@ -185,8 +185,16 @@ def run_env_linked(obj: Object) -> Probe:
              "mechanism": mechanism}
         )
 
+    # What *kind* of evidence each record carried, because the three are not
+    # equal: a container or a lockfile can reconstitute the environment, a
+    # run-time capture only describes it. A blind run on another model tier
+    # overrode must/006 precisely because the reason did not say which of the
+    # three it had counted, so the basis is now in the reason and in `details`.
+    by_mechanism = {m: sum(1 for r in with_env if r["mechanism"] == m)
+                    for m in ("container", "lockfile", "capture")}
     details = {"records": len(records), "with_env": len(with_env), "without_env": without_env[:20],
-               "unpinned": unpinned}
+               "by_mechanism": by_mechanism, "unpinned": unpinned}
+    reconstitutable = by_mechanism["container"] + by_mechanism["lockfile"]
 
     # must/006 — do the run records name the environment they ran in?
     if not records:
@@ -200,9 +208,16 @@ def run_env_linked(obj: Object) -> Probe:
         s006 = "met"
         r006 = clip(f"All {len(records)} run record(s) name a container image, a lockfile or an "
                     "environment capture.")
+    elif with_env and not reconstitutable:
+        s006 = "partial"
+        r006 = clip(f"{len(without_env)} of {len(records)} run record(s) name no environment at all, and "
+                    f"the other {len(with_env)} carry only a run-time capture (duct or similar), which "
+                    f"describes the environment without reconstituting it.")
     elif with_env:
         s006 = "partial"
-        r006 = clip(f"{len(without_env)} of {len(records)} run record(s) name no container or lockfile, "
+        r006 = clip(f"{len(without_env)} of {len(records)} run record(s) name no container or lockfile "
+                    f"({by_mechanism['container']} name a container, {by_mechanism['lockfile']} a "
+                    f"lockfile, {by_mechanism['capture']} only a capture), "
                     f"e.g. {without_env[0]['commit'][:7]}: {without_env[0]['cmd']}")
     else:
         s006 = "unmet"

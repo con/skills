@@ -26,7 +26,7 @@ When a judgement turns on wording, open the paper rather than this card.
 ## Known drift to be aware of (and not to paper over)
 
 - The paper names **S.2**, **M.3** and **D.3** — all three about licensing; principles-schema 0.2.0 does not carry them, so none of the 31 checklist items asks about a licence.
-  The paper lists 19 principles, the schema 17 ([`../../docs/stamped/upstream/paper-schema-drift-issue.md`](../../docs/stamped/upstream/paper-schema-drift-issue.md) has the line numbers).
+  The paper lists 19 principles, the schema 17 ([`docs/stamped/upstream/paper-schema-drift-issue.md`](https://github.com/con/skills/blob/master/docs/stamped/upstream/paper-schema-drift-issue.md) in con/skills has the line numbers; it is not part of an installed copy of this skill).
   The assessor reports licence findings as an extra item outside the checklist rather than bending an existing id ([`response-format.md`](response-format.md)).
 - **T.4** ("code-driven provenance SHOULD be recorded programmatically") exists in the schema but has **no checklist item**.
   Evidence for it is reported under the T items it supports, with the gap named.

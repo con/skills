@@ -131,7 +131,8 @@ Consider fanning these out to subagents, one per principle, when the object is l
 Before a finding goes first in the report, confirm it yourself rather than repeating a probe.
 The cheap confirmations:
 
-- **An unresolvable module url** (must/002): clone the object into a temporary directory from its *published* remote and run `git submodule update --init <path>`, or resolve the recorded url by hand against that remote. `url = ../..` resolving to something real on your disk and to nothing for a stranger is exactly the case worth being sure about.
+- **An unresolvable module url** (must/002): clone the object into a temporary directory from its *published* remote and run `git submodule update --init <path>`, or resolve the recorded url by hand against that remote.
+  If the object records no remote you can clone, resolve the url against the one its documentation names, and say in the reason that the recorded url is the defect and the documented one is what you used — the missing remote is a finding of its own (must/016), not a reason to leave must/002 unchecked. `url = ../..` resolving to something real on your disk and to nothing for a stranger is exactly the case worth being sure about.
   A url can also be live and still unusable: `git fetch --depth=1 <url> <recorded commit>` catches a module pinned to a commit that does not exist upstream, which the shape check cannot see and `--check-remote` now does.
 - **A remote that does not exist** (must/016): `git ls-remote <remote url>` before believing a publication claim. A tracked specification in an unpublished repository is not shared.
 - **A missing environment specification** (must/010, must/013): look for what the entry point actually requires — a tool checked on `PATH`, a version gate, a vendored directory — and cite that line, not the absence of a file.
@@ -158,7 +159,7 @@ python3 ../stamped-conventions/scripts/encode_response.py encode   <date>-respon
 
 `validate` must pass before you report anything: it catches an unanswered item, an item still carrying the probe draft's "No probe covers this item" placeholder, a status without evidence, a reason over the app's 250 characters, and an id the app would reject.
 Every one of the 31 items gets your answer — the judgement items in [Step 4](#step-4-judge-what-no-probe-can) are not optional, and a smaller model skipping the `may/*` items is the observed failure this check exists to stop.
-Write the four files `response-format.md` names — `<date>-assessment.md`, `<date>-response.json`, `<date>-probes.json`, and `<date>-fresh-rerun.json` only if that probe ran — where `<date>` is the day you made the assessment, in UTC.
+Write the four files `response-format.md` names — `<date>-assessment.md`, `<date>-response.json`, `<date>-probes.json`, and `<date>-fresh-rerun.json` only if that probe ran — where `<date>` is the day you made the assessment, in UTC — from `date -u +%F`, not from any date in your context, which may disagree with the host by a day.
 Follow its report layout: verdict line with denominators, what to fix first, what is already good, the per-item table, the flagged items, the not-checked list, goals and kind, then the URL and the stamp.
 Fill `assessor` with this skill's `version:`, the harness, the model, and `dependencies: ["stamped-conventions@<version>"]`.
 
@@ -183,6 +184,8 @@ Where the products go:
 ## Validation scope
 
 This version is calibrated on:
+
+Those references live in the [con/skills](https://github.com/con/skills) repository, not in an installed copy of this skill: nothing outside this directory and its `../stamped-conventions/` sibling is needed to run the procedure, and a link into the repository that does not resolve where you are reading is a note, not a stop.
 
 - the defect-injection mutants in `evals/stamped/mutants/` (one injected defect, one expected item flip) — which test the probes, not this procedure;
 - blind runs of this skill by fresh subagents on real objects, diffed per item against the reference answers in `evals/stamped/gold/` (`evals/stamped/harness/blind_run.py`) — which are what test the procedure;

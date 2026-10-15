@@ -36,6 +36,8 @@ This reconciles @asmacdo's draft (pass/partial/fail/unknown), STAMPED-dl's met/p
 
    **A declared process that has never run is `partial`**, not `met` and not `not-checked`.
    must/014 and should/008 ask for a process *and* for its updates to be tracked; a documented regeneration command with no update in the history is half of that, so say "declared in <file>, no instance in the history yet".
+   **A declared process with instances in the history is `met`**: cite one.
+   A blind run stalled on exactly this gap — a re-install step the history shows was carried out seventeen times fits neither "never run" nor "unmet" — so the three cases are: instances in the history → `met`; declared, no instance → `partial`; not declared → `unmet`.
    **The bar for "declared" is a command a reader could run**: `# pinned with uv pip compile code/requirements.in` in a lockfile header clears it; "dependencies are kept up to date" does not, and that is `unmet`.
    This is the commonest borderline case, and it comes up on every young object.
 6. **`restricted`** (from STAMPED-dl) is **not a status here**.
