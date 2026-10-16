@@ -1,4 +1,4 @@
 [submodule "evals"]
 	path = evals
 	url = https://github.com/con/skills.git
-	branch = codex/neutral-assessor-evals
+	branch = codex/narps-research-trial-evidence
