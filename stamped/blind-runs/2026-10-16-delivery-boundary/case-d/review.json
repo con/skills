@@ -1,0 +1,14 @@
+{
+  "reviewed_at": "2026-10-16T05:21:15.087922+00:00",
+  "case": "case-d",
+  "native_session_id": "01a14321-50b4-7c41-a264-ec742714cc0f",
+  "native_model": "gpt-6-luna",
+  "native_reasoning_effort": "high",
+  "native_transcript_sha256": "cbb8a9ec667f2dfbab42e5cc79e6c5ef904bf147e8b1b94c18ce63ffda5cb8f1",
+  "boundary_checks_passed": true,
+  "scientific_adequacy": "Correct delivered n=3 mean=4.0 recognized without replay",
+  "applicability_checks_passed": false,
+  "finding": "may/001 still penalizes NumPy as an unlinked module despite candidate guidance. Raw judgment retained; reference was read in native trace. Incomplete dependency environment was ambiguously allowed to change applicability.",
+  "classification": "skill wording; clarify component subject in item-specific guidance and probe hint",
+  "disposition": "Prospective clarification and new regression/counterexample trials; no regrading."
+}

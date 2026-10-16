@@ -1,0 +1,38 @@
+{
+  "reviewed_at": "2026-10-16T05:07:31.166836+00:00",
+  "case": "case-a",
+  "native_session_id": "01a14312-d12d-7c11-bd99-7591b2246d18",
+  "native_model": "gpt-6-astra",
+  "native_reasoning_effort": "ultra",
+  "native_transcript_sha256": "a33dfb7cd59bfebaa1fc6cf1bd652af132363c3253b392425394590e4afabdef",
+  "changed_input_paths": [
+    "object/.git/index"
+  ],
+  "scientific_delivered_bytes_unchanged": true,
+  "science": "Original delivered mean2.0 judged adequate by direct independent arithmetic, without replay",
+  "worker_tracking": {
+    "status": "met",
+    "reason": "Git tracks all four delivered files. The original stop receipt records a clean worker commit adding analysis.py and products/estimate.json after the supplied seed.",
+    "source": "probe:tree-clean+judgement",
+    "evidence": [
+      {
+        "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-a/stop-state.json",
+        "description": "Original delivery ba0a9bdc2bd355c1303a60a5b4a43527a41d8e89 is clean, with one commit after the supplied seed.",
+        "sha256": null
+      },
+      {
+        "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-a/out/2026-10-16-assessment.md#delivery-boundary",
+        "description": "Git inventory and history independently match the receipt.",
+        "sha256": null
+      }
+    ]
+  },
+  "seed_attribution": "Report explicitly distinguishes seed input from original worker code/result commit",
+  "boundary_checks_passed": true,
+  "new_friction": [
+    "Probe heuristics miss script/derivative and confuse supplied input; overrides were used",
+    "No-large-binary applicability still ambiguous",
+    "Output product list repeated inconsistently; candidate text now references single canonical list",
+    "Batch response editing overhead; recorded, no new API added"
+  ]
+}

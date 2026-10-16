@@ -1,0 +1,70 @@
+{
+  "reviewed_at": "2026-10-16T05:25:37.302931+00:00",
+  "case": "case-f",
+  "native_session_id": "01a14328-6f0d-7370-ac5a-c84f88d1962d",
+  "native_model": "gpt-6-luna",
+  "native_reasoning_effort": "high",
+  "native_transcript_sha256": "236da1a9000fc30005c34850c1bf1a6c90cd5b030d99acfa429513036d771683",
+  "scientific_delivered_bytes_unchanged": true,
+  "scientific_adequacy": "Correct delivered n=3 mean=4.0 recognized without replay",
+  "worker_tracking": {
+    "status": "partial",
+    "reason": "Git tracks input.csv and .gitignore, while the README, scripts, and requirements are untracked in the delivered state.",
+    "source": "probe:tree-clean+judgement",
+    "evidence": [
+      {
+        "uri": "git status --short",
+        "description": "?? README.md, analysis.py, component.py, requirements.txt",
+        "sha256": null
+      },
+      {
+        "uri": "git ls-files -s",
+        "description": "only .gitignore and input.csv tracked",
+        "sha256": null
+      }
+    ],
+    "flags": [
+      "probe-overridden"
+    ]
+  },
+  "worker_tracking_met_credit": false,
+  "original_worker_commits": 0,
+  "boundary_checks_passed": true,
+  "applicability_findings": {
+    "must/005": {
+      "status": "not-applicable",
+      "reason": "N/A: the complete delivered object contains no large binary data.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-f/stop-state.json",
+          "description": "delivery inventory includes input.csv and small estimate.json; no large binary",
+          "sha256": null
+        }
+      ]
+    },
+    "may/001": {
+      "status": "unmet",
+      "reason": "component.py is independently maintained but its upstream location, revision, and retrieval instructions were not retained.",
+      "source": "probe:subdatasets-resolvable+judgement",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "explicitly says upstream location, revision and retrieval instructions were not retained",
+          "sha256": null
+        },
+        {
+          "uri": "component.py",
+          "description": "copied component in object",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    }
+  },
+  "applicability_checks_passed": true,
+  "remaining_variability": "Incomplete-environment inclusion/completeness judgments differ across these related fixtures; no claim of uniform verdicts.",
+  "disposition": "Raw output retained; no regrading. E is a regression; F is a counterexample, not a population efficacy estimate."
+}

@@ -1,0 +1,21 @@
+{
+  "assess-alignment-with-stamped-principles/SKILL.md": "1b3825d4e9f0d81a5c7cebf7990d08029990da2e44b8c78f15f404b485714e94",
+  "assess-alignment-with-stamped-principles/scripts/fresh_rerun.py": "928a3aa24c56c58b78c77066271bfdbc99ab05b60f5226c99baa385471703a49",
+  "assess-alignment-with-stamped-principles/scripts/probes/__init__.py": "a1ac553469f884a00af4d0795d1a53be3bf8bc5f8ac428aceba9357502d3e593",
+  "assess-alignment-with-stamped-principles/scripts/probes/common.py": "08cfabb932bf31efa910fae33b0c42b10db5362be1f8db8c9fa537b2f4b4baf1",
+  "assess-alignment-with-stamped-principles/scripts/probes/modules.py": "e9f83a80a19f78e112a6b2a127f06a88c2e8fbc40575155faba5203b332e1547",
+  "assess-alignment-with-stamped-principles/scripts/probes/provenance.py": "6fdd74a8ac2d88b9790128ce9c205082c399365407e551d8af7f2a01d640d40f",
+  "assess-alignment-with-stamped-principles/scripts/probes/structure.py": "35fbba1aa985125d28b1eb7860098014a95f7cba03205b4b8a356d37be4e6cad",
+  "assess-alignment-with-stamped-principles/scripts/run_probes.py": "409aba74dd63d9423b9c8ce0ee70bae87433fc333f15c91f3115cf168f028727",
+  "stamped-conventions/SKILL.md": "681bdfb9123b463be8e8f0190ac62d3af464434eedbcda70d77dff562811e29f",
+  "stamped-conventions/checklist/lock.json": "4c353484adcb2210b8041f21366c7de04c4eaace7f8f52e7a30f6a279110a2ad",
+  "stamped-conventions/checklist/stamped-checklist-0.3.1.json": "da2eb88ed49dff64f098ad92200dec81c1b4404cc2d3ba1e1e1404d0e10e7bba",
+  "stamped-conventions/references/principles-card.md": "7b7d090a8b3167b1bc1090adaf76e694a17a19dd57bfcbe16fb48949ea5ded61",
+  "stamped-conventions/references/project-kinds.md": "9298f37272bd814c73d6628f172edc03e4612343b47beaf9f75f4f8e3213f41b",
+  "stamped-conventions/references/response-format.md": "37556b8f40d259839a47f36e046a151df981fd77fdcdb3c0ac6fd22b390c0697",
+  "stamped-conventions/references/response-schema.json": "3ec46b6f8b2ab267c1d0fac94a9a55cca47d4a76c8a6922eaf947f3f0dd6bec2",
+  "stamped-conventions/references/stacks/datalad.md": "7c733e4e6cde63cdf78cf35c2890e5f3b2b8f9dd31e2576e31a3678657c6f0cc",
+  "stamped-conventions/references/verdicts.md": "0d6a48688f86bf472950afdcef4a4820aa06a90ec6d38849762e642d64c34c47",
+  "stamped-conventions/scripts/encode_response.py": "10533d443b75dc1456bc4e080b03a8fd3822782e785a08eab9ef0db8006e3d27",
+  "stamped-conventions/scripts/vendor_checklist.py": "d47751678b7a6d1e585c6e54d01a967739db5a1840cde9ccafaf09e7e0cc289f"
+}

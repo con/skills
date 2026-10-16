@@ -1,0 +1,18 @@
+{
+  "scope": "Two independent synthetic followability cases; not NARPS outcomes, no causal efficacy estimate.",
+  "case_a": {
+    "observed": "Replaced pooled-variance formula mislabeled Welch with a trusted Welch implementation; preserved zero and excluded one NA; gave uncertainty and a figure without introducing a project migration or assessment loop.",
+    "expected_difference": 6.5,
+    "original_input_unchanged": true,
+    "limitation": "Agent reported a snapshot-boundary ambiguity and did not load all referenced guidance. Classified as harness prompt ambiguity; the second independent case explicitly permits all supplied snapshot references."
+  },
+  "case_b": {
+    "held_out_from_wording_tuning": true,
+    "changed_paths": [
+      "REPORT.md"
+    ],
+    "observed": "Only report units corrected; no numerical artifact changed and no scientific rerun reported."
+  },
+  "skill_wording_changed_after_cases": false,
+  "graded_objects": "Exact original and completed file manifests; these trial targets have no Git commits, and no trial commit/publication was requested."
+}

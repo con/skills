@@ -1,0 +1,76 @@
+{
+  "reviewed_at": "2026-10-16T05:15:25.382515+00:00",
+  "case": "case-c",
+  "native_session_id": "01a14319-066f-7a73-b527-d4f81acb4151",
+  "native_model": "gpt-6-luna",
+  "native_reasoning_effort": "high",
+  "native_transcript_sha256": "5d18b0120c51f00a7000998124877da940d95e83ef9190d9c48bc490d6a594c7",
+  "changed_input_paths": [
+    "object/.git/index"
+  ],
+  "scientific_delivered_bytes_unchanged": true,
+  "scientific_adequacy": "Correct delivered mean2.0 recognized without replay",
+  "worker_tracking": {
+    "status": "partial",
+    "reason": "Git tracked input.csv, while original delivery left analysis.py untracked and estimate.json ignored.",
+    "source": "probe:tree-clean+judgement",
+    "evidence": [
+      {
+        "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-c/stop-state.json",
+        "description": "original delivery lists analysis.py untracked and products/estimate.json ignored",
+        "sha256": null
+      },
+      {
+        "uri": "analysis.py",
+        "description": "untracked at original delivery",
+        "sha256": null
+      }
+    ],
+    "flags": [
+      "probe-overridden"
+    ]
+  },
+  "worker_tracking_met_credit": false,
+  "original_worker_commits": 0,
+  "boundary_checks_passed": true,
+  "applicability_findings": {
+    "may/001": {
+      "status": "unmet",
+      "reason": "Python is an external software dependency, but no linked module provides it.",
+      "source": "probe:subdatasets-resolvable+judgement",
+      "evidence": [
+        {
+          "uri": "analysis.py",
+          "description": "requires a Python runtime",
+          "sha256": null
+        },
+        {
+          "uri": "find /Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-c/object -maxdepth 3 -type f",
+          "description": "no linked modules or environment specification",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "must/005": {
+      "status": "met",
+      "reason": "The delivered CSV and JSON are small text files; no large binary content needs a separate store.",
+      "source": "probe:large-in-annex",
+      "evidence": [
+        {
+          "uri": "input.csv",
+          "description": "small text input",
+          "sha256": null
+        },
+        {
+          "uri": "products/estimate.json",
+          "description": "small text result",
+          "sha256": null
+        }
+      ]
+    }
+  },
+  "disposition": "Raw judgment retained. Original-delivery boundary works; applicability differences motivate prospective clarification, not regrading."
+}

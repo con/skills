@@ -1,0 +1,31 @@
+{
+  "supplied_seed": {
+    "head": "296e306732358822e82b548b8d73e55255ef536a",
+    "git_status": "",
+    "tracked_paths": [
+      ".gitignore",
+      "input.csv"
+    ],
+    "files": {
+      ".gitignore": "14ca1bed94a382e3b079eb6059dac7dced7b4c46b4a20a7380487500dc7c2d7f",
+      "input.csv": "4bf0e63035dd1fafdbe5915d64110833dacd4754cfbb5e70330440fd3bb5f53b"
+    }
+  },
+  "original_delivery": {
+    "head": "ba0a9bdc2bd355c1303a60a5b4a43527a41d8e89",
+    "git_status": "",
+    "tracked_paths": [
+      ".gitignore",
+      "analysis.py",
+      "input.csv",
+      "products/estimate.json"
+    ],
+    "files": {
+      ".gitignore": "14ca1bed94a382e3b079eb6059dac7dced7b4c46b4a20a7380487500dc7c2d7f",
+      "analysis.py": "e0b9f58f2216ff75136cf681d961fe171c48361c1335ffce03f137c73488cacf",
+      "input.csv": "4bf0e63035dd1fafdbe5915d64110833dacd4754cfbb5e70330440fd3bb5f53b",
+      "products/estimate.json": "e6ed0002cabe15a3394c892c60df5e6ff91dac274066f0fd145ecf2eb7ea95c5"
+    },
+    "commits_after_supplied_seed": 1
+  }
+}

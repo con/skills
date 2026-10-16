@@ -1,0 +1,89 @@
+{
+  "reviewed_at": "2026-10-16T05:15:25.365944+00:00",
+  "case": "case-b",
+  "native_session_id": "01a14316-8486-77a1-976e-95864a9ef2c5",
+  "native_model": "gpt-6-astra",
+  "native_reasoning_effort": "ultra",
+  "native_transcript_sha256": "5118ec7cc31cc893025020ea2af850c17346f2bf0aa6fe350f15a930ebda0d4b",
+  "changed_input_paths": [
+    "object/.git/index"
+  ],
+  "scientific_delivered_bytes_unchanged": true,
+  "scientific_adequacy": "Correct delivered mean2.0 recognized without replay",
+  "worker_tracking": {
+    "status": "partial",
+    "reason": "Git tracks the supplied seed only. analysis.py is untracked and products/estimate.json ignored; the worker made no commits. Version control covers only part of the delivery.",
+    "source": "probe:tree-clean+judgement",
+    "evidence": [
+      {
+        "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/stop-state.json",
+        "description": "Both tracked paths and the commit predate worker actions; commits_after_supplied_seed is zero.",
+        "sha256": null
+      },
+      {
+        "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-evidence.json",
+        "description": "Current Git status and history independently match the receipt.",
+        "sha256": null
+      },
+      {
+        "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-probes.json",
+        "description": "Tree-clean reported unmet from an untracked script; partial reflects supplied tracked components without attributing them to the worker.",
+        "sha256": null
+      }
+    ],
+    "flags": [
+      "probe-overridden"
+    ]
+  },
+  "worker_tracking_met_credit": false,
+  "original_worker_commits": 0,
+  "boundary_checks_passed": true,
+  "applicability_findings": {
+    "may/001": {
+      "status": "unmet",
+      "reason": "No independently identified, retrievable software component link is provided for the external Python runtime. The sole dataset is included directly; no submodule or equivalent link exists.",
+      "source": "probe:subdatasets-resolvable+judgement",
+      "evidence": [
+        {
+          "uri": "analysis.py",
+          "description": "Requires a host Python runtime, with no linked software component.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-evidence.json",
+          "description": "No module files, software links or environment definition in the complete inventory.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-probes.json",
+          "description": "No submodules found; direct review establishes no equivalent links.",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "must/005": {
+      "status": "not-applicable",
+      "reason": "N/A: the entire delivery is four small text files, 8 to 227 bytes; there is no large binary data to version.",
+      "source": "probe:large-in-annex+judgement",
+      "evidence": [
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-evidence.json",
+          "description": "Full inventory includes untracked and ignored files, not just Git blobs.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-probes.json",
+          "description": "Probe returned met for an empty large-binary subject; verdict rule 5 supports not-applicable.",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    }
+  },
+  "disposition": "Raw judgment retained. Original-delivery boundary works; applicability differences motivate prospective clarification, not regrading."
+}

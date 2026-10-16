@@ -1,0 +1,473 @@
+{
+  "checklist_version": "0.3.1",
+  "responses": {
+    "stamped-checklist:must/001": {
+      "status": "met",
+      "reason": "All delivered files, including ignored products/estimate.json, sit under the object root.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "input.csv",
+          "description": "Delivered input; the receipt and inventory place all artifacts under object/",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/002": {
+      "status": "met",
+      "reason": "analysis.py reads the included input.csv by relative path; no external dataset is referenced.",
+      "source": "probe:subdatasets-resolvable+judgement",
+      "evidence": [
+        {
+          "uri": "analysis.py",
+          "description": "Reads input.csv; input.csv=Delivered under the same root",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:must/003": {
+      "status": "unmet",
+      "reason": "analysis.py imports external NumPy; it is specified by requirements.txt but neither bundled nor linked as a module.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "analysis.py",
+          "description": "Imports numpy; requirements.txt=Names numpy>=2, without bundling or linking software",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/004": {
+      "status": "unmet",
+      "reason": "Original delivery has untracked analysis.py and requirements.txt and ignored products/estimate.json; Git does not capture the full delivery.",
+      "source": "probe:tree-clean+judgement",
+      "evidence": [
+        {
+          "uri": "../stop-state.json#original_delivery",
+          "description": "Original statuses include ?? analysis.py, ?? requirements.txt, and !! products/estimate.json",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/005": {
+      "status": "not-applicable",
+      "reason": "N/A: the complete delivered inventory contains only small text/CSV/JSON files; no large binary data exists.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "../stop-state.json#original_delivery",
+          "description": "Complete delivery inventory lists only small text and tabular files",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/006": {
+      "status": "unmet",
+      "reason": "The shipped estimate has no run record linking the computation, input, and environment; the probe misclassified input.csv as derived.",
+      "source": "probe:derived-have-records+judgement",
+      "evidence": [
+        {
+          "uri": "products/estimate.json",
+          "description": "Delivered derived result; ../stop-state.json#original_delivery=Ignored output present, with no run record",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:must/007": {
+      "status": "unmet",
+      "reason": "No README, Makefile, or equivalent installation and usage instructions are delivered.",
+      "source": "probe:entry-point",
+      "evidence": [
+        {
+          "uri": "git ls-tree -r HEAD",
+          "description": "Only .gitignore and input.csv are tracked; delivered inventory has no README or Makefile",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/008": {
+      "status": "met",
+      "reason": "analysis.py is a clear starting script and writes products/estimate.json from input.csv.",
+      "source": "probe:entry-point+judgement",
+      "evidence": [
+        {
+          "uri": "analysis.py",
+          "description": "Single analysis script reads the input and writes the result",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:must/009": {
+      "status": "met",
+      "reason": "The delivered script uses relative paths for input.csv and products/estimate.json.",
+      "source": "probe:no-abs-paths+judgement",
+      "evidence": [
+        {
+          "uri": "analysis.py",
+          "description": "Uses relative paths for input.csv and products/estimate.json",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "mapping-questioned"
+      ]
+    },
+    "stamped-checklist:must/010": {
+      "status": "unmet",
+      "reason": "requirements.txt lists NumPy but omits the Python runtime/version; the delivered execution environment is incomplete.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "analysis.py",
+          "description": "Python script imports numpy; requirements.txt=Only specifies numpy>=2",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/011": {
+      "status": "unmet",
+      "reason": "No documentation specifies host assumptions, including the required Python runtime; the delivered files provide no execution guidance.",
+      "source": "probe:platform-assumptions+judgement",
+      "evidence": [
+        {
+          "uri": "requirements.txt",
+          "description": "No Python runtime or host assumptions specified; object inventory contains no documentation",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:must/012": {
+      "status": "unmet",
+      "reason": "The only dependency list is requirements.txt (numpy>=2); Python and other system requirements are undocumented.",
+      "source": "probe:platform-assumptions+judgement",
+      "evidence": [
+        {
+          "uri": "requirements.txt",
+          "description": "Lists only numpy>=2; no README or system-requirements file in delivery",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:must/013": {
+      "status": "unmet",
+      "reason": "requirements.txt is untracked in the original delivery, so the environment specification is not version-controlled.",
+      "source": "probe:env-spec-tracked+judgement",
+      "evidence": [
+        {
+          "uri": "../stop-state.json#original_delivery",
+          "description": "Shows requirements.txt as untracked",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/014": {
+      "status": "unmet",
+      "reason": "No process or command for updating environment specifications is delivered.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "requirements.txt",
+          "description": "Contains only numpy>=2 and no regeneration/update instructions",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "upstream-duplicate"
+      ]
+    },
+    "stamped-checklist:must/015": {
+      "status": "unmet",
+      "reason": "numpy>=2 does not pin an exact environment; no lock, interpreter version, or immutable environment snapshot is delivered.",
+      "source": "probe:run-env-linked+judgement",
+      "evidence": [
+        {
+          "uri": "requirements.txt",
+          "description": "Unbounded upper version and no runtime pin",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:must/016": {
+      "status": "unmet",
+      "reason": "No published remote or archived environment is identified; requirements.txt is untracked and the repository has no remote.",
+      "source": "probe:env-spec-tracked+judgement",
+      "evidence": [
+        {
+          "uri": "../stop-state.json#original_delivery",
+          "description": "Environment file untracked; .git/config=No remote configured",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/017": {
+      "status": "unmet",
+      "reason": "No delivered instructions explain how to obtain or use the environment specification.",
+      "source": "probe:entry-point+judgement",
+      "evidence": [
+        {
+          "uri": "requirements.txt",
+          "description": "No install instructions; object inventory contains no README or equivalent guide",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/001": {
+      "status": "partial",
+      "reason": "Git contains the input, but analysis.py and requirements.txt are untracked and the result is ignored.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "../stop-state.json#original_delivery",
+          "description": "Shows only input.csv tracked; code/spec untracked and output ignored",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/002": {
+      "status": "unmet",
+      "reason": "The delivered object has no test or repeated-run record; the repository contains a single seed commit.",
+      "source": "probe:ci-present+judgement",
+      "evidence": [
+        {
+          "uri": "git log",
+          "description": "One commit; delivered inventory contains no test or repeated-run records",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:should/003": {
+      "status": "partial",
+      "reason": "Input, code, and environment list are separate files, but there are no documented or independently versioned component modules.",
+      "source": "probe:modules-separated+judgement",
+      "evidence": [
+        {
+          "uri": "input.csv, analysis.py, requirements.txt",
+          "description": "Separate files under one root; no module boundaries or docs",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:should/009": {
+      "status": "not-checked",
+      "reason": "Access restrictions are not stated; confirm whether any delivered data or software is restricted, then classify its isolation.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "Object inventory and .git/config",
+          "description": "No restriction/access metadata or separate restricted module",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/004": {
+      "status": "not-checked",
+      "reason": "No fresh-environment replay was authorized or run; a successful isolated replay with comparison would settle this.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "products/estimate.json",
+          "description": "Output exists, but no run record identifies a fresh environment",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/005": {
+      "status": "unmet",
+      "reason": "analysis.py invokes the current Python process directly and creates no disposable environment per execution.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "analysis.py",
+          "description": "Contains only direct Python computation; no environment creation mechanism",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/006": {
+      "status": "unmet",
+      "reason": "No exact environment specification or recurring reconstitution test is delivered.",
+      "source": "probe:ci-present+judgement",
+      "evidence": [
+        {
+          "uri": "requirements.txt",
+          "description": "Unpinned dependency; no test or reconstitution records in delivery",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:should/007": {
+      "status": "unmet",
+      "reason": "No environment binaries or image are archived; the only environment file is an untracked requirements list.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "../stop-state.json#original_delivery",
+          "description": "Lists untracked requirements.txt and no archived environment artifacts",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/008": {
+      "status": "unmet",
+      "reason": "No update process is documented; this repeats must/014 by design.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "requirements.txt",
+          "description": "No regeneration/update instructions",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "upstream-duplicate"
+      ]
+    },
+    "stamped-checklist:may/001": {
+      "status": "unmet",
+      "reason": "NumPy is an external software dependency and is not included or linked as a module.",
+      "source": "probe:subdatasets-resolvable+judgement",
+      "evidence": [
+        {
+          "uri": "analysis.py",
+          "description": "Imports numpy; repository has no submodules",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:may/002": {
+      "status": "unmet",
+      "reason": "No documentation describes modules or how components relate.",
+      "source": "probe:modules-separated+judgement",
+      "evidence": [
+        {
+          "uri": "Object inventory",
+          "description": "No README or modular-structure documentation",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:may/003": {
+      "status": "unmet",
+      "reason": "No independently updateable modules or boundaries are defined.",
+      "source": "probe:modules-separated+judgement",
+      "evidence": [
+        {
+          "uri": "Object inventory",
+          "description": "Single root with no module definitions",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:may/004": {
+      "status": "unmet",
+      "reason": "No composition mechanism for independent modules is delivered.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "analysis.py",
+          "description": "Directly reads one local input; no module composition setup",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:may/005": {
+      "status": "unmet",
+      "reason": "No navigation guidance or tooling for a modular structure is delivered.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "Object inventory",
+          "description": "No modular structure documentation or navigation tooling",
+          "sha256": null
+        }
+      ]
+    }
+  },
+  "schema_version": "0.2.0",
+  "principles_version": "0.2.0",
+  "checklist_source": {
+    "repo": "https://github.com/stamped-principles/stamped-checklist-schema",
+    "tag": "v0.3.1",
+    "commit": "af259bad237fa57b856417db8dba45a1b283a527"
+  },
+  "extra_items": [
+    {
+      "key": "clone-weight",
+      "status": "met",
+      "reason": "No text blob in git exceeds 10 MiB.",
+      "evidence": [
+        {
+          "uri": "git ls-tree -r -l HEAD",
+          "description": "largest text blob under 10485760 bytes",
+          "sha256": null
+        }
+      ]
+    },
+    {
+      "key": "inputs-untouched",
+      "status": "not-applicable",
+      "reason": "N/A: no linked modules, so there is no recorded input state to compare against.",
+      "evidence": []
+    },
+    {
+      "key": "license-declared",
+      "status": "unmet",
+      "reason": "No LICENSE, LICENSES/, REUSE.toml or BIDS License field: reuse terms are unstated.",
+      "evidence": [
+        {
+          "uri": "probe:license-declared",
+          "description": "no licence file among 2 tracked paths, and no License field in any dataset_description.json",
+          "sha256": null
+        }
+      ]
+    }
+  ],
+  "object": {
+    "url": null,
+    "commit": "5f3aefd0ea525d8526ee47e06c6ffd0a4d2ce6e7",
+    "captured_at": "2026-10-16T05:14:11+00:00",
+    "kind": "study"
+  },
+  "assessor": {
+    "skill": "assess-alignment-with-stamped-principles",
+    "version": "0.1.0",
+    "harness": "Codex Desktop (subagent; exact runtime metadata unavailable)",
+    "model": "GPT-6 (exact model identifier unavailable)",
+    "date": "2026-10-16",
+    "drafted_by": "scripts/run_probes.py",
+    "dependencies": [
+      "stamped-conventions@0.1.0"
+    ]
+  },
+  "scope": "Original delivery at commit 5f3aefd0ea525d8526ee47e06c6ffd0a4d2ce6e7, as described by the supplied stop receipt; included untracked and ignored files. Probes ran with remote checking; no replay attempted. Assessor runtime/model identifiers were unavailable."
+}

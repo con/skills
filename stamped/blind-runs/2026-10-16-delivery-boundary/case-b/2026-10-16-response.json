@@ -1,0 +1,658 @@
+{
+  "checklist_version": "0.3.1",
+  "responses": {
+    "stamped-checklist:must/001": {
+      "status": "met",
+      "reason": "All four delivered files lie under the object root; there are no symlinks or external file references. Missing runtime specification is assessed separately.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-evidence.json",
+          "description": "Complete delivery inventory, hashes and no symlinks.",
+          "sha256": null
+        },
+        {
+          "uri": "analysis.py#L3",
+          "description": "Input and output paths stay within the root.",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/002": {
+      "status": "met",
+      "reason": "analysis.py reads the supplied input.csv at the common root. The sole dataset is present and matches the receipt; no remote module resolution is needed.",
+      "source": "probe:subdatasets-resolvable+judgement",
+      "evidence": [
+        {
+          "uri": "analysis.py#L3",
+          "description": "Reads input.csv by relative path.",
+          "sha256": null
+        },
+        {
+          "uri": "input.csv",
+          "description": "The complete supplied dataset.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-evidence.json",
+          "description": "Input SHA-256 agrees with supplied seed and original delivery.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-probes.json",
+          "description": "Subdataset probe was not-checked because it only recognized module links.",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:must/003": {
+      "status": "unmet",
+      "reason": "analysis.py needs Python and its pathlib/json standard library; no runtime environment or linked software component is delivered.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "analysis.py#L1",
+          "description": "Python imports pathlib; line 2 imports json; neither is a third-party package.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-evidence.json",
+          "description": "All four delivered files inspected; no runtime or environment definition.",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/004": {
+      "status": "partial",
+      "reason": "Git tracks the supplied seed only. analysis.py is untracked and products/estimate.json ignored; the worker made no commits. Version control covers only part of the delivery.",
+      "source": "probe:tree-clean+judgement",
+      "evidence": [
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/stop-state.json",
+          "description": "Both tracked paths and the commit predate worker actions; commits_after_supplied_seed is zero.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-evidence.json",
+          "description": "Current Git status and history independently match the receipt.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-probes.json",
+          "description": "Tree-clean reported unmet from an untracked script; partial reflects supplied tracked components without attributing them to the worker.",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:must/005": {
+      "status": "not-applicable",
+      "reason": "N/A: the entire delivery is four small text files, 8 to 227 bytes; there is no large binary data to version.",
+      "source": "probe:large-in-annex+judgement",
+      "evidence": [
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-evidence.json",
+          "description": "Full inventory includes untracked and ignored files, not just Git blobs.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-probes.json",
+          "description": "Probe returned met for an empty large-binary subject; verdict rule 5 supports not-applicable.",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:must/006": {
+      "status": "unmet",
+      "reason": "The actual derivative, products/estimate.json, has no execution record linking its actions to an exact environment. The receipt identifies bytes and Git state only.",
+      "source": "probe:derived-have-records+probe:run-env-linked+judgement",
+      "evidence": [
+        {
+          "uri": "products/estimate.json#L1",
+          "description": "Actual delivered derivative: mean 2.0.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/stop-state.json",
+          "description": "Hashes and stop state do not identify a command or environment.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-evidence.json",
+          "description": "All delivered files and full history contain no run/environment record.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-probes.json",
+          "description": "derived-have-records misclassified supplied input.csv as a derivative and omitted the ignored result.",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "mapping-questioned"
+      ]
+    },
+    "stamped-checklist:must/007": {
+      "status": "unmet",
+      "reason": "The full delivery has no installation or usage instructions, in a README or an equivalent interface. Add the runtime setup and invocation.",
+      "source": "probe:entry-point+judgement",
+      "evidence": [
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-evidence.json",
+          "description": "All four files opened; no README, Makefile, help interface or equivalent instructions.",
+          "sha256": null
+        },
+        {
+          "uri": "analysis.py",
+          "description": "Five-line script has no usage or installation documentation.",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/008": {
+      "status": "met",
+      "reason": "analysis.py is the sole main script: it reads input.csv and writes products/estimate.json. It is a clear entry point even though it is untracked and usage documentation is missing.",
+      "source": "probe:entry-point+judgement",
+      "evidence": [
+        {
+          "uri": "analysis.py#L3",
+          "description": "Direct top-level read, computation and output in lines 3-5.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-probes.json",
+          "description": "Entry-point probe missed the untracked script and reported unmet.",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:must/009": {
+      "status": "met",
+      "reason": "All file paths in the complete analysis.py are relative: input.csv, products, and products/estimate.json. No host-specific path appears.",
+      "source": "probe:no-abs-paths+judgement",
+      "evidence": [
+        {
+          "uri": "analysis.py#L3",
+          "description": "Lines 3-5 contain all three relative file paths.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-probes.json",
+          "description": "Tracked-path scan did not include analysis.py; direct reading extends its evidence to the executed code.",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/010": {
+      "status": "unmet",
+      "reason": "The complete script requires a Python runtime with pathlib and json, both standard-library modules. No environment specification includes that runtime; no third-party dependency is needed.",
+      "source": "probe:env-spec-tracked+judgement",
+      "evidence": [
+        {
+          "uri": "analysis.py",
+          "description": "Read all imports and operations: pathlib/json only; no subprocess or external tool call.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-evidence.json",
+          "description": "No runtime specification in any delivered file.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-probes.json",
+          "description": "env-spec-tracked measured tracked manifest presence; dependency inclusion was reviewed directly.",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "mapping-questioned"
+      ]
+    },
+    "stamped-checklist:must/011": {
+      "status": "unmet",
+      "reason": "The script assumes an available Python runtime and execution from the root with writable products/. These assumptions are not documented; no special OS, hardware, scheduler or service is evident.",
+      "source": "probe:platform-assumptions+judgement",
+      "evidence": [
+        {
+          "uri": "analysis.py#L3",
+          "description": "Relative current-directory input; lines 4-5 create/write products.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-evidence.json",
+          "description": "Full inventory contains no host requirements documentation.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-probes.json",
+          "description": "Platform scan was not-checked and omitted the untracked script.",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:must/012": {
+      "status": "unmet",
+      "reason": "No requirements list or environment specification documents the Python runtime and writable working directory required by analysis.py.",
+      "source": "probe:platform-assumptions+judgement",
+      "evidence": [
+        {
+          "uri": "analysis.py",
+          "description": "Python script imports pathlib/json and writes a relative output directory.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-evidence.json",
+          "description": "No requirements documentation in the complete four-file delivery.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-probes.json",
+          "description": "Platform probe required manual host-assumption review.",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:must/013": {
+      "status": "unmet",
+      "reason": "Only .gitignore and input.csv are versioned. No environment specification exists anywhere in the delivered tree or single-commit history.",
+      "source": "probe:env-spec-tracked+judgement",
+      "evidence": [
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/stop-state.json",
+          "description": "Tracked paths and unchanged seed commit.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-evidence.json",
+          "description": "Full file inventory and complete Git history.",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/014": {
+      "status": "unmet",
+      "reason": "No environment-update process is declared, and history contains only the supplied input seed. This repeats should/008 by checklist design.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-evidence.json",
+          "description": "Complete contents and history contain no environment specification or update command.",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "upstream-duplicate"
+      ]
+    },
+    "stamped-checklist:must/015": {
+      "status": "unmet",
+      "reason": "No exact Python version, runtime pin, container digest or frozen environment is delivered, so the result-producing environment cannot be reconstructed exactly.",
+      "source": "probe:run-env-linked+judgement",
+      "evidence": [
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-evidence.json",
+          "description": "All delivered files and history inspected; no environment pin.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/stop-state.json",
+          "description": "Receipt records file hashes, not an execution environment.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-probes.json",
+          "description": "run-env-linked was not-checked; direct complete inventory establishes absence of a specification.",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:must/016": {
+      "status": "unmet",
+      "reason": "There is no environment specification to share and no recorded publication location. The supplied local object does not establish access for independent recipients.",
+      "source": "probe:env-spec-tracked+judgement",
+      "evidence": [
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-evidence.json",
+          "description": "Full inventory lacks environment files; git remote -v is empty.",
+          "sha256": null
+        },
+        {
+          "uri": ".git/config",
+          "description": "No configured remote.",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/017": {
+      "status": "unmet",
+      "reason": "No delivered documentation tells a reader how to obtain or use the runtime environment; the script alone supplies neither installation instructions nor an environment specification.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-evidence.json",
+          "description": "All four delivered files opened, with no documentation or environment specification.",
+          "sha256": null
+        },
+        {
+          "uri": "analysis.py",
+          "description": "Executable computation, but no setup or usage text.",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/001": {
+      "status": "partial",
+      "reason": "The supplied input and ignore rule use Git, but worker code and results are outside version control. No common system covers every component.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/stop-state.json",
+          "description": "Only input.csv and .gitignore are tracked; analysis.py is untracked and products/estimate.json ignored.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-evidence.json",
+          "description": "Independent Git inspection confirms the original state.",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/002": {
+      "status": "not-checked",
+      "reason": "No repeated-testing evidence is delivered. Regular testing outside this capture is unknown; dated test records would settle it. No replay was authorized.",
+      "source": "probe:ci-present+judgement",
+      "evidence": [
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-evidence.json",
+          "description": "All files and history contain no CI, tests or repeated-run records.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/stop-state.json",
+          "description": "Stop receipt has no test history.",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/003": {
+      "status": "partial",
+      "reason": "The output is separated in products/ and code/input are distinct files, but they have no independently defined modules and no environment definition. Some separation is present.",
+      "source": "probe:modules-separated+judgement",
+      "evidence": [
+        {
+          "uri": "analysis.py#L3",
+          "description": "Reads root input.csv and writes products/estimate.json.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-evidence.json",
+          "description": "Complete delivered layout, including ignored output.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-probes.json",
+          "description": "modules-separated reported unmet from two tracked paths, overlooking the output directory.",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:should/009": {
+      "status": "not-applicable",
+      "reason": "N/A: no restricted data or software component occurs within this completely accessible four-file delivery. Reuse licensing is separately unstated.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-evidence.json",
+          "description": "All delivered files are directly readable; no restricted component or external access dependency is referenced.",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/004": {
+      "status": "not-checked",
+      "reason": "No fresh-environment completed-run evidence is supplied, and replay was excluded. An isolated execution with a recorded environment and result comparison would settle this.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/stop-state.json",
+          "description": "Stop receipt has no execution context.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-evidence.json",
+          "description": "No completed-run record in the delivered files; independent arithmetic check is not a pipeline replay.",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/005": {
+      "status": "unmet",
+      "reason": "The complete workflow is a host Python script; it creates an output directory but has no mechanism to spawn a disposable execution environment.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "analysis.py",
+          "description": "All five lines inspected: file I/O, arithmetic and JSON serialization only.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-evidence.json",
+          "description": "No wrapper, container/job definition or environment-creation mechanism is delivered.",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/006": {
+      "status": "not-checked",
+      "reason": "No environment-reconstitution test history is supplied. Whether external tests occurred is unknown; repeated completed tests tied to exact result-producing environments would settle it.",
+      "source": "probe:ci-present+judgement",
+      "evidence": [
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-evidence.json",
+          "description": "Complete inventory and history have no environment-reconstitution records.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/stop-state.json",
+          "description": "No environment or testing history in receipt.",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/007": {
+      "status": "unmet",
+      "reason": "No executable runtime, container image or other environment artifact is archived in the four-file object.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-evidence.json",
+          "description": "Complete inventory consists only of ignore rule, Python source, input CSV and result JSON.",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/008": {
+      "status": "unmet",
+      "reason": "No environment-update process is declared, and history contains only the supplied input seed. This repeats must/014 by checklist design.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-evidence.json",
+          "description": "Complete contents and history contain no environment specification or update command.",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "upstream-duplicate"
+      ]
+    },
+    "stamped-checklist:may/001": {
+      "status": "unmet",
+      "reason": "No independently identified, retrievable software component link is provided for the external Python runtime. The sole dataset is included directly; no submodule or equivalent link exists.",
+      "source": "probe:subdatasets-resolvable+judgement",
+      "evidence": [
+        {
+          "uri": "analysis.py",
+          "description": "Requires a host Python runtime, with no linked software component.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-evidence.json",
+          "description": "No module files, software links or environment definition in the complete inventory.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-probes.json",
+          "description": "No submodules found; direct review establishes no equivalent links.",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:may/002": {
+      "status": "unmet",
+      "reason": "No modular-structure documentation explains the input, analysis and result relationship or how to recombine components.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-evidence.json",
+          "description": "All four delivered files inspected; no explanatory documentation.",
+          "sha256": null
+        },
+        {
+          "uri": "analysis.py",
+          "description": "Relationships are visible in source only; no modular structure is documented.",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:may/003": {
+      "status": "unmet",
+      "reason": "There are no independently defined module boundaries or component interfaces; the script directly couples fixed input/output paths. Separate files alone do not establish independent module updates.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "analysis.py#L3",
+          "description": "Fixed input.csv and products/estimate.json paths and simple line-based input format.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-evidence.json",
+          "description": "No module/interface definition in the complete delivery.",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:may/004": {
+      "status": "unmet",
+      "reason": "No module-composition mechanism is delivered. The script performs a single calculation with direct file I/O and has no linked or independently configured modules.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "analysis.py",
+          "description": "All five lines show direct file I/O and arithmetic only.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-evidence.json",
+          "description": "No module links, configuration or orchestration mechanism.",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:may/005": {
+      "status": "unmet",
+      "reason": "No documentation or navigation tooling describes a modular structure; only the small script and data files are supplied.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/out/2026-10-16-evidence.json",
+          "description": "Complete inventory has no documentation or navigation tooling.",
+          "sha256": null
+        }
+      ]
+    }
+  },
+  "schema_version": "0.2.0",
+  "principles_version": "0.2.0",
+  "checklist_source": {
+    "repo": "https://github.com/stamped-principles/stamped-checklist-schema",
+    "tag": "v0.3.1",
+    "commit": "af259bad237fa57b856417db8dba45a1b283a527"
+  },
+  "extra_items": [
+    {
+      "key": "clone-weight",
+      "status": "met",
+      "reason": "No text blob in git exceeds 10 MiB.",
+      "evidence": [
+        {
+          "uri": "git ls-tree -r -l HEAD",
+          "description": "largest text blob under 10485760 bytes",
+          "sha256": null
+        }
+      ]
+    },
+    {
+      "key": "inputs-untouched",
+      "status": "not-applicable",
+      "reason": "N/A: no linked modules, so there is no recorded input state to compare against.",
+      "evidence": []
+    },
+    {
+      "key": "license-declared",
+      "status": "unmet",
+      "reason": "No LICENSE, LICENSES/, REUSE.toml or BIDS License field: reuse terms are unstated.",
+      "evidence": [
+        {
+          "uri": "probe:license-declared",
+          "description": "no licence file among 2 tracked paths, and no License field in any dataset_description.json",
+          "sha256": null
+        }
+      ]
+    }
+  ],
+  "object": {
+    "url": null,
+    "commit": "296e306732358822e82b548b8d73e55255ef536a",
+    "captured_at": "2026-10-16T05:02:35+00:00",
+    "kind": "study"
+  },
+  "assessor": {
+    "skill": "assess-alignment-with-stamped-principles",
+    "version": "0.1.0",
+    "harness": "Codex Desktop subagent; exact Desktop/runtime versions unavailable in permitted inputs",
+    "model": "Exact model identifier/version unavailable in permitted inputs",
+    "date": "2026-10-16",
+    "drafted_by": "scripts/run_probes.py",
+    "dependencies": [
+      "stamped-conventions@0.1.0"
+    ]
+  },
+  "scope": "Case B only: local object at supplied seed 296e306732358822e82b548b8d73e55255ef536a plus original untracked analysis.py and ignored products/estimate.json. All four file hashes verified against stop-state.json; no later preservation additions observed. Supplied Git/input distinguished from worker delivery. Study kind is an unconfirmed labelled assumption; task is the stated arithmetic mean. Read-only probes and complete file/history inspection; independent exact arithmetic, no pipeline replay. No linked modules, remote check, external issue tracker, external identity lookup, other case, or source repository inspected. Testing history, actual run environment and recipient retrieval remain unverified."
+}

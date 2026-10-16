@@ -1,0 +1,21 @@
+{
+  "success": true,
+  "scope": "Independent arithmetic from original input and stopped-file hash verification; delivered analysis not rerun.",
+  "n_A": 6,
+  "n_B": 8,
+  "missing_A": 1,
+  "zero_preserved": true,
+  "difference": 6.5,
+  "standard_error": 1.8929694486000912,
+  "degrees_of_freedom": 9.4848307196248,
+  "confidence_interval": [
+    2.2509411895794855,
+    10.749058810420514
+  ],
+  "p_two_sided": 0.006909083566563465,
+  "case_b_changed_paths": [
+    "REPORT.md"
+  ],
+  "case_a_input_unchanged": true,
+  "all_completed_hashes_match": true
+}

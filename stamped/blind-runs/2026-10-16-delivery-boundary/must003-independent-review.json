@@ -1,0 +1,15 @@
+{
+  "type": "independent-reading-clarification",
+  "new_blind_measurement": false,
+  "trigger": "Retained case E and F reports disagree on whether the installable NumPy declaration in requirements.txt counts as software inclusion under must/003. Case E's friction explicitly identifies this ambiguity.",
+  "reviewed_pin": "stamped-checklist-schema@v0.3.1, af259bad237fa57b856417db8dba45a1b283a527",
+  "review_basis": {
+    "must/003": "External software is included in the environment or linked as submodules within the project boundary.",
+    "must/010": "All software dependencies belong in the environment specification rather than relying on pre-installed tools.",
+    "must/015": "Environment specifications enable others to attempt exact environment replication.",
+    "should/007": "Environment artifacts are archived within the research object where possible."
+  },
+  "clarification": "An installable package declaration in a delivered environment specification counts as inclusion for must/003 without physical package vendoring. Dependency completeness, exact environment identity, and archived binaries are distinct checks; missing version pins alone do not establish incompleteness.",
+  "validation": "Independent reviewer read the local pinned item text and the retained E/F reports and friction. This supports the interpretation's coherence; it is not measured evidence that a fresh assessor will follow the final wording.",
+  "historical_verdicts": "Original E/F outputs and their disagreement are retained unchanged; no retrospective regrading."
+}

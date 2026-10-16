@@ -1,0 +1,81 @@
+{
+  "source_base": "b86e37ff9115e37541fd47aca73f49e13b5110bb",
+  "candidate_branch": "codex/pr26-neutral-assessor",
+  "final_skill_patch_sha256": "30d26aaeec2482e57d32a9fd5ac63818ade25cf90c28a31e60ac1f30eca2d86d",
+  "records": [
+    {
+      "case": "case-a",
+      "native_session": "01a14312-d12d-7c11-bd99-7591b2246d18",
+      "model": "gpt-6-astra",
+      "effort": "ultra",
+      "original_object_commit": "ba0a9bdc2bd355c1303a60a5b4a43527a41d8e89",
+      "skill_identity": "case skill-hashes.json",
+      "raw_review": "case-a/review.json"
+    },
+    {
+      "case": "case-b",
+      "native_session": "01a14316-8486-77a1-976e-95864a9ef2c5",
+      "model": "gpt-6-astra",
+      "effort": "ultra",
+      "original_object_commit": "296e306732358822e82b548b8d73e55255ef536a",
+      "skill_identity": "case skill-hashes.json",
+      "raw_review": "case-b/review.json"
+    },
+    {
+      "case": "case-c",
+      "native_session": "01a14319-066f-7a73-b527-d4f81acb4151",
+      "model": "gpt-6-luna",
+      "effort": "high",
+      "original_object_commit": "296e306732358822e82b548b8d73e55255ef536a",
+      "skill_identity": "case skill-hashes.json",
+      "raw_review": "case-c/review.json"
+    },
+    {
+      "case": "case-d",
+      "native_session": "01a14321-50b4-7c41-a264-ec742714cc0f",
+      "model": "gpt-6-luna",
+      "effort": "high",
+      "original_object_commit": "5f3aefd0ea525d8526ee47e06c6ffd0a4d2ce6e7",
+      "skill_identity": "case skill-hashes.json",
+      "raw_review": "case-d/review.json"
+    },
+    {
+      "case": "case-e",
+      "native_session": "01a14328-5d08-75d1-b4f1-9336d427e002",
+      "model": "gpt-6-luna",
+      "effort": "high",
+      "original_object_commit": "5f3aefd0ea525d8526ee47e06c6ffd0a4d2ce6e7",
+      "skill_identity": "case skill-hashes.json",
+      "raw_review": "case-e/review.json"
+    },
+    {
+      "case": "case-f",
+      "native_session": "01a14328-6f0d-7370-ac5a-c84f88d1962d",
+      "model": "gpt-6-luna",
+      "effort": "high",
+      "original_object_commit": "5f3aefd0ea525d8526ee47e06c6ffd0a4d2ce6e7",
+      "skill_identity": "case skill-hashes.json",
+      "raw_review": "case-f/review.json"
+    }
+  ],
+  "complete_archive": "https://github.com/leej3/stamped-in-practice/tree/codex/iteration-narps-v1/skill-reflection/assessment-neutrality-trial-01",
+  "validation": {
+    "tests_passed": 153,
+    "tests_skipped": 28,
+    "recorded_evals_passed": 26,
+    "mutants_detected": 18,
+    "mutants_total": 18,
+    "structural_errors": 0,
+    "structural_warnings": 10,
+    "focused_identity_tests_passed": 41
+  },
+  "limits": [
+    "Synthetic development fixtures, not estimates of scientific-agent performance.",
+    "A/B/C used initial candidate, D intermediate clarification, E/F final targeted clarification.",
+    "D failed applicability and is retained unchanged.",
+    "E repeats D for regression; F is a component counterexample.",
+    "Remaining incomplete-environment judgment variance is not resolved by these trials.",
+    "No workflow replay was requested or performed.",
+    "After E/F, independent review added non-Git capture identity and clarified installable package inclusion. Focused CLI tests and reading validate these final edits; no new blind measurement was made."
+  ]
+}

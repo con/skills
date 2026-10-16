@@ -1,0 +1,584 @@
+{
+  "checklist_version": "0.3.1",
+  "responses": {
+    "stamped-checklist:must/001": {
+      "status": "met",
+      "reason": "The captured delivery places the CSV, scripts, requirements, README, and ignored result under one object root.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-f/stop-state.json",
+          "description": "original_delivery lists every delivered file under object; products/estimate.json is under products/",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/002": {
+      "status": "met",
+      "reason": "The input dataset is included inside the root and the documented command reads input.csv there.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "run command and input description",
+          "sha256": null
+        },
+        {
+          "uri": "input.csv",
+          "description": "input data included at object root",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/003": {
+      "status": "met",
+      "reason": "NumPy is named in requirements.txt and the independently sourced component is included as component.py under the root.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "requirements.txt",
+          "description": "numpy>=2",
+          "sha256": null
+        },
+        {
+          "uri": "component.py",
+          "description": "local imported implementation",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/004": {
+      "status": "partial",
+      "reason": "Git tracks input.csv and .gitignore, while the README, scripts, and requirements are untracked in the delivered state.",
+      "source": "probe:tree-clean+judgement",
+      "evidence": [
+        {
+          "uri": "git status --short",
+          "description": "?? README.md, analysis.py, component.py, requirements.txt",
+          "sha256": null
+        },
+        {
+          "uri": "git ls-files -s",
+          "description": "only .gitignore and input.csv tracked",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:must/005": {
+      "status": "not-applicable",
+      "reason": "N/A: the complete delivered object contains no large binary data.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-f/stop-state.json",
+          "description": "delivery inventory includes input.csv and small estimate.json; no large binary",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/006": {
+      "status": "unmet",
+      "reason": "The delivered estimate has no run record linking its production actions to an environment; input.csv is an input, not a derived file.",
+      "source": "probe:derived-have-records+judgement",
+      "evidence": [
+        {
+          "uri": "products/estimate.json",
+          "description": "ignored result delivered per stop receipt",
+          "sha256": null
+        },
+        {
+          "uri": "analysis.py",
+          "description": "declares result generation but is not a run record",
+          "sha256": null
+        },
+        {
+          "uri": "probe:derived-have-records",
+          "description": "probe misidentified input.csv as derived; reviewed result separately",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:must/007": {
+      "status": "unmet",
+      "reason": "README.md gives a run command but no instructions for obtaining or installing Python and NumPy.",
+      "source": "probe:entry-point+judgement",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "only says run python analysis.py with Python and NumPy",
+          "sha256": null
+        },
+        {
+          "uri": "requirements.txt",
+          "description": "dependency declaration lacks installation instructions",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:must/008": {
+      "status": "met",
+      "reason": "README.md gives the starting command, and analysis.py is the runnable entry point.",
+      "source": "probe:entry-point+judgement",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "Run python analysis.py",
+          "sha256": null
+        },
+        {
+          "uri": "analysis.py",
+          "description": "reads input.csv and writes products/estimate.json",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:must/009": {
+      "status": "met",
+      "reason": "The delivered scripts use relative local imports and input/output paths; no host-specific absolute path appears.",
+      "source": "probe:no-abs-paths+judgement",
+      "evidence": [
+        {
+          "uri": "analysis.py",
+          "description": "opens input.csv and products/estimate.json by relative paths",
+          "sha256": null
+        },
+        {
+          "uri": "component.py",
+          "description": "no filesystem paths",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/010": {
+      "status": "partial",
+      "reason": "The third-party NumPy dependency is listed, but the Python runtime version required by the documented route is unspecified.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "requirements.txt",
+          "description": "numpy>=2",
+          "sha256": null
+        },
+        {
+          "uri": "README.md",
+          "description": "requires Python but gives no version or runtime specification",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/011": {
+      "status": "met",
+      "reason": "The documented route requires Python and NumPy; no additional host configuration, mounts, hardware, or services are stated or used.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "Python and NumPy named; no other host assumptions",
+          "sha256": null
+        },
+        {
+          "uri": "analysis.py",
+          "description": "only local files, Python standard library, and NumPy",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/012": {
+      "status": "met",
+      "reason": "README.md names Python and NumPy; requirements.txt names the third-party package dependency.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "requires Python and NumPy",
+          "sha256": null
+        },
+        {
+          "uri": "requirements.txt",
+          "description": "numpy>=2",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/013": {
+      "status": "unmet",
+      "reason": "requirements.txt exists in the delivered bytes but is untracked, so the environment specification is not in version control.",
+      "source": "probe:env-spec-tracked+judgement",
+      "evidence": [
+        {
+          "uri": "git status --short",
+          "description": "?? requirements.txt",
+          "sha256": null
+        },
+        {
+          "uri": "requirements.txt",
+          "description": "delivered environment specification",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/014": {
+      "status": "unmet",
+      "reason": "No runnable process for updating environment specifications is documented, and the only requirements file is untracked.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "requirements.txt",
+          "description": "contains dependency declaration but no regeneration command",
+          "sha256": null
+        },
+        {
+          "uri": "git log --oneline",
+          "description": "one supplied seed commit",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/015": {
+      "status": "unmet",
+      "reason": "requirements.txt uses numpy>=2 and gives no lock or exact environment snapshot for others to reproduce.",
+      "source": "probe:run-env-linked+judgement",
+      "evidence": [
+        {
+          "uri": "requirements.txt",
+          "description": "mutable lower bound, no lock",
+          "sha256": null
+        },
+        {
+          "uri": "probe:run-env-linked",
+          "description": "no run records or pinned environment found",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/016": {
+      "status": "unmet",
+      "reason": "No remote or published environment specification is recorded; requirements.txt is untracked and unpinned.",
+      "source": "probe:env-spec-tracked+judgement",
+      "evidence": [
+        {
+          "uri": "git remote -v",
+          "description": "no remotes configured",
+          "sha256": null
+        },
+        {
+          "uri": "requirements.txt",
+          "description": "local untracked specification only",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/017": {
+      "status": "unmet",
+      "reason": "The README gives a command but no instructions for obtaining or installing the environment specification.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "run command names Python and NumPy only",
+          "sha256": null
+        },
+        {
+          "uri": "requirements.txt",
+          "description": "no installation or environment-use instructions",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/001": {
+      "status": "partial",
+      "reason": "Git contains the input and ignore rules, but the code, documentation, configuration, and result are untracked or ignored.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "git ls-files -s",
+          "description": "only .gitignore and input.csv are tracked",
+          "sha256": null
+        },
+        {
+          "uri": "git status --short --ignored",
+          "description": "products/ ignored; other components at root",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/002": {
+      "status": "unmet",
+      "reason": "The delivery contains no recurring workflow test or run record showing that the instructions are checked over time.",
+      "source": "probe:ci-present+judgement",
+      "evidence": [
+        {
+          "uri": "probe:ci-present",
+          "description": "no recognized CI configuration",
+          "sha256": null
+        },
+        {
+          "uri": "git log --oneline",
+          "description": "only supplied seed commit",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/003": {
+      "status": "partial",
+      "reason": "products/ separates the result, but input, code, and requirements share the root; the result directory is ignored.",
+      "source": "probe:modules-separated+judgement",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "describes input and result",
+          "sha256": null
+        },
+        {
+          "uri": "git status --short --ignored",
+          "description": "products/ ignored; other components at root",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:should/009": {
+      "status": "not-applicable",
+      "reason": "N/A: no restricted data or software is identified in the complete delivered object.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "no restricted components described",
+          "sha256": null
+        },
+        {
+          "uri": "delivery inventory",
+          "description": "all supplied components inspected",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/004": {
+      "status": "not-checked",
+      "reason": "No fresh-environment run was authorized or attempted, and no completed-run record is included; a fresh isolated run would settle this.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "probe:run-env-linked",
+          "description": "zero run records found",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/005": {
+      "status": "unmet",
+      "reason": "The documented command uses the caller\u2019s existing Python and NumPy installation; no disposable environment is created.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "python analysis.py with Python and NumPy",
+          "sha256": null
+        },
+        {
+          "uri": "requirements.txt",
+          "description": "dependency list only; no environment creation",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/006": {
+      "status": "unmet",
+      "reason": "No exact environment pin or recurring reconstitution test is present in the delivered object.",
+      "source": "probe:ci-present+judgement",
+      "evidence": [
+        {
+          "uri": "requirements.txt",
+          "description": "numpy>=2, no lock",
+          "sha256": null
+        },
+        {
+          "uri": "probe:ci-present",
+          "description": "no recognized CI configuration",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/007": {
+      "status": "unmet",
+      "reason": "No environment image, executable, or binary artifact is archived; only an untracked requirements list is supplied.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "requirements.txt",
+          "description": "dependency declaration only",
+          "sha256": null
+        },
+        {
+          "uri": "delivery inventory",
+          "description": "contains no environment artifacts",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/008": {
+      "status": "unmet",
+      "reason": "No environment update process is documented, and no update appears in version control history.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "requirements.txt",
+          "description": "no regeneration command",
+          "sha256": null
+        },
+        {
+          "uri": "git log --oneline",
+          "description": "one seed commit",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "upstream-duplicate"
+      ]
+    },
+    "stamped-checklist:may/001": {
+      "status": "unmet",
+      "reason": "component.py is independently maintained but its upstream location, revision, and retrieval instructions were not retained.",
+      "source": "probe:subdatasets-resolvable+judgement",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "explicitly says upstream location, revision and retrieval instructions were not retained",
+          "sha256": null
+        },
+        {
+          "uri": "component.py",
+          "description": "copied component in object",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:may/002": {
+      "status": "unmet",
+      "reason": "The README names the copied component but does not document module boundaries or how modules can be recombined.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "component identified, no module map or composition guidance",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:may/003": {
+      "status": "partial",
+      "reason": "The script/component boundary exists, but no interface contract or test supports independent component updates.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "analysis.py",
+          "description": "imports summarize from component.py",
+          "sha256": null
+        },
+        {
+          "uri": "component.py",
+          "description": "summarize interface only",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:may/004": {
+      "status": "met",
+      "reason": "analysis.py composes the local component through a Python import and invokes summarize.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "analysis.py",
+          "description": "from component import summarize; calls summarize(x)",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:may/005": {
+      "status": "partial",
+      "reason": "README.md identifies the component and run command, but gives no route to retrieve the component\u2019s upstream source.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "names component.py and discloses lost upstream retrieval details",
+          "sha256": null
+        }
+      ]
+    }
+  },
+  "schema_version": "0.2.0",
+  "principles_version": "0.2.0",
+  "checklist_source": {
+    "repo": "https://github.com/stamped-principles/stamped-checklist-schema",
+    "tag": "v0.3.1",
+    "commit": "af259bad237fa57b856417db8dba45a1b283a527"
+  },
+  "extra_items": [
+    {
+      "key": "clone-weight",
+      "status": "met",
+      "reason": "No text blob in git exceeds 10 MiB.",
+      "evidence": [
+        {
+          "uri": "git ls-tree -r -l HEAD",
+          "description": "largest text blob under 10485760 bytes",
+          "sha256": null
+        }
+      ]
+    },
+    {
+      "key": "inputs-untouched",
+      "status": "not-applicable",
+      "reason": "N/A: no linked modules, so there is no recorded input state to compare against.",
+      "evidence": []
+    },
+    {
+      "key": "license-declared",
+      "status": "unmet",
+      "reason": "No license or reuse terms appear in the complete delivered inventory; licensing is outside checklist 0.3.1.",
+      "evidence": [
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-f/stop-state.json",
+          "description": "original delivery inventory contains no license file or license metadata"
+        }
+      ]
+    }
+  ],
+  "object": {
+    "url": null,
+    "commit": "5f3aefd0ea525d8526ee47e06c6ffd0a4d2ce6e7",
+    "captured_at": "2026-10-16T05:21:41+00:00",
+    "kind": "study"
+  },
+  "assessor": {
+    "skill": "assess-alignment-with-stamped-principles",
+    "version": "0.1.0",
+    "harness": "Codex Desktop (subagent; exact harness version unavailable)",
+    "model": "GPT-6 (exact model version metadata unavailable to subagent)",
+    "date": "2026-10-16",
+    "drafted_by": "scripts/run_probes.py",
+    "dependencies": [
+      "stamped-conventions@0.1.0"
+    ]
+  },
+  "scope": "Assessed delivered bytes at supplied seed 5f3aefd0ea525d8526ee47e06c6ffd0a4d2ce6e7 and original delivery state per stop-state.json; no remote, issue tracker, or replay. Original worker state distinguished from ignored/untracked artifacts; capture boundary is the supplied receipt."
+}

@@ -1,0 +1,15 @@
+{
+  "source_commit": "eb8b454b02ba171a821cc6725dfe98a7495f5126",
+  "source_branch": "codex/narps-round1-research-guidance",
+  "archive_verification": {
+    "success": true,
+    "files": 72,
+    "archive_bytes": 608421,
+    "archive_sha256": "19e4c488fff57d368cdff765f6618b8e8f3fd11f684920cb8527e78944ddd551",
+    "manifest_sha256": "695e44a8fcf39fc2703f071cdf83470920c1bc373e7d587b74eff9ab75da40bf",
+    "source_unchanged": true
+  },
+  "archive_location": "https://github.com/leej3/stamped-in-practice/tree/codex/iteration-narps-v1/skill-reflection/research-guidance-trial-01",
+  "objects": "Non-Git fixtures identified by exact before/after manifests; no invented Git commit.",
+  "scope": "Two synthetic independent followability cases; not formal research outcomes or an efficacy estimate."
+}

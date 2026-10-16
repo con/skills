@@ -1,0 +1,32 @@
+{
+  "supplied_seed": {
+    "head": "5f3aefd0ea525d8526ee47e06c6ffd0a4d2ce6e7",
+    "git_status": "",
+    "tracked_paths": [
+      ".gitignore",
+      "input.csv"
+    ],
+    "files": {
+      "input.csv": "518bc567c4c284aa96d3b6db7b5f5946a64b01b248aedfc07b795aaff0e8216b",
+      ".gitignore": "14ca1bed94a382e3b079eb6059dac7dced7b4c46b4a20a7380487500dc7c2d7f"
+    }
+  },
+  "original_delivery": {
+    "head": "5f3aefd0ea525d8526ee47e06c6ffd0a4d2ce6e7",
+    "git_status": "?? README.md\n?? analysis.py\n?? component.py\n?? requirements.txt\n!! products/",
+    "tracked_paths": [
+      ".gitignore",
+      "input.csv"
+    ],
+    "files": {
+      ".gitignore": "14ca1bed94a382e3b079eb6059dac7dced7b4c46b4a20a7380487500dc7c2d7f",
+      "README.md": "573db906591a9166acec79b92fa2ce5d821585c9b1a6fd6f9b47a5875bc15e92",
+      "analysis.py": "784fe5db496ed295ea4b3495490242269081e90e1da0633e732ce1b6867e24be",
+      "component.py": "ebeb3dbb9afe8950f0d2fe92dca86cbf6b9523d63399dc3353d5d3ef52fbb8db",
+      "input.csv": "518bc567c4c284aa96d3b6db7b5f5946a64b01b248aedfc07b795aaff0e8216b",
+      "products/estimate.json": "b14200a44c8638a45e10118992fdd69aa2acd959ab8bdef5ae251c791f7deab5",
+      "requirements.txt": "63671478d138a6324e0b9daf7b49888954afc317f0157ffab01286d8d350044a"
+    },
+    "commits_after_supplied_seed": 0
+  }
+}

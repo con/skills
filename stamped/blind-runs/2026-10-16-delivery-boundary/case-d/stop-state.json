@@ -1,0 +1,30 @@
+{
+  "supplied_seed": {
+    "head": "5f3aefd0ea525d8526ee47e06c6ffd0a4d2ce6e7",
+    "git_status": "",
+    "tracked_paths": [
+      ".gitignore",
+      "input.csv"
+    ],
+    "files": {
+      "input.csv": "518bc567c4c284aa96d3b6db7b5f5946a64b01b248aedfc07b795aaff0e8216b",
+      ".gitignore": "14ca1bed94a382e3b079eb6059dac7dced7b4c46b4a20a7380487500dc7c2d7f"
+    }
+  },
+  "original_delivery": {
+    "head": "5f3aefd0ea525d8526ee47e06c6ffd0a4d2ce6e7",
+    "git_status": "?? analysis.py\n?? requirements.txt\n!! products/estimate.json",
+    "tracked_paths": [
+      ".gitignore",
+      "input.csv"
+    ],
+    "files": {
+      "input.csv": "518bc567c4c284aa96d3b6db7b5f5946a64b01b248aedfc07b795aaff0e8216b",
+      "analysis.py": "0dab2cd247eac74a2e99bf5dbae59be0a53c2e12102a832864245af11eefc361",
+      "requirements.txt": "63671478d138a6324e0b9daf7b49888954afc317f0157ffab01286d8d350044a",
+      ".gitignore": "14ca1bed94a382e3b079eb6059dac7dced7b4c46b4a20a7380487500dc7c2d7f",
+      "products/estimate.json": "b14200a44c8638a45e10118992fdd69aa2acd959ab8bdef5ae251c791f7deab5"
+    },
+    "commits_after_supplied_seed": 0
+  }
+}

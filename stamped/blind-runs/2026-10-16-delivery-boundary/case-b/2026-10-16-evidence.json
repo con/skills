@@ -1,0 +1,74 @@
+{
+  "root": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/object",
+  "receipt": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-b/stop-state.json",
+  "files": [
+    {
+      "path": ".gitignore",
+      "bytes": 10,
+      "sha256": "14ca1bed94a382e3b079eb6059dac7dced7b4c46b4a20a7380487500dc7c2d7f",
+      "matches_original_delivery": true,
+      "symlink": false
+    },
+    {
+      "path": "analysis.py",
+      "bytes": 227,
+      "sha256": "e0b9f58f2216ff75136cf681d961fe171c48361c1335ffce03f137c73488cacf",
+      "matches_original_delivery": true,
+      "symlink": false
+    },
+    {
+      "path": "input.csv",
+      "bytes": 8,
+      "sha256": "4bf0e63035dd1fafdbe5915d64110833dacd4754cfbb5e70330440fd3bb5f53b",
+      "matches_original_delivery": true,
+      "symlink": false
+    },
+    {
+      "path": "products/estimate.json",
+      "bytes": 13,
+      "sha256": "e6ed0002cabe15a3394c892c60df5e6ff91dac274066f0fd145ecf2eb7ea95c5",
+      "matches_original_delivery": true,
+      "symlink": false
+    }
+  ],
+  "receipt_file_set_matches": true,
+  "commands": {
+    "git status --short --untracked-files=all --ignored": {
+      "returncode": 0,
+      "stdout": "?? analysis.py\n!! products/estimate.json\n",
+      "stderr": ""
+    },
+    "git ls-files": {
+      "returncode": 0,
+      "stdout": ".gitignore\ninput.csv\n",
+      "stderr": ""
+    },
+    "git log --format=fuller --stat": {
+      "returncode": 0,
+      "stdout": "commit 296e306732358822e82b548b8d73e55255ef536a\nAuthor:     synthetic fixture <fixture@example.invalid>\nAuthorDate: Thu Oct 1 00:00:00 2026 +0000\nCommit:     synthetic fixture <fixture@example.invalid>\nCommitDate: Thu Oct 1 00:00:00 2026 +0000\n\n    test: supplied synthetic input seed\n\n .gitignore | 1 +\n input.csv  | 4 ++++\n 2 files changed, 5 insertions(+)\n",
+      "stderr": ""
+    },
+    "git remote -v": {
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  },
+  "scientific_check": {
+    "method": "Independent exact rational arithmetic on supplied input; analysis.py was not executed.",
+    "values": [
+      "1",
+      "2",
+      "3"
+    ],
+    "n": 3,
+    "sum": "6",
+    "expected_arithmetic_mean": "2",
+    "delivered": {
+      "mean": 2.0
+    },
+    "matches": true
+  },
+  "inspection": "All four non-Git delivered files opened; no README, environment specification, run/test record, module link, or license present. Git config and full single-commit history inspected. The receipt contains no execution environment or command.",
+  "attribution": "Git seed and input were supplied. Original delivery has zero commits after seed; analysis.py is untracked and products/estimate.json ignored. No later preservation revision appears in the object."
+}

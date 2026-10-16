@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import json
 import pathlib
+import subprocess
 import sys
 
 import pytest
@@ -12,7 +14,7 @@ import pytest
 ROOT = pathlib.Path(__file__).resolve().parents[3]
 SKILLS = ROOT / "skills"
 sys.path.insert(0, str(SKILLS / "stamped-conventions" / "scripts"))
-from encode_response import Checklist, template, validate
+from encode_response import Checklist, stamp, template, validate
 
 spec = importlib.util.spec_from_file_location(
     "freeze_fresh_rerun",
@@ -38,6 +40,63 @@ def completed():
 
 def test_completed_response_accepts_truthful_not_checked():
     assert validate(completed(), Checklist()) == []
+
+
+@pytest.mark.parametrize("capture", [None, {}, {"uri": "manifest.json"},
+    {"uri": "", "sha256": "b" * 64}, {"uri": "manifest.json", "sha256": "bad"}])
+def test_non_git_response_requires_verifiable_capture_identity(capture):
+    response = completed()
+    response["object"]["commit"] = None
+    if capture is not None:
+        response["object"]["capture"] = capture
+    assert any("capture" in problem for problem in validate(response, Checklist()))
+
+
+@pytest.mark.parametrize("commit", [None, "a" * 40])
+def test_stamp_capture_hashes_retained_bytes_without_replacing_commit(tmp_path, commit):
+    manifest = tmp_path / "delivery.json"
+    manifest.write_text('{"files": [], "omissions": []}\n')
+    response = completed()
+    response["object"]["commit"] = commit
+    stamp(response, capture=manifest)
+    assert response["object"]["commit"] == commit
+    assert response["object"]["capture"] == {
+        "uri": str(manifest.resolve()),
+        "sha256": hashlib.sha256(manifest.read_bytes()).hexdigest(),
+    }
+    assert validate(response, Checklist()) == []
+
+
+@pytest.mark.parametrize("git_state", ["none", "unborn", "parent-only"])
+def test_unavailable_git_sweep_retains_limitation_without_borrowing_history(tmp_path, git_state):
+    obj = tmp_path / "delivery"
+    obj.mkdir()
+    if git_state != "none":
+        repo = obj if git_state == "unborn" else tmp_path
+        subprocess.run(["git", "init", "-q", str(repo)], check=True)
+        if git_state == "parent-only":
+            subprocess.run(["git", "-c", "core.hooksPath=/dev/null",
+                            "-c", "user.name=fixture", "-c", "user.email=fixture@example.invalid",
+                            "commit", "--allow-empty", "-qm", "test: parent repository fixture"],
+                           cwd=repo, check=True)
+            assert subprocess.run(["git", "rev-parse", "HEAD"], cwd=obj,
+                                  capture_output=True).returncode == 0
+    (obj / "result.txt").write_text("delivered bytes\n")
+    receipt = tmp_path / "probes.json"
+    response = tmp_path / "response.json"
+    command = [sys.executable, str(SKILLS / "assess-alignment-with-stamped-principles" /
+                                  "scripts/run_probes.py"), str(obj),
+               "-o", str(receipt), "--response", str(response)]
+    done = subprocess.run(command, capture_output=True, text=True)
+    assert done.returncode == 2
+    record = json.loads(receipt.read_text())
+    assert record["object"]["commit"] is None
+    assert record["object"]["path"] == str(obj.resolve())
+    assert record["status"] == "not-checked"
+    assert record["reason"] in done.stderr
+    assert record["probes"] == []
+    assert not response.exists()
+    assert (obj / "result.txt").read_text() == "delivered bytes\n"
 
 
 @pytest.mark.parametrize(("section", "field", "value"), [
@@ -152,6 +211,15 @@ def test_absent_ci_requires_inspection_of_equivalent_records(tmp_path):
     result = ci_present(Object(tmp_path))
     assert result.status == "not-checked"
     assert set(result.item_status.values()) == {"not-checked"}
+
+
+def test_no_large_binary_probe_leaves_delivery_applicability_open(tmp_path):
+    sys.path.insert(0, str(SKILLS / "assess-alignment-with-stamped-principles" / "scripts"))
+    from probes.common import Object
+    from probes.structure import large_in_annex
+
+    result = large_in_annex(Object(tmp_path))
+    assert result.status == "not-checked"
 
 
 def test_prefixed_run_record_is_not_native_replayable(monkeypatch, tmp_path):

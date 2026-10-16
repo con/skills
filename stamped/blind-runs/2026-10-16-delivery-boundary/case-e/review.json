@@ -1,0 +1,73 @@
+{
+  "reviewed_at": "2026-10-16T05:25:37.294678+00:00",
+  "case": "case-e",
+  "native_session_id": "01a14328-5d08-75d1-b4f1-9336d427e002",
+  "native_model": "gpt-6-luna",
+  "native_reasoning_effort": "high",
+  "native_transcript_sha256": "031ae1c96245520ec3b1abe64b2258b98a8cbbe708b49b89ec149d9a46b1f78a",
+  "scientific_delivered_bytes_unchanged": true,
+  "scientific_adequacy": "Correct delivered n=3 mean=4.0 recognized without replay",
+  "worker_tracking": {
+    "status": "partial",
+    "reason": "Git tracks the input and .gitignore, but analysis.py and requirements.txt are untracked and the result is ignored.",
+    "source": "probe:tree-clean+judgement",
+    "evidence": [
+      {
+        "uri": "git status --porcelain",
+        "description": "?? analysis.py; ?? requirements.txt; products ignored",
+        "sha256": null
+      },
+      {
+        "uri": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-e/stop-state.json#original_delivery",
+        "description": "only .gitignore and input.csv were tracked",
+        "sha256": null
+      }
+    ],
+    "flags": [
+      "probe-overridden",
+      "mapping-questioned"
+    ]
+  },
+  "worker_tracking_met_credit": false,
+  "original_worker_commits": 0,
+  "boundary_checks_passed": true,
+  "applicability_findings": {
+    "must/005": {
+      "status": "not-applicable",
+      "reason": "N/A: the complete delivery contains only small text/CSV/JSON files and no large binary data.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "input.csv",
+          "description": "small text observations",
+          "sha256": null
+        },
+        {
+          "uri": "products/estimate.json",
+          "description": "small JSON output",
+          "sha256": null
+        }
+      ]
+    },
+    "may/001": {
+      "status": "not-applicable",
+      "reason": "N/A: there are no independently maintained project components; NumPy is a runtime package dependency, not a project module.",
+      "source": "probe:subdatasets-resolvable+judgement",
+      "evidence": [
+        {
+          "uri": "probe:subdatasets-resolvable",
+          "description": "no submodules",
+          "sha256": null
+        },
+        {
+          "uri": "requirements.txt",
+          "description": "NumPy package requirement",
+          "sha256": null
+        }
+      ]
+    }
+  },
+  "applicability_checks_passed": true,
+  "remaining_variability": "Incomplete-environment inclusion/completeness judgments differ across these related fixtures; no claim of uniform verdicts.",
+  "disposition": "Raw output retained; no regrading. E is a regression; F is a counterexample, not a population efficacy estimate."
+}

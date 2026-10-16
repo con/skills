@@ -1,0 +1,346 @@
+{
+  "object": {
+    "path": "/Users/johnlee/.local/state/stamped-in-practice/assessment-neutrality-trial-01/case-c/object",
+    "commit": "fa2a403a5940d9c7425278720d404856ab680874",
+    "is_datalad": false
+  },
+  "checklist_version": "0.3.1",
+  "probes": [
+    {
+      "probe": "ci-present",
+      "status": "not-checked",
+      "items": [
+        "stamped-checklist:should/002",
+        "stamped-checklist:should/006"
+      ],
+      "reason": "No recognized CI configuration; inspect equivalent repeated-testing records.",
+      "evidence": [
+        {
+          "uri": "probe:ci-present",
+          "description": "no tracked .github/workflows/, .gitlab-ci.yml, .circleci/, .forgejo/workflows/, .gitea/workflows/ in 4 tracked paths",
+          "sha256": null
+        }
+      ],
+      "details": {
+        "configs": []
+      },
+      "item_status": {
+        "stamped-checklist:should/002": "not-checked",
+        "stamped-checklist:should/006": "not-checked"
+      },
+      "item_reason": {
+        "stamped-checklist:should/002": "No recognized CI configuration; inspect equivalent repeated-testing records.",
+        "stamped-checklist:should/006": "No recognized CI configuration; inspect equivalent environment-reconstitution records."
+      }
+    },
+    {
+      "probe": "clone-weight",
+      "status": "met",
+      "items": [],
+      "reason": "No text blob in git exceeds 10 MiB.",
+      "evidence": [
+        {
+          "uri": "git ls-tree -r -l HEAD",
+          "description": "largest text blob under 10485760 bytes",
+          "sha256": null
+        }
+      ],
+      "details": {},
+      "item_status": {},
+      "item_reason": {}
+    },
+    {
+      "probe": "derived-have-records",
+      "status": "unmet",
+      "items": [
+        "stamped-checklist:must/006"
+      ],
+      "reason": "1 derived file(s) tracked (e.g. input.csv) and no run record or tracked workflow that would re-create any of them.",
+      "evidence": [
+        {
+          "uri": "input.csv",
+          "description": "derived file with no re-executable record",
+          "sha256": null
+        }
+      ],
+      "details": {
+        "candidates": [
+          "input.csv"
+        ]
+      },
+      "item_status": {
+        "stamped-checklist:must/006": "unmet"
+      },
+      "item_reason": {
+        "stamped-checklist:must/006": "1 derived file(s) tracked (e.g. input.csv) and no run record or tracked workflow that would re-create any of them."
+      }
+    },
+    {
+      "probe": "entry-point",
+      "status": "unmet",
+      "items": [
+        "stamped-checklist:must/007",
+        "stamped-checklist:must/008"
+      ],
+      "reason": "must/007 unmet: Neither a README with install/usage instructions nor a Makefile. must/008 unmet: No script, make target or workflow definition that a reader could start from.",
+      "evidence": [],
+      "details": {
+        "readmes": [],
+        "makefiles": [],
+        "named": [],
+        "targets": [],
+        "workflow": [],
+        "has_section": false,
+        "documented_targets": [],
+        "missing_targets": []
+      },
+      "item_status": {
+        "stamped-checklist:must/007": "unmet",
+        "stamped-checklist:must/008": "unmet"
+      },
+      "item_reason": {
+        "stamped-checklist:must/007": "Neither a README with install/usage instructions nor a Makefile.",
+        "stamped-checklist:must/008": "No script, make target or workflow definition that a reader could start from."
+      }
+    },
+    {
+      "probe": "env-spec-tracked",
+      "status": "unmet",
+      "items": [
+        "stamped-checklist:must/010",
+        "stamped-checklist:must/013",
+        "stamped-checklist:must/016"
+      ],
+      "reason": "must/010 unmet: No tracked environment specification (lockfile, container definition or registration). must/013 unmet. must/016 unmet.",
+      "evidence": [],
+      "details": {
+        "specs": {},
+        "uninstalled_modules": [],
+        "preconditions": [],
+        "remote": null,
+        "publication": null
+      },
+      "item_status": {
+        "stamped-checklist:must/010": "unmet",
+        "stamped-checklist:must/013": "unmet",
+        "stamped-checklist:must/016": "unmet"
+      },
+      "item_reason": {
+        "stamped-checklist:must/010": "No tracked environment specification (lockfile, container definition or registration).",
+        "stamped-checklist:must/013": "No tracked environment specification (lockfile, container definition or registration).",
+        "stamped-checklist:must/016": "Nothing to share: No tracked environment specification (lockfile, container definition or registration)."
+      }
+    },
+    {
+      "probe": "inputs-untouched",
+      "status": "not-applicable",
+      "items": [],
+      "reason": "N/A: no linked modules, so there is no recorded input state to compare against.",
+      "evidence": [],
+      "details": {},
+      "item_status": {},
+      "item_reason": {}
+    },
+    {
+      "probe": "large-in-annex",
+      "status": "met",
+      "items": [
+        "stamped-checklist:must/005"
+      ],
+      "reason": "No binary blob over 10 MiB in git, and no large-content mechanism is needed: nothing in this object is large binary data.",
+      "evidence": [
+        {
+          "uri": "git ls-tree -r -l HEAD",
+          "description": "no binary blob over 10485760 bytes; 4 blobs tracked",
+          "sha256": null
+        }
+      ],
+      "details": {
+        "mechanism": null,
+        "annex_pointers": 0,
+        "large_binary": []
+      },
+      "item_status": {
+        "stamped-checklist:must/005": "met"
+      },
+      "item_reason": {
+        "stamped-checklist:must/005": "No binary blob over 10 MiB in git, and no large-content mechanism is needed: nothing in this object is large binary data."
+      }
+    },
+    {
+      "probe": "license-declared",
+      "status": "unmet",
+      "items": [],
+      "reason": "No LICENSE, LICENSES/, REUSE.toml or BIDS License field: reuse terms are unstated.",
+      "evidence": [
+        {
+          "uri": "probe:license-declared",
+          "description": "no licence file among 4 tracked paths, and no License field in any dataset_description.json",
+          "sha256": null
+        }
+      ],
+      "details": {},
+      "item_status": {},
+      "item_reason": {}
+    },
+    {
+      "probe": "modules-separated",
+      "status": "unmet",
+      "items": [
+        "stamped-checklist:should/003"
+      ],
+      "reason": "Nothing distinguishes raw data, derived data, code and environment: no module or directory of any of those kinds is tracked.",
+      "evidence": [
+        {
+          "uri": "probe:modules-separated",
+          "description": "4 tracked paths, none in a recognised layout",
+          "sha256": null
+        }
+      ],
+      "details": {
+        "found": {
+          "inputs": [],
+          "code": [],
+          "derived": [],
+          "environment": []
+        }
+      },
+      "item_status": {
+        "stamped-checklist:should/003": "unmet"
+      },
+      "item_reason": {
+        "stamped-checklist:should/003": "Nothing distinguishes raw data, derived data, code and environment: no module or directory of any of those kinds is tracked."
+      }
+    },
+    {
+      "probe": "no-abs-paths",
+      "status": "met",
+      "items": [
+        "stamped-checklist:must/009"
+      ],
+      "reason": "No host-specific absolute paths in tracked text files.",
+      "evidence": [
+        {
+          "uri": "probe:no-abs-paths",
+          "description": "scanned 4 tracked paths, 0 /tmp hit(s), 0 host-specific",
+          "sha256": null
+        }
+      ],
+      "details": {
+        "tmp_hits": []
+      },
+      "item_status": {
+        "stamped-checklist:must/009": "met"
+      },
+      "item_reason": {
+        "stamped-checklist:must/009": "No host-specific absolute paths in tracked text files."
+      }
+    },
+    {
+      "probe": "platform-assumptions",
+      "status": "not-checked",
+      "items": [
+        "stamped-checklist:must/011",
+        "stamped-checklist:must/012"
+      ],
+      "reason": "No platform-specific package manager, BSD/GNU-only flag or scheduler command in tracked text \u2014 all a command scan can settle. Whether the documented route needs a mount, a host install, hardware or a service is a reading.",
+      "evidence": [
+        {
+          "uri": "probe:platform-assumptions",
+          "description": "scanned 4 tracked paths for 20 platform-specific commands, 0 hits",
+          "sha256": null
+        }
+      ],
+      "details": {
+        "hits": []
+      },
+      "item_status": {
+        "stamped-checklist:must/011": "not-checked",
+        "stamped-checklist:must/012": "not-checked"
+      },
+      "item_reason": {
+        "stamped-checklist:must/011": "No platform-specific package manager, BSD/GNU-only flag or scheduler command in tracked text \u2014 all a command scan can settle. Whether the documented route needs a mount, a host install, hardware or a service is a reading.",
+        "stamped-checklist:must/012": "No platform-specific package manager, BSD/GNU-only flag or scheduler command in tracked text \u2014 all a command scan can settle. Whether the documented route needs a mount, a host install, hardware or a service is a reading."
+      }
+    },
+    {
+      "probe": "run-env-linked",
+      "status": "not-checked",
+      "items": [
+        "stamped-checklist:must/006",
+        "stamped-checklist:must/015"
+      ],
+      "reason": "must/006 not-checked: No run records, so no record names the environment it ran in. must/015 not-checked: Nothing names an environment to check for a pin.",
+      "evidence": [],
+      "details": {
+        "records": 0,
+        "with_env": 0,
+        "without_env": [],
+        "by_mechanism": {
+          "container": 0,
+          "lockfile": 0,
+          "capture": 0
+        },
+        "unpinned": []
+      },
+      "item_status": {
+        "stamped-checklist:must/006": "not-checked",
+        "stamped-checklist:must/015": "not-checked"
+      },
+      "item_reason": {
+        "stamped-checklist:must/006": "No run records, so no record names the environment it ran in.",
+        "stamped-checklist:must/015": "Nothing names an environment to check for a pin."
+      }
+    },
+    {
+      "probe": "subdatasets-resolvable",
+      "status": "not-checked",
+      "items": [
+        "stamped-checklist:must/002",
+        "stamped-checklist:may/001"
+      ],
+      "reason": "No submodules or subdatasets: whether external inputs are linked at all needs a reading of the object.",
+      "evidence": [],
+      "details": {
+        "submodules": []
+      },
+      "item_status": {
+        "stamped-checklist:must/002": "not-checked",
+        "stamped-checklist:may/001": "not-checked"
+      },
+      "item_reason": {
+        "stamped-checklist:must/002": "No submodules or subdatasets: whether external inputs are linked at all needs a reading of the object.",
+        "stamped-checklist:may/001": "No submodules or subdatasets: whether external inputs are linked at all needs a reading of the object."
+      }
+    },
+    {
+      "probe": "tree-clean",
+      "status": "met",
+      "items": [
+        "stamped-checklist:must/004"
+      ],
+      "reason": "git tracks 3 text, code and configuration file(s), and `git status` is empty including submodules: the committed state is the whole state.",
+      "evidence": [
+        {
+          "uri": "git ls-files",
+          "description": "3 tracked text/code/config paths of 4 tracked paths",
+          "sha256": null
+        },
+        {
+          "uri": "git status --porcelain",
+          "description": "no output",
+          "sha256": null
+        }
+      ],
+      "details": {
+        "tracked_text": 3
+      },
+      "item_status": {
+        "stamped-checklist:must/004": "met"
+      },
+      "item_reason": {
+        "stamped-checklist:must/004": "git tracks 3 text, code and configuration file(s), and `git status` is empty including submodules: the committed state is the whole state."
+      }
+    }
+  ]
+}

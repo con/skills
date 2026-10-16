@@ -1,0 +1,50 @@
+[
+  {
+    "case": "a",
+    "session_id": "01a14322-8be2-7890-973f-a0a4154d6be9",
+    "source": "/Users/johnlee/.codex/sessions/2026/10/16/rollout-2026-10-16T01-14-59-01a14322-8be2-7890-973f-a0a4154d6be9.jsonl",
+    "path": "native/rollout-2026-10-16T01-14-59-01a14322-8be2-7890-973f-a0a4154d6be9.jsonl",
+    "sha256": "463309c6b8173a5a1b3c5835c63d66f86b417c276573bedd0b37273c8f8568fa",
+    "turn_model_metadata": [
+      {
+        "model": "gpt-6-luna",
+        "effort": "high"
+      }
+    ],
+    "source_metadata": {
+      "subagent": {
+        "thread_spawn": {
+          "parent_thread_id": "01a1425b-4d8e-7482-8535-de99ac86b7c3",
+          "depth": 2,
+          "agent_path": "/root/formal_coordinator/research_guidance_trial_a",
+          "agent_nickname": "Galileo",
+          "agent_role": null
+        }
+      }
+    }
+  },
+  {
+    "case": "b",
+    "session_id": "01a14324-af17-7c93-8233-118ed7cd2ead",
+    "source": "/Users/johnlee/.codex/sessions/2026/10/16/rollout-2026-10-16T01-17-20-01a14324-af17-7c93-8233-118ed7cd2ead.jsonl",
+    "path": "native/rollout-2026-10-16T01-17-20-01a14324-af17-7c93-8233-118ed7cd2ead.jsonl",
+    "sha256": "4c32790bb7df7abd9a20d9b7b6869a760ca11bc0b8e13d6c9e239afa21ee9df3",
+    "turn_model_metadata": [
+      {
+        "model": "gpt-6-sol",
+        "effort": "high"
+      }
+    ],
+    "source_metadata": {
+      "subagent": {
+        "thread_spawn": {
+          "parent_thread_id": "01a1425b-4d8e-7482-8535-de99ac86b7c3",
+          "depth": 2,
+          "agent_path": "/root/formal_coordinator/research_guidance_trial_b",
+          "agent_nickname": "Lagrange",
+          "agent_role": null
+        }
+      }
+    }
+  }
+]
