@@ -151,7 +151,19 @@ def _sha256(path: pathlib.Path) -> str | None:
     try:
         if path.is_symlink() and not path.exists():
             return None  # annexed content not present
-        return hashlib.sha256(path.read_bytes()).hexdigest()
+        content = path.read_bytes()
+        # An unavailable unlocked annex object is a regular pointer file, not
+        # the shipped payload. Use annex's index-aware content query rather
+        # than mistaking arbitrary pointer-looking ordinary text for annex.
+        if len(content) <= 32768 and (content.startswith(b"/annex/objects/") or
+                                     b".git/annex/objects/" in content.split(b"\n", 1)[0]):
+            missing = subprocess.run(
+                ["git", "annex", "find", "--not", "--in", "here",
+                 "--format=${file}", "--", path.name],
+                cwd=path.parent, capture_output=True, text=True)
+            if missing.returncode == 0 and missing.stdout:
+                return None
+        return hashlib.sha256(content).hexdigest()
     except OSError:
         return None
 
