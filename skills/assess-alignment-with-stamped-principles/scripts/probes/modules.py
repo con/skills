@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import re
 import subprocess
+import tempfile
 
 from .common import Evidence, Object, Probe, clip
 
@@ -106,11 +107,15 @@ def subdatasets_resolvable(obj: Object, check_remote: bool = False) -> Probe:
             commit = recorded.get(mod["path"])
             if not commit:
                 continue
-            fetch = subprocess.run(
-                ["git", "fetch", "--depth=1", "--no-tags", url, commit],
-                capture_output=True, text=True, timeout=300,
-                cwd=str(obj.root),
-            )
+            # Even a failed fetch creates FETCH_HEAD. Keep all received objects
+            # and metadata outside the assessed delivery.
+            with tempfile.TemporaryDirectory(prefix="stamped-remote-probe-") as receiver:
+                subprocess.run(["git", "init", "--bare", receiver], check=True,
+                               capture_output=True, text=True, timeout=30)
+                fetch = subprocess.run(
+                    ["git", "--git-dir", receiver, "fetch", "--depth=1", "--no-tags", url, commit],
+                    capture_output=True, text=True, timeout=300,
+                )
             if fetch.returncode != 0:
                 unreachable.append({**mod, "commit": commit,
                                     "why": f"url answers, but commit {commit[:9]} is not fetchable from it: "

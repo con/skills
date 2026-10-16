@@ -42,7 +42,7 @@ The app ignores keys it does not know, so one file serves both.
     "commit": "af259bad237fa57b856417db8dba45a1b283a527"
   },
   "extra_items": [
-    {"key": "licence-declared", "status": "unmet", "reason": "No LICENSE, LICENSES/ or REUSE.toml; paper S.2/D.3 have no checklist item.", "evidence": []}
+    {"key": "license-declared", "status": "unmet", "reason": "No LICENSE, LICENSES/ or REUSE.toml; paper S.2/D.3 have no checklist item.", "evidence": []}
   ],
   "object": {"url": "…", "commit": "…", "captured_at": "2026-10-13T12:00:00Z", "kind": "study"},
   "assessor": {"skill": "assess-alignment-with-stamped-principles", "version": "0.2.0", "harness": "claude-code 2.1.x", "model": "…", "date": "2026-10-13",
@@ -96,7 +96,7 @@ A report without the stamp cannot be compared against another iteration, so it i
 
 Use this order, so the reader meets the actionable part first:
 
-1. **Verdict line** — `MUST: n met / n partial / n unmet / n not-checked`, then SHOULD and MAY, each with its denominator.
+1. **Verdict line** — `MUST: n met / n partial / n unmet / n not-checked / n not-applicable`, then SHOULD and MAY, each with its full denominator.
    No single overall score, ever.
 2. **What to fix first** — at most five, highest leverage first, each as *what to change* → *why it matters to this project* → *the item ids it closes*.
 3. **What the project already does well** — two or three, with citations.

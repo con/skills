@@ -68,6 +68,9 @@ python3 scripts/run_probes.py <object> --kind <kind> --check-remote \
     -o <date>-probes.json --response <date>-response.json
 ```
 
+For an existing captured-delivery response, use a separate probe draft (for example, `--response <date>-probe-draft.json`) and record reviewed item evidence with `set` in the original response.
+A probe draft describes the probed Git state; it cannot redefine the original capture.
+
 `--check-remote` contacts the recorded module urls and fetches the commit each one is pinned to.
 **Run it whenever the object has a linked module and you have network**: without it the shape check alone reports `met` for a module pinned to a commit that no longer exists upstream, which is a silently wrong answer on the most consequential item there is.
 Say in the scope line when you could not.

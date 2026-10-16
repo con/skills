@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import datetime
 import hashlib
 import json
 import pathlib
@@ -228,6 +229,8 @@ def stamp(response: dict, harness: str | None = None, model: str | None = None,
             "uri": str(capture), "sha256": digest.hexdigest(),
         }
     assessor = response.setdefault("assessor", {})
+    if not assessor.get("date"):
+        assessor["date"] = datetime.datetime.now(datetime.timezone.utc).date().isoformat()
     if harness:
         assessor["harness"] = harness
     if model:

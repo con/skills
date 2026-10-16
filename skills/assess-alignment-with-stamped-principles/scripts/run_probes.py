@@ -252,6 +252,17 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--quiet", action="store_true")
     args = ap.parse_args(argv)
 
+    previous = {}
+    if args.response and args.response.exists() and not args.overwrite:
+        try:
+            previous = json.loads(args.response.read_text())
+        except (OSError, json.JSONDecodeError):
+            pass
+        if isinstance(previous, dict) and isinstance(previous.get("object"), dict):
+            if previous["object"].get("capture") is not None:
+                ap.error("--response identifies a captured delivery; keep it and use "
+                         "a separate probe draft path, then review item evidence with set")
+
     root = args.path.resolve()
     if not root.is_dir():
         print(f"error: {root} is not a directory", file=sys.stderr)
@@ -297,10 +308,6 @@ def main(argv: list[str] | None = None) -> int:
     if args.response:
         response = merge_into_response(results, obj, checklist, template, status_value, args.kind)
         if args.response.exists() and not args.overwrite:
-            try:
-                previous = json.loads(args.response.read_text())
-            except (OSError, json.JSONDecodeError):
-                previous = {}
             if previous:
                 response = keep_judgement(response, previous)
                 kept = response.pop("_kept_judgement_answers", 0)
