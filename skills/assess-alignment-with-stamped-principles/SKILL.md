@@ -88,7 +88,8 @@ That is how probes get fixed; silently editing a verdict loses the finding.
 The execution probe is separate because it runs the workflow:
 
 ```console
-python3 scripts/fresh_rerun.py --url <published url> --entry '<documented command>' -o <date>-fresh-rerun.json
+python3 scripts/fresh_rerun.py --url <published url> --entry '<documented command>' \
+  --outputs '<generated-output glob>' -o <date>-fresh-rerun.json
 ```
 
 Run it when the object claims to be reproducible and execution is authorized.
