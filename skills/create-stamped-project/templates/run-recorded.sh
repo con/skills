@@ -1,5 +1,6 @@
 #!/bin/sh
-# Start a recorded run, with the in-flight marker the pre-commit guard reads.
+# DataLad-oriented recorded-run template with an in-flight commit guard.
+# The plain-Git fallback records changed outputs, not a complete execution log.
 #
 #   ./code/run-recorded.sh -m 'collect volumes' -o results/volumes.tsv -- \
 #       python3 code/collect_volumes.py --input sourcedata/ds007116 --output results/volumes.tsv
@@ -106,7 +107,8 @@ GITDIR="$(git rev-parse --git-dir)"
 MARKER="$GITDIR/datalad-run-in-flight"
 cleanup() { rm -f "$MARKER"; }
 
-# Commit before execute: a run that starts from a dirty tree cannot be rerun.
+# This template uses committed Git state as its replay identity.
+# Other workflows can capture a complete dirty state; this wrapper does not.
 if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
     printf 'refusing to run: the tree is dirty. Commit first.\n' >&2
     git status --short >&2

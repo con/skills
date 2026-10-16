@@ -1,5 +1,6 @@
 #!/bin/sh
-# Refuse to start work from a state whose results could not be reproduced.
+# Checks for a workflow that uses committed Git state as its run identity.
+# Adapt these guards to the project; they are not the complete STAMPED rubric.
 #
 #   ./code/preflight.sh            # before a batch of compute
 #   ./code/preflight.sh --quiet    # in CI
@@ -19,9 +20,10 @@ fail=0
 say() { [ "$quiet" = 1 ] || printf '%s\n' "$1"; }
 bad() { printf 'FAIL  %s\n' "$1" >&2; fail=1; }
 
-# must/004 — the committed state is the whole state.
+# This template requires a clean commit; other workflows can identify a complete
+# dirty delivery by a retained content snapshot. Cleanliness alone is not must/004.
 if [ -n "$(git status --porcelain)" ]; then
-    bad "the tree is dirty (must/004): commit or stash before executing"
+    bad "this commit-based workflow requires a clean tree before executing"
 else
     say "ok    tree is clean"
 fi

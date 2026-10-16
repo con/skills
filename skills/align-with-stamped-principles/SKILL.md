@@ -31,7 +31,8 @@ Prefer executable fixes to additional instructions:
 - Amend a spec-kit constitution only when the project already uses one.
 
 Keep the diff to the project's workflow and instructions.
-Scientific recomputation or a changed method belongs in [do-full-research-loop](../do-full-research-loop/SKILL.md) and must be within the user's requested scope.
+Verify an unchanged method when needed to test the repaired workflow; preserve the supplied results.
+New analyses or method changes belong in [do-full-research-loop](../do-full-research-loop/SKILL.md) and must be within the user's requested scope.
 Do not manually patch measurements to make an assessment pass.
 Honor the project's environment policy, including separate exact lock snapshots where specified.
 Native DataLad run commits retain their machine-readable message; normal authored commits follow the project's commit convention.
