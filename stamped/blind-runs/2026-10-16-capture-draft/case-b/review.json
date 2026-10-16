@@ -1,0 +1,26 @@
+{
+  "case": "case-b",
+  "snapshot": "snapshot-02",
+  "snapshot_files_unchanged": true,
+  "original_object_commit": "a701e40679cbea091490121a4f3ec55a62c75811",
+  "capture_sha256": "b4f4b5bbc6e58996184ac38829439b784a0946711e34e3dc427c277e81e6fa7f",
+  "response_sha256": "1e4e8a6bd62263871536093fd29accfb69688a7db1fff70254c9597c537078b4",
+  "response_identity_preserved": true,
+  "schema_valid": true,
+  "items": 31,
+  "native_session": "01a144c9-4746-7e80-9c7e-fb025ef42ee1",
+  "native_sha256": "5b9483b9dd0ecc50accdb592e71f8bfb731af54c6a8dd62238a0147d0cd10cd5",
+  "runtime_cli_version": "0.162.0-alpha.17.2",
+  "actual_turn_identities": [
+    {
+      "model": "gpt-6-luna",
+      "effort": "high"
+    }
+  ],
+  "scope": "Identity/schema and source-integrity review; no regrading or scientific replay.",
+  "capture_integrity_review": "integrity-review-01",
+  "limitations": [
+    "Strict end-of-trial capture validation failed; original failure and independent exact-delta review retained separately. A clean Git working tree is not complete capture equality.",
+    "Agent report incorrectly labels CODEX_VERSION as Desktop version and the PATH codex version as its active runtime; preserved unchanged. External native receipt supplies actual runtime/model/effort."
+  ]
+}

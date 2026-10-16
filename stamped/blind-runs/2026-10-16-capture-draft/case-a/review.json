@@ -1,0 +1,23 @@
+{
+  "case": "case-a",
+  "snapshot": "snapshot",
+  "snapshot_files_unchanged": true,
+  "original_object_commit": "20171384fc05892008d889ed7440d7646eef6c5b",
+  "capture_sha256": "5a695edf17e525c1cdbfa1767bcee2e1356c4df20bc2df27b3f5c57536c5a6b5",
+  "response_sha256": "3f60a2f027d85125dab22ace2f7158a39999ca01d8053f533f249344b11d9c5b",
+  "response_identity_preserved": true,
+  "schema_valid": true,
+  "items": 31,
+  "native_session": "01a144bf-bb6b-7721-8048-2d9d13193ff8",
+  "native_sha256": "4142c66e76f098df66326abb69960aa481530c79eaa40940ebe1243bf67c4ca6",
+  "runtime_cli_version": "0.162.0-alpha.17.2",
+  "actual_turn_identities": [
+    {
+      "model": "gpt-6-astra",
+      "effort": "ultra"
+    }
+  ],
+  "scope": "Identity/schema and source-integrity review; no regrading or scientific replay.",
+  "capture_integrity_review": "root-verification.json",
+  "limitations": []
+}

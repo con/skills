@@ -1,0 +1,163 @@
+{
+  "schema": "case-b-integrity-attribution-v1",
+  "native_session": {
+    "path": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/native-session/raw-session.jsonl",
+    "sha256": "5b9483b9dd0ecc50accdb592e71f8bfb731af54c6a8dd62238a0147d0cd10cd5",
+    "receipt_path": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/native-session/receipt.json",
+    "receipt_sha256": "ab73f229e8130e4d1cea1afaa8800ca2aa6c9822fbe177560140e7ff58e50441",
+    "receipt_sha256_verified": true,
+    "session_id": "01a144c9-4746-7e80-9c7e-fb025ef42ee1",
+    "agent_path": "/root/capture_skill_trial_b",
+    "relevant_tool_calls": [
+      {
+        "record": 90,
+        "timestamp": "2026-10-16T12:57:39.615Z",
+        "call_id": "call_56a03bc1cf664186a2ca1f1a073fa5de",
+        "tool_input": "const base=\"/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01\";\nconst py=\"/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python\";\nconst assess=`${base}/case-b/assessment`;\nconst repo=`${base}/case-b/object-capture/content/workspace`;\nconst s=`${base}/snapshot-02/skills`;\nconst r=await tools.exec_command({cmd:`cd ${assess} && cp response.json response-original.json && PYTHONDONTWRITEBYTECODE=1 GIT_OPTIONAL_LOCKS=0 duct -p ${assess}/duct-logs/probes- -- ${py} ${s}/assess-alignment-with-stamped-principles/scripts/run_probes.py ${repo} --kind study --check-remote -o ${assess}/2026-10-16-probes.json --response ${assess}/2026-10-16-probe-draft.json`,yield_time_ms:30000,max_output_tokens:5000});\ntext(`exit=${r.exit_code}\\n${r.output}`);\n"
+      }
+    ]
+  },
+  "retained_probe_code": {
+    "path": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/assess-alignment-with-stamped-principles/scripts/probes/modules.py",
+    "sha256": "e9f83a80a19f78e112a6b2a127f06a88c2e8fbc40575155faba5203b332e1547",
+    "snippet": [
+      {
+        "line": 109,
+        "text": "            fetch = subprocess.run("
+      },
+      {
+        "line": 110,
+        "text": "                [\"git\", \"fetch\", \"--depth=1\", \"--no-tags\", url, commit],"
+      },
+      {
+        "line": 111,
+        "text": "                capture_output=True, text=True, timeout=300,"
+      },
+      {
+        "line": 112,
+        "text": "                cwd=str(obj.root),"
+      },
+      {
+        "line": 113,
+        "text": "            )"
+      },
+      {
+        "line": 114,
+        "text": "            if fetch.returncode != 0:"
+      },
+      {
+        "line": 115,
+        "text": "                unreachable.append({**mod, \"commit\": commit,"
+      },
+      {
+        "line": 116,
+        "text": "                                    \"why\": f\"url answers, but commit {commit[:9]} is not fetchable from it: \""
+      },
+      {
+        "line": 117,
+        "text": "                                           + clip(fetch.stderr.strip(), 90)})"
+      }
+    ]
+  },
+  "probe_receipt": {
+    "path": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/2026-10-16-probes.json",
+    "sha256": "9afff6ef8ffba0246333d921d6a8063ef6ab94f3fdb479245945b4ae83220954",
+    "subdatasets_resolvable": {
+      "probe": "subdatasets-resolvable",
+      "status": "partial",
+      "items": [
+        "stamped-checklist:must/002",
+        "stamped-checklist:may/001"
+      ],
+      "reason": "1 linked module(s) are well-formed but do not resolve in fact: sourcedata/ds007116 \u2014 url answers, but commit 84570256a is not fetchable from it: fatal: remote error: upload-pack: not our ref 84570256a2a2c84edaed247fee15a3a90b7039ed",
+      "evidence": [
+        {
+          "uri": ".gitmodules",
+          "description": "sourcedata/ds007116: https://github.com/OpenNeuroDatasets/ds007116.git \u2014 url answers, but commit 84570256a is not fetchable from it: fatal: remote error: upload-pack: not our ref 84570256a2a2c84edaed247fee15a3a90b7039ed",
+          "sha256": null
+        }
+      ],
+      "details": {
+        "resolvable": [
+          {
+            "path": "sourcedata/ds007116",
+            "url": "https://github.com/OpenNeuroDatasets/ds007116.git"
+          }
+        ],
+        "unresolvable": [],
+        "unreachable": [
+          {
+            "path": "sourcedata/ds007116",
+            "url": "https://github.com/OpenNeuroDatasets/ds007116.git",
+            "commit": "84570256a2a2c84edaed247fee15a3a90b7039ed",
+            "why": "url answers, but commit 84570256a is not fetchable from it: fatal: remote error: upload-pack: not our ref 84570256a2a2c84edaed247fee15a3a90b7039ed"
+          }
+        ],
+        "pinned_to_local_commits": []
+      },
+      "item_status": {
+        "stamped-checklist:must/002": "partial",
+        "stamped-checklist:may/001": "met"
+      },
+      "item_reason": {
+        "stamped-checklist:must/002": "1 linked module(s) are well-formed but do not resolve in fact: sourcedata/ds007116 \u2014 url answers, but commit 84570256a is not fetchable from it: fatal: remote error: upload-pack: not our ref 84570256a2a2c84edaed247fee15a3a90b7039ed",
+        "stamped-checklist:may/001": "1 external component(s) are linked as modules: sourcedata/ds007116"
+      }
+    }
+  },
+  "timing": {
+    "probe_start_utc": "2026-10-16T12:57:39.741326+00:00",
+    "probe_end_utc": "2026-10-16T12:57:41.158775+00:00",
+    "fetch_head_mtime_utc": "2026-10-16T12:57:40.734079+00:00",
+    "fetch_head_mtime_ns": 1792155460734079409,
+    "mtime_within_logged_probe_run": true
+  },
+  "attribution": "Strongly supported inference: the snapshot remote-check probe created empty FETCH_HEAD through its failed git fetch in obj.root. Native invocation, retained code, failed-fetch receipt and file timestamp agree; there is no filesystem syscall audit proving the individual writer.",
+  "scope": "Only an added Git operational metadata file is observed; no recorded file, directory mode, symlink, Git object, ref, index, worktree source, scientific output or manifest changed.",
+  "strict_result": "Failure remains: FETCH_HEAD is an unexpected entry. It is not repaired or reclassified as a successful strict capture.",
+  "final_source_preservation": {
+    "protected_roots_unchanged": true,
+    "protected_file_checks": {
+      "trial-inputs.json": true,
+      "prepare_trials.py": true,
+      "snapshot-02-manifest.json": true,
+      "verify_case.py": true,
+      "case-b/launch-record.json": true,
+      "case-b/invocation.txt": true,
+      "case-b/prompt.txt": true
+    },
+    "native_session_and_receipt_unchanged": true,
+    "delta_by_root": {
+      "case-b/object-capture": {
+        "missing": [],
+        "unexpected": [],
+        "modified": []
+      },
+      "case-b/assessment": {
+        "missing": [],
+        "unexpected": [],
+        "modified": []
+      },
+      "fixture-capture/original-delivery": {
+        "missing": [],
+        "unexpected": [],
+        "modified": []
+      },
+      "fixture-source": {
+        "missing": [],
+        "unexpected": [],
+        "modified": []
+      },
+      "fixture-source-input": {
+        "missing": [],
+        "unexpected": [],
+        "modified": []
+      },
+      "snapshot-02": {
+        "missing": [],
+        "unexpected": [],
+        "modified": []
+      }
+    }
+  }
+}

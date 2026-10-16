@@ -1,0 +1,118 @@
+{
+  "source_base": "d83d7d66a9060be6afae57336124afdcfc1743e9",
+  "candidate_branch": "codex/assessment-capture-drafts",
+  "final_source_patch_sha256": "286ec7133bc56abd1645185fb4441faa4db86378a6e38e55178a3efcffb14d98",
+  "final_source_files": [
+    {
+      "path": "skills/assess-alignment-with-stamped-principles/SKILL.md",
+      "sha256": "2c2b4cbdda799a4b304e0cfd33e704fe91ced73d9ddf698d11617399343bd65e"
+    },
+    {
+      "path": "skills/assess-alignment-with-stamped-principles/scripts/run_probes.py",
+      "sha256": "07a77e544b2517748cc79f2f879f1c1c1cc2cc7d9883052e613e184ee29a84ae"
+    },
+    {
+      "path": "skills/stamped-conventions/scripts/encode_response.py",
+      "sha256": "b32673e6684d27ae82b2a54489eb0dbc382eae93ec9115623c2b23455f880364"
+    },
+    {
+      "path": "skills/stamped-conventions/references/response-format.md",
+      "sha256": "06a3cecafaba7a91ba2e16a07df8888d1e7b185603de67f639e67c9335cf86cc"
+    },
+    {
+      "path": "skills/assess-alignment-with-stamped-principles/scripts/probes/modules.py",
+      "sha256": "50dfc91c632e1078ab3ddf72febc15bb679b767edc9f6999474cb25afcf3e934"
+    }
+  ],
+  "records": [
+    {
+      "case": "case-a",
+      "snapshot": "snapshot",
+      "snapshot_files_unchanged": true,
+      "original_object_commit": "20171384fc05892008d889ed7440d7646eef6c5b",
+      "capture_sha256": "5a695edf17e525c1cdbfa1767bcee2e1356c4df20bc2df27b3f5c57536c5a6b5",
+      "response_sha256": "3f60a2f027d85125dab22ace2f7158a39999ca01d8053f533f249344b11d9c5b",
+      "response_identity_preserved": true,
+      "schema_valid": true,
+      "items": 31,
+      "native_session": "01a144bf-bb6b-7721-8048-2d9d13193ff8",
+      "native_sha256": "4142c66e76f098df66326abb69960aa481530c79eaa40940ebe1243bf67c4ca6",
+      "runtime_cli_version": "0.162.0-alpha.17.2",
+      "actual_turn_identities": [
+        {
+          "model": "gpt-6-astra",
+          "effort": "ultra"
+        }
+      ],
+      "scope": "Identity/schema and source-integrity review; no regrading or scientific replay.",
+      "capture_integrity_review": "root-verification.json",
+      "limitations": []
+    },
+    {
+      "case": "case-b",
+      "snapshot": "snapshot-02",
+      "snapshot_files_unchanged": true,
+      "original_object_commit": "a701e40679cbea091490121a4f3ec55a62c75811",
+      "capture_sha256": "b4f4b5bbc6e58996184ac38829439b784a0946711e34e3dc427c277e81e6fa7f",
+      "response_sha256": "1e4e8a6bd62263871536093fd29accfb69688a7db1fff70254c9597c537078b4",
+      "response_identity_preserved": true,
+      "schema_valid": true,
+      "items": 31,
+      "native_session": "01a144c9-4746-7e80-9c7e-fb025ef42ee1",
+      "native_sha256": "5b9483b9dd0ecc50accdb592e71f8bfb731af54c6a8dd62238a0147d0cd10cd5",
+      "runtime_cli_version": "0.162.0-alpha.17.2",
+      "actual_turn_identities": [
+        {
+          "model": "gpt-6-luna",
+          "effort": "high"
+        }
+      ],
+      "scope": "Identity/schema and source-integrity review; no regrading or scientific replay.",
+      "capture_integrity_review": "integrity-review-01",
+      "limitations": [
+        "Strict end-of-trial capture validation failed; original failure and independent exact-delta review retained separately. A clean Git working tree is not complete capture equality.",
+        "Agent report incorrectly labels CODEX_VERSION as Desktop version and the PATH codex version as its active runtime; preserved unchanged. External native receipt supplies actual runtime/model/effort."
+      ],
+      "capture_integrity_result": "One added empty .git/FETCH_HEAD; 0 recorded-entry changes. Original fixture intact. Failure retained."
+    }
+  ],
+  "complete_archive": "https://github.com/leej3/stamped-in-practice/tree/codex/iteration-narps-neutral-v1/skill-reflection/assessment-capture-skill-01",
+  "validation": {
+    "structural_skills": 27,
+    "errors": 0,
+    "existing_warnings": 10,
+    "tests_passed": 158,
+    "tests_skipped": 28,
+    "recorded_evals_passed": 26,
+    "mutants_detected": 18,
+    "mutants_total": 18,
+    "full_execution_record": "final-tox-02-info.json",
+    "exit_code": 0
+  },
+  "limits": [
+    "Two development fixtures, no formal NARPS observation or assessor-reliability estimate.",
+    "Case A tested snapshot01 and exposed missing stamp date; case B tested snapshot02 adding a missing-date default. These are sequential versions, not a matched model-tier comparison.",
+    "After both full assessments, two report-format examples were corrected (license key and not-applicable count). No additional full assessment tested those examples; final automated checks and the narrow case-C helper trial cover the published source.",
+    "No scientific replay, original response correction, or selective removal of failed attempts.",
+    "Probe false citations, supplied-name friction and active-runtime metadata availability remain disclosed; these trials do not resolve every assessment problem.",
+    "Case C exercises final remote-fetch helper on a new copy of case B fixture; it is a focused regression check, not an additional held-out full assessment. Canonical capture validation resolves the agent comparator wrapper mismatch."
+  ],
+  "remote_probe_regression_trial": {
+    "scope": "Narrow remote-module probe regression on a new copy; no full checklist or scientific replay.",
+    "original_object_commit": "a701e40679cbea091490121a4f3ec55a62c75811",
+    "capture_sha256": "b4f4b5bbc6e58996184ac38829439b784a0946711e34e3dc427c277e81e6fa7f",
+    "canonical_capture_validation": "passed",
+    "complete_before_after_inventory_equal": true,
+    "snapshot_unchanged": true,
+    "native_session": "01a144d8-d43f-79b2-b603-9d84fde11763",
+    "native_sha256": "13425cddf31194df83c1909befb95377aac28d60ae4703884765c7d9d8ffad4b",
+    "actual_turn_identities": [
+      {
+        "model": "gpt-6-astra",
+        "effort": "ultra"
+      }
+    ],
+    "runtime_cli_version": "0.162.0-alpha.17.2",
+    "agent_comparison_limitation": "Agent marked the pre-existing empty content/external wrapper unexpected. The canonical validator explicitly requires this capture wrapper, and passes. Original agent findings are retained unchanged."
+  }
+}

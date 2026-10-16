@@ -1,0 +1,288 @@
+{
+  "checklist_version": "0.3.1",
+  "responses": {
+    "stamped-checklist:must/001": {
+      "value": null,
+      "reason": "No probe covers this item; a reading of the object is required.",
+      "status": "not-checked",
+      "evidence": [],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:must/002": {
+      "value": "no",
+      "reason": "1 linked module(s) are well-formed but do not resolve in fact: sourcedata/ds007116 \u2014 url answers, but commit 84570256a is not fetchable from it: fatal: remote error: upload-pack: not our ref 84570256a2a2c84edaed247fee15a3a90b7039ed",
+      "status": "partial",
+      "evidence": [
+        {
+          "uri": ".gitmodules",
+          "description": "sourcedata/ds007116: https://github.com/OpenNeuroDatasets/ds007116.git \u2014 url answers, but commit 84570256a is not fetchable from it: fatal: remote error: upload-pack: not our ref 84570256a2a2c84edaed247fee15a3a90b7039ed",
+          "sha256": null
+        }
+      ],
+      "source": "probe:subdatasets-resolvable",
+      "flags": []
+    },
+    "stamped-checklist:must/003": {
+      "value": null,
+      "reason": "No probe covers this item; a reading of the object is required.",
+      "status": "not-checked",
+      "evidence": [],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:must/004": {
+      "value": null,
+      "reason": "No probe covers this item; a reading of the object is required.",
+      "status": "not-checked",
+      "evidence": [],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:must/005": {
+      "value": null,
+      "reason": "No probe covers this item; a reading of the object is required.",
+      "status": "not-checked",
+      "evidence": [],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:must/006": {
+      "value": null,
+      "reason": "No probe covers this item; a reading of the object is required.",
+      "status": "not-checked",
+      "evidence": [],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:must/007": {
+      "value": null,
+      "reason": "No probe covers this item; a reading of the object is required.",
+      "status": "not-checked",
+      "evidence": [],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:must/008": {
+      "value": null,
+      "reason": "No probe covers this item; a reading of the object is required.",
+      "status": "not-checked",
+      "evidence": [],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:must/009": {
+      "value": null,
+      "reason": "No probe covers this item; a reading of the object is required.",
+      "status": "not-checked",
+      "evidence": [],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:must/010": {
+      "value": null,
+      "reason": "No probe covers this item; a reading of the object is required.",
+      "status": "not-checked",
+      "evidence": [],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:must/011": {
+      "value": null,
+      "reason": "No probe covers this item; a reading of the object is required.",
+      "status": "not-checked",
+      "evidence": [],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:must/012": {
+      "value": null,
+      "reason": "No probe covers this item; a reading of the object is required.",
+      "status": "not-checked",
+      "evidence": [],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:must/013": {
+      "value": null,
+      "reason": "No probe covers this item; a reading of the object is required.",
+      "status": "not-checked",
+      "evidence": [],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:must/014": {
+      "value": null,
+      "reason": "No probe covers this item; a reading of the object is required.",
+      "status": "not-checked",
+      "evidence": [],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:must/015": {
+      "value": null,
+      "reason": "No probe covers this item; a reading of the object is required.",
+      "status": "not-checked",
+      "evidence": [],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:must/016": {
+      "value": null,
+      "reason": "No probe covers this item; a reading of the object is required.",
+      "status": "not-checked",
+      "evidence": [],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:must/017": {
+      "value": null,
+      "reason": "No probe covers this item; a reading of the object is required.",
+      "status": "not-checked",
+      "evidence": [],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:should/001": {
+      "value": null,
+      "reason": "No probe covers this item; a reading of the object is required.",
+      "status": "not-checked",
+      "evidence": [],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:should/002": {
+      "value": null,
+      "reason": "No probe covers this item; a reading of the object is required.",
+      "status": "not-checked",
+      "evidence": [],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:should/003": {
+      "value": null,
+      "reason": "No probe covers this item; a reading of the object is required.",
+      "status": "not-checked",
+      "evidence": [],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:should/009": {
+      "value": null,
+      "reason": "No probe covers this item; a reading of the object is required.",
+      "status": "not-checked",
+      "evidence": [],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:should/004": {
+      "value": null,
+      "reason": "No probe covers this item; a reading of the object is required.",
+      "status": "not-checked",
+      "evidence": [],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:should/005": {
+      "value": null,
+      "reason": "No probe covers this item; a reading of the object is required.",
+      "status": "not-checked",
+      "evidence": [],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:should/006": {
+      "value": null,
+      "reason": "No probe covers this item; a reading of the object is required.",
+      "status": "not-checked",
+      "evidence": [],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:should/007": {
+      "value": null,
+      "reason": "No probe covers this item; a reading of the object is required.",
+      "status": "not-checked",
+      "evidence": [],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:should/008": {
+      "value": null,
+      "reason": "No probe covers this item; a reading of the object is required.",
+      "status": "not-checked",
+      "evidence": [],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:may/001": {
+      "value": "yes",
+      "reason": "1 external component(s) are linked as modules: sourcedata/ds007116",
+      "status": "met",
+      "evidence": [
+        {
+          "uri": ".gitmodules",
+          "description": "sourcedata/ds007116: https://github.com/OpenNeuroDatasets/ds007116.git \u2014 url answers, but commit 84570256a is not fetchable from it: fatal: remote error: upload-pack: not our ref 84570256a2a2c84edaed247fee15a3a90b7039ed",
+          "sha256": null
+        }
+      ],
+      "source": "probe:subdatasets-resolvable",
+      "flags": []
+    },
+    "stamped-checklist:may/002": {
+      "value": null,
+      "reason": "No probe covers this item; a reading of the object is required.",
+      "status": "not-checked",
+      "evidence": [],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:may/003": {
+      "value": null,
+      "reason": "No probe covers this item; a reading of the object is required.",
+      "status": "not-checked",
+      "evidence": [],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:may/004": {
+      "value": null,
+      "reason": "No probe covers this item; a reading of the object is required.",
+      "status": "not-checked",
+      "evidence": [],
+      "source": "judgement",
+      "flags": []
+    },
+    "stamped-checklist:may/005": {
+      "value": null,
+      "reason": "No probe covers this item; a reading of the object is required.",
+      "status": "not-checked",
+      "evidence": [],
+      "source": "judgement",
+      "flags": []
+    }
+  },
+  "schema_version": "0.2.0",
+  "principles_version": "0.2.0",
+  "checklist_source": {
+    "repo": "https://github.com/stamped-principles/stamped-checklist-schema",
+    "tag": "v0.3.1",
+    "commit": "af259bad237fa57b856417db8dba45a1b283a527"
+  },
+  "extra_items": [],
+  "object": {
+    "url": "https://github.com/con/stamped-eval-fixture-r0.git",
+    "commit": "a701e40679cbea091490121a4f3ec55a62c75811",
+    "captured_at": "2026-10-16T13:15:50+00:00",
+    "kind": "study"
+  },
+  "assessor": {
+    "skill": "assess-alignment-with-stamped-principles",
+    "version": "0.1.0",
+    "harness": null,
+    "model": null,
+    "date": "2026-10-16",
+    "drafted_by": "scripts/run_probes.py"
+  },
+  "scope": "Probe sweep only; judgement items are left not-checked."
+}

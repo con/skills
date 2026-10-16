@@ -1,0 +1,10 @@
+{
+  "agent": "/root/capture_skill_trial_b",
+  "fork_turns": "none",
+  "model_override": "gpt-6-luna",
+  "reasoning_effort_override": "high",
+  "authority": "con/skills AGENTS.md: test more than one model tier",
+  "prompt_sha256": "ca89cdd1d626f54f40817fb342aa59794c74b361738fe442b9a93ba19e43712b",
+  "invocation_sha256": "10b32eb86204074b1770839f18ea7262dcbf9c730aae086c03c3361c57da0880",
+  "status": "launched"
+}

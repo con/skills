@@ -1,0 +1,138 @@
+{
+  "started_at_utc": "2026-10-16T13:16:33.797235+00:00",
+  "finished_at_utc": "2026-10-16T13:16:34.598495+00:00",
+  "module_path": "sourcedata/ds007116",
+  "recorded_url": "https://github.com/OpenNeuroDatasets/ds007116.git",
+  "recorded_commit": "84570256a2a2c84edaed247fee15a3a90b7039ed",
+  "head_index_pin_match": true,
+  "remote_head_available": true,
+  "recorded_revision_fetchable": false,
+  "receiver": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-c/review/remote-confirmation.git",
+  "commands": [
+    {
+      "argv": [
+        "git",
+        "--version"
+      ],
+      "cwd": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-c/review",
+      "returncode": 0,
+      "stdout": "git version 2.55.0\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "cwd": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-c/object-capture/content/workspace",
+      "returncode": 0,
+      "stdout": "a701e40679cbea091490121a4f3ec55a62c75811\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "ls-tree",
+        "HEAD",
+        "sourcedata/ds007116"
+      ],
+      "cwd": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-c/object-capture/content/workspace",
+      "returncode": 0,
+      "stdout": "160000 commit 84570256a2a2c84edaed247fee15a3a90b7039ed\tsourcedata/ds007116\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "ls-files",
+        "--stage",
+        "sourcedata/ds007116"
+      ],
+      "cwd": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-c/object-capture/content/workspace",
+      "returncode": 0,
+      "stdout": "160000 84570256a2a2c84edaed247fee15a3a90b7039ed 0\tsourcedata/ds007116\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "submodule",
+        "status",
+        "--recursive"
+      ],
+      "cwd": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-c/object-capture/content/workspace",
+      "returncode": 0,
+      "stdout": " 84570256a2a2c84edaed247fee15a3a90b7039ed sourcedata/ds007116 (heads/main)\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "branch",
+        "-r",
+        "--contains",
+        "HEAD"
+      ],
+      "cwd": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-c/object-capture/content/workspace/sourcedata/ds007116",
+      "returncode": 0,
+      "stdout": "  origin/HEAD -> origin/main\n  origin/main\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "config",
+        "-f",
+        ".gitmodules",
+        "--get",
+        "submodule.sourcedata/ds007116.url"
+      ],
+      "cwd": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-c/object-capture/content/workspace",
+      "returncode": 0,
+      "stdout": "https://github.com/OpenNeuroDatasets/ds007116.git\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "ls-remote",
+        "--exit-code",
+        "https://github.com/OpenNeuroDatasets/ds007116.git",
+        "HEAD"
+      ],
+      "cwd": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-c/review",
+      "returncode": 0,
+      "stdout": "fc7dc36fa2598b0b2e4579baef37d148cc085207\tHEAD\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "init",
+        "--bare",
+        "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-c/review/remote-confirmation.git"
+      ],
+      "cwd": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-c/review",
+      "returncode": 0,
+      "stdout": "Initialized empty Git repository in /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-c/review/remote-confirmation.git/\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "--git-dir",
+        "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-c/review/remote-confirmation.git",
+        "fetch",
+        "--depth=1",
+        "--no-tags",
+        "https://github.com/OpenNeuroDatasets/ds007116.git",
+        "84570256a2a2c84edaed247fee15a3a90b7039ed"
+      ],
+      "cwd": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-c/review",
+      "returncode": 128,
+      "stdout": "",
+      "stderr": "fatal: remote error: upload-pack: not our ref 84570256a2a2c84edaed247fee15a3a90b7039ed\n"
+    }
+  ]
+}

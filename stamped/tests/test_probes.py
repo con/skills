@@ -60,6 +60,39 @@ def _statuses(root: pathlib.Path) -> dict[str, str]:
     return out
 
 
+@pytest.mark.parametrize("reachable", [True, False])
+def test_remote_pin_probe_never_writes_to_assessed_object(clean, tmp_path, monkeypatch, reachable):
+    from probes.modules import subdatasets_resolvable
+
+    root = tmp_path / "assessed"
+    subprocess.run(["git", "init", str(root)], check=True, capture_output=True)
+    (root / "original.txt").write_text("delivered evidence\n")
+    commit = subprocess.run(["git", "rev-parse", "HEAD"], cwd=clean,
+                            check=True, text=True, capture_output=True).stdout.strip()
+    obj = Object(root)
+    url = "https://probe.invalid/component.git"
+    monkeypatch.setattr(obj, "submodules", lambda: [{
+        "name": "component", "path": "input", "url": url,
+        "recorded_commit": commit if reachable else "f" * 40, "initialized": False,
+    }])
+    run = subprocess.run
+    def local_transport(command, **kwargs):
+        if url in command:
+            command = ["git", "-c", "protocol.file.allow=always", *[
+                clean.as_uri() if value == url else value for value in command[1:]
+            ]]
+        return run(command, **kwargs)
+    monkeypatch.setattr(subprocess, "run", local_transport)
+    def inventory():
+        return {str(p.relative_to(root)): (p.stat().st_mode, p.read_bytes() if p.is_file() else None)
+                for p in root.rglob("*")}
+    before = inventory()
+    result = subdatasets_resolvable(obj, check_remote=True)
+    assert result.status == ("met" if reachable else "partial")
+    assert bool(result.details["unreachable"]) is not reachable
+    assert inventory() == before
+
+
 # `platform-assumptions` never returns `met`: it can only flag platform-specific
 # commands, and must/011 and must/012 ask about host assumptions in general. Its
 # silence is a prompt to read, not a pass — an earlier version claimed `met` and
@@ -1356,6 +1389,33 @@ def test_the_upstream_schema_carries_every_field_this_repo_emits(clean, tmp_path
         "repository's own responses contain; the PR body cites them as "
         "validating instances"
     )
+
+
+def test_probe_draft_preserves_a_captured_delivery_response(clean, tmp_path):
+    response = tmp_path / "response.json"
+    original = template(Checklist())
+    original["object"]["capture"] = {"uri": "original-delivery.json", "sha256": "a" * 64}
+    response.write_text(json.dumps(original))
+    before = response.read_bytes()
+    output = tmp_path / "probes.json"
+    sweep = [sys.executable, str(ASSESS / "scripts" / "run_probes.py"), str(clean),
+             "--only", "tree-clean", "-o", str(output), "--response"]
+
+    collision = subprocess.run([*sweep, str(response)], capture_output=True, text=True)
+    assert collision.returncode == 2
+    assert "separate probe draft" in collision.stderr
+    assert response.read_bytes() == before
+    assert not output.exists()
+
+    draft = tmp_path / "probe-draft.json"
+    subprocess.run([*sweep, str(draft)], check=True, capture_output=True)
+    assert output.is_file() and draft.is_file()
+    assert response.read_bytes() == before
+    assert "capture" not in json.loads(draft.read_text())["object"]
+
+    # Intentional replacement remains explicit; default refresh cannot do it.
+    subprocess.run([*sweep, str(response), "--overwrite"], check=True, capture_output=True)
+    assert "capture" not in json.loads(response.read_text())["object"]
 
 
 def test_a_probe_rerun_keeps_the_answers_only_a_reader_could_give(clean, tmp_path):

@@ -1,0 +1,621 @@
+{
+  "checklist_version": "0.3.1",
+  "responses": {
+    "stamped-checklist:must/001": {
+      "status": "met",
+      "reason": "The captured workspace places the study files under one root.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "layout table locates inputs, code, results and figures under the project root",
+          "sha256": null
+        },
+        {
+          "uri": "capture manifest",
+          "description": "complete capture of content/workspace",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/002": {
+      "status": "partial",
+      "reason": "The dataset is linked inside the root, but its pinned commit is unavailable from the recorded URL.",
+      "source": "probe:subdatasets-resolvable",
+      "evidence": [
+        {
+          "uri": ".gitmodules",
+          "description": "sourcedata/ds007116 URL",
+          "sha256": null
+        },
+        {
+          "uri": "probe:subdatasets-resolvable",
+          "description": "upstream reports pinned commit 8457025 is not fetchable",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/003": {
+      "status": "partial",
+      "reason": "Python packages are specified, but the recorded route also relies on host Apptainer outside that environment.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "requirements.lock",
+          "description": "Python package pins",
+          "sha256": null
+        },
+        {
+          "uri": "README.md#System requirements",
+          "description": "Apptainer is a host requirement",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/004": {
+      "status": "met",
+      "reason": "Git tracks code, documentation, configuration and results; the captured tree is clean.",
+      "source": "probe:tree-clean",
+      "evidence": [
+        {
+          "uri": "git ls-files",
+          "description": "tracked code, text, configuration and results",
+          "sha256": null
+        },
+        {
+          "uri": "git status --porcelain",
+          "description": "empty in captured workspace",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/005": {
+      "status": "not-applicable",
+      "reason": "N/A: the complete captured delivery contains no large binary data; binary placeholders are 17 and 28 bytes.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "git ls-tree -rl HEAD",
+          "description": "largest binary artifacts are tiny placeholders",
+          "sha256": null
+        },
+        {
+          "uri": "capture manifest",
+          "description": "complete, no omissions",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/006": {
+      "status": "met",
+      "reason": "Each shipped derived file has a run record linking its inputs, output and pinned environment.",
+      "source": "probe:derived-have-records+probe:run-env-linked",
+      "evidence": [
+        {
+          "uri": "commit:6d53e90893d0cf3a3ba2fbe5420a66e888d42cc2",
+          "description": "volumes.tsv run record",
+          "sha256": null
+        },
+        {
+          "uri": "commit:fa96ed20ffb14f282e216edace2119c359a71cb3",
+          "description": "qc.tsv run record",
+          "sha256": null
+        },
+        {
+          "uri": "commit:a701e40679cbea091490121a4f3ec55a62c75811",
+          "description": "figure run record",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/007": {
+      "status": "met",
+      "reason": "README.md documents installation and usage, and the Makefile exposes the workflow.",
+      "source": "probe:entry-point",
+      "evidence": [
+        {
+          "uri": "README.md#Install",
+          "description": "venv install instructions",
+          "sha256": null
+        },
+        {
+          "uri": "README.md#Usage",
+          "description": "make all",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/008": {
+      "status": "met",
+      "reason": "The README names the Makefile workflow and both processing scripts as reproduction starting points.",
+      "source": "probe:entry-point",
+      "evidence": [
+        {
+          "uri": "README.md#Usage",
+          "description": "make all and named entry point",
+          "sha256": null
+        },
+        {
+          "uri": "Makefile",
+          "description": "all target and script commands",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/009": {
+      "status": "met",
+      "reason": "The tracked text scan found no host-specific absolute paths.",
+      "source": "probe:no-abs-paths",
+      "evidence": [
+        {
+          "uri": "probe:no-abs-paths",
+          "description": "21 tracked paths scanned; no host-specific paths",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/010": {
+      "status": "partial",
+      "reason": "The lock covers Python packages, while recorded commands also require host tools such as Apptainer outside the environment spec.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "requirements.lock",
+          "description": "only matplotlib and pandas pinned",
+          "sha256": null
+        },
+        {
+          "uri": "README.md#System requirements",
+          "description": "Apptainer, make, git and Python listed as host requirements",
+          "sha256": null
+        },
+        {
+          "uri": "commit:6d53e90",
+          "description": "recorded command invokes apptainer",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/011": {
+      "status": "met",
+      "reason": "README lists the POSIX shell, make, Git, Python, Apptainer and network assumptions, with versions where needed.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "README.md#System requirements",
+          "description": "host requirements and versions documented",
+          "sha256": null
+        },
+        {
+          "uri": ".datalad/config",
+          "description": "container execution registration",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/012": {
+      "status": "met",
+      "reason": "README has a clear system-requirements list, including the container runner and network access.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "README.md#System requirements",
+          "description": "system requirements table",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/013": {
+      "status": "met",
+      "reason": "The tracked requirements lock and container registrations sit alongside the code.",
+      "source": "probe:env-spec-tracked",
+      "evidence": [
+        {
+          "uri": "requirements.lock",
+          "description": "tracked package lock",
+          "sha256": null
+        },
+        {
+          "uri": "code/containers.json",
+          "description": "tracked container digest registration",
+          "sha256": null
+        },
+        {
+          "uri": ".datalad/config",
+          "description": "tracked DataLad container registration",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/014": {
+      "status": "partial",
+      "reason": "The lock documents `uv pip compile`, but history shows no regeneration after its initial setup commit.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "requirements.lock",
+          "description": "regeneration command in header",
+          "sha256": null
+        },
+        {
+          "uri": "commit:a9cb7f0",
+          "description": "only environment-specification history entry",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/015": {
+      "status": "met",
+      "reason": "Run records and tracked registrations name a pinned container digest, with no floating `latest` reference.",
+      "source": "probe:run-env-linked",
+      "evidence": [
+        {
+          "uri": "code/containers.json",
+          "description": "container image digest",
+          "sha256": null
+        },
+        {
+          "uri": "commit:a701e40679cbea091490121a4f3ec55a62c75811",
+          "description": "run record carries digest",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/016": {
+      "status": "unmet",
+      "reason": "The declared origin is unavailable: `git ls-remote` reports the GitHub repository does not exist.",
+      "source": "probe:env-spec-tracked+judgement",
+      "evidence": [
+        {
+          "uri": "git remote -v",
+          "description": "declared origin URL",
+          "sha256": null
+        },
+        {
+          "uri": "remote check log",
+          "description": "git ls-remote origin returned Repository not found",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/017": {
+      "status": "partial",
+      "reason": "README explains the lockfile route, but gives no retrieval/use command for the image named by shipped-result records.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "README.md#Install",
+          "description": "lockfile installation instructions",
+          "sha256": null
+        },
+        {
+          "uri": "code/containers/plotting.sif.README",
+          "description": "local image is only a placeholder",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/001": {
+      "status": "met",
+      "reason": "The study and its input module both use Git; the module boundary is explicit.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": ".gitmodules",
+          "description": "dataset is a Git submodule",
+          "sha256": null
+        },
+        {
+          "uri": "git submodule status",
+          "description": "module is present at recorded commit",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/002": {
+      "status": "not-checked",
+      "reason": "A recurring CI workflow is configured, but no completed run result is in the capture; run history would settle regular success.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": ".github/workflows/rerun.yml",
+          "description": "push and pull_request triggers",
+          "sha256": null
+        },
+        {
+          "uri": "capture manifest",
+          "description": "delivery contains no CI run artifacts",
+          "sha256": null
+        },
+        {
+          "uri": "probe:subdatasets-resolvable",
+          "description": "fresh retrieval currently fails",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/003": {
+      "status": "met",
+      "reason": "Inputs, code, environment definitions and derived outputs have separate paths and documented roles.",
+      "source": "probe:modules-separated",
+      "evidence": [
+        {
+          "uri": "README.md#Layout",
+          "description": "component layout",
+          "sha256": null
+        },
+        {
+          "uri": "docs/README.md",
+          "description": "module relationships",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/009": {
+      "status": "not-applicable",
+      "reason": "N/A: the captured dataset and software are public; no restricted component is present.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "sourcedata/ds007116/dataset_description.json",
+          "description": "CC0 license",
+          "sha256": null
+        },
+        {
+          "uri": "README.md",
+          "description": "public OpenNeuro dataset and ordinary software",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/004": {
+      "status": "not-checked",
+      "reason": "CI defines a fresh Ubuntu runner, but no completed successful run is captured; CI history would settle this.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": ".github/workflows/rerun.yml",
+          "description": "runs-on ubuntu-latest",
+          "sha256": null
+        },
+        {
+          "uri": "capture manifest",
+          "description": "no CI execution results retained",
+          "sha256": null
+        },
+        {
+          "uri": "probe:subdatasets-resolvable",
+          "description": "recorded module commit cannot be fetched",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/005": {
+      "status": "met",
+      "reason": "Each CI job runs on a fresh hosted Ubuntu runner, providing a disposable environment per execution.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": ".github/workflows/rerun.yml",
+          "description": "job uses ubuntu-latest and installs its environment",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/006": {
+      "status": "unmet",
+      "reason": "CI installs the lockfile and runs `make all`; it only prints the recorded digest and checks a placeholder path.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": ".github/workflows/rerun.yml",
+          "description": "installs lock and runs make without Apptainer",
+          "sha256": null
+        },
+        {
+          "uri": "README.md",
+          "description": "CI route differs from the recorded-result container route",
+          "sha256": null
+        },
+        {
+          "uri": "code/containers/plotting.sif.README",
+          "description": "container file is a placeholder",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/007": {
+      "status": "partial",
+      "reason": "The lock and image registrations are archived, but both tracked image files are 28-byte placeholders.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "requirements.lock",
+          "description": "archived package lock",
+          "sha256": null
+        },
+        {
+          "uri": "code/containers/plotting.sif.README",
+          "description": "container image not shipped",
+          "sha256": null
+        },
+        {
+          "uri": "git ls-tree -rl HEAD",
+          "description": "image files are 28 bytes",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/008": {
+      "status": "partial",
+      "reason": "The declared lock regeneration process has no later execution in history; this repeats must/014 by checklist design.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "requirements.lock",
+          "description": "regeneration command in header",
+          "sha256": null
+        },
+        {
+          "uri": "commit:a9cb7f0",
+          "description": "only environment-specification history entry",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "upstream-duplicate"
+      ]
+    },
+    "stamped-checklist:may/001": {
+      "status": "partial",
+      "reason": "A dataset submodule is declared, but its pinned commit is not retrievable from the linked upstream.",
+      "source": "probe:subdatasets-resolvable+judgement",
+      "evidence": [
+        {
+          "uri": ".gitmodules",
+          "description": "identifies the input module",
+          "sha256": null
+        },
+        {
+          "uri": "probe:subdatasets-resolvable",
+          "description": "recorded commit unavailable",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:may/002": {
+      "status": "met",
+      "reason": "README and docs explain component roles and how to navigate between them.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "README.md#Layout",
+          "description": "component descriptions",
+          "sha256": null
+        },
+        {
+          "uri": "docs/README.md",
+          "description": "method and relationships",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:may/003": {
+      "status": "met",
+      "reason": "The documented boundaries permit replacing the input, collector or plot independently; Makefile rules state their dependencies.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "docs/README.md",
+          "description": "each step's inputs and outputs",
+          "sha256": null
+        },
+        {
+          "uri": "Makefile",
+          "description": "target dependency edges",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:may/004": {
+      "status": "met",
+      "reason": "The Git submodule and Makefile targets provide mechanisms to compose the input and processing steps.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": ".gitmodules",
+          "description": "input module composition",
+          "sha256": null
+        },
+        {
+          "uri": "Makefile",
+          "description": "all target composes steps",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:may/005": {
+      "status": "met",
+      "reason": "README layout and docs README guide users through the project structure and method.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "README.md#Layout",
+          "description": "project map",
+          "sha256": null
+        },
+        {
+          "uri": "docs/README.md",
+          "description": "method navigation",
+          "sha256": null
+        }
+      ]
+    }
+  },
+  "schema_version": "0.2.0",
+  "principles_version": "0.2.0",
+  "checklist_source": {
+    "repo": "https://github.com/stamped-principles/stamped-checklist-schema",
+    "tag": "v0.3.1",
+    "commit": "af259bad237fa57b856417db8dba45a1b283a527"
+  },
+  "extra_items": [
+    {
+      "key": "license-declared",
+      "status": "met",
+      "reason": "LICENSE is present; licensing is outside the pinned checklist.",
+      "evidence": [
+        {
+          "uri": "LICENSE",
+          "description": "license declaration"
+        }
+      ]
+    },
+    {
+      "key": "clone-weight",
+      "status": "met",
+      "reason": "No text blob in Git exceeds 10 MiB.",
+      "evidence": [
+        {
+          "uri": "git ls-tree -r -l HEAD",
+          "description": "tracked blob sizes"
+        }
+      ]
+    },
+    {
+      "key": "inputs-untouched",
+      "status": "met",
+      "reason": "The linked input is clean at the commit recorded by the parent dataset; this does not prove upstream retrievability.",
+      "evidence": [
+        {
+          "uri": "git submodule status",
+          "description": "submodule at recorded commit with no dirty marker"
+        }
+      ]
+    }
+  ],
+  "object": {
+    "url": null,
+    "commit": "a701e40679cbea091490121a4f3ec55a62c75811",
+    "captured_at": "2026-10-16T12:44:55.971269+00:00",
+    "kind": "study",
+    "capture": {
+      "uri": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/object-capture/manifest.json",
+      "sha256": "b4f4b5bbc6e58996184ac38829439b784a0946711e34e3dc427c277e81e6fa7f"
+    }
+  },
+  "assessor": {
+    "skill": "assess-alignment-with-stamped-principles",
+    "version": "0.1.0",
+    "harness": "Codex Desktop 0.162.0-alpha.17.2; codex-cli 0.143.0",
+    "model": "GPT-6 (exact model variant/version unavailable from the task harness)",
+    "date": "2026-10-16",
+    "dependencies": [
+      "stamped-conventions@0.1.0"
+    ]
+  },
+  "scope": "Original captured delivery at Git commit a701e40679cbea091490121a4f3ec55a62c75811; complete capture manifest retained and hash recorded; checks include declared origin and module URL; no scientific replay or source modification."
+}

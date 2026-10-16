@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import datetime
 import importlib.util
 import json
 import pathlib
@@ -40,6 +41,19 @@ def completed():
 
 def test_completed_response_accepts_truthful_not_checked():
     assert validate(completed(), Checklist()) == []
+
+
+@pytest.mark.parametrize("date", [None, "2026-10-01"])
+def test_stamp_initializes_only_missing_assessment_date(date):
+    response = completed()
+    response["assessor"]["date"] = date
+    answers = json.loads(json.dumps(response["responses"]))
+    before = datetime.datetime.now(datetime.timezone.utc).date().isoformat()
+    stamp(response)
+    after = datetime.datetime.now(datetime.timezone.utc).date().isoformat()
+    assert response["assessor"]["date"] in ({date} if date else {before, after})
+    assert response["responses"] == answers
+    assert validate(response, Checklist()) == []
 
 
 @pytest.mark.parametrize("capture", [None, {}, {"uri": "manifest.json"},

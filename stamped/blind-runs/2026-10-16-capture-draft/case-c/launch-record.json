@@ -1,0 +1,8 @@
+{
+  "agent": "/root/capture_remote_probe_trial",
+  "fork_turns": "none",
+  "model_override": null,
+  "status": "launched",
+  "invocation_sha256": "f522a69d7344989cec439505f03fee85ea93159fc9e9a118e337ebfb8788ddd2",
+  "prompt_sha256": "b91c91c2447aeedcdd3a31884fbfc58bbefc3f8cb3aa12fd6f32e133a1fa08d5"
+}

@@ -1,0 +1,535 @@
+{
+  "object": {
+    "path": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/object-capture/content/workspace",
+    "commit": "a701e40679cbea091490121a4f3ec55a62c75811",
+    "is_datalad": true
+  },
+  "checklist_version": "0.3.1",
+  "probes": [
+    {
+      "probe": "ci-present",
+      "status": "met",
+      "items": [
+        "stamped-checklist:should/002",
+        "stamped-checklist:should/006"
+      ],
+      "reason": "should/002 met: .github/workflows/rerun.yml contains a workflow-executing step (make/snakemake/datalad rerun or similar). Whether it runs what the instructions describe is a reading. should/006 met: .github/workflows/rerun.yml names the same image o\u2026",
+      "evidence": [
+        {
+          "uri": ".github/workflows/rerun.yml",
+          "description": "CI configuration",
+          "sha256": null
+        },
+        {
+          "uri": ".github/workflows/rerun.yml",
+          "description": "re-executes the workflow",
+          "sha256": null
+        },
+        {
+          "uri": ".github/workflows/rerun.yml",
+          "description": "rebuilds an environment",
+          "sha256": null
+        }
+      ],
+      "details": {
+        "configs": [
+          ".github/workflows/rerun.yml"
+        ],
+        "runs_workflow": [
+          ".github/workflows/rerun.yml"
+        ],
+        "rebuilders": [
+          ".github/workflows/rerun.yml"
+        ],
+        "recorded_images": [
+          "code/containers/plotting.sif"
+        ],
+        "recorded_locks": [],
+        "same_environment": [
+          ".github/workflows/rerun.yml"
+        ]
+      },
+      "item_status": {
+        "stamped-checklist:should/002": "met",
+        "stamped-checklist:should/006": "met"
+      },
+      "item_reason": {
+        "stamped-checklist:should/002": ".github/workflows/rerun.yml contains a workflow-executing step (make/snakemake/datalad rerun or similar). Whether it runs what the instructions describe is a reading.",
+        "stamped-checklist:should/006": ".github/workflows/rerun.yml names the same image or lockfile the run records name. Whether the job actually rebuilds it is a reading."
+      }
+    },
+    {
+      "probe": "clone-weight",
+      "status": "met",
+      "items": [],
+      "reason": "No text blob in git exceeds 10 MiB.",
+      "evidence": [
+        {
+          "uri": "git ls-tree -r -l HEAD",
+          "description": "largest text blob under 10485760 bytes",
+          "sha256": null
+        }
+      ],
+      "details": {},
+      "item_status": {},
+      "item_reason": {}
+    },
+    {
+      "probe": "derived-have-records",
+      "status": "met",
+      "items": [
+        "stamped-checklist:must/006"
+      ],
+      "reason": "All 3 derived file(s) trace to a re-executable record (3 run record(s), workflows: Makefile).",
+      "evidence": [
+        {
+          "uri": "figures/brain-volume-vs-age.png",
+          "description": "run record a701e40",
+          "sha256": null
+        },
+        {
+          "uri": "results/qc.tsv",
+          "description": "run record fa96ed2",
+          "sha256": null
+        },
+        {
+          "uri": "results/volumes.tsv",
+          "description": "run record 6d53e90",
+          "sha256": null
+        }
+      ],
+      "details": {
+        "candidates": 3,
+        "covered": 3,
+        "uncovered": [],
+        "run_records": 3,
+        "workflow_sources": [
+          "Makefile"
+        ]
+      },
+      "item_status": {
+        "stamped-checklist:must/006": "met"
+      },
+      "item_reason": {
+        "stamped-checklist:must/006": "All 3 derived file(s) trace to a re-executable record (3 run record(s), workflows: Makefile)."
+      }
+    },
+    {
+      "probe": "entry-point",
+      "status": "met",
+      "items": [
+        "stamped-checklist:must/007",
+        "stamped-checklist:must/008"
+      ],
+      "reason": "must/007 met: README.md has an install/usage/reproduce section. must/008 met: Starting point present: code/collect_volumes.py.",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "instructions",
+          "sha256": null
+        },
+        {
+          "uri": "Makefile",
+          "description": "instructions",
+          "sha256": null
+        },
+        {
+          "uri": "code/collect_volumes.py",
+          "description": "entry point named in the instructions and present",
+          "sha256": null
+        },
+        {
+          "uri": "code/plot_volumes.py",
+          "description": "entry point named in the instructions and present",
+          "sha256": null
+        },
+        {
+          "uri": "Makefile",
+          "description": "make targets: all, clean, figures/brain-volume-vs-age.png, results/volumes.tsv",
+          "sha256": null
+        }
+      ],
+      "details": {
+        "readmes": [
+          "README.md"
+        ],
+        "makefiles": [
+          "Makefile"
+        ],
+        "named": [
+          "code/collect_volumes.py",
+          "code/plot_volumes.py"
+        ],
+        "targets": [
+          "all",
+          "clean",
+          "figures/brain-volume-vs-age.png",
+          "results/volumes.tsv"
+        ],
+        "workflow": [],
+        "has_section": true,
+        "documented_targets": [
+          "all",
+          "figures/brain-volume-vs-age.png"
+        ],
+        "missing_targets": []
+      },
+      "item_status": {
+        "stamped-checklist:must/007": "met",
+        "stamped-checklist:must/008": "met"
+      },
+      "item_reason": {
+        "stamped-checklist:must/007": "README.md has an install/usage/reproduce section.",
+        "stamped-checklist:must/008": "Starting point present: code/collect_volumes.py."
+      }
+    },
+    {
+      "probe": "env-spec-tracked",
+      "status": "unmet",
+      "items": [
+        "stamped-checklist:must/010",
+        "stamped-checklist:must/013",
+        "stamped-checklist:must/016"
+      ],
+      "reason": "must/010 not-checked: Specification found: .datalad/config, requirements.lock. Dependency completeness is not checked: compare imports and invoked tools with declarations, including local/vendored code. Version pins are separate. must/013 met. must/\u2026",
+      "evidence": [
+        {
+          "uri": ".datalad/config",
+          "description": "pinned environment specification",
+          "sha256": null
+        },
+        {
+          "uri": "requirements.lock",
+          "description": "pinned environment specification",
+          "sha256": null
+        }
+      ],
+      "details": {
+        "specs": {
+          "requirements.lock": "pinned",
+          ".datalad/config": "pinned"
+        },
+        "uninstalled_modules": [],
+        "preconditions": [],
+        "remote": "https://github.com/con/stamped-eval-fixture-r0.git",
+        "publication": null
+      },
+      "item_status": {
+        "stamped-checklist:must/010": "not-checked",
+        "stamped-checklist:must/013": "met",
+        "stamped-checklist:must/016": "unmet"
+      },
+      "item_reason": {
+        "stamped-checklist:must/010": "Specification found: .datalad/config, requirements.lock. Dependency completeness is not checked: compare imports and invoked tools with declarations, including local/vendored code. Version pins are separate.",
+        "stamped-checklist:must/013": "Tracked: .datalad/config, requirements.lock.",
+        "stamped-checklist:must/016": "The recorded remote does not resolve (https://github.com/con/stamped-eval-fixture-r0.git): `git ls-remote` could not reach it, so the tracked specification is not obtainable from where it claims."
+      }
+    },
+    {
+      "probe": "inputs-untouched",
+      "status": "met",
+      "items": [],
+      "reason": "All 1 linked module(s) are clean and at the commit the superdataset records.",
+      "evidence": [
+        {
+          "uri": "git submodule status",
+          "description": "no '+' or 'U' flags",
+          "sha256": null
+        }
+      ],
+      "details": {},
+      "item_status": {},
+      "item_reason": {}
+    },
+    {
+      "probe": "large-in-annex",
+      "status": "met",
+      "items": [
+        "stamped-checklist:must/005"
+      ],
+      "reason": "git-annex carries the binary content (0 pointer(s) tracked) and no binary blob over 10 MiB is in git.",
+      "evidence": [
+        {
+          "uri": "git ls-tree -r -l HEAD",
+          "description": "no binary blob over 10485760 bytes",
+          "sha256": null
+        },
+        {
+          "uri": ".datalad/config",
+          "description": "git-annex in use for large content",
+          "sha256": null
+        }
+      ],
+      "details": {
+        "mechanism": "git-annex",
+        "annex_pointers": 0,
+        "large_binary": []
+      },
+      "item_status": {
+        "stamped-checklist:must/005": "met"
+      },
+      "item_reason": {
+        "stamped-checklist:must/005": "git-annex carries the binary content (0 pointer(s) tracked) and no binary blob over 10 MiB is in git."
+      }
+    },
+    {
+      "probe": "license-declared",
+      "status": "met",
+      "items": [],
+      "reason": "Licence declared in LICENSE.",
+      "evidence": [
+        {
+          "uri": "LICENSE",
+          "description": "licence declaration",
+          "sha256": null
+        }
+      ],
+      "details": {},
+      "item_status": {},
+      "item_reason": {}
+    },
+    {
+      "probe": "modules-separated",
+      "status": "met",
+      "items": [
+        "stamped-checklist:should/003"
+      ],
+      "reason": "4 kinds of component live in distinct places: inputs in sourcedata, sourcedata/ds007116; code in Makefile, code; derived in figures, results; environment in code/containers.json, requirements.lock",
+      "evidence": [
+        {
+          "uri": "sourcedata",
+          "description": "inputs module",
+          "sha256": null
+        },
+        {
+          "uri": "sourcedata/ds007116",
+          "description": "inputs module",
+          "sha256": null
+        },
+        {
+          "uri": "Makefile",
+          "description": "code module",
+          "sha256": null
+        },
+        {
+          "uri": "code",
+          "description": "code module",
+          "sha256": null
+        },
+        {
+          "uri": "figures",
+          "description": "derived module",
+          "sha256": null
+        },
+        {
+          "uri": "results",
+          "description": "derived module",
+          "sha256": null
+        },
+        {
+          "uri": "code/containers.json",
+          "description": "environment module",
+          "sha256": null
+        },
+        {
+          "uri": "requirements.lock",
+          "description": "environment module",
+          "sha256": null
+        }
+      ],
+      "details": {
+        "found": {
+          "inputs": [
+            "sourcedata",
+            "sourcedata/ds007116"
+          ],
+          "code": [
+            "Makefile",
+            "code"
+          ],
+          "derived": [
+            "figures",
+            "results"
+          ],
+          "environment": [
+            "code/containers.json",
+            "requirements.lock"
+          ]
+        }
+      },
+      "item_status": {
+        "stamped-checklist:should/003": "met"
+      },
+      "item_reason": {
+        "stamped-checklist:should/003": "4 kinds of component live in distinct places: inputs in sourcedata, sourcedata/ds007116; code in Makefile, code; derived in figures, results; environment in code/containers.json, requirements.lock"
+      }
+    },
+    {
+      "probe": "no-abs-paths",
+      "status": "met",
+      "items": [
+        "stamped-checklist:must/009"
+      ],
+      "reason": "No host-specific absolute paths in tracked text files.",
+      "evidence": [
+        {
+          "uri": "probe:no-abs-paths",
+          "description": "scanned 21 tracked paths, 0 /tmp hit(s), 0 host-specific",
+          "sha256": null
+        }
+      ],
+      "details": {
+        "tmp_hits": []
+      },
+      "item_status": {
+        "stamped-checklist:must/009": "met"
+      },
+      "item_reason": {
+        "stamped-checklist:must/009": "No host-specific absolute paths in tracked text files."
+      }
+    },
+    {
+      "probe": "platform-assumptions",
+      "status": "not-checked",
+      "items": [
+        "stamped-checklist:must/011",
+        "stamped-checklist:must/012"
+      ],
+      "reason": "No platform-specific package manager, BSD/GNU-only flag or scheduler command in tracked text \u2014 all a command scan can settle. Whether the documented route needs a mount, a host install, hardware or a service is a reading.",
+      "evidence": [
+        {
+          "uri": "probe:platform-assumptions",
+          "description": "scanned 21 tracked paths for 20 platform-specific commands, 0 hits",
+          "sha256": null
+        }
+      ],
+      "details": {
+        "hits": []
+      },
+      "item_status": {
+        "stamped-checklist:must/011": "not-checked",
+        "stamped-checklist:must/012": "not-checked"
+      },
+      "item_reason": {
+        "stamped-checklist:must/011": "No platform-specific package manager, BSD/GNU-only flag or scheduler command in tracked text \u2014 all a command scan can settle. Whether the documented route needs a mount, a host install, hardware or a service is a reading.",
+        "stamped-checklist:must/012": "No platform-specific package manager, BSD/GNU-only flag or scheduler command in tracked text \u2014 all a command scan can settle. Whether the documented route needs a mount, a host install, hardware or a service is a reading."
+      }
+    },
+    {
+      "probe": "run-env-linked",
+      "status": "met",
+      "items": [
+        "stamped-checklist:must/006",
+        "stamped-checklist:must/015"
+      ],
+      "reason": "must/006 met: All 3 run record(s) name a container image, a lockfile or an environment capture. must/015 met: 3 run record(s) reference a pinned image or lockfile, and no ':latest' reference is tracked.",
+      "evidence": [
+        {
+          "uri": "commit:a701e40",
+          "description": "container: apptainer exec code/containers/plotting.sif python3 code/plot_volumes.py --input results/volumes.tsv --output figures/brain-volume-vs-age.png",
+          "sha256": null
+        },
+        {
+          "uri": "commit:fa96ed2",
+          "description": "container: apptainer exec .datalad/environments/qc/image python3 code/collect_volumes.py --qc --input results/volumes.tsv --output results/qc.tsv",
+          "sha256": null
+        },
+        {
+          "uri": "commit:6d53e90",
+          "description": "container: apptainer exec code/containers/plotting.sif python3 code/collect_volumes.py --input sourcedata/ds007116 --output results/volumes.tsv",
+          "sha256": null
+        }
+      ],
+      "details": {
+        "records": 3,
+        "with_env": 3,
+        "without_env": [],
+        "by_mechanism": {
+          "container": 3,
+          "lockfile": 0,
+          "capture": 0
+        },
+        "unpinned": []
+      },
+      "item_status": {
+        "stamped-checklist:must/006": "met",
+        "stamped-checklist:must/015": "met"
+      },
+      "item_reason": {
+        "stamped-checklist:must/006": "All 3 run record(s) name a container image, a lockfile or an environment capture.",
+        "stamped-checklist:must/015": "3 run record(s) reference a pinned image or lockfile, and no ':latest' reference is tracked."
+      }
+    },
+    {
+      "probe": "subdatasets-resolvable",
+      "status": "partial",
+      "items": [
+        "stamped-checklist:must/002",
+        "stamped-checklist:may/001"
+      ],
+      "reason": "1 linked module(s) are well-formed but do not resolve in fact: sourcedata/ds007116 \u2014 url answers, but commit 84570256a is not fetchable from it: fatal: remote error: upload-pack: not our ref 84570256a2a2c84edaed247fee15a3a90b7039ed",
+      "evidence": [
+        {
+          "uri": ".gitmodules",
+          "description": "sourcedata/ds007116: https://github.com/OpenNeuroDatasets/ds007116.git \u2014 url answers, but commit 84570256a is not fetchable from it: fatal: remote error: upload-pack: not our ref 84570256a2a2c84edaed247fee15a3a90b7039ed",
+          "sha256": null
+        }
+      ],
+      "details": {
+        "resolvable": [
+          {
+            "path": "sourcedata/ds007116",
+            "url": "https://github.com/OpenNeuroDatasets/ds007116.git"
+          }
+        ],
+        "unresolvable": [],
+        "unreachable": [
+          {
+            "path": "sourcedata/ds007116",
+            "url": "https://github.com/OpenNeuroDatasets/ds007116.git",
+            "commit": "84570256a2a2c84edaed247fee15a3a90b7039ed",
+            "why": "url answers, but commit 84570256a is not fetchable from it: fatal: remote error: upload-pack: not our ref 84570256a2a2c84edaed247fee15a3a90b7039ed"
+          }
+        ],
+        "pinned_to_local_commits": []
+      },
+      "item_status": {
+        "stamped-checklist:must/002": "partial",
+        "stamped-checklist:may/001": "met"
+      },
+      "item_reason": {
+        "stamped-checklist:must/002": "1 linked module(s) are well-formed but do not resolve in fact: sourcedata/ds007116 \u2014 url answers, but commit 84570256a is not fetchable from it: fatal: remote error: upload-pack: not our ref 84570256a2a2c84edaed247fee15a3a90b7039ed",
+        "stamped-checklist:may/001": "1 external component(s) are linked as modules: sourcedata/ds007116"
+      }
+    },
+    {
+      "probe": "tree-clean",
+      "status": "met",
+      "items": [
+        "stamped-checklist:must/004"
+      ],
+      "reason": "git tracks 14 text, code and configuration file(s), and `git status` is empty including submodules: the committed state is the whole state.",
+      "evidence": [
+        {
+          "uri": "git ls-files",
+          "description": "14 tracked text/code/config paths of 21 tracked paths",
+          "sha256": null
+        },
+        {
+          "uri": "git status --porcelain",
+          "description": "no output",
+          "sha256": null
+        }
+      ],
+      "details": {
+        "tracked_text": 14
+      },
+      "item_status": {
+        "stamped-checklist:must/004": "met"
+      },
+      "item_reason": {
+        "stamped-checklist:must/004": "git tracks 14 text, code and configuration file(s), and `git status` is empty including submodules: the committed state is the whole state."
+      }
+    }
+  ]
+}

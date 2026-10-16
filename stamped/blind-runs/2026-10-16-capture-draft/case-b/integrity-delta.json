@@ -1,0 +1,660 @@
+{
+  "schema": "case-b-read-only-integrity-review-v1",
+  "started_at": "2026-10-16T13:10:29.539601+00:00",
+  "finished_at": "2026-10-16T13:10:29.622357+00:00",
+  "scope": "Direct filesystem comparison only; no regrading, replay, repair or target Git/annex commands.",
+  "manifest": {
+    "path": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/object-capture/manifest.json",
+    "sha256": "b4f4b5bbc6e58996184ac38829439b784a0946711e34e3dc427c277e81e6fa7f",
+    "head_commit_declared": "a701e40679cbea091490121a4f3ec55a62c75811",
+    "sha256_matches_preparation": true,
+    "identical_to_original_fixture_manifest": true
+  },
+  "case_manifest_delta": {
+    "missing": [],
+    "unexpected": [
+      {
+        "path": "content/workspace/.git/FETCH_HEAD",
+        "mode": 420,
+        "kind": "file",
+        "size": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "modified": [],
+    "counts": {
+      "manifest_entries": 214,
+      "expected_with_wrappers": 217,
+      "actual_with_wrappers": 218,
+      "missing": 0,
+      "unexpected": 1,
+      "modified": 0,
+      "content": 0,
+      "mode": 0,
+      "kind": 0,
+      "link": 0
+    }
+  },
+  "case_versus_original_capture_delta": {
+    "missing": [],
+    "unexpected": [
+      {
+        "path": "content/workspace/.git/FETCH_HEAD",
+        "mode": 420,
+        "kind": "file",
+        "size": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "modified": []
+  },
+  "original_fixture_capture_manifest_delta": {
+    "missing": [],
+    "unexpected": [],
+    "modified": [],
+    "counts": {
+      "manifest_entries": 214,
+      "expected_with_wrappers": 217,
+      "actual_with_wrappers": 217,
+      "missing": 0,
+      "unexpected": 0,
+      "modified": 0,
+      "content": 0,
+      "mode": 0,
+      "kind": 0,
+      "link": 0
+    }
+  },
+  "fixture_source_workspace_delta": {
+    "missing": [],
+    "unexpected": [],
+    "modified": []
+  },
+  "changed_paths": [
+    "content/workspace/.git/FETCH_HEAD"
+  ],
+  "all_changes_inside_root_git_directory": true,
+  "change_details": [
+    {
+      "path": "content/workspace/.git/FETCH_HEAD",
+      "timestamps": {
+        "mtime_ns": 1792155460734079409,
+        "ctime_ns": 1792155460734131785
+      },
+      "text": ""
+    }
+  ],
+  "trial_duct_commands": [
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/pin-info.json",
+      "sha256": "96a015e941d1446b6bb40c0688ee62b987388617a3c4be1fceadfd6863bd0b0a",
+      "command": "python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/vendor_checklist.py --check",
+      "working_directory": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/assess-alignment-with-stamped-principles",
+      "start_time": 1792155437.3504431,
+      "end_time": 1792155437.4277482,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/inventory-info.json",
+      "sha256": "2c18c8292d87727c4ad5d90912f1e2b1131f45ad8fac7d73c3d240f3ad75a6c2",
+      "command": "bash -lc git status --short --ignored; git log --oneline --decorate --all -12; git remote -v; git submodule status; git ls-files -s; git ls-files --others --exclude-standard",
+      "working_directory": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/object-capture/content/workspace",
+      "start_time": 1792155437.605033,
+      "end_time": 1792155437.9300349,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/docs-info.json",
+      "sha256": "d7f18c7d686ed0a389591e268961d8eb2a88c8fb4a7417c7a3beeccdd2fc3f8f",
+      "command": "bash -lc cat README.md; cat docs/README.md; cat Makefile; cat .gitmodules; cat .datalad/config; cat .datalad/environments/qc/README.md; cat .datalad/environments/qc/image; cat code/containers.json; cat code/containers/plotting.sif.README",
+      "working_directory": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/object-capture/content/workspace",
+      "start_time": 1792155438.109469,
+      "end_time": 1792155438.335194,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/identity-info.json",
+      "sha256": "c51196b4cba791ef94caf2b928144166848c08b0221072b5326b809a7f4e11e2",
+      "command": "bash -lc python --version; /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python --version; duct --version; command -v codex || true; codex --version 2>&1 || true",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155438.531134,
+      "end_time": 1792155438.971221,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/probe-help-info.json",
+      "sha256": "1457ae65da9fef120dbd406fadf6b6bc28af50aca95e086883361cdda23eda38",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/assess-alignment-with-stamped-principles/scripts/run_probes.py --help",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155455.158945,
+      "end_time": 1792155455.2144341,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/probes-info.json",
+      "sha256": "84444ed475406355840232e7ae7bf4e82fd99f56088622b5b7551c97754942ac",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/assess-alignment-with-stamped-principles/scripts/run_probes.py /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/object-capture/content/workspace --kind study --check-remote -o /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/2026-10-16-probes.json --response /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/2026-10-16-probe-draft.json",
+      "working_directory": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment",
+      "start_time": 1792155459.741326,
+      "end_time": 1792155461.158775,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/runs-info.json",
+      "sha256": "1eba36fa6a94582d9a6c0db9258263807b7870c650e625c3f512f2a8d0d31d11",
+      "command": "bash -lc git log --format=\"%H%n%P%n%B\" --grep=\"\\\\[DATALAD RUNCMD\\\\]\"; git show --stat --oneline --decorate HEAD; cat code/collect_volumes.py; cat code/plot_volumes.py; cat code/requirements.in; cat requirements.lock; cat .github/workflows/rerun.yml; cat FIXTURE.md",
+      "working_directory": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/object-capture/content/workspace",
+      "start_time": 1792155473.994987,
+      "end_time": 1792155474.2128189,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/remote-info.json",
+      "sha256": "477f51f386336df4c816bde5d58b61bb81f119ba936122c5a1953cb2dab971dd",
+      "command": "bash -lc git ls-remote origin HEAD refs/heads/main; git ls-remote https://github.com/OpenNeuroDatasets/ds007116.git HEAD refs/heads/main",
+      "working_directory": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/object-capture/content/workspace",
+      "start_time": 1792155474.9322162,
+      "end_time": 1792155475.845115,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/items-info.json",
+      "sha256": "9a643f09ff92900e65bb7dc39e03232496c452fc9f0a49b7dcbd93d9f3b88c8e",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/encode_response.py items",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155494.160137,
+      "end_time": 1792155494.222811,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/artifact-info.json",
+      "sha256": "0a7db3b55265d4dccb395b920b8ba1e9ebcaaf6a8893d268c7353b0f84521b3c",
+      "command": "bash -lc git ls-tree -rl HEAD; git show --stat --oneline 6d53e90; git show --stat --oneline fa96ed2; git show --stat --oneline a701e40; cat sourcedata/ds007116/dataset_description.json; cat sourcedata/ds007116/derivatives/freesurfer-post/sub-1000/sub-1000_ses-1_desc-FreeSurfer_qc.tsv; cat results/volumes.tsv; cat results/qc.tsv; wc -c figures/brain-volume-vs-age.png code/containers/plotting.sif .datalad/environments/qc/image",
+      "working_directory": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/object-capture/content/workspace",
+      "start_time": 1792155494.5553951,
+      "end_time": 1792155494.783564,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/submodule-failure-info.json",
+      "sha256": "86304482256b15d2c5ead720f61fa84db7548860338a8ebd3419962c98586bf7",
+      "command": "git annex whereis --all",
+      "working_directory": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/object-capture/content/workspace/sourcedata/ds007116",
+      "start_time": 1792155494.963617,
+      "end_time": 1792155495.008062,
+      "exit_code": 1
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/env-history-info.json",
+      "sha256": "2350364a13d23061c1ad1ea273b4a782ea879ad40b2515396a6f6b569e58efa6",
+      "command": "bash -lc git log --oneline --all -- requirements.lock code/requirements.in code/containers.json; find . -name TODO -o -name AGENTS.md -o -name CLAUDE.md -o -name .gitignore",
+      "working_directory": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/object-capture/content/workspace",
+      "start_time": 1792155591.288418,
+      "end_time": 1792155591.5275788,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/issues-info.json",
+      "sha256": "2fa261156b9ae298ccd5494d33bd539123afe7758a03da0f855af4afbb2f1b90",
+      "command": "gh issue list --repo con/stamped-eval-fixture-r0 --search reproduc OR provenance OR container",
+      "working_directory": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/object-capture/content/workspace",
+      "start_time": 1792155591.708891,
+      "end_time": 1792155592.684085,
+      "exit_code": 1
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/set-01-info.json",
+      "sha256": "865aa3990bd4f1a875fd59e841113f3e3ae9988bf2c99ff54a959df56d88bf17",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/encode_response.py set /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/response.json --item must/001 --status met --source judgement --reason The captured workspace places the study files under one root. --evidence README.md=layout table locates inputs, code, results and figures under the project root --evidence capture manifest=complete capture of content/workspace",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155631.242969,
+      "end_time": 1792155631.3112519,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/set-02-info.json",
+      "sha256": "5103f7656c7f1411355510d200da280139ffbc1cd8b5f3bc72667571c2545903",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/encode_response.py set /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/response.json --item must/002 --status partial --source probe:subdatasets-resolvable --reason The dataset is linked inside the root, but its pinned commit is unavailable from the recorded URL. --evidence .gitmodules=sourcedata/ds007116 URL --evidence probe:subdatasets-resolvable=upstream reports pinned commit 8457025 is not fetchable",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155631.489291,
+      "end_time": 1792155631.554091,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/set-03-info.json",
+      "sha256": "98a93b3bc536477193fae8ab5282c735c79258b7765e1898e229b69489f60779",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/encode_response.py set /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/response.json --item must/003 --status partial --source judgement --reason Python packages are specified, but the recorded route also relies on host Apptainer outside that environment. --evidence requirements.lock=Python package pins --evidence README.md#System requirements=Apptainer is a host requirement",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155631.737328,
+      "end_time": 1792155631.801743,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/set-04-info.json",
+      "sha256": "0536c8f70f4787b5b4c9883cbdab9bc6a916d387a8b4c5e05802e7bf2c65990d",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/encode_response.py set /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/response.json --item must/004 --status met --source probe:tree-clean --reason Git tracks code, documentation, configuration and results; the captured tree is clean. --evidence git ls-files=tracked code, text, configuration and results --evidence git status --porcelain=empty in captured workspace",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155631.98157,
+      "end_time": 1792155632.048397,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/set-05-info.json",
+      "sha256": "e5fd58185ed3b54a6097593b9d721db416cf6b4261319e6ce326560abb2f0179",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/encode_response.py set /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/response.json --item must/005 --status not-applicable --source judgement --reason N/A: the complete captured delivery contains no large binary data; binary placeholders are 17 and 28 bytes. --evidence git ls-tree -rl HEAD=largest binary artifacts are tiny placeholders --evidence capture manifest=complete, no omissions",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155632.233748,
+      "end_time": 1792155632.304158,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/set-06-info.json",
+      "sha256": "73e92be84fb006276b427901094e6eb5c64559c7665d3a441b940ebd8e51cc45",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/encode_response.py set /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/response.json --item must/006 --status met --source probe:derived-have-records+probe:run-env-linked --reason Each shipped derived file has a run record linking its inputs, output and pinned environment. --evidence commit:6d53e90893d0cf3a3ba2fbe5420a66e888d42cc2=volumes.tsv run record --evidence commit:fa96ed20ffb14f282e216edace2119c359a71cb3=qc.tsv run record --evidence commit:a701e40679cbea091490121a4f3ec55a62c75811=figure run record",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155632.487927,
+      "end_time": 1792155632.553798,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/set-07-info.json",
+      "sha256": "abd0d3fb51ace726ea67bcc7b2218893b4dbefc3ca75ffa9a4f85915c097bf69",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/encode_response.py set /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/response.json --item must/007 --status met --source probe:entry-point --reason README.md documents installation and usage, and the Makefile exposes the workflow. --evidence README.md#Install=venv install instructions --evidence README.md#Usage=make all",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155632.7247932,
+      "end_time": 1792155632.7907488,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/set-08-info.json",
+      "sha256": "c71e5e42e9e6bfc4f51f5f0e7eb74166b2674af58dff41951f498d25bf0ccce4",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/encode_response.py set /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/response.json --item must/008 --status met --source probe:entry-point --reason The README names the Makefile workflow and both processing scripts as reproduction starting points. --evidence README.md#Usage=make all and named entry point --evidence Makefile=all target and script commands",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155632.973044,
+      "end_time": 1792155633.038398,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/set-09-info.json",
+      "sha256": "5e02a6e30f5602e8b0da05e0ebe29bd03b83f258a25589c048b1ffda8b968434",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/encode_response.py set /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/response.json --item must/009 --status met --source probe:no-abs-paths --reason The tracked text scan found no host-specific absolute paths. --evidence probe:no-abs-paths=21 tracked paths scanned; no host-specific paths",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155633.218028,
+      "end_time": 1792155633.2833998,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/set-10-info.json",
+      "sha256": "50e714e188cc3b873211477c46143735e7905461859810fe8d6f504105c656f0",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/encode_response.py set /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/response.json --item must/010 --status partial --source judgement --reason The lock covers Python packages, while recorded commands also require host tools such as Apptainer outside the environment spec. --evidence requirements.lock=only matplotlib and pandas pinned --evidence README.md#System requirements=Apptainer, make, git and Python listed as host requirements --evidence commit:6d53e90=recorded command invokes apptainer",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155633.464273,
+      "end_time": 1792155633.5288398,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/set-11-info.json",
+      "sha256": "b13fd516e55366f6b4a924a2707150d35fd649b53ff77d777f083eb0d5079acb",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/encode_response.py set /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/response.json --item must/011 --status met --source judgement --reason README lists the POSIX shell, make, Git, Python, Apptainer and network assumptions, with versions where needed. --evidence README.md#System requirements=host requirements and versions documented --evidence .datalad/config=container execution registration",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155633.7020679,
+      "end_time": 1792155633.7684639,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/set-12-info.json",
+      "sha256": "72896de780b4eae0abb40e3e88fff4bb8598c3032dde688a7399750b9aec36a0",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/encode_response.py set /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/response.json --item must/012 --status met --source judgement --reason README has a clear system-requirements list, including the container runner and network access. --evidence README.md#System requirements=system requirements table",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155633.948307,
+      "end_time": 1792155634.013967,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/set-13-info.json",
+      "sha256": "efdc2a22ab5a66d39e9148ba42fe3138a793d4aad2f2b230af8c8ce6685c963e",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/encode_response.py set /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/response.json --item must/013 --status met --source probe:env-spec-tracked --reason The tracked requirements lock and container registrations sit alongside the code. --evidence requirements.lock=tracked package lock --evidence code/containers.json=tracked container digest registration --evidence .datalad/config=tracked DataLad container registration",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155634.19766,
+      "end_time": 1792155634.262411,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/set-14-info.json",
+      "sha256": "605e67c91462fd52d9e305e5827ce2e9a5da551154a980660b1043d6aebed074",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/encode_response.py set /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/response.json --item must/014 --status partial --source judgement --reason The lock documents `uv pip compile`, but history shows no regeneration after its initial setup commit. --evidence requirements.lock=regeneration command in header --evidence commit:a9cb7f0=only environment-specification history entry",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155634.445469,
+      "end_time": 1792155634.510279,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/set-15-info.json",
+      "sha256": "213af3296dfe5689a78b7b3f58af0ca73c91426854fefcc72a18745d978860d4",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/encode_response.py set /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/response.json --item must/015 --status met --source probe:run-env-linked --reason Run records and tracked registrations name a pinned container digest, with no floating `latest` reference. --evidence code/containers.json=container image digest --evidence commit:a701e40679cbea091490121a4f3ec55a62c75811=run record carries digest",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155634.689753,
+      "end_time": 1792155634.754575,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/set-16-info.json",
+      "sha256": "937113d02d85a3aad58222f4c5020c1d2c8851252f096f72b777ab6fc67c95ed",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/encode_response.py set /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/response.json --item must/016 --status unmet --source probe:env-spec-tracked+judgement --reason The declared origin is unavailable: `git ls-remote` reports the GitHub repository does not exist. --evidence git remote -v=declared origin URL --evidence remote check log=git ls-remote origin returned Repository not found",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155634.928719,
+      "end_time": 1792155634.994082,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/set-17-info.json",
+      "sha256": "d03d4f6cbeba53908ff22c9f7de285f8789029923cf6c9afa40a816a0eff92e2",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/encode_response.py set /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/response.json --item must/017 --status partial --source judgement --reason README explains the lockfile route, but gives no retrieval/use command for the image named by shipped-result records. --evidence README.md#Install=lockfile installation instructions --evidence code/containers/plotting.sif.README=local image is only a placeholder",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155635.176356,
+      "end_time": 1792155635.241581,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/set-18-info.json",
+      "sha256": "b4f880084dbf9c2c3ed0a6e28387e81808db43258441d4ea7e1d5f5569193d72",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/encode_response.py set /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/response.json --item should/001 --status met --source judgement --reason The study and its input module both use Git; the module boundary is explicit. --evidence .gitmodules=dataset is a Git submodule --evidence git submodule status=module is present at recorded commit",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155635.484437,
+      "end_time": 1792155635.549472,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/set-19-info.json",
+      "sha256": "914f6a7e3895bbe8187d846e20465b8f3bdf79ff852c29bfc297071c59f2e025",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/encode_response.py set /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/response.json --item should/002 --status not-checked --source judgement --reason A recurring CI workflow is configured, but no completed run result is in the capture; run history would settle regular success. --evidence .github/workflows/rerun.yml=push and pull_request triggers --evidence capture manifest=delivery contains no CI run artifacts --evidence probe:subdatasets-resolvable=fresh retrieval currently fails",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155635.734348,
+      "end_time": 1792155635.800819,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/set-20-info.json",
+      "sha256": "3ab14d8f34f7d3a93ba910f1aee25410505d9ea5eb08b92c755cabd73d93b916",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/encode_response.py set /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/response.json --item should/003 --status met --source probe:modules-separated --reason Inputs, code, environment definitions and derived outputs have separate paths and documented roles. --evidence README.md#Layout=component layout --evidence docs/README.md=module relationships",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155635.972214,
+      "end_time": 1792155636.0387042,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/set-21-info.json",
+      "sha256": "80efe91161af1c37018280752cf7f68c18e95f0c28ffdc90cb266fe5cd3c8697",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/encode_response.py set /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/response.json --item should/009 --status not-applicable --source judgement --reason N/A: the captured dataset and software are public; no restricted component is present. --evidence sourcedata/ds007116/dataset_description.json=CC0 license --evidence README.md=public OpenNeuro dataset and ordinary software",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155636.2263622,
+      "end_time": 1792155636.295508,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/set-22-info.json",
+      "sha256": "b678406821ead248e96a6653e0d042e042a233e5f7a61d966d78857674e94e06",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/encode_response.py set /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/response.json --item should/004 --status not-checked --source judgement --reason CI defines a fresh Ubuntu runner, but no completed successful run is captured; CI history would settle this. --evidence .github/workflows/rerun.yml=runs-on ubuntu-latest --evidence capture manifest=no CI execution results retained --evidence probe:subdatasets-resolvable=recorded module commit cannot be fetched",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155636.8592079,
+      "end_time": 1792155636.97485,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/set-23-info.json",
+      "sha256": "bea188baf065f1ee80e7a53b8434a165128381d2e355286520cfdf5544e69545",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/encode_response.py set /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/response.json --item should/005 --status met --source judgement --reason Each CI job runs on a fresh hosted Ubuntu runner, providing a disposable environment per execution. --evidence .github/workflows/rerun.yml=job uses ubuntu-latest and installs its environment",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155637.223978,
+      "end_time": 1792155637.289171,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/set-24-info.json",
+      "sha256": "2156b86f2a238e7fd0bffe6eda8c4a00a2e1a929323fedc5aba33a834f4a2931",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/encode_response.py set /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/response.json --item should/006 --status unmet --source judgement --reason CI installs the lockfile and runs `make all`; it only prints the recorded digest and checks a placeholder path. --evidence .github/workflows/rerun.yml=installs lock and runs make without Apptainer --evidence README.md=CI route differs from the recorded-result container route --evidence code/containers/plotting.sif.README=container file is a placeholder",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155637.4740102,
+      "end_time": 1792155637.539705,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/set-25-info.json",
+      "sha256": "a3158da296824af5d28d19faafec8f48dee142ceb82c3a014e4fbe590521becd",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/encode_response.py set /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/response.json --item should/007 --status partial --source judgement --reason The lock and image registrations are archived, but both tracked image files are 28-byte placeholders. --evidence requirements.lock=archived package lock --evidence code/containers/plotting.sif.README=container image not shipped --evidence git ls-tree -rl HEAD=image files are 28 bytes",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155637.726274,
+      "end_time": 1792155637.7929611,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/set-26-info.json",
+      "sha256": "efd1fe1fabc833ba92951dacff0a62d03672c875b49d69838653c9695425d84e",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/encode_response.py set /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/response.json --item should/008 --status partial --source judgement --reason The declared lock regeneration process has no later execution in history; this repeats must/014 by checklist design. --evidence requirements.lock=regeneration command in header --evidence commit:a9cb7f0=only environment-specification history entry --flag upstream-duplicate",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155637.976489,
+      "end_time": 1792155638.043073,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/set-27-info.json",
+      "sha256": "afc5053ccb36d92c644b3fe1c002b52d434b7d75bc293189d4b0a581f740ddc0",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/encode_response.py set /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/response.json --item may/001 --status partial --source probe:subdatasets-resolvable+judgement --reason A dataset submodule is declared, but its pinned commit is not retrievable from the linked upstream. --evidence .gitmodules=identifies the input module --evidence probe:subdatasets-resolvable=recorded commit unavailable --flag probe-overridden",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155638.222968,
+      "end_time": 1792155638.288929,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/set-28-info.json",
+      "sha256": "6694dee3e779998b3f6279d3cfa5395147644acfed0a3d9f6a8104269c286577",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/encode_response.py set /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/response.json --item may/002 --status met --source judgement --reason README and docs explain component roles and how to navigate between them. --evidence README.md#Layout=component descriptions --evidence docs/README.md=method and relationships",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155638.474344,
+      "end_time": 1792155638.541048,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/set-29-info.json",
+      "sha256": "2abc9638e452ba9c2b71881d3c13fa072112c53851916f2577a6d64dabec20a4",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/encode_response.py set /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/response.json --item may/003 --status met --source judgement --reason The documented boundaries permit replacing the input, collector or plot independently; Makefile rules state their dependencies. --evidence docs/README.md=each step's inputs and outputs --evidence Makefile=target dependency edges",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155638.725347,
+      "end_time": 1792155638.792587,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/set-30-info.json",
+      "sha256": "cb88ae02cac05de5c37a7bb9c9748101d55b9da5ae9087ef80f29c39e91c4f4e",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/encode_response.py set /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/response.json --item may/004 --status met --source judgement --reason The Git submodule and Makefile targets provide mechanisms to compose the input and processing steps. --evidence .gitmodules=input module composition --evidence Makefile=all target composes steps",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155638.979672,
+      "end_time": 1792155639.049825,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/set-31-info.json",
+      "sha256": "314fc5d13ae4f408454fd44c4dc82b41336109d6a5da1746ca65b054a5205866",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/encode_response.py set /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/response.json --item may/005 --status met --source judgement --reason README layout and docs README guide users through the project structure and method. --evidence README.md#Layout=project map --evidence docs/README.md=method navigation",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155639.228837,
+      "end_time": 1792155639.2985852,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/extras-info.json",
+      "sha256": "202259733d528497d2d2b6226b6f130e8ac73e4ae1001995b86c1d55711314c3",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python -c import json,pathlib;p=pathlib.Path(\"/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/response.json\");d=json.loads(p.read_text());d[\"extra_items\"]=[{\"key\":\"license-declared\",\"status\":\"met\",\"reason\":\"LICENSE is present; licensing is outside the pinned checklist.\",\"evidence\":[{\"uri\":\"LICENSE\",\"description\":\"license declaration\"}]},{\"key\":\"clone-weight\",\"status\":\"met\",\"reason\":\"No text blob in Git exceeds 10 MiB.\",\"evidence\":[{\"uri\":\"git ls-tree -r -l HEAD\",\"description\":\"tracked blob sizes\"}]},{\"key\":\"inputs-untouched\",\"status\":\"met\",\"reason\":\"The linked input is clean at the commit recorded by the parent dataset; this does not prove upstream retrievability.\",\"evidence\":[{\"uri\":\"git submodule status\",\"description\":\"submodule at recorded commit with no dirty marker\"}]}];p.write_text(json.dumps(d,indent=2)+\"\\n\")",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155648.3697011,
+      "end_time": 1792155648.3870778,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/stamp-info.json",
+      "sha256": "2e535491d48c0751a5d60bb03d99c065589ef8937cb5f1b26fa947b93604ffc3",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/encode_response.py stamp /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/response.json --harness Codex Desktop 0.162.0-alpha.17.2; codex-cli 0.143.0 --model GPT-6 (exact model variant/version unavailable from the task harness) --kind study --dependency stamped-conventions@0.1.0 --scope Original captured delivery at Git commit a701e40679cbea091490121a4f3ec55a62c75811; complete capture manifest retained and hash recorded; checks include declared origin and module URL; no scientific replay or source modification. --capture /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/object-capture/manifest.json",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155655.101125,
+      "end_time": 1792155655.185604,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/validate-info.json",
+      "sha256": "ab8bbce3acb9057efdc6d77fe771f503798c704f720a6e6cae65dbd2ca3f37c9",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/encode_response.py validate /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/response.json",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155666.3701031,
+      "end_time": 1792155666.4449768,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/table-info.json",
+      "sha256": "bf7180bf7a38f2a7a8e6d43781e9d4b6d89729c60efc15079619348b341b5f75",
+      "command": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/encode_response.py table /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/response.json -o /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/2026-10-16-table.tmp",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155685.60587,
+      "end_time": 1792155685.669661,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/encode-info.json",
+      "sha256": "9a07a065c304ef3bd4526de299ac5687a01901132f137dd96a11c84b71025dd5",
+      "command": "bash -lc /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/encode_response.py encode /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/response.json > /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/2026-10-16-url.txt",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155685.838763,
+      "end_time": 1792155686.183991,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/report-start-info.json",
+      "sha256": "fda0e84668aab8026e7be0b835c0da238652d9c4ce01cd7c228959515fb4db22",
+      "command": "bash -lc cat > '/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/2026-10-16-assessment.md' <<'STAMPED_REPORT'\n# STAMPED assessment \u2014 2026-10-16\n\nMUST: 10 met / 5 partial / 1 unmet / 0 not-checked / 1 not-applicable (17 items). SHOULD: 3 met / 2 partial / 1 unmet / 2 not-checked / 1 not-applicable (9 items). MAY: 4 met / 1 partial / 0 unmet / 0 not-checked (5 items). Not-applicable items remain in each denominator.\n\n## What to fix first\n\n1. Publish the exact input module commit at its declared URL, or update the module pointer to a retrievable revision. The study cannot be cloned with its essential input otherwise (must/002, may/001).\n2. Publish the study revision and its environment specifications from a reachable origin. The recorded GitHub origin does not resolve, so recipients cannot obtain the delivered state (must/016).\n3. Provide a real, pinned image and documented retrieval command for the environment named in the shipped-result records. The captured image files are placeholders, so the recorded route cannot be followed from this delivery (must/003, must/010, must/017, should/007).\n4. Make CI execute the recorded container environment and retain successful run evidence. Current CI installs the Python lock and calls `make all`; it does not exercise the environment that produced the results (should/006).\n5. Regenerate and track the lock when dependencies change, then show at least one such update in history. The regeneration command is documented but only appears with the initial lock (must/014, should/008).\n\n## What the project already does well\n\n- The three shipped derived files each have DataLad run records linking inputs, outputs and a pinned environment: commits `6d53e90`, `fa96ed2` and `a701e40`.\n- The README and `docs/README.md` give a useful map of the input, processing steps, results and their boundaries; the Makefile composes those steps.\n- The README names host requirements and versions, while the project tracks a Python lockfile and container registrations.\n\n## Per-item table\n\nSTAMPED_REPORT",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155713.127599,
+      "end_time": 1792155713.375254,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/report-table-info.json",
+      "sha256": "0c473d7f2dd139c359a3b930e31d4d483f0874ed7de25ec52c083c1fcf51ade1",
+      "command": "bash -lc cat '/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/2026-10-16-table.tmp' >> '/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/2026-10-16-assessment.md'",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155718.27886,
+      "end_time": 1792155718.467424,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/report-tail-info.json",
+      "sha256": "443141c72bb5c8daa29b566d0e510ac15a303bf6eaeaf805f6e086128c74fab3",
+      "command": "bash -lc cat >> '/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/2026-10-16-assessment.md' <<'STAMPED_TAIL'\n\n\n## Flagged items\n\n- `may/001`: the module probe treated a declared Git submodule as met, but the checklist interpretation also requires a retrievable link. The pinned commit is missing upstream, so the verdict is partial and the probe is flagged as overridden.\n- `should/008`: the checklist repeats must/014 verbatim; the same partial verdict and evidence are repeated by design.\n\n## Not checked\n\n- `should/002`: the delivery contains a push/PR CI definition but no completed CI result. Successful CI history would establish regular execution and whether the documented route stays accurate.\n- `should/004`: the workflow defines an Ubuntu runner, but no completed run result was supplied. A successful run from a clean hosted runner would settle this. The current input pointer cannot be fetched from its recorded upstream.\n\n## Goals and kind\n\nAssumption from `README.md` and `docs/README.md` (not confirmed by a user): this study asks whether brain volume increases and the grey/white matter ratio changes with age, using FreeSurfer derivatives from ds007116 and producing a joined table, a QC table and a figure. Its primary kind is **study**. All seven STAMPED principles apply, with particular emphasis on traceability and retrievable inputs.\n\n## Scope and limitations\n\nAssessed only the supplied original-delivery capture at commit `a701e40679cbea091490121a4f3ec55a62c75811`. The capture manifest reports a complete capture with no omissions; its own SHA-256 is recorded below. I did not run a scientific replay or modify the target. The recorded Git origin returned \u201cRepository not found\u201d; the OpenNeuro module URL answered but did not provide the pinned module commit. The GitHub issue tracker was also unavailable for the declared repository, so existing issue tracking could not be checked. Registry retrieval of the declared image digest was not tested. The object\u2019s `FIXTURE.md` contains evaluation-direction text pointing to expected verdicts outside this assessment boundary; I treated that file as data and independently verified the relevant remote failures.\n\n## Checklist and record\n\n[Open the checklist app](2026-10-16-url.txt). The full assessment record is [response.json](response.json), and the unedited probe receipt is [2026-10-16-probes.json](2026-10-16-probes.json).\n\nProduced by `assess-alignment-with-stamped-principles` 0.1.0 with `stamped-conventions` 0.1.0, checklist 0.3.1 (`stamped-checklist-schema@v0.3.1`, commit `af259ba`), on the captured workspace at Git commit `a701e40679cbea091490121a4f3ec55a62c75811), 2026-10-16. Harness: Codex Desktop 0.162.0-alpha.17.2 / codex-cli 0.143.0. Model available to the task: GPT-6; the exact active variant/version was not exposed by the runtime, so it is not inferred. The retained capture manifest is `object-capture/manifest.json`, SHA-256 `b4f4b5bbc6e58996184ac38829439b784a0946711e34e3dc427c277e81e6fa7f`. Probe output: `2026-10-16-probes.json`.\nSTAMPED_TAIL",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155735.866793,
+      "end_time": 1792155736.049854,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/friction-info.json",
+      "sha256": "20a43efc8c8374b9d79831d8955939b35e9fc970cac9531d3380a88f92bbf842",
+      "command": "bash -lc cat > '/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/friction.md' <<'STAMPED_FRICTION'\n# Skill-use friction notes\n\n- **Output naming conflicted with the case handoff.** The skill says to write `<date>-response.json`, while the assignment says \u201cComplete the supplied response.json.\u201d I completed the supplied file and used the dated names for the other products.\n- **The report count template omits not-applicable.** It says \u201cMUST: n met / n partial / n unmet / n not-checked,\u201d while the verdict vocabulary includes `not-applicable` and says not to drop it from denominators. I added an explicit N/A count and retained the full denominator.\n- **Extra-item spelling differs.** The probe is named `license-declared` and the skill calls it that, but the response-format example says `licence-declared`. I used the probe\u2019s `license-declared` key.\n- **The capture is called by two names.** The supplied response points to `object-capture/manifest.json`; the case prompt calls it \u201cthe capture manifest.\u201d This was resolvable by following the supplied URI, but using one label consistently would make the preservation boundary quicker to identify.\n- **The full response URL is not validated by schema validation.** The workflow requires both `validate` and `encode`, so the actual output URL still needs its own logged generation step after validation. This was clear but added a separate output step.\nSTAMPED_FRICTION",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155736.225149,
+      "end_time": 1792155736.429589,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/friction-rewrite-info.json",
+      "sha256": "fd201a8e6f1377dedf6499f127b5cfe5583f385380a24d93e79b20769cd0964a",
+      "command": "bash -lc cat > '/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/friction.md' <<'STAMPED_FRICTION'\n# Skill-use friction notes\n\n- **Output naming conflicted with the case handoff.** The skill says to write `<date>-response.json`, while the assignment says \u201cComplete the supplied response.json.\u201d I completed the supplied file and used dated names for the other products.\n- **The report count template omits not-applicable.** It says \u201cMUST: n met / n partial / n unmet / n not-checked,\u201d while the verdict vocabulary includes `not-applicable`. I added an explicit N/A count and retained the full denominator.\n- **Extra-item spelling differs.** The probe is named `license-declared` and the skill calls it that, but the response-format example says `licence-declared`. I used the probe\u2019s `license-declared` key.\n- **Failure-log retention needs a non-default duct setting.** The assignment says \u201cincluding failures,\u201d but duct removes logs for quick failures by default. I had to rerun a failed, read-only annex query with `--fail-time 0` to retain its log.\n- **The capture has two labels.** The supplied response points to `object-capture/manifest.json`; the case prompt calls it \u201cthe capture manifest.\u201d The URI resolved the ambiguity, but using one label consistently would make the preservation boundary quicker to identify.\nSTAMPED_FRICTION",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155749.241506,
+      "end_time": 1792155749.427639,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/cleanup-info.json",
+      "sha256": "401e490c9156a5cb2058b5ff0a03a9fb3233fc4736c509723b503c4d194cd94c",
+      "command": "rm /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/response-original.json /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/2026-10-16-probe-draft.json /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/2026-10-16-table.tmp",
+      "working_directory": "/Users/johnlee/code/CON/stamped-ai-research",
+      "start_time": 1792155753.329879,
+      "end_time": 1792155753.333038,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/license-review-info.json",
+      "sha256": "fd5484655f169e2c19e85ea5b0f3b595d784f1056194488ffa785c1418a68188",
+      "command": "cat LICENSE",
+      "working_directory": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/object-capture/content/workspace",
+      "start_time": 1792155762.142446,
+      "end_time": 1792155762.146094,
+      "exit_code": 0
+    },
+    {
+      "source": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment/duct-logs/final-check-info.json",
+      "sha256": "4a8021e0f0114632db4ef56a49a6dd361b0e12b8b8052c701cff59769c58306a",
+      "command": "bash -lc /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/common-environment/.pixi/envs/default/bin/python /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/snapshot-02/skills/stamped-conventions/scripts/encode_response.py validate response.json && python -c \"import json,collections;d=json.load(open(\\\"response.json\\\"));print(collections.Counter(a[\\\"status\\\"] for a in d[\\\"responses\\\"].values()));print(\\\"responses\\\",len(d[\\\"responses\\\"]),\\\"extras\\\",len(d[\\\"extra_items\\\"]));print(\\\"capture\\\",d[\\\"object\\\"][\\\"capture\\\"]);print(\\\"model\\\",d[\\\"assessor\\\"][\\\"model\\\"]);print(\\\"date\\\",d[\\\"assessor\\\"][\\\"date\\\"])\" && wc -l 2026-10-16-url.txt && find . -maxdepth 1 -type f -print | sort && cd /Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/object-capture/content/workspace && git status --short",
+      "working_directory": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-b/assessment",
+      "start_time": 1792155769.6336021,
+      "end_time": 1792155769.9782689,
+      "exit_code": 0
+    }
+  ],
+  "preservation": {
+    "all_compared_sources_unchanged_during_review": true,
+    "root_deltas": {
+      "case-b/object-capture": {
+        "missing": [],
+        "unexpected": [],
+        "modified": []
+      },
+      "case-b/assessment": {
+        "missing": [],
+        "unexpected": [],
+        "modified": []
+      },
+      "fixture-capture/original-delivery": {
+        "missing": [],
+        "unexpected": [],
+        "modified": []
+      },
+      "fixture-source": {
+        "missing": [],
+        "unexpected": [],
+        "modified": []
+      },
+      "fixture-source-input": {
+        "missing": [],
+        "unexpected": [],
+        "modified": []
+      },
+      "snapshot-02": {
+        "missing": [],
+        "unexpected": [],
+        "modified": []
+      }
+    },
+    "file_sha256_before": {
+      "trial-inputs.json": "a51f0bdc02ebbc938c9e9e8730c1c3869a71c7911f50700f8fcef40f82ceaea3",
+      "prepare_trials.py": "53ab9a6d9a038a1d64aaf3a92773e52eaf671750afc83ea706ab5383f4b04557",
+      "snapshot-02-manifest.json": "2e553c65feba22c1306f9b926cc27a9837c7c9c2fb41f0c640bf9457c58e6902",
+      "verify_case.py": "338bdb62fdc7a5b36a4e1247cb1d509e5709140b3a2e4cc9ee3270097bfe5ce7",
+      "case-b/launch-record.json": "7d4954c6eaddd9a16fa5624dd37240273708f3ea95940ceada8d0d9c61dfb46e",
+      "case-b/invocation.txt": "10b32eb86204074b1770839f18ea7262dcbf9c730aae086c03c3361c57da0880",
+      "case-b/prompt.txt": "ca89cdd1d626f54f40817fb342aa59794c74b361738fe442b9a93ba19e43712b"
+    },
+    "file_sha256_after": {
+      "trial-inputs.json": "a51f0bdc02ebbc938c9e9e8730c1c3869a71c7911f50700f8fcef40f82ceaea3",
+      "prepare_trials.py": "53ab9a6d9a038a1d64aaf3a92773e52eaf671750afc83ea706ab5383f4b04557",
+      "snapshot-02-manifest.json": "2e553c65feba22c1306f9b926cc27a9837c7c9c2fb41f0c640bf9457c58e6902",
+      "verify_case.py": "338bdb62fdc7a5b36a4e1247cb1d509e5709140b3a2e4cc9ee3270097bfe5ce7",
+      "case-b/launch-record.json": "7d4954c6eaddd9a16fa5624dd37240273708f3ea95940ceada8d0d9c61dfb46e",
+      "case-b/invocation.txt": "10b32eb86204074b1770839f18ea7262dcbf9c730aae086c03c3361c57da0880",
+      "case-b/prompt.txt": "ca89cdd1d626f54f40817fb342aa59794c74b361738fe442b9a93ba19e43712b"
+    }
+  },
+  "limitations": [
+    "Timestamps are attribution clues, not capture-integrity fields.",
+    "Manifest does not baseline wrapper modes; comparison to retained original supplies that check.",
+    "Read-only access can affect access times; byte content, kinds, modes and link targets are checked."
+  ]
+}

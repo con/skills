@@ -1,0 +1,8 @@
+{
+  "agent": "/root/capture_skill_trial_a",
+  "fork_turns": "none",
+  "model_override": null,
+  "prompt_sha256": "bd4cfadafb978277e1b33e43efe4f945421d4afae4a12a6406f0581f759bfbb9",
+  "invocation_sha256": "bbaac0c837c1ca4fdcb5a1a7d5941125ed8c0de2d81c488280e4750e7de27c61",
+  "status": "launched"
+}

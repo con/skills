@@ -1,0 +1,726 @@
+{
+  "checklist_version": "0.3.1",
+  "responses": {
+    "stamped-checklist:must/001": {
+      "status": "met",
+      "reason": "The delivered input, analysis, requirements and scientific outputs are under one workspace root; external session tools are infrastructure.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-a/assessment/logs/git_and_artifacts_stdout",
+          "description": "Full delivered inventory and manifest hash check, including untracked files.",
+          "sha256": null
+        },
+        {
+          "uri": "README.md",
+          "description": "Declares the analysis root, inputs, environment specification and outputs.",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/002": {
+      "status": "met",
+      "reason": "The only scientific input resolves to its captured annex payload inside the root; its SHA-256 matches the result record.",
+      "source": "probe:subdatasets-resolvable+judgement",
+      "evidence": [
+        {
+          "uri": "input/paired-assay.csv",
+          "description": "Relative symlink resolves within .git/annex; 167-byte CSV with hash 7cfc112a3d6a3922c347695e62bdb9ad2b92c0265c7bb18c7fd50eed2763050b.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-a/assessment/2026-10-16-probes.json",
+          "description": "The probe could not judge inputs without submodules; the actual local input was inspected.",
+          "sha256": null
+        },
+        {
+          "uri": "results/summary.json",
+          "description": "Records the same input hash.",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:must/003": {
+      "status": "met",
+      "reason": "requirements.txt declares the four external analysis packages for pip installation; physical vendoring is unnecessary.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "requirements.txt",
+          "description": "Installable numpy, scipy, pandas and matplotlib declarations.",
+          "sha256": null
+        },
+        {
+          "uri": "README.md",
+          "description": "Uses pip install -r requirements.txt before execution.",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/004": {
+      "status": "unmet",
+      "reason": "Worker code, documentation and configuration remain untracked at stop. The supplied seed and automatic Entire preservation do not establish worker versioning.",
+      "source": "probe:tree-clean+judgement",
+      "evidence": [
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-a/assessment/logs/git_and_artifacts_stdout",
+          "description": "HEAD tracks only three supplied input paths; nine delivered worker files are untracked.",
+          "sha256": null
+        },
+        {
+          "uri": ".entire/metadata/01a1441a-ac9b-7ed2-a25d-fd4542bd6852/full.jsonl#L123",
+          "description": "Final worker Git status shows all new analysis paths untracked.",
+          "sha256": null
+        },
+        {
+          "uri": ".entire/logs/entire.log",
+          "description": "Stop hook creates a separate shadow snapshot after the final response; preservation is distinguished from worker practice.",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/005": {
+      "status": "not-applicable",
+      "reason": "N/A: the full delivery has no large binary data; the scientific PNG is 65,526 bytes and the supplied annexed CSV is 167 bytes.",
+      "source": "probe:large-in-annex+judgement",
+      "evidence": [
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-a/assessment/logs/preservation_check_stdout",
+          "description": "Full scientific-file size inventory; annex use belongs to the supplied input.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-a/assessment/2026-10-16-probes.json",
+          "description": "Probe inferred a pass from an annex pointer and cited nonexistent .datalad/config; this does not establish a large-binary subject.",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:must/006": {
+      "status": "partial",
+      "reason": "The summary and transcript link actual results to input, command and Python/package versions, but omit the complete resolved environment and its immutable identity.",
+      "source": "probe:derived-have-records+probe:run-env-linked+judgement",
+      "evidence": [
+        {
+          "uri": "results/summary.json",
+          "description": "Records input SHA-256, Python 3.13.16 and four exact direct package versions.",
+          "sha256": null
+        },
+        {
+          "uri": ".entire/metadata/01a1441a-ac9b-7ed2-a25d-fd4542bd6852/full.jsonl#L84",
+          "description": "Contains the source-writing command and actual analysis invocation; line 87 records completion.",
+          "sha256": null
+        },
+        {
+          "uri": "validation/replay.md",
+          "description": "Input and figure hashes and environment versions for the same-environment replay.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-a/assessment/2026-10-16-probes.json",
+          "description": "Tracked-path probes miss the delivered results and non-DataLad execution record.",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:must/007": {
+      "status": "met",
+      "reason": "The delivered README gives Python, virtualenv, pip installation and analysis commands; it accurately discloses the original supplied-runtime execution.",
+      "source": "probe:entry-point+judgement",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "Complete Run section, including truthful distinction between reproduction setup and original run.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-a/assessment/2026-10-16-probes.json",
+          "description": "Entry-point probe only examined tracked paths and missed README.md.",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:must/008": {
+      "status": "met",
+      "reason": "README.md identifies python analysis/run_analysis.py; the delivered script implements the documented inputs and output options.",
+      "source": "probe:entry-point+judgement",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "Entry point and --input, --out, --figure options.",
+          "sha256": null
+        },
+        {
+          "uri": "analysis/run_analysis.py",
+          "description": "Argument parser and main entry point agree with the README.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-a/assessment/2026-10-16-probes.json",
+          "description": "Entry-point probe missed untracked analysis code.",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:must/009": {
+      "status": "met",
+      "reason": "The actual analysis uses root-relative defaults and Path arguments. Absolute paths in the historical transcript identify the supplied runtime, not script defaults.",
+      "source": "probe:no-abs-paths+judgement",
+      "evidence": [
+        {
+          "uri": "analysis/run_analysis.py",
+          "description": "Defaults input/paired-assay.csv, results and figures/paired-changes.png; no hardcoded host path.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-a/assessment/2026-10-16-probes.json",
+          "description": "Tracked-only scan was supplemented by inspecting the delivered script.",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/010": {
+      "status": "not-checked",
+      "reason": "All direct imports map to declared packages or Python stdlib. Transitive requirements and platform builds were not verified from the permitted capture; inspect resolved distribution metadata to settle completeness.",
+      "source": "probe:env-spec-tracked+judgement",
+      "evidence": [
+        {
+          "uri": "analysis/run_analysis.py",
+          "description": "External imports: numpy, scipy, pandas, matplotlib; no subprocess or external command on the analysis route.",
+          "sha256": null
+        },
+        {
+          "uri": "requirements.txt",
+          "description": "All four direct package names are declared; resolved dependency metadata is absent.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-a/assessment/2026-10-16-probes.json",
+          "description": "Absence of a tracked specification measured tracking, not dependency completeness.",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden",
+        "mapping-questioned"
+      ]
+    },
+    "stamped-checklist:must/011": {
+      "status": "met",
+      "reason": "README documents Python 3.13 and a sh virtualenv route. The script uses a headless plotting backend and needs no mount, scheduler, GPU or private service.",
+      "source": "probe:platform-assumptions+judgement",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "Python requirement, sh command block, root-relative invocation and supplied-runtime disclosure.",
+          "sha256": null
+        },
+        {
+          "uri": "analysis/run_analysis.py",
+          "description": "Agg backend, local CSV and filesystem output; no additional host-specific execution assumptions found.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-a/assessment/2026-10-16-probes.json",
+          "description": "Platform scan alone could not settle this item.",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:must/012": {
+      "status": "met",
+      "reason": "README lists Python 3.13 and points to pinned analysis packages, with a standard sh/venv/pip setup; the code requires no additional application or hardware service.",
+      "source": "probe:platform-assumptions+judgement",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "Requirements and installation procedure.",
+          "sha256": null
+        },
+        {
+          "uri": "requirements.txt",
+          "description": "Four direct package requirements.",
+          "sha256": null
+        },
+        {
+          "uri": "analysis/run_analysis.py",
+          "description": "End-to-end route reviewed; transitive completeness remains separately not-checked under must/010.",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:must/013": {
+      "status": "unmet",
+      "reason": "requirements.txt is delivered but untracked on the original branch. The automatic stop snapshot preserves it without establishing worker-maintained environment versioning.",
+      "source": "probe:env-spec-tracked+judgement",
+      "evidence": [
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-a/assessment/logs/git_and_artifacts_stdout",
+          "description": "Git ls-files and final untracked status of requirements.txt.",
+          "sha256": null
+        },
+        {
+          "uri": ".entire/logs/entire.log",
+          "description": "One automatic checkpoint of nine new files at stop.",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:must/014": {
+      "status": "unmet",
+      "reason": "No runnable process for updating requirements is declared; the worker creates requirements.txt once and never updates a versioned specification.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "Installation instructions exist, but no environment-update command or policy.",
+          "sha256": null
+        },
+        {
+          "uri": ".entire/metadata/01a1441a-ac9b-7ed2-a25d-fd4542bd6852/full.jsonl#L84",
+          "description": "Creates the requirements file once; complete command history contains no environment-update procedure.",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "upstream-duplicate"
+      ]
+    },
+    "stamped-checklist:must/015": {
+      "status": "partial",
+      "reason": "Python and four top-level package versions are recorded, but there is no complete frozen dependency graph, platform/build pin or immutable environment artifact.",
+      "source": "probe:run-env-linked+judgement",
+      "evidence": [
+        {
+          "uri": "requirements.txt",
+          "description": "Four exact direct package pins, without transitives or hashes.",
+          "sha256": null
+        },
+        {
+          "uri": "results/summary.json",
+          "description": "Exact Python and direct library versions, but no complete environment identity.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-a/assessment/2026-10-16-probes.json",
+          "description": "Run-env probe missed delivered requirements and summary evidence.",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:must/016": {
+      "status": "unmet",
+      "reason": "The delivered files contain an environment specification but no published retrieval route. Git has no remote; the configured checkpoint destination is infrastructure, not verified publication.",
+      "source": "probe:env-spec-tracked+judgement",
+      "evidence": [
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-a/assessment/logs/git_and_artifacts_stdout",
+          "description": "git remote -v returns no remote; README gives local-only setup.",
+          "sha256": null
+        },
+        {
+          "uri": ".entire/settings.local.json",
+          "description": "Supplied checkpoint_remote with push_sessions false; no independent recipient retrieval evidence.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-a/assessment/2026-10-16-probes.json",
+          "description": "Probe inferred nothing to share from untracked specs; actual defect is absent publication/retrieval evidence.",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "mapping-questioned"
+      ]
+    },
+    "stamped-checklist:must/017": {
+      "status": "met",
+      "reason": "A colleague receiving the directory is told to create a venv, install requirements.txt and run the script; original supplied-runtime use is disclosed accurately.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "Runnable environment setup and use instructions for delivered requirements.txt.",
+          "sha256": null
+        },
+        {
+          "uri": "requirements.txt",
+          "description": "The named specification exists in the delivered bytes.",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/001": {
+      "status": "unmet",
+      "reason": "Only supplied inputs use Git/git-annex on the delivery branch; worker code, results and requirements remain untracked. Automatic session preservation is not worker adoption of common versioning.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-a/assessment/logs/git_and_artifacts_stdout",
+          "description": "Three tracked seed paths and all nine new files untracked.",
+          "sha256": null
+        },
+        {
+          "uri": ".entire/logs/entire.log",
+          "description": "Supplied hooks preserve a separate stop snapshot.",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/002": {
+      "status": "partial",
+      "reason": "The original session ran and replayed the analysis successfully, but did not test the documented fresh-install route or establish a recurring validation process.",
+      "source": "probe:ci-present+judgement",
+      "evidence": [
+        {
+          "uri": ".entire/metadata/01a1441a-ac9b-7ed2-a25d-fd4542bd6852/full.jsonl#L111",
+          "description": "Replay command reuses supplied interpreter; line 114 records matching outputs.",
+          "sha256": null
+        },
+        {
+          "uri": "README.md",
+          "description": "Documented venv/pip setup was not exercised in the recorded session.",
+          "sha256": null
+        },
+        {
+          "uri": "validation/replay.md",
+          "description": "One same-environment replay, no regular testing procedure.",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:should/003": {
+      "status": "met",
+      "reason": "Inputs, analysis, results and figures are separate; requirements.txt isolates the environment declaration. These boundaries exist in the delivered untracked files.",
+      "source": "probe:modules-separated+judgement",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "Explains input, result, figure and analysis roles.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-a/assessment/logs/git_and_artifacts_stdout",
+          "description": "Full inventory includes input/, analysis/, results/, figures/ and requirements.txt.",
+          "sha256": null
+        },
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-a/assessment/2026-10-16-probes.json",
+          "description": "Probe missed nontracked components.",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:should/009": {
+      "status": "not-applicable",
+      "reason": "N/A: no restricted data or software is identified; the input is a synthetic teaching table and the analysis uses ordinary declared packages.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "input/sources.json",
+          "description": "Coordinator-generated synthetic teaching data; no human observations or access restrictions.",
+          "sha256": null
+        },
+        {
+          "uri": "requirements.txt",
+          "description": "Ordinary analysis packages; no licensed service or restricted component.",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/004": {
+      "status": "not-checked",
+      "reason": "The completed replay uses the same supplied interpreter and packages. Fresh-environment execution is not established; a successful isolated reinstall and run would settle it.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": ".entire/metadata/01a1441a-ac9b-7ed2-a25d-fd4542bd6852/full.jsonl#L111",
+          "description": "Reuses the absolute common-environment interpreter, changing only output paths.",
+          "sha256": null
+        },
+        {
+          "uri": "validation/replay.md",
+          "description": "Explicitly describes same-input, same-interpreter replay; assessor execution was out of scope.",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/005": {
+      "status": "unmet",
+      "reason": "The entry point reuses its current environment; README creates one persistent .venv, and both original runs reuse the supplied environment.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "Creates .venv once with no per-execution recreation or cleanup.",
+          "sha256": null
+        },
+        {
+          "uri": "analysis/run_analysis.py",
+          "description": "No environment-spawning mechanism.",
+          "sha256": null
+        },
+        {
+          "uri": ".entire/metadata/01a1441a-ac9b-7ed2-a25d-fd4542bd6852/full.jsonl#L111",
+          "description": "Replay uses the same supplied interpreter.",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/006": {
+      "status": "unmet",
+      "reason": "No environment-reconstitution test is present: the two recorded executions reuse installed packages, and no recurring recreation procedure is delivered.",
+      "source": "probe:ci-present+judgement",
+      "evidence": [
+        {
+          "uri": ".entire/metadata/01a1441a-ac9b-7ed2-a25d-fd4542bd6852/full.jsonl#L84",
+          "description": "Original execution in supplied common environment, with no installation.",
+          "sha256": null
+        },
+        {
+          "uri": ".entire/metadata/01a1441a-ac9b-7ed2-a25d-fd4542bd6852/full.jsonl#L111",
+          "description": "Replay again reuses that environment; complete transcript and delivery contain no reconstitution test.",
+          "sha256": null
+        },
+        {
+          "uri": "validation/replay.md",
+          "description": "Claims output repeatability only.",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:should/007": {
+      "status": "unmet",
+      "reason": "No interpreter, wheels, binary environment or container is archived inside the research root; only a package list and version observations are delivered.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-a/assessment/logs/git_and_artifacts_stdout",
+          "description": "Complete manifest inventory contains no environment artifact; external common runtime is supplied infrastructure.",
+          "sha256": null
+        },
+        {
+          "uri": "requirements.txt",
+          "description": "Text dependency specification only.",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:should/008": {
+      "status": "unmet",
+      "reason": "No runnable process for updating requirements is declared; the worker creates requirements.txt once and never updates a versioned specification.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "Installation instructions exist, but no environment-update command or policy.",
+          "sha256": null
+        },
+        {
+          "uri": ".entire/metadata/01a1441a-ac9b-7ed2-a25d-fd4542bd6852/full.jsonl#L84",
+          "description": "Creates the requirements file once; complete command history contains no environment-update procedure.",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "upstream-duplicate"
+      ]
+    },
+    "stamped-checklist:may/001": {
+      "status": "not-applicable",
+      "reason": "N/A: no independently maintained external project component is present. The supplied synthetic input is local; Python packages are environment dependencies.",
+      "source": "probe:subdatasets-resolvable+judgement",
+      "evidence": [
+        {
+          "uri": "input/sources.json",
+          "description": "The only dataset is coordinator-generated teaching material.",
+          "sha256": null
+        },
+        {
+          "uri": "analysis/run_analysis.py",
+          "description": "No independent external project component is invoked.",
+          "sha256": null
+        }
+      ],
+      "flags": [
+        "probe-overridden"
+      ]
+    },
+    "stamped-checklist:may/002": {
+      "status": "met",
+      "reason": "README names the component roles and documents input/output options; protocol states the input contract and result meaning.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "Input, analysis, requirements, result and figure locations plus configurable paths.",
+          "sha256": null
+        },
+        {
+          "uri": "protocol.md",
+          "description": "Three-column twelve-pair input contract and specified outputs.",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:may/003": {
+      "status": "partial",
+      "reason": "CLI paths separate inputs and outputs, but one main function couples computation, report text and figure generation; those parts cannot be updated independently through defined interfaces.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "analysis/run_analysis.py",
+          "description": "--input/--out/--figure boundaries exist; statistics, rendering and report generation share one main function.",
+          "sha256": null
+        },
+        {
+          "uri": "protocol.md",
+          "description": "Input schema and twelve-row constraint are explicit.",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:may/004": {
+      "status": "met",
+      "reason": "The documented Python entry point composes the local input, declared environment, computation and output paths without requiring a separate orchestration stack.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "Environment setup followed by analysis/run_analysis.py.",
+          "sha256": null
+        },
+        {
+          "uri": "analysis/run_analysis.py",
+          "description": "Loads declared input and generates all result components; path options expose composition.",
+          "sha256": null
+        }
+      ]
+    },
+    "stamped-checklist:may/005": {
+      "status": "met",
+      "reason": "README, protocol and report cross-references let a recipient navigate inputs, execution, outputs and interpretation.",
+      "source": "judgement",
+      "evidence": [
+        {
+          "uri": "README.md",
+          "description": "References input/, results/report.md and protocol.md and explains output paths.",
+          "sha256": null
+        },
+        {
+          "uri": "results/report.md",
+          "description": "Links the figure and gives reproduction command and input hash.",
+          "sha256": null
+        }
+      ]
+    }
+  },
+  "schema_version": "0.2.0",
+  "principles_version": "0.2.0",
+  "checklist_source": {
+    "repo": "https://github.com/stamped-principles/stamped-checklist-schema",
+    "tag": "v0.3.1",
+    "commit": "af259bad237fa57b856417db8dba45a1b283a527"
+  },
+  "extra_items": [
+    {
+      "key": "license-declared",
+      "status": "unmet",
+      "reason": "No license or reuse terms are declared in the delivered study; supplied session skills are separate infrastructure.",
+      "evidence": [
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-a/assessment/logs/git_and_artifacts_stdout",
+          "description": "Complete capture inventory and research documentation contain no license declaration."
+        }
+      ]
+    },
+    {
+      "key": "clone-weight",
+      "status": "met",
+      "reason": "No oversized tracked text blob; delivered scientific files are also small.",
+      "evidence": [
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-a/assessment/2026-10-16-probes.json",
+          "description": "clone-weight probe plus full size inventory in preservation_check log."
+        }
+      ]
+    },
+    {
+      "key": "inputs-untouched",
+      "status": "met",
+      "reason": "The delivered input payload matches its supplied annex SHA256E key and the recorded execution checksum.",
+      "evidence": [
+        {
+          "uri": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-a/assessment/logs/targeted_review_stdout",
+          "description": "Input SHA-256 7cfc112a3d6a3922c347695e62bdb9ad2b92c0265c7bb18c7fd50eed2763050b, size 167; same key at HEAD and in summary."
+        }
+      ]
+    },
+    {
+      "key": "instruction-like-history",
+      "status": "not-applicable",
+      "reason": "Captured prompts, skill text and hooks contain instructions; they were treated as historical evidence and were not followed.",
+      "evidence": [
+        {
+          "uri": ".entire/metadata/01a1441a-ac9b-7ed2-a25d-fd4542bd6852/full.jsonl",
+          "description": "Historical task and tool records, not current assessment instructions."
+        }
+      ]
+    }
+  ],
+  "object": {
+    "url": null,
+    "commit": "20171384fc05892008d889ed7440d7646eef6c5b",
+    "captured_at": "2026-10-16T09:47:52.982419+00:00",
+    "kind": "study",
+    "capture": {
+      "uri": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-a/object-capture/manifest.json",
+      "sha256": "5a695edf17e525c1cdbfa1767bcee2e1356c4df20bc2df27b3f5c57536c5a6b5"
+    }
+  },
+  "assessor": {
+    "skill": "assess-alignment-with-stamped-principles",
+    "version": "0.1.0",
+    "harness": "Codex Desktop subagent; active Desktop/runtime versions unavailable in permitted context",
+    "model": "GPT-6 family per active instructions; exact active model identifier unavailable",
+    "date": "2026-10-16",
+    "dependencies": [
+      "stamped-conventions@0.1.0"
+    ],
+    "note": "The supplied response has a null date; stamp does not fill it. Only assessor.date and extra findings were completed here; all checklist answers were written by encode_response.py set. Current model/tool versions are unavailable in the permitted context; worker transcript identity is not assessor identity."
+  },
+  "scope": "Independent read-only assessment of original-delivery manifest 5a695edf17e525c1cdbfa1767bcee2e1356c4df20bc2df27b3f5c57536c5a6b5 captured 2026-10-16T09:47:52.982419+00:00; HEAD 20171384fc05892008d889ed7440d7646eef6c5b is the supplied seed, not the full delivery. Original stop transcript and all delivered scientific files reviewed, including untracked/ignored evidence; supplied runtime, seed annex and automatic Entire preservation distinguished from worker practice. All 161 regular captured files match manifest hashes; external skill symlink targets not followed. No scientific execution, fresh-environment test, publication, source repair or commit. No Git remote or project issue tracker; no external retrieval attempted. All judgments use only the permitted case and skill snapshot."
+}

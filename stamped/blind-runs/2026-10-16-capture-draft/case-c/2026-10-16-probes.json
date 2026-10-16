@@ -1,0 +1,52 @@
+{
+  "object": {
+    "path": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-c/object-capture/content/workspace",
+    "commit": "a701e40679cbea091490121a4f3ec55a62c75811",
+    "is_datalad": true
+  },
+  "checklist_version": "0.3.1",
+  "probes": [
+    {
+      "probe": "subdatasets-resolvable",
+      "status": "partial",
+      "items": [
+        "stamped-checklist:must/002",
+        "stamped-checklist:may/001"
+      ],
+      "reason": "1 linked module(s) are well-formed but do not resolve in fact: sourcedata/ds007116 \u2014 url answers, but commit 84570256a is not fetchable from it: fatal: remote error: upload-pack: not our ref 84570256a2a2c84edaed247fee15a3a90b7039ed",
+      "evidence": [
+        {
+          "uri": ".gitmodules",
+          "description": "sourcedata/ds007116: https://github.com/OpenNeuroDatasets/ds007116.git \u2014 url answers, but commit 84570256a is not fetchable from it: fatal: remote error: upload-pack: not our ref 84570256a2a2c84edaed247fee15a3a90b7039ed",
+          "sha256": null
+        }
+      ],
+      "details": {
+        "resolvable": [
+          {
+            "path": "sourcedata/ds007116",
+            "url": "https://github.com/OpenNeuroDatasets/ds007116.git"
+          }
+        ],
+        "unresolvable": [],
+        "unreachable": [
+          {
+            "path": "sourcedata/ds007116",
+            "url": "https://github.com/OpenNeuroDatasets/ds007116.git",
+            "commit": "84570256a2a2c84edaed247fee15a3a90b7039ed",
+            "why": "url answers, but commit 84570256a is not fetchable from it: fatal: remote error: upload-pack: not our ref 84570256a2a2c84edaed247fee15a3a90b7039ed"
+          }
+        ],
+        "pinned_to_local_commits": []
+      },
+      "item_status": {
+        "stamped-checklist:must/002": "partial",
+        "stamped-checklist:may/001": "met"
+      },
+      "item_reason": {
+        "stamped-checklist:must/002": "1 linked module(s) are well-formed but do not resolve in fact: sourcedata/ds007116 \u2014 url answers, but commit 84570256a is not fetchable from it: fatal: remote error: upload-pack: not our ref 84570256a2a2c84edaed247fee15a3a90b7039ed",
+        "stamped-checklist:may/001": "1 external component(s) are linked as modules: sourcedata/ds007116"
+      }
+    }
+  ]
+}

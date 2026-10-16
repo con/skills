@@ -1,0 +1,17 @@
+{
+  "retained_utc": "2026-10-16T12:57:18.568602+00:00",
+  "scope": "Closed independent prospective skill-use trial coordination session; not a formal research or assessment observation.",
+  "session_id": "01a144bf-bb6b-7721-8048-2d9d13193ff8",
+  "agent_path": "/root/capture_skill_trial_a",
+  "parent_thread_id": "01a13c60-1063-7be3-8eab-fb5df54cb12b",
+  "source_path": "/Users/johnlee/.codex/sessions/2026/10/16/rollout-2026-10-16T08-46-18-01a144bf-bb6b-7721-8048-2d9d13193ff8.jsonl",
+  "bytes": 1002028,
+  "sha256": "4142c66e76f098df66326abb69960aa481530c79eaa40940ebe1243bf67c4ca6",
+  "records": 202,
+  "task_complete_events": 1,
+  "exact_prompt_path_observed": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1/assessment-capture-skill-01/case-a/prompt.txt",
+  "prompt_sha256": "bd4cfadafb978277e1b33e43efe4f945421d4afae4a12a6406f0581f759bfbb9",
+  "launch_record_sha256": "6eaec4a169a2decda0750aaeec600a06ddc32c529cb1afa5a6ef679c0b660eda",
+  "source_before_copy_after_equal": true,
+  "source_modified": false
+}
