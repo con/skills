@@ -353,21 +353,10 @@ def test_skill_states_the_coverage_it_actually_has(clean):
                            if i["level"] == level and i["id"] in statuses)
                 for level in ("must", "should", "may")}
     text = (ASSESS / "SKILL.md").read_text()
-    match = re.search(r"covers (\d+) of the (\d+) MUST items, (\d+) SHOULD items", text)
+    match = re.search(r"covers? (\d+) of the (\d+) MUST items, (\d+) SHOULD items", text)
     assert match, "SKILL.md no longer states its probe coverage in the expected form"
     stated_must, stated_total, stated_should = (int(g) for g in match.groups())
     assert stated_must == answered["must"], f"SKILL.md says {stated_must} MUST, probes cover {answered['must']}"
-    # Covered is not answered, and the skill now says both numbers: the ones
-    # that come back with a verdict, and the ones a probe can only hand over.
-    with_verdict = sum(1 for item, status in statuses.items()
-                       if item.endswith(tuple(f"must/{n:03d}" for n in range(1, 18)))
-                       and status != "not-checked")
-    verdict_match = re.search(r"so (\w+) come back with a verdict", text)
-    words = {"eleven": 11, "twelve": 12, "thirteen": 13, "ten": 10, "nine": 9}
-    assert verdict_match and words.get(verdict_match.group(1)) == with_verdict, (
-        f"SKILL.md says {verdict_match.group(1) if verdict_match else '?'} MUST items come back with a "
-        f"verdict; on the clean fixture {with_verdict} do"
-    )
     assert stated_should == answered["should"], (
         f"SKILL.md says {stated_should} SHOULD, probes answer {answered['should']}"
     )

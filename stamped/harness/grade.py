@@ -98,19 +98,16 @@ def oracle(obj: pathlib.Path, use_case: pathlib.Path, extra: list[str]) -> dict 
         return {"status": "not-checked", "reason": f"oracle did not return JSON: {proc.stderr.strip()[:200]}"}
 
 
-def fresh_rerun(url: str, workdir: pathlib.Path | None, timeout: int) -> dict:
-    """The one probe that leaves the machine the results were made on.
-
-    §10.1 asks explicit-skill runs to pass every mechanically checkable MUST
-    probe "including `fresh-rerun`", and until a run had somewhere to publish
-    there was nothing to clone from, so the criterion named a probe that
-    nothing in this harness ran. It is reported beside the oracle rather than
-    folded into the MUST rate: it answers should/004 and D.1, not one of the
-    eleven items.
-    """
+def fresh_rerun(url: str, workdir: pathlib.Path | None, timeout: int,
+                outputs: list[str] | None = None) -> dict:
+    """Replay selected generated outputs in a fresh clone, separately from science."""
+    if not outputs or any(not pattern.strip() for pattern in outputs):
+        return {"status": "not-checked",
+                "reason": "Replay needs explicit generated-output selections; no command executed."}
     cmd = [sys.executable, str(FRESH_RERUN), "--url", url, "--timeout", str(timeout)]
     if workdir:
         cmd += ["--workdir", str(workdir)]
+    cmd += ["--outputs", *outputs]
     proc = subprocess.run(cmd, capture_output=True, text=True)
     try:
         return json.loads(proc.stdout)
@@ -189,6 +186,8 @@ def main(argv: list[str] | None = None) -> int:
                          "§10.1 names); usually the run's publish target")
     ap.add_argument("--fresh-rerun-workdir", type=pathlib.Path,
                     help="keep the fresh-rerun clone here instead of a temp dir")
+    ap.add_argument("--fresh-rerun-output", action="append", default=[],
+                    help="generated-output glob to remove and compare during replay; repeat as needed")
     ap.add_argument("--check-remote", action="store_true",
                     help="let the probes contact remotes (needed for must/016 above `partial`)")
     ap.add_argument("--publish-target", default="unknown",
@@ -219,7 +218,8 @@ def main(argv: list[str] | None = None) -> int:
     t1_result = t1(args.object.resolve(), check_remote=args.check_remote)
     oracle_result = oracle(args.object.resolve(), args.use_case, args.oracle_arg)
     process = process_metrics(args.transcript)
-    rerun = (fresh_rerun(args.fresh_rerun, args.fresh_rerun_workdir, 7200)
+    rerun = (fresh_rerun(args.fresh_rerun, args.fresh_rerun_workdir, 7200,
+                        args.fresh_rerun_output)
              if args.fresh_rerun else None)
 
     passed = [i for i in scripted_musts if t1_result["items"].get(i, {}).get("status") == "met"]

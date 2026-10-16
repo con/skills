@@ -91,7 +91,8 @@ def test_missing_published_comparator_is_never_met(tmp_path, monkeypatch):
     monkeypatch.setattr(rerun, "_run", fake_run)
     monkeypatch.setattr(rerun.shutil, "which", lambda executable: None)
     report = tmp_path / "report.json"
-    rerun.main(["--path", "fixture", "--entry", "true", "--workdir", str(tmp_path / "run"), "-o", str(report)])
+    rerun.main(["--url", "https://example.invalid/fixture", "--entry", "true", "--outputs", "results.tsv",
+                "--workdir", str(tmp_path / "run"), "-o", str(report)])
     result = json.loads(report.read_text())
     assert result["status"] == "not-checked"
     assert result["unavailable_comparators"] == ["results.tsv"]
@@ -109,8 +110,48 @@ def test_preserved_outputs_are_not_proof_of_execution(tmp_path, monkeypatch):
     monkeypatch.setattr(rerun, "_run", fake_run)
     monkeypatch.setattr(rerun.shutil, "which", lambda executable: None)
     report = tmp_path / "report.json"
-    rerun.main(["--path", "fixture", "--entry", "true", "--keep-outputs", "--workdir", str(tmp_path / "run"), "-o", str(report)])
-    assert json.loads(report.read_text())["status"] == "not-checked"
+    rerun.main(["--url", "https://example.invalid/fixture", "--entry", "true", "--outputs", "results.tsv",
+                "--keep-outputs", "--workdir", str(tmp_path / "run"), "-o", str(report)])
+    result = json.loads(report.read_text())
+    assert result["status"] == "not-checked"
+    assert any(step["step"] == "entry: true" for step in result["steps"])
+
+
+@pytest.mark.parametrize("outputs", [[], [""], [" "]])
+def test_replay_refuses_missing_selections_before_execution(monkeypatch, outputs):
+    monkeypatch.setattr(rerun, "_run", lambda *a, **kw: pytest.fail("command executed"))
+    with pytest.raises(SystemExit) as error:
+        rerun.main(["--path", "fixture", *(["--outputs", *outputs] if outputs else [])])
+    assert error.value.code == 2
+
+
+def test_grade_requires_and_forwards_generated_output_selections(monkeypatch):
+    spec = importlib.util.spec_from_file_location(
+        "neutral_grade", pathlib.Path(__file__).resolve().parents[1] / "harness" / "grade.py",
+    )
+    grade = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(grade)
+    calls = []
+
+    def fake_run(command, **kwargs):
+        calls.append(command)
+        return type("Result", (), {"stdout": '{"status":"not-checked"}', "stderr": ""})()
+
+    monkeypatch.setattr(grade.subprocess, "run", fake_run)
+    assert grade.fresh_rerun("fixture", None, 10)["status"] == "not-checked"
+    assert not calls
+    grade.fresh_rerun("fixture", None, 10, ["products/estimate.json"])
+    assert calls[0][-2:] == ["--outputs", "products/estimate.json"]
+
+
+def test_absent_ci_requires_inspection_of_equivalent_records(tmp_path):
+    sys.path.insert(0, str(SKILLS / "assess-alignment-with-stamped-principles" / "scripts"))
+    from probes.common import Object
+    from probes.structure import ci_present
+
+    result = ci_present(Object(tmp_path))
+    assert result.status == "not-checked"
+    assert set(result.item_status.values()) == {"not-checked"}
 
 
 def test_prefixed_run_record_is_not_native_replayable(monkeypatch, tmp_path):
