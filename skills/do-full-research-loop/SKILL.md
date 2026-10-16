@@ -25,9 +25,7 @@ A recorded protocol supports execution already authorized by the user; it does n
 Record exact data, code, parameters and environment identities and their retrieval routes.
 Use community analysis packages, domain pipelines and plotting tools; add dependencies through the project's environment manager.
 Retain an executable entry point using the project's existing interface; a script, notebook or documented command can suffice.
-A shared interpreter is an execution resource, not a reconstruction recipe.
-Deliver an environment recipe and the exact identity used for validation, with acquisition and launch instructions; honor the project's lock policy.
-For an explicit skill comparison, read [references/comparisons.md](references/comparisons.md) before either arm.
+Deliver the environment recipe itself (manifest or installation command), the exact runtime identity used for validation, and setup/launch instructions; honor the project's lock policy. If the recipe lives elsewhere, give a retrievable pinned source. A host-local interpreter or manifest path, or a prose version list alone, is not a setup recipe. For an explicit skill comparison, read [references/comparisons.md](references/comparisons.md) before either arm.
 
 ## Pilot, inspect and scale
 
