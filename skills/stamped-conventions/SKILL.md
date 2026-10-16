@@ -77,7 +77,7 @@ Both subcommands validate against the vendored items: an unknown id makes the ap
 
 ## Versioning
 
-Bump `version:` here when the verdict vocabulary, the response format, the provenance stamp or the checklist pin changes, under the rules in [`AGENTS.md`](../AGENTS.md) ("Skill versions").
+Bump `version:` here when the verdict vocabulary, the response format, the provenance stamp or the checklist pin changes: MINOR for compatible additions, MAJOR for incompatible reports, PATCH for compatible clarifications; typo-only edits need no bump.
 Counting starts at the first merge, so this stays at `0.1.0` while the pull request introducing it is open — the development history is in the commits, not in the label.
 A pin change alone is a MINOR bump: older reports stay comparable because each one records the pin it used.
 Skills that read these files do not need a bump of their own for that; they do need one when their own procedure changes.

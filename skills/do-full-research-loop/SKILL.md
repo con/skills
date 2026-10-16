@@ -12,7 +12,8 @@ max-lines: 140
 Produce the requested scientific result and an inspectable research object.
 Keep the researcher's existing tools and delivery format when they support the task.
 Use [create-stamped-project](../create-stamped-project/SKILL.md) only when the requested work needs a new project structure; available infrastructure is not a mandate to adopt it.
-Read [stamped-conventions](../stamped-conventions/SKILL.md) and the applicable stack reference; retain an already frozen assessment bundle for comparable judgments.
+Read [stamped-conventions](../stamped-conventions/SKILL.md); use a supplied [stack reference](../stamped-conventions/references/stacks/) when it matches the project's tools.
+Retain an already frozen assessment bundle for comparable judgments.
 
 ## Establish the protocol
 
@@ -24,7 +25,8 @@ A recorded protocol supports execution already authorized by the user; it does n
 Record exact data, code, parameters and environment identities and their retrieval routes.
 Use community analysis packages, domain pipelines and plotting tools; add dependencies through the project's environment manager.
 Retain an executable entry point using the project's existing interface; a script, notebook or documented command can suffice.
-Respect the chosen lock policy and preserve the exact environment used for validation.
+A shared interpreter is an execution resource, not a reconstruction recipe.
+Deliver an environment recipe and the exact identity used for validation, with acquisition and launch instructions; honor the project's lock policy.
 For an explicit skill comparison, read [references/comparisons.md](references/comparisons.md) before either arm.
 
 ## Pilot, inspect and scale
@@ -64,6 +66,7 @@ Compare regenerated scientific values, identifiers and declared tolerances; inci
 A same-host replay does not establish another platform works; an unavailable adapter or external service is a validation limitation, not proof of a scientific error.
 
 Deliver checked results and useful figures, executable analysis, source and environment identities, validation evidence and a concise interpretation with uncertainties and scope limits.
+Keep artifacts supporting the conclusions in the delivered object; temporary scratch paths alone are not a retrieval route.
 Do not relabel exploratory choices as prespecified or select results for significance.
 Report scientific validity separately from STAMPED properties: a reproducible error remains an error.
 

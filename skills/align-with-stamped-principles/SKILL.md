@@ -9,9 +9,9 @@ max-lines: 100
 
 # Align a project with STAMPED
 
-Read [stamped-conventions](../stamped-conventions/SKILL.md) and the applicable stack reference.
-Run [assess-alignment-with-stamped-principles](../assess-alignment-with-stamped-principles/SKILL.md) against the committed project.
-Retain the assessed revision and rubric identity; use the same assessor and checklist for before/after comparisons.
+Read [stamped-conventions](../stamped-conventions/SKILL.md); use a supplied [stack reference](../stamped-conventions/references/stacks/) when it matches the project's tools.
+Run [assess-alignment-with-stamped-principles](../assess-alignment-with-stamped-principles/SKILL.md) against the complete declared delivery, including uncommitted and ignored artifacts.
+Retain its snapshot identity and actual Git revision when present; use the same assessor and checklist for before/after comparisons.
 Do not silently change a frozen assessment to suit improvements to the working skills.
 
 ## Choose and apply a useful fix
@@ -39,6 +39,6 @@ Native DataLad run commits retain their machine-readable message; normal authore
 ## Check and reassess
 
 Validate the actual repaired entry point or retrieval route; a passing syntax check does not establish it works.
-Commit coherent changes with the affected checklist IDs, without interrupting an active recorded run.
-Reassess the new committed object using the unchanged rubric and report item-level differences with evidence.
+Record coherent changes with the affected checklist IDs through the project's tracking mechanism, without interrupting an active recorded run.
+Reassess the complete updated delivery using the unchanged rubric and report item-level differences with evidence.
 Continue while useful in-scope fixes remain; identify unresolved access, method or user-decision dependencies without claiming completion on those items.
