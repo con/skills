@@ -1,0 +1,174 @@
+{
+  "scope": "Two completed synthetic engineering trials and one independent alignment review with an additive follow-up; not NARPS outcomes, a formal research grade, or a skill efficacy estimate.",
+  "source_branch": "codex/narps-round2-research-guidance",
+  "source_commit": "56183c3229f8785ab962fb820e4a50f7c11c594b",
+  "later_clarification_commit": "9c731e1e4e76770991b419987727fdaca5e06e64",
+  "later_clarification_validation": "Text/code-diff review only. Neither completed trial exercised the later alignment/template clarifications.",
+  "formal_research_skill_pin_changed": false,
+  "evidence": {
+    "publication_status": "Published content; independently retrieved from an empty recipient and verified by content hash",
+    "repository": "https://github.com/leej3/stamped-in-practice",
+    "immutable_commit": "7880424a00bc2c9b3560ba579770a1ca1baf6c99",
+    "local_root": "/Users/johnlee/.local/state/stamped-in-practice/narps-neutral-v1",
+    "source_hashes": "source-hashes.json",
+    "scope": "Full retained evidence belongs in the iteration subdataset; this record keeps only prompts, identities and bounded findings.",
+    "archives": [
+      {
+        "case": "alignment-handoff",
+        "path": "skill-reflection/research-skill-revision-01/trial-and-runtime.tar.gz",
+        "sha256": "63f3105cc20b84aa76f15158562ee6885b81cc637212b70be13a63cd80689843",
+        "bytes": 378945867
+      },
+      {
+        "case": "native-research-and-independent-replay",
+        "path": "measurement-development/assessment-operational-live-trial-01/trial-and-runtime.tar.gz",
+        "sha256": "b9a52cda569cd992f2b48584b98392f594dfa0b9cf70f9d6e30afd40dacea83c",
+        "bytes": 375352367
+      }
+    ]
+  },
+  "records": [
+    {
+      "case": "alignment-handoff",
+      "source_root": "research-skill-revision-01",
+      "prompt": "alignment-prompt.txt",
+      "prompt_sha256": "27a14ed95ed7f8ddc9741009298b2228da5e0c66ce3acc8756d0593f62062902",
+      "invocation": "alignment-invocation.json",
+      "invocation_message_sha256": "46b0d12cbf1205409538615806121a4895bfc7ce93d13cda0a3eb67e4532e57b",
+      "prompt_identity_note": "Saved prompt adds one trailing newline to the exact invocation message.",
+      "native_session": "01a14409-d7f2-7dc1-b809-fea21146b572",
+      "model": "gpt-6-astra",
+      "effort": "ultra",
+      "runtime": "codex-cli 0.162.0-alpha.17.2",
+      "identity_source": "alignment-session-retention-01/raw-session.jsonl session_meta and turn_context; the trial report itself declared exact model/runtime unavailable within its read boundary.",
+      "snapshot": {
+        "source_base_commit": "f2e74ea3ed372f966c95692cb0826d56ad5e6a6c",
+        "manifest": "alignment-skill-snapshot.json",
+        "inventory": "alignment-trial-01/evidence/skill-snapshot-manifest.json",
+        "inventory_sha256": "89086c3609a9d142c7be1f5faaf6d640378292c515c3f2901bca62dd3e449353",
+        "files": 34,
+        "relation_to_source_commit": "33 of 34 files match 56183c3. do-full-research-loop/SKILL.md retains the earlier environment-identity sentence; the explicit reconstruction-recipe wording was added before the native Luna trial."
+      },
+      "delivery": {
+        "git_commit": "2c0f98e0ee14847ef515a0fa301306b2192aa64c",
+        "complete_state": "Uncommitted delivery, identified by all-file manifests and archives, not HEAD alone.",
+        "before_files": 8,
+        "after_files": 44,
+        "before_manifest_sha256": "f6da8efe69d56225b23692af3e50c9e5950bb5c4133a1992a69e30e8cc6b9847",
+        "after_manifest_sha256": "d7748c97e5b4f8776e33b726188b405c1f96386763ef934685860fccb7a8dfb5"
+      },
+      "independent_review": {
+        "session": "01a14418-b32d-7430-8a66-93e744ed8094",
+        "model": "gpt-6-astra",
+        "effort": "ultra",
+        "report": "alignment-independent-review-01/REVIEW.md",
+        "additive_followup": "alignment-independent-review-01/followup-01/FOLLOWUP.md",
+        "complete_raw_session": "alignment-review-session-retention-02/raw-session.jsonl"
+      },
+      "observations": [
+        "Independent checks found all 44 delivered files matched the after manifest; input, analysis, original summary, figure and report bytes were preserved.",
+        "Unchanged analysis completed via the fresh-venv and supplied-Pixi routes. Both generated CSVs match the supplied summary exactly; regenerated PNGs match each other but differ from the supplied PNG in 23,086 of 288,000 pixels, with cause unestablished.",
+        "Both 31-item responses validate against checklist 0.3.1. Ten statuses changed; after MUST counts are 11 met, 4 partial, 1 not-checked and 1 not-applicable out of 17. No overall score.",
+        "Additive review verifies actual two-environment invocations and successful completions in retained raw session lines 95, 98, 102, 105, 112 and 116, resolving the original historical-attribution evidence gap."
+      ],
+      "friction": [
+        {
+          "classification": "skill wording",
+          "observation": "Scientific recomputation versus repaired-entrypoint verification was ambiguous. Optional templates described dirty-tree execution as impossible to rerun and committed state as the whole state. Later clarifications were reviewed as text only."
+        },
+        {
+          "classification": "coverage opportunity",
+          "observation": "No matching plain-Python stack example; no required bundled artifact was missing. Git-oriented probes required delivery-aware overrides. Two complete assessments imposed observable procedural overhead."
+        },
+        {
+          "classification": "target/environment limitation",
+          "observation": "Original runtime is unknown; additions remain uncommitted; no fresh-host, recipient-retrieval, environment-binary or public-licence proof. Both checks used the same host and Python base."
+        },
+        {
+          "classification": "recording limitation",
+          "observation": "Portable receipts still omit sys.executable, sys.prefix and outer wrapper argv; historical attribution depends on the external retained session. The project-local summaries of four rejection checks omit full invocations and mutation transcripts; the complete external session is retained separately."
+        },
+        {
+          "classification": "resolved environment friction",
+          "observation": "Provided environment lacked pip; fresh venv installation and pip check succeeded. Reviewer default Python lacked jsonschema; supplied environment validated successfully."
+        }
+      ]
+    },
+    {
+      "case": "native-research-and-independent-replay",
+      "source_root": "assessment-operational-live-trial-01",
+      "skill_commit": "56183c3229f8785ab962fb820e4a50f7c11c594b",
+      "skill_snapshot_manifest": "research-launch-01/input-boundary.json",
+      "skill_snapshot_files": 34,
+      "snapshot_validation": "All 34 retained files match their manifest SHA-256 and source commit.",
+      "sessions": [
+        {
+          "role": "research",
+          "native_session": "01a1441a-ac9b-7ed2-a25d-fd4542bd6852",
+          "model": "gpt-6-luna",
+          "effort": "high",
+          "prompt": "research-prompt.txt",
+          "prompt_sha256": "6bca55f7a256f1f000671934c86a0d52bc1818c675f504bd9326a325832776c6"
+        },
+        {
+          "role": "judge",
+          "native_session": "01a1441c-fd64-78a3-a25b-1c4923e42c29",
+          "model": "gpt-6-luna",
+          "effort": "high",
+          "prompt": "judge-prompt.txt",
+          "prompt_sha256": "8871bc411c66a1c9615b9f6eaa4030382c1fe51a1f126f29202c613b4c1082ee"
+        }
+      ],
+      "runtime": "codex-cli 0.162.0-alpha.17.2",
+      "research_procedure_sha256": "9630be631105a0836f914c1c13f45a65d3fcbc4c8a41b8e17c87e3382edf37e0",
+      "assessment_procedure_sha256": "4ec04bf797cdbdc3403e6c5eabf7c037c3bb501e8694c42df4ae54f1fcdb9c7d",
+      "assessor_source_commit": "9852d8360f9519d21d11099b45f5deb8ba80cb28",
+      "delivery": {
+        "seed_and_result_commit": "20171384fc05892008d889ed7440d7646eef6c5b",
+        "complete_state": "Research additions remain outside HEAD; complete stopped delivery is identified by the retained capture.",
+        "capture_sha256": "5a695edf17e525c1cdbfa1767bcee2e1356c4df20bc2df27b3f5c57536c5a6b5",
+        "worker_end_state_sha256": "ad9850bf0f532c0ea5a56f913674f16028128f57a2941b2c0c85f480e89d2b63",
+        "retained_operational_capture_sha256": "44cae8b74b56d8d55eca32a9eb7161957417b8814a175805618233528674f520"
+      },
+      "observations": [
+        "Worker delivered README reconstruction instructions, directly pinned requirements and exact validation identity. Its own validation used the shared prepared interpreter and a same-environment rerun.",
+        "Independent native judge rebuilt a fresh virtual environment from the delivered recipe on the same host using cached pip artifacts; all four selected outputs were byte-identical.",
+        "Verification recorded original source, canonical capture, protected content and the entire operational target unchanged. Operational delta was empty; no metadata-mutation exception was exercised."
+      ],
+      "identical_replay_outputs": [
+        "results/paired-differences.csv",
+        "results/summary.json",
+        "results/report.md",
+        "figures/paired-changes.png"
+      ],
+      "friction": [
+        {
+          "classification": "harness fault",
+          "observation": "Relative response-helper output resolved in coordinator root, creating concurrent-judge collision risk. The judge recovered using absolute paths; the runtime was not modified during this trial."
+        },
+        {
+          "classification": "model attribution discrepancy",
+          "observation": "Judge self-stamp said Codex API / GPT-6; authoritative launch/session evidence identifies gpt-6-luna, high. Original response was retained unchanged."
+        },
+        {
+          "classification": "unresolved assessment interpretation",
+          "observation": "Retained must/005 credit cites the supplied 167-byte annexed CSV without a worker-owned annex action. Worker-credit/applicability concern remains; no verdict was replaced."
+        },
+        {
+          "classification": "environment/coverage limitation",
+          "observation": "Direct dependency pins are not a complete transitive lock. No empty-cache or other-host/platform proof. max-get-gb was unmetered for this captured replay and is not evidence of a blanket installer/network cap."
+        }
+      ],
+      "failure_counts": {
+        "research": 1,
+        "judge": 2
+      },
+      "failure_count_limit": "Top-level nonzero commands omit failures inside compound commands; failed attempts are retained.",
+      "additional_limits": [
+        "One candidate delivery on one synthetic fixture.",
+        "Allocation was recorded after research started but before it stopped.",
+        "No NARPS judgment was created or replaced."
+      ]
+    }
+  ]
+}
