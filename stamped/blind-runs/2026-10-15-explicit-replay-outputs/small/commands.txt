@@ -1,0 +1,26 @@
+Pinned snapshot revision supplied by requester: 4ca147e7060640219c0270fb51d2721a74fcb82c
+Operational environment: pixi run --manifest-path /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/pixi.toml
+
+First invocation (without --outputs):
+pixi run --manifest-path /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/pixi.toml python /tmp/stamped-output-selection-review/snapshot/skills/assess-alignment-with-stamped-principles/scripts/fresh_rerun.py --path /tmp/stamped-output-selection-review/small-source --entry 'python analysis.py' -o /tmp/stamped-output-selection-review/small/first-response.json
+Captured stdout: first-response.stdout (empty)
+Captured stderr: first-response.stderr
+Exit code: 2
+
+Explicit product selection replay:
+pixi run --manifest-path /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/pixi.toml python /tmp/stamped-output-selection-review/snapshot/skills/assess-alignment-with-stamped-principles/scripts/fresh_rerun.py --path /tmp/stamped-output-selection-review/small-source --entry 'python analysis.py' --outputs 'results/group_summary.csv' --workdir /tmp/stamped-output-selection-review/small/replay-work -o /tmp/stamped-output-selection-review/small/fresh-rerun.json
+Captured stdout: fresh-rerun.stdout
+Captured stderr: fresh-rerun.stderr (empty)
+Exit code: 0
+
+Preservation hash check command:
+python - <<'PY'
+from pathlib import Path
+import hashlib
+source = Path('/tmp/stamped-output-selection-review/small-source')
+clone = Path('/tmp/stamped-output-selection-review/small/replay-work/clone')
+paths = ['README.md', 'analysis.py', 'input/participants.tsv', 'results/reference-atlas-cache/manual.pdf', 'skills/example/assets/icon.png']
+for rel in paths:
+    a, b = (source / rel).read_bytes(), (clone / rel).read_bytes()
+    print(f'{rel}: source_sha256={hashlib.sha256(a).hexdigest()} clone_sha256={hashlib.sha256(b).hexdigest()} identical={a == b}')
+PY

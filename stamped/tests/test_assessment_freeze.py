@@ -93,7 +93,7 @@ def test_missing_published_comparator_is_never_met(tmp_path, monkeypatch):
     monkeypatch.setattr(rerun, "_local_annex_routes", lambda source, clone: {"routes": []})
     monkeypatch.setattr(rerun.shutil, "which", lambda executable: None)
     report = tmp_path / "report.json"
-    rerun.main(["--path", "fixture", "--entry", "true", "--workdir", str(tmp_path / "run"), "-o", str(report)])
+    rerun.main(["--path", "fixture", "--entry", "true", "--outputs", "results.tsv", "--workdir", str(tmp_path / "run"), "-o", str(report)])
     result = json.loads(report.read_text())
     assert result["status"] == "not-checked"
     assert result["unavailable_comparators"] == ["results.tsv"]
@@ -112,7 +112,7 @@ def test_preserved_outputs_are_not_proof_of_execution(tmp_path, monkeypatch):
     monkeypatch.setattr(rerun, "_local_annex_routes", lambda source, clone: {"routes": []})
     monkeypatch.setattr(rerun.shutil, "which", lambda executable: None)
     report = tmp_path / "report.json"
-    rerun.main(["--path", "fixture", "--entry", "true", "--keep-outputs", "--workdir", str(tmp_path / "run"), "-o", str(report)])
+    rerun.main(["--path", "fixture", "--entry", "true", "--outputs", "results.tsv", "--keep-outputs", "--workdir", str(tmp_path / "run"), "-o", str(report)])
     assert json.loads(report.read_text())["status"] == "not-checked"
 
 
@@ -126,3 +126,20 @@ def test_prefixed_run_record_is_not_native_replayable(monkeypatch, tmp_path):
         monkeypatch.setattr(obj, "git", lambda *args: "\x1e" + "a" * 40 + "\n" + prefix + body)
         record = obj.run_records()[0]
         assert bool(record["run_info"]) is replayable
+
+
+@pytest.mark.parametrize("selection", [[], ["--outputs"], ["--outputs", ""], ["--outputs", "   "]])
+def test_missing_output_selection_fails_before_any_execution(tmp_path, monkeypatch, capsys, selection):
+    def forbidden(*args, **kwargs):
+        raise AssertionError("Missing output selection must not launch a subprocess")
+    monkeypatch.setattr(rerun, "_run", forbidden)
+    monkeypatch.setattr(rerun.subprocess, "run", forbidden)
+    workdir = tmp_path / "replay"
+    report = tmp_path / "report.json"
+    with pytest.raises(SystemExit) as error:
+        rerun.main(["--path", "never-clone", "--entry", "true", "--workdir", str(workdir),
+                    "-o", str(report), *selection])
+    assert error.value.code == 2
+    assert "--outputs" in capsys.readouterr().err
+    assert not workdir.exists()
+    assert not report.exists()

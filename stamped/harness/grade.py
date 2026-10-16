@@ -98,7 +98,7 @@ def oracle(obj: pathlib.Path, use_case: pathlib.Path, extra: list[str]) -> dict 
         return {"status": "not-checked", "reason": f"oracle did not return JSON: {proc.stderr.strip()[:200]}"}
 
 
-def fresh_rerun(url: str, workdir: pathlib.Path | None, timeout: int) -> dict:
+def fresh_rerun(url: str, workdir: pathlib.Path | None, timeout: int, outputs: list[str]) -> dict:
     """The one probe that leaves the machine the results were made on.
 
     §10.1 asks explicit-skill runs to pass every mechanically checkable MUST
@@ -108,7 +108,8 @@ def fresh_rerun(url: str, workdir: pathlib.Path | None, timeout: int) -> dict:
     folded into the MUST rate: it answers should/004 and D.1, not one of the
     eleven items.
     """
-    cmd = [sys.executable, str(FRESH_RERUN), "--url", url, "--timeout", str(timeout)]
+    cmd = [sys.executable, str(FRESH_RERUN), "--url", url, "--timeout", str(timeout),
+           "--outputs", *outputs]
     if workdir:
         cmd += ["--workdir", str(workdir)]
     proc = subprocess.run(cmd, capture_output=True, text=True)
@@ -187,6 +188,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--fresh-rerun", metavar="URL",
                     help="clone from here and try to re-create the outputs (the `fresh-rerun` probe "
                          "§10.1 names); usually the run's publish target")
+    ap.add_argument("--fresh-rerun-outputs", nargs="+",
+                    help="explicit generated-output globs required with --fresh-rerun")
     ap.add_argument("--fresh-rerun-workdir", type=pathlib.Path,
                     help="keep the fresh-rerun clone here instead of a temp dir")
     ap.add_argument("--check-remote", action="store_true",
@@ -197,6 +200,9 @@ def main(argv: list[str] | None = None) -> int:
                          "that ceiling.")
     ap.add_argument("-o", "--output", type=pathlib.Path)
     args = ap.parse_args(argv)
+    if args.fresh_rerun and (not args.fresh_rerun_outputs or
+                             any(not item.strip() for item in args.fresh_rerun_outputs)):
+        ap.error("--fresh-rerun requires --fresh-rerun-outputs with nonempty selections")
 
     # Never write inside the object being graded: a grading file left in the
     # tree makes the next sweep report must/004 `unmet`, which is the grader
@@ -219,7 +225,8 @@ def main(argv: list[str] | None = None) -> int:
     t1_result = t1(args.object.resolve(), check_remote=args.check_remote)
     oracle_result = oracle(args.object.resolve(), args.use_case, args.oracle_arg)
     process = process_metrics(args.transcript)
-    rerun = (fresh_rerun(args.fresh_rerun, args.fresh_rerun_workdir, 7200)
+    rerun = (fresh_rerun(args.fresh_rerun, args.fresh_rerun_workdir, 7200,
+                         args.fresh_rerun_outputs)
              if args.fresh_rerun else None)
 
     passed = [i for i in scripted_musts if t1_result["items"].get(i, {}).get("status") == "met"]

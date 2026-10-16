@@ -1,0 +1,71 @@
+{
+  "probe": "fresh-rerun",
+  "items": [
+    "stamped-checklist:must/007",
+    "stamped-checklist:must/008",
+    "stamped-checklist:must/015",
+    "stamped-checklist:must/017",
+    "stamped-checklist:should/004",
+    "stamped-checklist:should/006"
+  ],
+  "source": "/tmp/stamped-output-selection-review/primary-source",
+  "started_at": "2026-10-16T03:11:27+00:00",
+  "host": {
+    "uname": "Darwin vpn-two-factor-general-229-133-11.dartmouth.edu 27.0.0 Darwin Kernel Version",
+    "datalad": true,
+    "container_runtime": null
+  },
+  "steps": [
+    {
+      "step": "datalad clone",
+      "returncode": 0,
+      "log": "install(ok): /tmp/stamped-output-selection-review/primary/selected-workdir/clone (dataset)\n[INFO] Attempting a clone into /tmp/stamped-output-selection-review/primary/selected-workdir/clone \n[INFO] Attempting to clone from /tmp/stamped-output-selection-review/primary-source to /tmp/stamped-output-selection-review/primary/selected-workdir/clone \n[INFO] Completed clone attempts for Dataset(/tmp/stamped-output-selection-review/primary/selected-workdir/clone) \n"
+    },
+    {
+      "step": "datalad get -n -r .",
+      "returncode": 0,
+      "log": "[INFO] Ensuring presence of Dataset(/private/tmp/stamped-output-selection-review/primary/selected-workdir/clone) to get /private/tmp/stamped-output-selection-review/primary/selected-workdir/clone \n"
+    },
+    {
+      "step": "fetched 1 output candidate(s) for comparison",
+      "returncode": 0,
+      "log": ""
+    },
+    {
+      "step": "removed 1 shipped output(s) before the rerun",
+      "returncode": 0,
+      "log": "results/group_summary.csv"
+    },
+    {
+      "step": "committed output removal",
+      "returncode": 0,
+      "log": ""
+    },
+    {
+      "step": "entry: python analysis.py",
+      "returncode": 0,
+      "log": ""
+    }
+  ],
+  "local_source_transports": {
+    "source": "/private/tmp/stamped-output-selection-review/primary-source",
+    "host_scope": "same-host",
+    "route_origin": "local-source-git-config",
+    "routes": []
+  },
+  "content_to_fetch_bytes": 0,
+  "outputs_shipped": {
+    "results/group_summary.csv": "a30f49691c25142d9114d2150c55ce809e23019301fdd23c7e08482cfbee0acd"
+  },
+  "comparison": {
+    "identical": [
+      "results/group_summary.csv"
+    ],
+    "within_tolerance": [],
+    "differing": [],
+    "missing_after_rerun": []
+  },
+  "status": "met",
+  "reason": "All 1 compared output(s) reproduced from a fresh clone via `python analysis.py`.",
+  "finished_at": "2026-10-16T03:11:29+00:00"
+}

@@ -1,0 +1,158 @@
+[
+  {
+    "argv": [
+      "git",
+      "init",
+      "-b",
+      "fixture"
+    ],
+    "cwd": "/tmp/stamped-output-selection-review/native/source",
+    "returncode": 0,
+    "stdout": "Initialized empty Git repository in /private/tmp/stamped-output-selection-review/native/source/.git/\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "config",
+      "core.hooksPath",
+      "/dev/null"
+    ],
+    "cwd": "/tmp/stamped-output-selection-review/native/source",
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "add",
+      "."
+    ],
+    "cwd": "/tmp/stamped-output-selection-review/native/source",
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/Users/johnlee/.agents/skills/commit-provenance/scripts/resolve.sh"
+    ],
+    "cwd": "/Users/johnlee/code/CON/stamped-ai-research-next",
+    "returncode": 0,
+    "stdout": "Co-Authored-By: Codex Desktop 26.1007.71326 (runtime codex-cli 0.162.0-alpha.17.2) / gpt-6-astra <codex@openai.com>\nCodex-Reasoning-Effort: high\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "commit",
+      "-m",
+      "test(replay): retain participant and reference selection fixture\n\nCo-Authored-By: Codex Desktop 26.1007.71326 (runtime codex-cli 0.162.0-alpha.17.2) / gpt-6-astra <codex@openai.com>\nCodex-Reasoning-Effort: high"
+    ],
+    "cwd": "/tmp/stamped-output-selection-review/native/source",
+    "returncode": 0,
+    "stdout": "[fixture (root-commit) 9f415de] test(replay): retain participant and reference selection fixture\n 6 files changed, 20 insertions(+)\n create mode 100644 README.md\n create mode 100644 analysis.py\n create mode 100644 input/participants.tsv\n create mode 100644 results/group_summary.csv\n create mode 100644 results/reference-atlas-cache/manual.pdf\n create mode 100644 skills/example/assets/icon.png\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "cwd": "/tmp/stamped-output-selection-review/native/source",
+    "returncode": 0,
+    "stdout": "9f415de61bb5806b7edbca1a6bba4ec35e394b6e\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "status",
+      "--porcelain"
+    ],
+    "cwd": "/tmp/stamped-output-selection-review/native/source",
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/.pixi/envs/default/bin/python",
+      "/tmp/stamped-output-selection-review/old_fresh_rerun.py",
+      "--path",
+      "/tmp/stamped-output-selection-review/native/source",
+      "--entry",
+      "python analysis.py",
+      "--workdir",
+      "/tmp/stamped-output-selection-review/native/old-default",
+      "-o",
+      "/tmp/stamped-output-selection-review/native/old-default.json"
+    ],
+    "cwd": "/Users/johnlee/code/CON/stamped-ai-research-next",
+    "returncode": 0,
+    "stdout": "unmet: The documented entry point failed in a fresh clone: `python analysis.py` exited 1.\nwrote /tmp/stamped-output-selection-review/native/old-default.json\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/.pixi/envs/default/bin/python",
+      "/tmp/stamped-output-selection-review/snapshot/skills/assess-alignment-with-stamped-principles/scripts/fresh_rerun.py",
+      "--path",
+      "/tmp/stamped-output-selection-review/native/source",
+      "--entry",
+      "python analysis.py",
+      "--workdir",
+      "/tmp/stamped-output-selection-review/native/required-missing",
+      "-o",
+      "/tmp/stamped-output-selection-review/native/required-missing.json"
+    ],
+    "cwd": "/Users/johnlee/code/CON/stamped-ai-research-next",
+    "returncode": 2,
+    "stdout": "",
+    "stderr": "usage: fresh_rerun.py [-h] (--url URL | --path PATH) [--entry ENTRY]\n                      --outputs OUTPUTS [OUTPUTS ...]\n                      [--in-container CONTAINER] [--rtol RTOL]\n                      [--workdir WORKDIR] [--timeout TIMEOUT] [--keep-outputs]\n                      [--max-get-gb MAX_GET_GB] [-o OUTPUT]\nfresh_rerun.py: error: the following arguments are required: --outputs\n"
+  },
+  {
+    "argv": [
+      "/Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/.pixi/envs/default/bin/python",
+      "/tmp/stamped-output-selection-review/snapshot/skills/assess-alignment-with-stamped-principles/scripts/fresh_rerun.py",
+      "--path",
+      "/tmp/stamped-output-selection-review/native/source",
+      "--entry",
+      "python analysis.py",
+      "--workdir",
+      "/tmp/stamped-output-selection-review/native/explicit-generated",
+      "-o",
+      "/tmp/stamped-output-selection-review/native/explicit-generated.json",
+      "--outputs",
+      "results/group_summary.csv"
+    ],
+    "cwd": "/Users/johnlee/code/CON/stamped-ai-research-next",
+    "returncode": 0,
+    "stdout": "met: All 1 compared output(s) reproduced from a fresh clone via `python analysis.py`.\nwrote /tmp/stamped-output-selection-review/native/explicit-generated.json\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "cwd": "/tmp/stamped-output-selection-review/native/source",
+    "returncode": 0,
+    "stdout": "9f415de61bb5806b7edbca1a6bba4ec35e394b6e\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "status",
+      "--porcelain"
+    ],
+    "cwd": "/tmp/stamped-output-selection-review/native/source",
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+]

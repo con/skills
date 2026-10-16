@@ -1,0 +1,33 @@
+diff --git a/skills/assess-alignment-with-stamped-principles/scripts/fresh_rerun.py b/skills/assess-alignment-with-stamped-principles/scripts/fresh_rerun.py
+index 5ba8c8a..2fc8b41 100644
+--- a/skills/assess-alignment-with-stamped-principles/scripts/fresh_rerun.py
++++ b/skills/assess-alignment-with-stamped-principles/scripts/fresh_rerun.py
+@@ -7,7 +7,7 @@ This probe tests re-creation in a fresh clone. Running it on the original host
+ does not establish portability to another host; the report records the host.
+ 
+     fresh_rerun.py --url <published url> [--entry 'make all'] [--in-container IMAGE]
+-                   [--outputs 'results/*.tsv' 'figures/*.png'] [--rtol 1e-6]
++                   --outputs 'results/*.tsv' 'figures/*.png' [--rtol 1e-6]
+                    [--workdir DIR] [-o fresh-rerun.json]
+ 
+ It never touches the original object: everything happens in a temporary clone
+@@ -236,8 +236,8 @@ def main(argv: list[str] | None = None) -> int:
+     source.add_argument("--url", help="published location to clone from (what D.1 promises)")
+     source.add_argument("--path", help="local path to clone from (indicative only: does not test D.1)")
+     ap.add_argument("--entry", help="command to run (default: datalad rerun, else make)")
+-    ap.add_argument("--outputs", nargs="+", default=["**/*.tsv", "**/*.csv", "**/*.png", "**/*.pdf"],
+-                    help="glob(s) naming the outputs to compare")
++    ap.add_argument("--outputs", nargs="+", required=True,
++                    help="explicit generated-output glob(s) to compare; selected files are removed before replay")
+     ap.add_argument("--in-container", dest="container", help="apptainer/singularity image to run --entry inside")
+     ap.add_argument("--rtol", type=float, default=1e-6, help="relative tolerance for tables")
+     ap.add_argument("--workdir", type=pathlib.Path, help="keep the clone here instead of a temp dir")
+@@ -251,6 +251,8 @@ def main(argv: list[str] | None = None) -> int:
+                          "a module of a container registry can be hundreds of GB")
+     ap.add_argument("-o", "--output", type=pathlib.Path)
+     args = ap.parse_args(argv)
++    if any(not pattern.strip() for pattern in args.outputs):
++        ap.error("--outputs requires nonempty generated-output selections")
+     if not math.isfinite(args.rtol) or args.rtol < 0:
+         ap.error("--rtol must be finite and nonnegative")
+ 

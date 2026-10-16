@@ -121,3 +121,30 @@ def test_available_unlocked_payload_is_hashed_without_requiring_annex(tmp_path, 
         raise AssertionError("Ordinary payload hashing should not need annex")
     monkeypatch.setattr(replay.subprocess, "run", unexpected)
     assert replay._sha256(path) == hashlib.sha256(payload).hexdigest()
+
+
+def test_eval_grade_requires_selection_before_grading(tmp_path):
+    import sys
+    grade = pathlib.Path(__file__).resolve().parents[1] / 'harness/grade.py'
+    result = subprocess.run([sys.executable, str(grade), str(tmp_path / 'absent'),
+                             '--use-case', str(tmp_path / 'absent-case'),
+                             '--fresh-rerun', 'never-clone'], capture_output=True, text=True)
+    assert result.returncode == 2
+    assert '--fresh-rerun-outputs' in result.stderr
+    assert 'Traceback' not in result.stderr
+
+
+def test_eval_grade_forwards_explicit_output_selection(monkeypatch, tmp_path):
+    path = pathlib.Path(__file__).resolve().parents[1] / 'harness/grade.py'
+    spec = importlib.util.spec_from_file_location('selection_grade', path)
+    grade = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(grade)
+    invocations = []
+    def invoke(command, **kwargs):
+        invocations.append(command)
+        return subprocess.CompletedProcess(command, 0, '{"status":"not-checked"}', '')
+    monkeypatch.setattr(grade.subprocess, 'run', invoke)
+    grade.fresh_rerun('fixture-url', tmp_path, 20, ['results/generated.csv'])
+    command = invocations[0]
+    assert command[command.index('--outputs') + 1] == 'results/generated.csv'
+    assert '**/*.tsv' not in command

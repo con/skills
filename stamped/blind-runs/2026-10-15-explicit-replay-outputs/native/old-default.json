@@ -1,0 +1,66 @@
+{
+  "probe": "fresh-rerun",
+  "items": [
+    "stamped-checklist:must/007",
+    "stamped-checklist:must/008",
+    "stamped-checklist:must/015",
+    "stamped-checklist:must/017",
+    "stamped-checklist:should/004",
+    "stamped-checklist:should/006"
+  ],
+  "source": "/tmp/stamped-output-selection-review/native/source",
+  "started_at": "2026-10-16T03:09:19+00:00",
+  "host": {
+    "uname": "Darwin vpn-two-factor-general-229-133-11.dartmouth.edu 27.0.0 Darwin Kernel Version",
+    "datalad": true,
+    "container_runtime": null
+  },
+  "steps": [
+    {
+      "step": "datalad clone",
+      "returncode": 0,
+      "log": "install(ok): /tmp/stamped-output-selection-review/native/old-default/clone (dataset)\n[INFO] Attempting a clone into /tmp/stamped-output-selection-review/native/old-default/clone \n[INFO] Attempting to clone from /tmp/stamped-output-selection-review/native/source to /tmp/stamped-output-selection-review/native/old-default/clone \n[INFO] Completed clone attempts for Dataset(/tmp/stamped-output-selection-review/native/old-default/clone) \n"
+    },
+    {
+      "step": "datalad get -n -r .",
+      "returncode": 0,
+      "log": "[INFO] Ensuring presence of Dataset(/private/tmp/stamped-output-selection-review/native/old-default/clone) to get /private/tmp/stamped-output-selection-review/native/old-default/clone \n"
+    },
+    {
+      "step": "fetched 4 output candidate(s) for comparison",
+      "returncode": 0,
+      "log": "action summary:\n  get (notneeded: 4)\n"
+    },
+    {
+      "step": "removed 4 shipped output(s) before the rerun",
+      "returncode": 0,
+      "log": "input/participants.tsv\nresults/group_summary.csv\nskills/example/assets/icon.png\nresults/reference-atlas-cache/manual.pdf"
+    },
+    {
+      "step": "committed output removal",
+      "returncode": 0,
+      "log": ""
+    },
+    {
+      "step": "entry: python analysis.py",
+      "returncode": 1,
+      "log": "Traceback (most recent call last):\n  File \"/private/tmp/stamped-output-selection-review/native/old-default/clone/analysis.py\", line 3, in <module>\n    with Path('input/participants.tsv').open() as stream:\n         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^\n  File \"/Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/.pixi/envs/default/lib/python3.13/pathlib/_local.py\", line 537, in open\n    return io.open(self, mode, buffering, encoding, errors, newline)\n           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nFileNotFoundError: [Errno 2] No such file or directory: 'input/participants.tsv'\n"
+    }
+  ],
+  "local_source_transports": {
+    "source": "/private/tmp/stamped-output-selection-review/native/source",
+    "host_scope": "same-host",
+    "route_origin": "local-source-git-config",
+    "routes": []
+  },
+  "content_to_fetch_bytes": 0,
+  "outputs_shipped": {
+    "input/participants.tsv": "7b1f59d0cab249c7b34ac4171de1beb962c7eb9d7e853683da4b882b9160751c",
+    "results/group_summary.csv": "a30f49691c25142d9114d2150c55ce809e23019301fdd23c7e08482cfbee0acd",
+    "skills/example/assets/icon.png": "13e597102f6230a635448594b330d4c8da262af6c87e668854bdbe8920d71e23",
+    "results/reference-atlas-cache/manual.pdf": "987f29723d073fb8efe8853b30fb093faf6d67434a7f733e322f431d88cf3564"
+  },
+  "status": "unmet",
+  "reason": "The documented entry point failed in a fresh clone: `python analysis.py` exited 1.",
+  "finished_at": "2026-10-16T03:09:20+00:00"
+}

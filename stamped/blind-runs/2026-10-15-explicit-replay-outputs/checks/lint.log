@@ -1,0 +1,48 @@
+✅ analyze-duplicates
+
+⚠️  bisect-and-patch-git-annex
+  WARN  W003  /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/skills/evals/../bisect-and-patch-git-annex/SKILL.md  file is 629 lines (>600); consider splitting
+✅ code-quality-report-conventions
+✅ credit-contributions
+✅ github-project-status
+
+⚠️  introduce-codespell
+  WARN  W003  /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/skills/evals/../introduce-codespell/SKILL.md  file is 1583 lines (>600); consider splitting
+✅ introduce-git-bug
+
+⚠️  introduce-intuit-auto
+  WARN  W003  /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/skills/evals/../introduce-intuit-auto/SKILL.md  file is 655 lines (>600); consider splitting
+
+⚠️  introduce-reuse-compliance
+  WARN  W003  /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/skills/evals/../introduce-reuse-compliance/SKILL.md  file is 891 lines (>600); consider splitting
+✅ issue-triage
+
+⚠️  make-scriv-changelog
+  WARN  W001  /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/skills/evals/../make-scriv-changelog/SKILL.md  frontmatter missing recommended field 'name'
+  WARN  W002  /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/skills/evals/../make-scriv-changelog/SKILL.md  frontmatter missing recommended field 'allowed-tools'
+✅ pr-feedback-review
+
+⚠️  pr-review-update
+  WARN  W002  /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/skills/evals/../pr-review-update/SKILL.md  frontmatter missing recommended field 'allowed-tools'
+  WARN  W003  /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/skills/evals/../pr-review-update/SKILL.md  file is 1461 lines (>600); consider splitting
+✅ review-org-code-quality
+✅ review-repo-code-quality
+
+⚠️  scan-projects
+  WARN  W002  /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/skills/evals/../scan-projects/SKILL.md  frontmatter missing recommended field 'allowed-tools'
+✅ setup-chromatic
+✅ align-with-stamped-principles
+✅ assess-alignment-with-stamped-principles
+✅ create-repronim-stamped-project
+✅ create-stamped-project
+✅ datalad-annex
+✅ do-full-research-loop
+✅ entire-worktrees
+✅ pixi-with-stamped
+✅ stamped-conventions
+
+⚠️  tinuous-analyzer
+  WARN  W002  /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/skills/evals/../tinuous-analyzer/SKILL.md  frontmatter missing recommended field 'allowed-tools'
+
+────────────────────────────────────────────────────────────
+Skills checked: 27  Errors: 0  Warnings: 10

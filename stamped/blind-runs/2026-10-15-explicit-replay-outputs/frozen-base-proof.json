@@ -1,0 +1,11 @@
+{
+  "base": "b86e37ff9115e37541fd47aca73f49e13b5110bb",
+  "snapshot": "4ca147e7060640219c0270fb51d2721a74fcb82c",
+  "helper_sha256": "928a3aa24c56c58b78c77066271bfdbc99ab05b60f5226c99baa385471703a49",
+  "changed_files": [
+    "skills/assess-alignment-with-stamped-principles/scripts/fresh_rerun.py"
+  ],
+  "applies_cleanly": true,
+  "exact_blob_match": true,
+  "all_other_frozen_files_unchanged": true
+}

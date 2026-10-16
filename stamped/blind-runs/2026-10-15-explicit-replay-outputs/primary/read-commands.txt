@@ -1,0 +1,12 @@
+# Read-only inspection commands executed before initial helper invocation
+cat /tmp/stamped-output-selection-review/snapshot/skills/assess-alignment-with-stamped-principles/SKILL.md
+cat /tmp/stamped-output-selection-review/snapshot/skills/stamped-conventions/SKILL.md /tmp/stamped-output-selection-review/snapshot/skills/stamped-conventions/references/verdicts.md /tmp/stamped-output-selection-review/snapshot/skills/stamped-conventions/references/response-format.md /tmp/stamped-output-selection-review/snapshot/skills/stamped-conventions/references/project-kinds.md /tmp/stamped-output-selection-review/snapshot/skills/stamped-conventions/references/principles-card.md
+rg -n 'output|argparse|workdir|add_argument' /tmp/stamped-output-selection-review/snapshot/skills/assess-alignment-with-stamped-principles/scripts/fresh_rerun.py
+# After first helper invocation
+cat /tmp/stamped-output-selection-review/primary-source/README.md /tmp/stamped-output-selection-review/primary-source/analysis.py
+git -C /tmp/stamped-output-selection-review/primary-source status --short
+git -C /tmp/stamped-output-selection-review/primary-source rev-parse HEAD
+git -C /tmp/stamped-output-selection-review/primary-source ls-files
+sed -n '1,70p' /tmp/stamped-output-selection-review/snapshot/skills/assess-alignment-with-stamped-principles/scripts/fresh_rerun.py
+sed -n '170,230p' /tmp/stamped-output-selection-review/snapshot/skills/assess-alignment-with-stamped-principles/scripts/fresh_rerun.py
+sed -n '254,412p' /tmp/stamped-output-selection-review/snapshot/skills/assess-alignment-with-stamped-principles/scripts/fresh_rerun.py

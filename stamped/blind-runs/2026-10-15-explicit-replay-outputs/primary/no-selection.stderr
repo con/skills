@@ -1,0 +1,6 @@
+usage: fresh_rerun.py [-h] (--url URL | --path PATH) [--entry ENTRY]
+                      --outputs OUTPUTS [OUTPUTS ...]
+                      [--in-container CONTAINER] [--rtol RTOL]
+                      [--workdir WORKDIR] [--timeout TIMEOUT] [--keep-outputs]
+                      [--max-get-gb MAX_GET_GB] [-o OUTPUT]
+fresh_rerun.py: error: the following arguments are required: --outputs

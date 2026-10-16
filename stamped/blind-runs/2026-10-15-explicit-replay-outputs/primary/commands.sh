@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Commands executed in order; environment used operationally only.
+pixi run --manifest-path /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/pixi.toml python /tmp/stamped-output-selection-review/snapshot/skills/stamped-conventions/scripts/vendor_checklist.py --check > /tmp/stamped-output-selection-review/primary/pin-check.stdout 2> /tmp/stamped-output-selection-review/primary/pin-check.stderr
+printf '%s\n' "$?" > /tmp/stamped-output-selection-review/primary/pin-check.exit
+pixi run --manifest-path /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/pixi.toml python /tmp/stamped-output-selection-review/snapshot/skills/assess-alignment-with-stamped-principles/scripts/fresh_rerun.py --path /tmp/stamped-output-selection-review/primary-source --entry 'python analysis.py' --workdir /tmp/stamped-output-selection-review/primary/no-selection-workdir -o /tmp/stamped-output-selection-review/primary/no-selection.json > /tmp/stamped-output-selection-review/primary/no-selection.stdout 2> /tmp/stamped-output-selection-review/primary/no-selection.stderr
+printf '%s\n' "$?" > /tmp/stamped-output-selection-review/primary/no-selection.exit

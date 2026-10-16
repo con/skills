@@ -1,0 +1,24 @@
+{
+  "source_commit": "9f415de61bb5806b7edbca1a6bba4ec35e394b6e",
+  "source_status": "",
+  "source_sha256": {
+    "README.md": "9edff814dee37f06019ad12d7f469313d2ca760478466aad7ca7627653644893",
+    "analysis.py": "0a906b80a2a6fd41ae78de0904911045318ad2ed25a39dc6a23090948152c4c4",
+    "input/participants.tsv": "7b1f59d0cab249c7b34ac4171de1beb962c7eb9d7e853683da4b882b9160751c",
+    "results/group_summary.csv": "a30f49691c25142d9114d2150c55ce809e23019301fdd23c7e08482cfbee0acd",
+    "results/reference-atlas-cache/manual.pdf": "987f29723d073fb8efe8853b30fb093faf6d67434a7f733e322f431d88cf3564",
+    "skills/example/assets/icon.png": "13e597102f6230a635448594b330d4c8da262af6c87e668854bdbe8920d71e23"
+  },
+  "source_unchanged": true,
+  "clone_sha256": {
+    "README.md": "9edff814dee37f06019ad12d7f469313d2ca760478466aad7ca7627653644893",
+    "analysis.py": "0a906b80a2a6fd41ae78de0904911045318ad2ed25a39dc6a23090948152c4c4",
+    "input/participants.tsv": "7b1f59d0cab249c7b34ac4171de1beb962c7eb9d7e853683da4b882b9160751c",
+    "results/group_summary.csv": "a30f49691c25142d9114d2150c55ce809e23019301fdd23c7e08482cfbee0acd",
+    "results/reference-atlas-cache/manual.pdf": "987f29723d073fb8efe8853b30fb093faf6d67434a7f733e322f431d88cf3564",
+    "skills/example/assets/icon.png": "13e597102f6230a635448594b330d4c8da262af6c87e668854bdbe8920d71e23"
+  },
+  "clone_matches_source": true,
+  "clone_removal_commit_diff": "commit 7d57559a4e3b10849e3c28358e7414804e148c9c\nAuthor:     fresh-rerun <probe@example.org>\nAuthorDate: Thu Oct 15 23:11:29 2026 -0400\nCommit:     fresh-rerun <probe@example.org>\nCommitDate: Thu Oct 15 23:11:29 2026 -0400\n\n    fresh-rerun: remove the shipped outputs\n\n results/group_summary.csv | 2 --\n 1 file changed, 2 deletions(-)\n",
+  "clone_removal_commit_paths": "D\tresults/group_summary.csv\n"
+}
