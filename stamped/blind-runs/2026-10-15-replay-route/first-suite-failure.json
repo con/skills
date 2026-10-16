@@ -1,0 +1,10 @@
+{
+  "command": "pixi run --manifest-path ../pixi.toml python -m pytest evals/stamped/tests -q",
+  "exit_code": 1,
+  "result": "1 failed, 146 passed, 28 skipped in 35.20s",
+  "test": "test_missing_published_comparator_is_never_met",
+  "failure": "KeyError: unavailable_comparators; mock source fixture was not a real Git repository, so newly introduced route config read returned not-checked before comparator inspection.",
+  "classification": "harness fault",
+  "correction": "Mock the route reader alongside the already mocked clone command, leaving real route behavior covered by separate Git-config tests and native fixture.",
+  "evidence_kind": "retained summary of tool output, not raw stream"
+}

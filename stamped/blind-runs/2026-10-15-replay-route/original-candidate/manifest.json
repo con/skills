@@ -1,0 +1,7 @@
+{
+  "source_commit": "0208f82504f15b82b7582f34143ab889dd52c68d",
+  "candidate_worktree": "/Users/johnlee/.local/share/wt-utils/worktrees/ecc8/assessment",
+  "helper_sha256": "2f9a66a52dfdc81a48a7950f3df9ae556d104bf16c1171294532bac3ddf7adbd",
+  "proof": "/Users/johnlee/.local/state/stamped-in-practice/replay-route-test-02/summary.json",
+  "earlier_fixture_limitation": "test-01 used identical keys; corrected distinct-key fixture test-02 retains old helper not-checked and new helper met."
+}

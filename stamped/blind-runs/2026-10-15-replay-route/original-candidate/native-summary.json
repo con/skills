@@ -1,0 +1,57 @@
+{
+  "started_at": "2026-10-16T02:30:23.565253+00:00",
+  "source_unchanged": true,
+  "source_before": {
+    "head": "e1c369a61b1c6be9f3fe3cc4ccd1e8885a713d3e",
+    "status": "",
+    "config": "07177e6b54e39ee5af5cff1d8c7eda33d5a45a445c57e2dcc167742da411cd70",
+    "files": {
+      "input.tsv": null,
+      "results/locked.tsv": null,
+      "results/unlocked.tsv": "64c3e86a53527c5adf3cffafef3a25abcbe4f1c01cfaf719b743f441d3a5e9f8"
+    }
+  },
+  "source_after": {
+    "head": "e1c369a61b1c6be9f3fe3cc4ccd1e8885a713d3e",
+    "status": "",
+    "config": "07177e6b54e39ee5af5cff1d8c7eda33d5a45a445c57e2dcc167742da411cd70",
+    "files": {
+      "input.tsv": null,
+      "results/locked.tsv": null,
+      "results/unlocked.tsv": "64c3e86a53527c5adf3cffafef3a25abcbe4f1c01cfaf719b743f441d3a5e9f8"
+    }
+  },
+  "old_status": "not-checked",
+  "new_status": "met",
+  "new_entry_executed": true,
+  "new_comparison": {
+    "identical": [
+      "results/locked.tsv",
+      "results/unlocked.tsv"
+    ],
+    "within_tolerance": [],
+    "differing": [],
+    "missing_after_rerun": []
+  },
+  "new_routes": {
+    "source": "/Users/johnlee/.local/state/stamped-in-practice/replay-route-test-02/target",
+    "host_scope": "same-host",
+    "route_origin": "local-source-git-config",
+    "routes": [
+      {
+        "source_remote": "storage",
+        "replay_remote": "replay-source-route-1",
+        "url": "/Users/johnlee/.local/state/stamped-in-practice/replay-route-test-02/store.git",
+        "annexurl": "/Users/johnlee/.local/state/stamped-in-practice/replay-route-test-02/store.git",
+        "annex-uuid": "e5f25f11-c272-473b-9eb3-792c8fb3a776"
+      }
+    ]
+  },
+  "absent_status": "not-checked",
+  "absent_routes": {
+    "source": "/Users/johnlee/.local/state/stamped-in-practice/replay-route-test-02/absent",
+    "host_scope": "same-host",
+    "route_origin": "local-source-git-config",
+    "routes": []
+  }
+}

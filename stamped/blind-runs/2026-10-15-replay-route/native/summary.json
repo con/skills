@@ -1,0 +1,57 @@
+{
+  "started_at": "2026-10-16T02:35:30.896087+00:00",
+  "source_unchanged": true,
+  "source_before": {
+    "head": "4b56f4b9a3643d2a79f23d2921f377d3eb70caf6",
+    "status": "",
+    "config": "a94d84b3827d459d6a209f25f58914297d5d56582d2ba4873182f2c5ea5f9262",
+    "files": {
+      "input.tsv": null,
+      "results/locked.tsv": null,
+      "results/unlocked.tsv": "64c3e86a53527c5adf3cffafef3a25abcbe4f1c01cfaf719b743f441d3a5e9f8"
+    }
+  },
+  "source_after": {
+    "head": "4b56f4b9a3643d2a79f23d2921f377d3eb70caf6",
+    "status": "",
+    "config": "a94d84b3827d459d6a209f25f58914297d5d56582d2ba4873182f2c5ea5f9262",
+    "files": {
+      "input.tsv": null,
+      "results/locked.tsv": null,
+      "results/unlocked.tsv": "64c3e86a53527c5adf3cffafef3a25abcbe4f1c01cfaf719b743f441d3a5e9f8"
+    }
+  },
+  "old_status": "not-checked",
+  "new_status": "met",
+  "new_entry_executed": true,
+  "new_comparison": {
+    "identical": [
+      "results/locked.tsv",
+      "results/unlocked.tsv"
+    ],
+    "within_tolerance": [],
+    "differing": [],
+    "missing_after_rerun": []
+  },
+  "new_routes": {
+    "source": "/private/tmp/stamped-replay-route-review/native/target",
+    "host_scope": "same-host",
+    "route_origin": "local-source-git-config",
+    "routes": [
+      {
+        "source_remote": "storage",
+        "replay_remote": "replay-source-route-1",
+        "url": "/tmp/stamped-replay-route-review/native/store.git",
+        "annexurl": "/tmp/stamped-replay-route-review/native/store.git",
+        "annex-uuid": "d04b5dcc-cc46-4d19-aaa1-84621274a84e"
+      }
+    ]
+  },
+  "absent_status": "not-checked",
+  "absent_routes": {
+    "source": "/private/tmp/stamped-replay-route-review/native/absent",
+    "host_scope": "same-host",
+    "route_origin": "local-source-git-config",
+    "routes": []
+  }
+}

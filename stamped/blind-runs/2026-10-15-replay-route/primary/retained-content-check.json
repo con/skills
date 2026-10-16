@@ -1,0 +1,45 @@
+{
+  "target": {
+    "input.tsv": {
+      "exists": true,
+      "is_symlink": true,
+      "size": 17,
+      "sha256": "63e99dbb908f67f0098c6d9539bfd9eb83207389b50ad086798934df08142d3f",
+      "text": "id\tvalue\n1\t2\n2\t4\n",
+      "link_target": ".git/annex/objects/1z/P0/SHA256E-s17--63e99dbb908f67f0098c6d9539bfd9eb83207389b50ad086798934df08142d3f.tsv/SHA256E-s17--63e99dbb908f67f0098c6d9539bfd9eb83207389b50ad086798934df08142d3f.tsv"
+    },
+    "results/locked.tsv": {
+      "exists": true,
+      "is_symlink": false,
+      "size": 21,
+      "sha256": "741f573250a1a1fe3f8bbb5d17a72575d99c644d589be02a29dd6e31c6578d80",
+      "text": "id\tvalue\n1\t2\n2\t4\n3\t6\n"
+    },
+    "results/unlocked.tsv": {
+      "exists": true,
+      "is_symlink": false,
+      "size": 21,
+      "sha256": "64c3e86a53527c5adf3cffafef3a25abcbe4f1c01cfaf719b743f441d3a5e9f8",
+      "text": "id\tvalue\n1\t2\n2\t4\n4\t8\n"
+    }
+  },
+  "absent": {
+    "input.tsv": {
+      "exists": false,
+      "is_symlink": true,
+      "link_target": ".git/annex/objects/1z/P0/SHA256E-s17--63e99dbb908f67f0098c6d9539bfd9eb83207389b50ad086798934df08142d3f.tsv/SHA256E-s17--63e99dbb908f67f0098c6d9539bfd9eb83207389b50ad086798934df08142d3f.tsv"
+    },
+    "results/locked.tsv": {
+      "exists": false,
+      "is_symlink": true,
+      "link_target": "../.git/annex/objects/wK/pz/SHA256E-s21--741f573250a1a1fe3f8bbb5d17a72575d99c644d589be02a29dd6e31c6578d80.tsv/SHA256E-s21--741f573250a1a1fe3f8bbb5d17a72575d99c644d589be02a29dd6e31c6578d80.tsv"
+    },
+    "results/unlocked.tsv": {
+      "exists": true,
+      "is_symlink": false,
+      "size": 97,
+      "sha256": "0f8969518c631ae5a390574359ee10f23df6e5fa933efe9f643d15c5a0387b41",
+      "text": "/annex/objects/SHA256E-s21--64c3e86a53527c5adf3cffafef3a25abcbe4f1c01cfaf719b743f441d3a5e9f8.tsv\n"
+    }
+  }
+}

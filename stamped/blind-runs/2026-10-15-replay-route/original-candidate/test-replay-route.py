@@ -1,0 +1,23 @@
+import datetime,hashlib,json,os,pathlib,subprocess,sys
+root=pathlib.Path(sys.argv[1]);root.mkdir(exist_ok=False);records=[]
+new=pathlib.Path('/Users/johnlee/.local/share/wt-utils/worktrees/ecc8/assessment/skills/assess-alignment-with-stamped-principles/scripts/fresh_rerun.py');old=pathlib.Path('/Users/johnlee/code/CON/stamped-in-practice/assessment/skills/assess-alignment-with-stamped-principles/scripts/fresh_rerun.py')
+def run(args,cwd=None,check=True):
+ r=subprocess.run(list(map(str,args)),cwd=cwd,capture_output=True,text=True);records.append({'argv':list(map(str,args)),'cwd':str(cwd or pathlib.Path.cwd()),'returncode':r.returncode,'stdout':r.stdout,'stderr':r.stderr});(root/'commands.json').write_text(json.dumps(records,indent=2)+'\n')
+ if check and r.returncode:raise RuntimeError(str(args)+' failed: '+r.stderr[-1000:])
+ return r.stdout.strip()
+def commit(repo,msg):
+ trailers=run(['/Users/johnlee/.agents/skills/commit-provenance/scripts/resolve.sh']);run(['git','commit','-m',msg+'\n\n'+trailers],repo)
+worker=root/'worker';worker.mkdir();run(['git','init','-b','fixture'],worker);run(['git','config','core.hooksPath','/dev/null'],worker);run(['git','annex','init','fixture-worker'],worker)
+(worker/'input.tsv').write_text('id\tvalue\n1\t2\n2\t4\n');(worker/'results').mkdir();(worker/'results/locked.tsv').write_text((worker/'input.tsv').read_text()+'3\t6\n');(worker/'results/unlocked.tsv').write_text((worker/'input.tsv').read_text()+'4\t8\n');(worker/'analysis.sh').write_text("mkdir -p results\ncat input.tsv > results/locked.tsv\nprintf '3\\t6\\n' >> results/locked.tsv\ncat input.tsv > results/unlocked.tsv\nprintf '4\\t8\\n' >> results/unlocked.tsv\n")
+run(['git','annex','add','--force','input.tsv','results/locked.tsv','results/unlocked.tsv'],worker);run(['git','annex','unlock','results/unlocked.tsv'],worker);run(['git','add','analysis.sh'],worker);commit(worker,'test(replay): create disposable locked and unlocked annex object')
+store=root/'store.git';run(['git','init','--bare',store]);run(['git','annex','init','fixture-store'],store);run(['git','remote','add','storage',store],worker);run(['git','annex','copy','--to','storage','--all'],worker);uuid=run(['git','config','annex.uuid'],store)
+target=root/'target';run(['git','clone',worker,target]);run(['git','config','core.hooksPath','/dev/null'],target);run(['git','annex','init','fixture-target'],target);run(['git','remote','remove','origin'],target);run(['git','remote','add','storage',store],target);run(['git','config','remote.storage.annexurl',store],target);run(['git','config','remote.storage.annex-uuid',uuid],target);run(['git','annex','get','--from','storage','--','results/unlocked.tsv'],target)
+def state():
+ return {'head':run(['git','rev-parse','HEAD'],target),'status':run(['git','status','--porcelain'],target),'config':hashlib.sha256((target/'.git/config').read_bytes()).hexdigest(),'files':{str(p.relative_to(target)):hashlib.sha256(p.read_bytes()).hexdigest() if p.exists() else None for p in [target/'input.tsv',target/'results/locked.tsv',target/'results/unlocked.tsv']}}
+before=state();results={}
+for name,helper in [('old',old),('corrected',new)]:
+ run([sys.executable,helper,'--path',target,'--entry','sh analysis.sh','--outputs','results/*.tsv','--workdir',root/name,'--output',root/(name+'.json')]);results[name]=json.loads((root/(name+'.json')).read_text())
+after=state();assert before==after
+absent=root/'absent';run(['git','clone',target,absent]);run(['git','config','core.hooksPath','/dev/null'],absent);run(['git','annex','init','fixture-absent'],absent);run(['git','remote','remove','origin'],absent)
+run([sys.executable,new,'--path',absent,'--entry','sh analysis.sh','--outputs','results/*.tsv','--workdir',root/'absent-replay','--output',root/'absent.json']);results['absent']=json.loads((root/'absent.json').read_text())
+summary={'started_at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'source_unchanged':before==after,'source_before':before,'source_after':after,'old_status':results['old']['status'],'new_status':results['corrected']['status'],'new_entry_executed':any(s['step'].startswith('entry:') for s in results['corrected']['steps']),'new_comparison':results['corrected'].get('comparison'),'new_routes':results['corrected'].get('local_source_transports'),'absent_status':results['absent']['status'],'absent_routes':results['absent'].get('local_source_transports')};(root/'summary.json').write_text(json.dumps(summary,indent=2)+'\n');print(json.dumps(summary,indent=2));assert summary['new_entry_executed'] and summary['new_status']=='met';assert summary['old_status']=='not-checked' and summary['absent_status']=='not-checked'

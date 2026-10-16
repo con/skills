@@ -1,0 +1,51 @@
+{
+  "probe": "fresh-rerun",
+  "items": [
+    "stamped-checklist:must/007",
+    "stamped-checklist:must/008",
+    "stamped-checklist:must/015",
+    "stamped-checklist:must/017",
+    "stamped-checklist:should/004",
+    "stamped-checklist:should/006"
+  ],
+  "source": "/tmp/stamped-replay-route-review/native/target",
+  "started_at": "2026-10-16T02:35:25+00:00",
+  "host": {
+    "uname": "Darwin vpn-two-factor-general-229-133-11.dartmouth.edu 27.0.0 Darwin Kernel Version",
+    "datalad": true,
+    "container_runtime": null
+  },
+  "steps": [
+    {
+      "step": "datalad clone",
+      "returncode": 0,
+      "log": "install(ok): /tmp/stamped-replay-route-review/native/old/clone (dataset)\n[INFO] Attempting a clone into /tmp/stamped-replay-route-review/native/old/clone \n[INFO] Attempting to clone from /tmp/stamped-replay-route-review/native/target to /tmp/stamped-replay-route-review/native/old/clone \n[INFO] Completed clone attempts for Dataset(/tmp/stamped-replay-route-review/native/old/clone) \n"
+    },
+    {
+      "step": "datalad get -n -r .",
+      "returncode": 0,
+      "log": "[INFO] Ensuring presence of Dataset(/private/tmp/stamped-replay-route-review/native/old/clone) to get /private/tmp/stamped-replay-route-review/native/old/clone \n"
+    },
+    {
+      "step": "datalad get -r . (0.0 GiB)",
+      "returncode": 1,
+      "log": "get(error): input.tsv (file) [not available]\nget(error): results/locked.tsv (file) [not available]\nget(ok): results/unlocked.tsv (file) [from origin...]\naction summary:\n  get (error: 2, ok: 1)\n[INFO] Ensuring presence of Dataset(/private/tmp/stamped-replay-route-review/native/old/clone) to get /private/tmp/stamped-replay-route-review/native/old/clone \n"
+    },
+    {
+      "step": "fetched 2 output candidate(s) for comparison",
+      "returncode": 1,
+      "log": "get(error): results/locked.tsv (file) [not available]\naction summary:\n  get (error: 1, notneeded: 1)\n"
+    }
+  ],
+  "content_to_fetch_bytes": 59,
+  "outputs_shipped": {
+    "results/locked.tsv": null,
+    "results/unlocked.tsv": "64c3e86a53527c5adf3cffafef3a25abcbe4f1c01cfaf719b743f441d3a5e9f8"
+  },
+  "status": "not-checked",
+  "unavailable_comparators": [
+    "results/locked.tsv"
+  ],
+  "reason": "Published output content was unavailable; no valid baseline exists for comparison.",
+  "finished_at": "2026-10-16T02:35:27+00:00"
+}

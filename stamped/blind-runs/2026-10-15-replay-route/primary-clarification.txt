@@ -1,0 +1,1 @@
+Correct: native helper housekeeping commits in its disposable replay clone are permitted. Do not make source/skill commits. Preserve this clarification in your review alongside the original prompt.

@@ -1,0 +1,1 @@
+{"argv": ["pixi", "run", "--manifest-path", "/Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/pixi.toml", "python", "evals/stamped/harness/calibrate.py"], "exit_code": 0}

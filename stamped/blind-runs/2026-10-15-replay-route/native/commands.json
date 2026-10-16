@@ -1,0 +1,411 @@
+[
+  {
+    "argv": [
+      "git",
+      "init",
+      "-b",
+      "fixture"
+    ],
+    "cwd": "/tmp/stamped-replay-route-review/native/worker",
+    "returncode": 0,
+    "stdout": "Initialized empty Git repository in /private/tmp/stamped-replay-route-review/native/worker/.git/\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "config",
+      "core.hooksPath",
+      "/dev/null"
+    ],
+    "cwd": "/tmp/stamped-replay-route-review/native/worker",
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "annex",
+      "init",
+      "fixture-worker"
+    ],
+    "cwd": "/tmp/stamped-replay-route-review/native/worker",
+    "returncode": 0,
+    "stdout": "init fixture-worker ok\n(recording state in git...)\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "annex",
+      "add",
+      "--force",
+      "input.tsv",
+      "results/locked.tsv",
+      "results/unlocked.tsv"
+    ],
+    "cwd": "/tmp/stamped-replay-route-review/native/worker",
+    "returncode": 0,
+    "stdout": "add input.tsv \n\n100%  17 B            114 KiB/s 0s\n                                  \nok\nadd results/locked.tsv \n\n100%  21 B            233 KiB/s 0s\n                                  \nok\nadd results/unlocked.tsv \n\n100%  21 B             76 KiB/s 0s\n                                  \nok\n(recording state in git...)\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "annex",
+      "unlock",
+      "results/unlocked.tsv"
+    ],
+    "cwd": "/tmp/stamped-replay-route-review/native/worker",
+    "returncode": 0,
+    "stdout": "unlock results/unlocked.tsv ok\n(recording state in git...)\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "add",
+      "analysis.sh"
+    ],
+    "cwd": "/tmp/stamped-replay-route-review/native/worker",
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/Users/johnlee/.agents/skills/commit-provenance/scripts/resolve.sh"
+    ],
+    "cwd": "/Users/johnlee/code/CON/stamped-ai-research-next",
+    "returncode": 0,
+    "stdout": "Co-Authored-By: Codex Desktop 26.1007.71326 (runtime codex-cli 0.162.0-alpha.17.2) / gpt-6-astra <codex@openai.com>\nCodex-Reasoning-Effort: high\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "commit",
+      "-m",
+      "test(replay): create disposable locked and unlocked annex object\n\nCo-Authored-By: Codex Desktop 26.1007.71326 (runtime codex-cli 0.162.0-alpha.17.2) / gpt-6-astra <codex@openai.com>\nCodex-Reasoning-Effort: high"
+    ],
+    "cwd": "/tmp/stamped-replay-route-review/native/worker",
+    "returncode": 0,
+    "stdout": "[fixture (root-commit) 4b56f4b] test(replay): create disposable locked and unlocked annex object\n 4 files changed, 8 insertions(+)\n create mode 100644 analysis.sh\n create mode 120000 input.tsv\n create mode 120000 results/locked.tsv\n create mode 100644 results/unlocked.tsv\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "init",
+      "--bare",
+      "/tmp/stamped-replay-route-review/native/store.git"
+    ],
+    "cwd": "/Users/johnlee/code/CON/stamped-ai-research-next",
+    "returncode": 0,
+    "stdout": "Initialized empty Git repository in /private/tmp/stamped-replay-route-review/native/store.git/\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "annex",
+      "init",
+      "fixture-store"
+    ],
+    "cwd": "/tmp/stamped-replay-route-review/native/store.git",
+    "returncode": 0,
+    "stdout": "init fixture-store ok\n(recording state in git...)\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "remote",
+      "add",
+      "storage",
+      "/tmp/stamped-replay-route-review/native/store.git"
+    ],
+    "cwd": "/tmp/stamped-replay-route-review/native/worker",
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "annex",
+      "copy",
+      "--to",
+      "storage",
+      "--all"
+    ],
+    "cwd": "/tmp/stamped-replay-route-review/native/worker",
+    "returncode": 0,
+    "stdout": "copy SHA256E-s17--63e99dbb908f67f0098c6d9539bfd9eb83207389b50ad086798934df08142d3f.tsv (to storage...) \n\n100%  17 B             45 KiB/s 0s\n                                  \nok\ncopy SHA256E-s21--741f573250a1a1fe3f8bbb5d17a72575d99c644d589be02a29dd6e31c6578d80.tsv (to storage...) \n\n100%  21 B            102 KiB/s 0s\n                                  \nok\ncopy SHA256E-s21--64c3e86a53527c5adf3cffafef3a25abcbe4f1c01cfaf719b743f441d3a5e9f8.tsv (to storage...) \n\n100%  21 B             39 KiB/s 0s\n                                  \nok\n(recording state in git...)\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "config",
+      "annex.uuid"
+    ],
+    "cwd": "/tmp/stamped-replay-route-review/native/store.git",
+    "returncode": 0,
+    "stdout": "d04b5dcc-cc46-4d19-aaa1-84621274a84e\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "clone",
+      "/tmp/stamped-replay-route-review/native/worker",
+      "/tmp/stamped-replay-route-review/native/target"
+    ],
+    "cwd": "/Users/johnlee/code/CON/stamped-ai-research-next",
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "Cloning into '/tmp/stamped-replay-route-review/native/target'...\ndone.\n"
+  },
+  {
+    "argv": [
+      "git",
+      "config",
+      "core.hooksPath",
+      "/dev/null"
+    ],
+    "cwd": "/tmp/stamped-replay-route-review/native/target",
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "annex",
+      "init",
+      "fixture-target"
+    ],
+    "cwd": "/tmp/stamped-replay-route-review/native/target",
+    "returncode": 0,
+    "stdout": "init fixture-target ok\n(recording state in git...)\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "remote",
+      "remove",
+      "origin"
+    ],
+    "cwd": "/tmp/stamped-replay-route-review/native/target",
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "remote",
+      "add",
+      "storage",
+      "/tmp/stamped-replay-route-review/native/store.git"
+    ],
+    "cwd": "/tmp/stamped-replay-route-review/native/target",
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "config",
+      "remote.storage.annexurl",
+      "/tmp/stamped-replay-route-review/native/store.git"
+    ],
+    "cwd": "/tmp/stamped-replay-route-review/native/target",
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "config",
+      "remote.storage.annex-uuid",
+      "d04b5dcc-cc46-4d19-aaa1-84621274a84e"
+    ],
+    "cwd": "/tmp/stamped-replay-route-review/native/target",
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "annex",
+      "get",
+      "--from",
+      "storage",
+      "--",
+      "results/unlocked.tsv"
+    ],
+    "cwd": "/tmp/stamped-replay-route-review/native/target",
+    "returncode": 0,
+    "stdout": "get results/unlocked.tsv (from storage...) \n\n100%  21 B            109 KiB/s 0s\n                                  \nok\n(recording state in git...)\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "cwd": "/tmp/stamped-replay-route-review/native/target",
+    "returncode": 0,
+    "stdout": "4b56f4b9a3643d2a79f23d2921f377d3eb70caf6\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "status",
+      "--porcelain"
+    ],
+    "cwd": "/tmp/stamped-replay-route-review/native/target",
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/.pixi/envs/default/bin/python",
+      "/tmp/stamped-replay-route-review/old_fresh_rerun.py",
+      "--path",
+      "/tmp/stamped-replay-route-review/native/target",
+      "--entry",
+      "sh analysis.sh",
+      "--outputs",
+      "results/*.tsv",
+      "--workdir",
+      "/tmp/stamped-replay-route-review/native/old",
+      "--output",
+      "/tmp/stamped-replay-route-review/native/old.json"
+    ],
+    "cwd": "/Users/johnlee/code/CON/stamped-ai-research-next",
+    "returncode": 0,
+    "stdout": "not-checked: Published output content was unavailable; no valid baseline exists for comparison.\nwrote /tmp/stamped-replay-route-review/native/old.json\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/.pixi/envs/default/bin/python",
+      "/tmp/stamped-replay-route-review/snapshot/skills/assess-alignment-with-stamped-principles/scripts/fresh_rerun.py",
+      "--path",
+      "/tmp/stamped-replay-route-review/native/target",
+      "--entry",
+      "sh analysis.sh",
+      "--outputs",
+      "results/*.tsv",
+      "--workdir",
+      "/tmp/stamped-replay-route-review/native/corrected",
+      "--output",
+      "/tmp/stamped-replay-route-review/native/corrected.json"
+    ],
+    "cwd": "/Users/johnlee/code/CON/stamped-ai-research-next",
+    "returncode": 0,
+    "stdout": "met: All 2 compared output(s) reproduced from a fresh clone via `sh analysis.sh`.\nwrote /tmp/stamped-replay-route-review/native/corrected.json\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "cwd": "/tmp/stamped-replay-route-review/native/target",
+    "returncode": 0,
+    "stdout": "4b56f4b9a3643d2a79f23d2921f377d3eb70caf6\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "status",
+      "--porcelain"
+    ],
+    "cwd": "/tmp/stamped-replay-route-review/native/target",
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "clone",
+      "/tmp/stamped-replay-route-review/native/target",
+      "/tmp/stamped-replay-route-review/native/absent"
+    ],
+    "cwd": "/Users/johnlee/code/CON/stamped-ai-research-next",
+    "returncode": 0,
+    "stdout": "",
+    "stderr": "Cloning into '/tmp/stamped-replay-route-review/native/absent'...\ndone.\n"
+  },
+  {
+    "argv": [
+      "git",
+      "config",
+      "core.hooksPath",
+      "/dev/null"
+    ],
+    "cwd": "/tmp/stamped-replay-route-review/native/absent",
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "annex",
+      "init",
+      "fixture-absent"
+    ],
+    "cwd": "/tmp/stamped-replay-route-review/native/absent",
+    "returncode": 0,
+    "stdout": "init fixture-absent ok\n(recording state in git...)\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "remote",
+      "remove",
+      "origin"
+    ],
+    "cwd": "/tmp/stamped-replay-route-review/native/absent",
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/.pixi/envs/default/bin/python",
+      "/tmp/stamped-replay-route-review/snapshot/skills/assess-alignment-with-stamped-principles/scripts/fresh_rerun.py",
+      "--path",
+      "/tmp/stamped-replay-route-review/native/absent",
+      "--entry",
+      "sh analysis.sh",
+      "--outputs",
+      "results/*.tsv",
+      "--workdir",
+      "/tmp/stamped-replay-route-review/native/absent-replay",
+      "--output",
+      "/tmp/stamped-replay-route-review/native/absent.json"
+    ],
+    "cwd": "/Users/johnlee/code/CON/stamped-ai-research-next",
+    "returncode": 0,
+    "stdout": "not-checked: Published output content was unavailable; no valid baseline exists for comparison.\nwrote /tmp/stamped-replay-route-review/native/absent.json\n",
+    "stderr": ""
+  }
+]
