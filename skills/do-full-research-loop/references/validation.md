@@ -8,10 +8,12 @@ Reuse established scientific libraries and validators, while keeping the expecte
 - Confirm source meanings and units, selected population, joins, duplicate handling, denominators and missingness.
   Distinguish independent exclusion flags from their unique-row union.
 - Check known examples and relevant boundaries: missing-token forms, invalid/nonfinite values, empty groups, unit conversions, unequal counts or weights.
+  Distinguish absent measurements or coverage from genuine zero values; justify the resulting analysis population or spatial domain.
   The task contract determines which cases matter.
 - Match uncertainty and resampling to the independent sampling unit.
   Compare paired observations only for a paired design; distinguish descriptive change from a causal effect.
 - Use independent summaries, a trusted reference implementation or justified controls; prespecify tolerances.
+  When custom numerical code determines inference, check its full statistic against an independent formula or trusted implementation, including quantities that change under resampling.
   Sensitivity analyses test assumptions, not select favorable results.
   Keep actual-data correctness separate from the reusable input contract.
 
@@ -27,9 +29,10 @@ Inspect at intended display size: units, labels, legends, clipping, series ident
 Parsing SVG or checking file existence is not visual review.
 If rendering was unavailable, report that limit rather than crediting a later reviewer to the original worker.
 
-## Fresh replay
+## Fresh replay when warranted
 
-In a disposable checkout, obtain exact inputs and restore the recorded environment.
+Choose replay when it resolves a material execution uncertainty; do not require it for every delivery or documentary edit.
+In a disposable copy of the exact delivered state, obtain exact inputs and restore the recorded environment.
 Remove only declared generated outputs, without deleting source data or shared annex content; keep expected artifacts elsewhere.
 Run the documented entry point and require at least one regenerated output.
 A successful no-op must fail this check.
