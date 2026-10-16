@@ -71,6 +71,13 @@ The app ignores keys it does not know, so one file serves both.
   The list is **open**: these four are the ones in use, and a consumer that meets an unfamiliar flag shows it rather than dropping it.
 - The `assessor` block may also carry `drafted_by` (the script or step that produced a draft, where that differs from the skill — `scripts/run_probes.py` sets it) and `note` (anything a reader needs about the assessor itself rather than about the object). Both are provenance *within* the assessor, not a second assessor.
 - `extra_items[]` carries findings with no checklist id (licences, T.4) so they are reported without bending an existing id.
+- `object.commit` names the inspected repository or preservation revision, not necessarily the worker's delivered state.
+  Identify the original delivery snapshot/hash, capture omissions and stop-state evidence in `scope` and evidence citations; distinguish supplied resources and coordinator additions so they cannot earn worker credit. Keep the actual Git commit whenever one exists. For a delivery without a commit, set `object.commit` to `null` and supply `object.capture` with a retained manifest/archive's `uri` and SHA-256 `sha256`; never substitute the capture hash for a Git commit.
+  The manifest must identify the delivered paths and content hashes plus capture omissions; an archive must contain the assessed bytes.
+  Retain the referenced file so another assessor can verify the hash and boundary.
+  Use `encode_response.py template -o <date>-response.json` when no Git probe draft is available, fill the assessment metadata and answers, then run `encode_response.py stamp <date>-response.json --capture <manifest-or-archive>` to hash the actual file.
+  This preserves an existing commit; record the capture time in `object.captured_at` and the boundary in `scope`.
+  Validation checks the record's shape; independently verify the manifest against the delivery.
 
 `validate` checks the complete record against [`response-schema.json`](response-schema.json), using `jsonschema`, then checks checklist pins and verdict semantics. Stamp the response before final validation. The metadata is required for a completed assessment, even though the web app itself reads only the compact payload.
 
@@ -80,6 +87,8 @@ The app ignores keys it does not know, so one file serves both.
 
 > Produced by `assess-alignment-with-stamped-principles` 0.1.0 with `stamped-conventions` 0.1.0, checklist 0.3.1 (`stamped-checklist-schema@v0.3.1`, `af259ba`), on <object url> at commit `<sha>`, 2026-10-13, <harness>/<model>.
 > Probe output: `<path to the probe JSON>`.
+
+When no commit exists, replace `at commit <sha>` with `at capture <uri>, SHA-256 <sha256>` in the prose stamp.
 
 A report without the stamp cannot be compared against another iteration, so it is not finished.
 

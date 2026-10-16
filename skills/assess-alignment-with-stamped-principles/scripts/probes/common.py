@@ -2,7 +2,8 @@
 # SPDX-License-Identifier: MIT
 """Shared helpers for the STAMPED probes.
 
-A probe is a deterministic, tool-agnostic check over *committed* state.  It
+A probe is a deterministic first pass over Git paths/history and recognized
+representations, not a complete delivered-state assessment. It
 returns a :class:`Probe` result carrying a status from
 ``../stamped-conventions/references/verdicts.md``, the checklist items it speaks
 to, a reason short enough for the checklist app, and evidence a reader can

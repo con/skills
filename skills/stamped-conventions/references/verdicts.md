@@ -28,6 +28,7 @@ This reconciles @asmacdo's draft (pass/partial/fail/unknown), STAMPED-dl's met/p
 
    Either way the reason names the ground, starting with `N/A:`.
    An item you merely could not check is `not-checked`, never this.
+   After inspecting the complete delivery, use `not-applicable` for must/005 when no large binary data exists; apply the may/001 subject boundary below.
 
    **Not** an N/A ground: *there was nothing of this kind to do*.
    An object with no host assumptions to document satisfies must/011 — the requirement is "write down your assumptions", and having none meets it.
@@ -46,8 +47,17 @@ This reconciles @asmacdo's draft (pass/partial/fail/unknown), STAMPED-dl's met/p
    Restricted data that is properly isolated is `met` on should/009 and `not-checked` elsewhere with "access-restricted" as the reason.
 7. **Equivalent evidence counts.**
    Name the mechanism you found rather than the tool you expected.
+   Preserve the checklist pin; these are explicit property-based interpretations, not edits to its wording:
+   - **must/003:** an installable package declaration in a delivered environment specification counts as inclusion; physical vendoring is not required. Judge completeness under must/010, exact environment identity under must/015, and archived artifacts under should/007; missing version pins alone do not show incompleteness.
+   - **must/007:** discoverable installation and usage instructions can satisfy the item under another filename or in an equivalent delivered interface; `README.md` and `Makefile` are not mandatory names.
+   - **may/001:** assess independently maintained project components, not ordinary runtime or package dependencies. No such components → `not-applicable`; otherwise require independently identified, retrievable links with clear boundaries, not necessarily Git submodules. An unidentified copy or unresolvable path fails. Judge missing or incomplete dependency environments under must/003 and must/010; they do not turn packages into project modules.
+   - **must/006:** execution evidence must link the actual results and actions to their environment; a recognized provenance format or tool name alone is neither necessary nor sufficient.
+   - **should/002, should/006:** inspect equivalent repeated-testing and environment-reconstitution records, including manual or scheduled runs; missing CI configuration alone proves neither property absent.
+   Apply these interpretations consistently within a comparison and name any equivalent evidence used.
 8. **Scripted before judged.**
-   Where a probe exists for an item, run it and cite its output; use judgement only for what no probe can settle, and record which of the two produced each verdict.
+   Run applicable probes and cite their output, then inspect evidence outside their supported representations.
+   A tracked-path inventory, recognized filename or parsed DataLad record is not a complete delivered-artifact or provenance inventory.
+   Missing probe support is `not-checked` pending inspection, not evidence of absence; record which probe or reading produced each verdict.
 9. **Disagreements are surfaced, not averaged.**
    When a probe and a reading of the object disagree, report both and flag the item for the human.
 10. **When the object tells two stories about how it runs, that disagreement *is* the answer.**

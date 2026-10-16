@@ -275,9 +275,9 @@ def large_in_annex(obj: Object, max_bytes: int = 10 * 1024 * 1024) -> Probe:
             details,
         )
     return Probe(
-        "large-in-annex", "met", ["stamped-checklist:must/005"],
-        clip(f"No binary blob over {limit_mib} MiB in git, and no large-content mechanism is needed: "
-             "nothing in this object is large binary data."),
+        "large-in-annex", "not-checked", ["stamped-checklist:must/005"],
+        clip(f"No binary blob over {limit_mib} MiB or large-content mechanism found in Git; "
+             "inspect the complete delivery to determine applicability."),
         [Evidence("git ls-tree -r -l HEAD", f"no binary blob over {max_bytes} bytes; "
                                             f"{len(blobs)} blobs tracked")],
         details,
@@ -888,15 +888,15 @@ def ci_present(obj: Object) -> Probe:
     items = [i002, i006]
     configs = [p for p in obj.tracked() if any(p.startswith(d) or p == d for d in CI_DIRS)]
     if not configs:
-        reason = "No CI configuration: nothing checks that the instructions still work."
+        reason = "No recognized CI configuration; inspect equivalent repeated-testing records."
         return Probe(
-            "ci-present", "unmet", items, reason,
+            "ci-present", "not-checked", items, reason,
             [Evidence("probe:ci-present",
                       "no tracked " + ", ".join(CI_DIRS) + f" in {len(obj.tracked())} tracked paths")],
             {"configs": []},
-            item_status={i002: "unmet", i006: "unmet"},
+            item_status={i002: "not-checked", i006: "not-checked"},
             item_reason={i002: reason,
-                         i006: "No CI configuration: the environment behind the results is never rebuilt."},
+                         i006: "No recognized CI configuration; inspect equivalent environment-reconstitution records."},
         )
 
     texts = {path: obj.read(path) for path in configs}

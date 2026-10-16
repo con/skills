@@ -38,14 +38,16 @@ Everything normative about STAMPED itself lives upstream and is **linked, not pa
 
 ## Invariants every STAMPED skill keeps
 
-1. **Evidence, not intent.** Only committed state counts.
+1. **Evidence, not intent.** Assess the declared delivered state, including uncommitted and ignored artifacts; cite its snapshot, paths and hashes.
    An agent's "done" is an assertion, not evidence; a skill or tool being installed does not show it was used.
    Never report `met` without a citation a reader can open.
+   Distinguish supplied resources, the worker's original behavior/state, and later coordinator preservation; only the original behavior/state earns worker-practice credit.
+   Scientific adequacy uses the original delivered bytes and is reported separately from tracking and other STAMPED properties.
 2. **`not-checked` is not `unmet`.** A tool that is missing, a check too expensive to run, or data you cannot access gives `not-checked` with the reason and what would settle it.
 3. **Equivalent evidence counts.** The checklist items are properties, not tools.
-   A tracked `Makefile`, `Snakefile` or CI workflow can satisfy an item that `datalad run` would also satisfy; say which mechanism you found.
-4. **Commit before execute.** Every execution starts from a committed state and leaves a re-executable record.
-   Never commit while a run is in flight — that has silently lost results before (see [`references/stacks/datalad.md`](references/stacks/datalad.md)).
+   Apply the explicit interpretations in [`references/verdicts.md`](references/verdicts.md), rule 7; preserve the pinned checklist text and cite the mechanism actually found.
+4. **Record what produced the result.** Judge whether code, inputs, environment and actions are identifiable from the original records; a prescribed tool or commit-before-execution sequence is not itself the property.
+   When using DataLad, never commit while a run is in flight (see [`references/stacks/datalad.md`](references/stacks/datalad.md)).
 5. **Measurements are immutable.** Narrative can be corrected; numbers are not edited in place.
    A change of method produces a new dated derivative, not an overwrite.
 6. **Ask, don't guess, about goals and kind.** Review the project's goals from its documentation and the user's answers, and settle its kind before judging it ([`references/project-kinds.md`](references/project-kinds.md)).
