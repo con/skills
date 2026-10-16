@@ -19,11 +19,20 @@
     "object": {
       "type": "object", "required": ["commit", "captured_at", "kind"],
       "properties": {
-        "commit": {"type": "string", "pattern": "^[0-9a-f]{40}([0-9a-f]{24})?$"},
+        "commit": {"type": ["string", "null"], "pattern": "^[0-9a-f]{40}([0-9a-f]{24})?$"},
+        "capture": {
+          "type": "object", "required": ["uri", "sha256"],
+          "properties": {
+            "uri": {"type": "string", "minLength": 1},
+            "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+          }
+        },
         "captured_at": {"type": "string", "format": "date-time"},
         "kind": {"enum": ["dataset", "component", "study", "skill"]},
         "url": {"type": ["string", "null"]}
-      }
+      },
+      "if": {"properties": {"commit": {"type": "null"}}, "required": ["commit"]},
+      "then": {"required": ["capture"]}
     },
     "assessor": {
       "type": "object", "required": ["skill", "version", "harness", "model", "date", "dependencies"],

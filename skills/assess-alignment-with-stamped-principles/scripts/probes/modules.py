@@ -64,6 +64,9 @@ def subdatasets_resolvable(obj: Object, check_remote: bool = False) -> Probe:
             "subdatasets-resolvable", "not-checked", items,
             "No submodules or subdatasets: whether external inputs are linked at all needs a reading of the object.",
             [], {"submodules": []},
+            item_reason={"stamped-checklist:may/001":
+                         "Inspect independently maintained project components; ordinary runtime/package "
+                         "dependencies are environment evidence. No components makes this item N/A."},
         )
 
     bad: list[dict] = []

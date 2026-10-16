@@ -14,7 +14,7 @@ items      list the pinned items (id, level, principle codes, text)
 set        answer one item in a response JSON, in place (what every run was
            otherwise writing a merge script for)
 table      the per-item markdown table response-format.md section 4 asks for
-stamp      fill the fields no script can know: harness, model, scope, kind
+stamp      fill harness, model, scope and kind; optionally hash a retained capture
 validate   check a response JSON against the pin and the app's constraints
 encode     response JSON -> checklist-app URL
 decode     checklist-app URL -> response JSON (how a filled web form becomes
@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import hashlib
 import json
 import pathlib
 import sys
@@ -210,13 +211,22 @@ def set_answer(response: dict, cl: Checklist, item_id: str, status: str, reason:
 
 def stamp(response: dict, harness: str | None = None, model: str | None = None,
           scope: str | None = None, kind: str | None = None,
-          dependency: list[str] | None = None) -> dict:
+          dependency: list[str] | None = None, capture: pathlib.Path | None = None) -> dict:
     """Fill the stamp fields a probe sweep cannot know.
 
     Four runs patched these in with their own Python snippet, because `set`
     only writes answers. Which harness and which model is reading the skill is
     exactly what the skill cannot work out for itself.
     """
+    if capture is not None:
+        capture = capture.resolve()
+        digest = hashlib.sha256()
+        with capture.open("rb") as stream:
+            for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+                digest.update(chunk)
+        response.setdefault("object", {})["capture"] = {
+            "uri": str(capture), "sha256": digest.hexdigest(),
+        }
     assessor = response.setdefault("assessor", {})
     if harness:
         assessor["harness"] = harness
@@ -355,7 +365,7 @@ def main(argv: list[str] | None = None) -> int:
                        help="clear the evidence already on this item (by default it is kept "
                             "when --evidence is not given)")
 
-    p_stamp = sub.add_parser("stamp", help="fill harness, model, scope and kind")
+    p_stamp = sub.add_parser("stamp", help="fill harness, model, scope, kind and capture identity")
     p_stamp.add_argument("response", type=pathlib.Path)
     p_stamp.add_argument("--harness", help='e.g. "claude-code (subagent)"')
     p_stamp.add_argument("--model")
@@ -363,6 +373,8 @@ def main(argv: list[str] | None = None) -> int:
     p_stamp.add_argument("--kind", choices=["dataset", "component", "study", "skill"], help="the object's kind (see references/project-kinds.md)")
     p_stamp.add_argument("--dependency", action="append",
                          help='e.g. "stamped-conventions@0.1.0"; repeatable')
+    p_stamp.add_argument("--capture", type=pathlib.Path,
+                         help="hash a retained delivery manifest/archive; preserve any recorded Git commit")
 
     p_table = sub.add_parser("table", help="print the per-item markdown table")
     p_table.add_argument("response", type=pathlib.Path)
@@ -421,7 +433,12 @@ def main(argv: list[str] | None = None) -> int:
         return 0 if not remaining else 1
 
     if args.cmd == "stamp":
-        stamp(response, args.harness, args.model, args.scope, args.kind, args.dependency)
+        try:
+            stamp(response, args.harness, args.model, args.scope, args.kind, args.dependency,
+                  args.capture)
+        except OSError as exc:
+            print(f"error: could not read capture: {exc}", file=sys.stderr)
+            return 2
         args.response.write_text(json.dumps(response, indent=2) + "\n")
         print(f"stamped {args.response}")
         return 0

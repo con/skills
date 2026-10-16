@@ -11,6 +11,8 @@ Writes the per-probe results, and optionally a response JSON (the format in
 ``../stamped-conventions/references/response-format.md``) in which every item a
 probe speaks to carries that probe's verdict and every other item is left
 ``not-checked`` for the assessing session to judge.
+Without a Git commit, ``-o`` retains a limitation receipt and exit code 2;
+no response draft is produced.
 
 The probes never modify the object.  Nothing here replaces the judgement items:
 a response straight out of this script is a draft, not an assessment.
@@ -255,11 +257,20 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: {root} is not a directory", file=sys.stderr)
         return 2
     obj = Object(root)
+    limitation = None
     if not obj.is_git:
-        print(f"error: {root} is not a git repository; STAMPED assessment needs committed state", file=sys.stderr)
-        return 2
-    if subprocess.run(["git", "rev-parse", "HEAD"], cwd=str(root), capture_output=True).returncode != 0:
-        print(f"error: {root} has no commits", file=sys.stderr)
+        limitation = "The object has no Git repository at its root; inspect the delivered evidence directly."
+    elif subprocess.run(["git", "rev-parse", "--verify", "HEAD^{commit}"],
+                        cwd=str(root), capture_output=True).returncode != 0:
+        limitation = "The object's Git repository has no readable commit; inspect the delivered evidence directly."
+    if limitation:
+        payload = {
+            "object": {"path": str(root), "commit": None, "is_datalad": obj.is_datalad},
+            "status": "not-checked", "reason": limitation, "probes": [],
+        }
+        if args.output:
+            args.output.write_text(json.dumps(payload, indent=2) + "\n")
+        print(f"error: {root}: {limitation}", file=sys.stderr)
         return 2
 
     names = [n for n in (args.only or sorted(REGISTRY)) if n not in args.skip]

@@ -7,7 +7,7 @@ This probe tests re-creation in a fresh clone. Running it on the original host
 does not establish portability to another host; the report records the host.
 
     fresh_rerun.py --url <published url> [--entry 'make all'] [--in-container IMAGE]
-                   [--outputs 'results/*.tsv' 'figures/*.png'] [--rtol 1e-6]
+                   --outputs 'results/*.tsv' 'figures/*.png' [--rtol 1e-6]
                    [--workdir DIR] [-o fresh-rerun.json]
 
 It never touches the original object: everything happens in a temporary clone
@@ -43,10 +43,12 @@ import hashlib
 import json
 import math
 import pathlib
+import re
 import shutil
 import subprocess
 import sys
 import tempfile
+from urllib.parse import urlsplit
 
 ITEMS = [
     "stamped-checklist:must/007",
@@ -57,6 +59,66 @@ ITEMS = [
     "stamped-checklist:should/006",
 ]
 TABLE_SUFFIXES = (".tsv", ".csv", ".txt")
+
+
+def _local_annex_routes(source: pathlib.Path, clone: pathlib.Path) -> dict:
+    """Carry explicit local-source transports into the disposable clone.
+
+    Ordinary Git remote configuration is not cloned. Copy only the three
+    non-secret route fields needed by annex, never credentials, Git includes,
+    commands or arbitrary configuration. This is host-assisted access, not a
+    test of discoverability from published Git trees or another host.
+    """
+    record = {"source": str(source.resolve()), "host_scope": "same-host",
+              "route_origin": "local-source-git-config", "routes": []}
+    proc = subprocess.run(
+        ["git", "--no-optional-locks", "-C", str(source), "config", "--local",
+         "--null", "--get-regexp", r"^remote\..*\.(url|annexurl|annex-uuid)$"],
+        capture_output=True, text=True)
+    if proc.returncode not in (0, 1):
+        raise ValueError("Could not read the local source's annex transport configuration")
+    remotes = {}
+    for entry in filter(None, proc.stdout.split("\0")):
+        key, separator, value = entry.partition("\n")
+        match = re.fullmatch(r"remote\.(.+)\.(url|annexurl|annex-uuid)", key)
+        if not separator or not match:
+            raise ValueError("Invalid local source transport record")
+        fields = remotes.setdefault(match[1], {})
+        if match[2] in fields:
+            raise ValueError("Ambiguous local source transport configuration")
+        fields[match[2]] = value
+    for name, fields in sorted(remotes.items()):
+        if "annexurl" not in fields:
+            continue
+        if (set(fields) != {"url", "annexurl", "annex-uuid"} or
+                not re.fullmatch(r"[0-9a-fA-F-]{36}", fields["annex-uuid"])):
+            raise ValueError("Incomplete local source annex transport configuration")
+        # Reject embedded authentication and command transports without writing
+        # the rejected value to stdout or the retained report.
+        for key in ("url", "annexurl"):
+            value = fields[key]
+            if any(ord(char) < 32 for char in value):
+                raise ValueError("Unsupported local source transport address")
+            if pathlib.Path(value).is_absolute():
+                continue
+            parsed = urlsplit(value.removeprefix("annex+"))
+            if (parsed.scheme not in {"http", "https", "ssh", "file"} or
+                    parsed.password or parsed.query or parsed.fragment or
+                    (parsed.username and parsed.scheme != "ssh")):
+                raise ValueError("Unsupported or credential-bearing local source transport address")
+        destination = "replay-source-route-" + str(len(record["routes"]) + 1)
+        existing = subprocess.run(["git", "remote", "get-url", destination], cwd=clone,
+                                  capture_output=True)
+        if existing.returncode == 0:
+            raise ValueError("Replay transport name already exists")
+        for key, value in fields.items():
+            code, _ = _run(["git", "config", "--local",
+                            f"remote.{destination}.{key}", value], cwd=clone)
+            if code:
+                raise ValueError("Could not configure the disposable replay transport")
+        record["routes"].append({"source_remote": name, "replay_remote": destination,
+                                  **fields})
+    return record
 
 
 def _annexed_bytes_missing(clone: pathlib.Path) -> int:
@@ -89,7 +151,19 @@ def _sha256(path: pathlib.Path) -> str | None:
     try:
         if path.is_symlink() and not path.exists():
             return None  # annexed content not present
-        return hashlib.sha256(path.read_bytes()).hexdigest()
+        content = path.read_bytes()
+        # An unavailable unlocked annex object is a regular pointer file, not
+        # the shipped payload. Use annex's index-aware content query rather
+        # than mistaking arbitrary pointer-looking ordinary text for annex.
+        if len(content) <= 32768 and (content.startswith(b"/annex/objects/") or
+                                     b".git/annex/objects/" in content.split(b"\n", 1)[0]):
+            missing = subprocess.run(
+                ["git", "annex", "find", "--not", "--in", "here",
+                 "--format=${file}", "--", path.name],
+                cwd=path.parent, capture_output=True, text=True)
+            if missing.returncode == 0 and missing.stdout:
+                return None
+        return hashlib.sha256(content).hexdigest()
     except OSError:
         return None
 
@@ -162,8 +236,8 @@ def main(argv: list[str] | None = None) -> int:
     source.add_argument("--url", help="published location to clone from (what D.1 promises)")
     source.add_argument("--path", help="local path to clone from (indicative only: does not test D.1)")
     ap.add_argument("--entry", help="command to run (default: datalad rerun, else make)")
-    ap.add_argument("--outputs", nargs="+", default=["**/*.tsv", "**/*.csv", "**/*.png", "**/*.pdf"],
-                    help="glob(s) naming the outputs to compare")
+    ap.add_argument("--outputs", nargs="+", required=True,
+                    help="explicit generated-output glob(s) to compare; selected files are removed before replay")
     ap.add_argument("--in-container", dest="container", help="apptainer/singularity image to run --entry inside")
     ap.add_argument("--rtol", type=float, default=1e-6, help="relative tolerance for tables")
     ap.add_argument("--workdir", type=pathlib.Path, help="keep the clone here instead of a temp dir")
@@ -177,6 +251,8 @@ def main(argv: list[str] | None = None) -> int:
                          "a module of a container registry can be hundreds of GB")
     ap.add_argument("-o", "--output", type=pathlib.Path)
     args = ap.parse_args(argv)
+    if any(not pattern.strip() for pattern in args.outputs):
+        ap.error("--outputs requires nonempty generated-output selections")
     if not math.isfinite(args.rtol) or args.rtol < 0:
         ap.error("--rtol must be finite and nonnegative")
 
@@ -203,6 +279,13 @@ def main(argv: list[str] | None = None) -> int:
     if code != 0:
         report.update(status="unmet", reason=f"clone from {args.url or args.path} failed: nothing to reproduce.")
         return _finish(report, args)
+
+    if args.path:
+        try:
+            report["local_source_transports"] = _local_annex_routes(pathlib.Path(args.path), clone)
+        except ValueError as error:
+            report.update(status="not-checked", reason=str(error))
+            return _finish(report, args)
 
     get_failed = False
     if shutil.which("datalad"):
