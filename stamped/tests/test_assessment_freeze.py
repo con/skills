@@ -109,6 +109,7 @@ def test_preserved_outputs_are_not_proof_of_execution(tmp_path, monkeypatch):
         return 0, ""
 
     monkeypatch.setattr(rerun, "_run", fake_run)
+    monkeypatch.setattr(rerun, "_local_annex_routes", lambda source, clone: {"routes": []})
     monkeypatch.setattr(rerun.shutil, "which", lambda executable: None)
     report = tmp_path / "report.json"
     rerun.main(["--path", "fixture", "--entry", "true", "--keep-outputs", "--workdir", str(tmp_path / "run"), "-o", str(report)])

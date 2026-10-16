@@ -1,0 +1,110 @@
+{
+  "source_unchanged": true,
+  "source_before": {
+    "/tmp/stamped-replay-comparator-review/native-clean/target": {
+      "head": "4b56f4b9a3643d2a79f23d2921f377d3eb70caf6",
+      "status": "M results/unlocked.tsv",
+      "config": "a94d84b3827d459d6a209f25f58914297d5d56582d2ba4873182f2c5ea5f9262",
+      "files": {
+        "input.tsv": null,
+        "results/locked.tsv": null,
+        "results/unlocked.tsv": "64c3e86a53527c5adf3cffafef3a25abcbe4f1c01cfaf719b743f441d3a5e9f8"
+      }
+    },
+    "/tmp/stamped-replay-comparator-review/native-clean/absent": {
+      "head": "4b56f4b9a3643d2a79f23d2921f377d3eb70caf6",
+      "status": "",
+      "config": "3c91203bde9f99e278cf38652078cea582755c9a6794def1fce545a2f4f0f212",
+      "files": {
+        "input.tsv": null,
+        "results/locked.tsv": null,
+        "results/unlocked.tsv": "0f8969518c631ae5a390574359ee10f23df6e5fa933efe9f643d15c5a0387b41"
+      }
+    }
+  },
+  "source_after": {
+    "/tmp/stamped-replay-comparator-review/native-clean/target": {
+      "head": "4b56f4b9a3643d2a79f23d2921f377d3eb70caf6",
+      "status": "M results/unlocked.tsv",
+      "config": "a94d84b3827d459d6a209f25f58914297d5d56582d2ba4873182f2c5ea5f9262",
+      "files": {
+        "input.tsv": null,
+        "results/locked.tsv": null,
+        "results/unlocked.tsv": "64c3e86a53527c5adf3cffafef3a25abcbe4f1c01cfaf719b743f441d3a5e9f8"
+      }
+    },
+    "/tmp/stamped-replay-comparator-review/native-clean/absent": {
+      "head": "4b56f4b9a3643d2a79f23d2921f377d3eb70caf6",
+      "status": "",
+      "config": "3c91203bde9f99e278cf38652078cea582755c9a6794def1fce545a2f4f0f212",
+      "files": {
+        "input.tsv": null,
+        "results/locked.tsv": null,
+        "results/unlocked.tsv": "0f8969518c631ae5a390574359ee10f23df6e5fa933efe9f643d15c5a0387b41"
+      }
+    }
+  },
+  "reports": {
+    "available-mixed": {
+      "status": "met",
+      "entry_executed": true,
+      "outputs_shipped": {
+        "results/locked.tsv": "741f573250a1a1fe3f8bbb5d17a72575d99c644d589be02a29dd6e31c6578d80",
+        "results/unlocked.tsv": "64c3e86a53527c5adf3cffafef3a25abcbe4f1c01cfaf719b743f441d3a5e9f8"
+      },
+      "unavailable_comparators": null,
+      "comparison": {
+        "identical": [
+          "results/locked.tsv",
+          "results/unlocked.tsv"
+        ],
+        "within_tolerance": [],
+        "differing": [],
+        "missing_after_rerun": []
+      }
+    },
+    "available-unlocked": {
+      "status": "met",
+      "entry_executed": true,
+      "outputs_shipped": {
+        "results/unlocked.tsv": "64c3e86a53527c5adf3cffafef3a25abcbe4f1c01cfaf719b743f441d3a5e9f8"
+      },
+      "unavailable_comparators": null,
+      "comparison": {
+        "identical": [
+          "results/unlocked.tsv"
+        ],
+        "within_tolerance": [],
+        "differing": [],
+        "missing_after_rerun": []
+      }
+    },
+    "absent-unlocked": {
+      "status": "not-checked",
+      "entry_executed": false,
+      "outputs_shipped": {
+        "results/unlocked.tsv": null
+      },
+      "unavailable_comparators": [
+        "results/unlocked.tsv"
+      ],
+      "comparison": null
+    },
+    "ordinary": {
+      "status": "met",
+      "entry_executed": true,
+      "outputs_shipped": {
+        "results/plain.tsv": "4dfffe26dd98b62cb5d400513c581bbb25d31a660b48fa42d220d8c2bd13c044"
+      },
+      "unavailable_comparators": null,
+      "comparison": {
+        "identical": [
+          "results/plain.tsv"
+        ],
+        "within_tolerance": [],
+        "differing": [],
+        "missing_after_rerun": []
+      }
+    }
+  }
+}

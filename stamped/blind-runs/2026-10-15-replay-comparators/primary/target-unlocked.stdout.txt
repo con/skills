@@ -1,0 +1,2 @@
+met: All 1 compared output(s) reproduced from a fresh clone via `sh analysis.sh`.
+wrote /tmp/stamped-replay-comparator-review/primary/target-unlocked.json

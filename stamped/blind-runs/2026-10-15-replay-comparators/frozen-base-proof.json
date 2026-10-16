@@ -1,0 +1,11 @@
+{
+  "base": "0208f82504f15b82b7582f34143ab889dd52c68d",
+  "candidate": "24564e88d832fc1c8c0911d92f1b943c86ad9b3c",
+  "changed_files": [
+    "skills/assess-alignment-with-stamped-principles/scripts/fresh_rerun.py"
+  ],
+  "helper_sha256": "0705dfb955ca2ed8418e20714d044b3bb11e5f5b4be2542f4018ec2d56e911df",
+  "patch_applies_to_frozen_base": true,
+  "patched_blob_matches_candidate": true,
+  "other_index_files_unchanged": true
+}

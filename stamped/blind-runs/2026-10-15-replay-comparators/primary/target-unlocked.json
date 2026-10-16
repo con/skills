@@ -1,0 +1,84 @@
+{
+  "probe": "fresh-rerun",
+  "items": [
+    "stamped-checklist:must/007",
+    "stamped-checklist:must/008",
+    "stamped-checklist:must/015",
+    "stamped-checklist:must/017",
+    "stamped-checklist:should/004",
+    "stamped-checklist:should/006"
+  ],
+  "source": "/tmp/stamped-replay-route-review/native/target",
+  "started_at": "2026-10-16T02:48:04+00:00",
+  "host": {
+    "uname": "Darwin vpn-two-factor-general-229-133-11.dartmouth.edu 27.0.0 Darwin Kernel Version",
+    "datalad": true,
+    "container_runtime": null
+  },
+  "steps": [
+    {
+      "step": "datalad clone",
+      "returncode": 0,
+      "log": "install(ok): /tmp/stamped-replay-comparator-review/primary/target-unlocked/clone (dataset)\n[INFO] Attempting a clone into /tmp/stamped-replay-comparator-review/primary/target-unlocked/clone \n[INFO] Attempting to clone from /tmp/stamped-replay-route-review/native/target to /tmp/stamped-replay-comparator-review/primary/target-unlocked/clone \n[INFO] Completed clone attempts for Dataset(/tmp/stamped-replay-comparator-review/primary/target-unlocked/clone) \n"
+    },
+    {
+      "step": "datalad get -n -r .",
+      "returncode": 0,
+      "log": "[INFO] Ensuring presence of Dataset(/private/tmp/stamped-replay-comparator-review/primary/target-unlocked/clone) to get /private/tmp/stamped-replay-comparator-review/primary/target-unlocked/clone \n"
+    },
+    {
+      "step": "datalad get -r . (0.0 GiB)",
+      "returncode": 0,
+      "log": "get(ok): results/locked.tsv (file) [from replay-source-route-1...]\nget(ok): input.tsv (file) [from replay-source-route-1...]\nget(ok): results/unlocked.tsv (file) [from origin...]\naction summary:\n  get (ok: 3)\n[INFO] Ensuring presence of Dataset(/private/tmp/stamped-replay-comparator-review/primary/target-unlocked/clone) to get /private/tmp/stamped-replay-comparator-review/primary/target-unlocked/clone \n"
+    },
+    {
+      "step": "fetched 1 output candidate(s) for comparison",
+      "returncode": 0,
+      "log": ""
+    },
+    {
+      "step": "removed 1 shipped output(s) before the rerun",
+      "returncode": 0,
+      "log": "results/unlocked.tsv"
+    },
+    {
+      "step": "committed output removal",
+      "returncode": 0,
+      "log": ""
+    },
+    {
+      "step": "entry: sh analysis.sh",
+      "returncode": 0,
+      "log": "analysis.sh: line 2: results/locked.tsv: Permission denied\nanalysis.sh: line 3: results/locked.tsv: Permission denied\n"
+    }
+  ],
+  "local_source_transports": {
+    "source": "/private/tmp/stamped-replay-route-review/native/target",
+    "host_scope": "same-host",
+    "route_origin": "local-source-git-config",
+    "routes": [
+      {
+        "source_remote": "storage",
+        "replay_remote": "replay-source-route-1",
+        "url": "/tmp/stamped-replay-route-review/native/store.git",
+        "annexurl": "/tmp/stamped-replay-route-review/native/store.git",
+        "annex-uuid": "d04b5dcc-cc46-4d19-aaa1-84621274a84e"
+      }
+    ]
+  },
+  "content_to_fetch_bytes": 59,
+  "outputs_shipped": {
+    "results/unlocked.tsv": "64c3e86a53527c5adf3cffafef3a25abcbe4f1c01cfaf719b743f441d3a5e9f8"
+  },
+  "comparison": {
+    "identical": [
+      "results/unlocked.tsv"
+    ],
+    "within_tolerance": [],
+    "differing": [],
+    "missing_after_rerun": []
+  },
+  "status": "met",
+  "reason": "All 1 compared output(s) reproduced from a fresh clone via `sh analysis.sh`.",
+  "finished_at": "2026-10-16T02:48:07+00:00"
+}

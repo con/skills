@@ -1,0 +1,23 @@
+detected  abs-path-in-script         must/009=unmet
+detected  container-latest           must/015=unmet
+detected  derived-without-record     must/006=partial
+detected  host-mount-path-in-script  must/009=unmet
+detected  host-tool-precondition     must/010=unmet
+detected  large-binary-in-git        must/005=unmet
+detected  large-text-in-git          must/005=met | clone-weight=partial
+detected  outputs-into-inputs        must/004=unmet, should/003=unmet
+detected  outputs-into-inputs-pointer-updated should/003=unmet, must/002=unmet
+detected  outputs-under-inputs       should/003=unmet
+detected  readme-platform-specific-steps must/011=partial
+detected  readme-reproduce-removed   must/007=partial
+detected  readme-wrong-make-target   must/007=partial
+detected  record-container-floating  must/015=unmet
+detected  record-env-stripped        must/006=partial
+detected  relative-subdataset-url    must/002=unmet
+detected  remote-removed             must/016=unmet
+detected  untracked-figure           must/004=unmet
+
+mutants detected: 18/18
+false unmet/partial on the clean object: 0/14 answered items (1 are declared simulations included in that count)
+coverage: 17 items; 3 left not-checked
+  (expected) stamped-checklist:must/016 = partial: the object's own remote is not published

@@ -1,0 +1,119 @@
+diff --git a/skills/assess-alignment-with-stamped-principles/scripts/fresh_rerun.py b/skills/assess-alignment-with-stamped-principles/scripts/fresh_rerun.py
+index a0f7955..5ba8c8a 100644
+--- a/skills/assess-alignment-with-stamped-principles/scripts/fresh_rerun.py
++++ b/skills/assess-alignment-with-stamped-principles/scripts/fresh_rerun.py
+@@ -43,10 +43,12 @@ import hashlib
+ import json
+ import math
+ import pathlib
++import re
+ import shutil
+ import subprocess
+ import sys
+ import tempfile
++from urllib.parse import urlsplit
+ 
+ ITEMS = [
+     "stamped-checklist:must/007",
+@@ -59,6 +61,66 @@ ITEMS = [
+ TABLE_SUFFIXES = (".tsv", ".csv", ".txt")
+ 
+ 
++def _local_annex_routes(source: pathlib.Path, clone: pathlib.Path) -> dict:
++    """Carry explicit local-source transports into the disposable clone.
++
++    Ordinary Git remote configuration is not cloned. Copy only the three
++    non-secret route fields needed by annex, never credentials, Git includes,
++    commands or arbitrary configuration. This is host-assisted access, not a
++    test of discoverability from published Git trees or another host.
++    """
++    record = {"source": str(source.resolve()), "host_scope": "same-host",
++              "route_origin": "local-source-git-config", "routes": []}
++    proc = subprocess.run(
++        ["git", "--no-optional-locks", "-C", str(source), "config", "--local",
++         "--null", "--get-regexp", r"^remote\..*\.(url|annexurl|annex-uuid)$"],
++        capture_output=True, text=True)
++    if proc.returncode not in (0, 1):
++        raise ValueError("Could not read the local source's annex transport configuration")
++    remotes = {}
++    for entry in filter(None, proc.stdout.split("\0")):
++        key, separator, value = entry.partition("\n")
++        match = re.fullmatch(r"remote\.(.+)\.(url|annexurl|annex-uuid)", key)
++        if not separator or not match:
++            raise ValueError("Invalid local source transport record")
++        fields = remotes.setdefault(match[1], {})
++        if match[2] in fields:
++            raise ValueError("Ambiguous local source transport configuration")
++        fields[match[2]] = value
++    for name, fields in sorted(remotes.items()):
++        if "annexurl" not in fields:
++            continue
++        if (set(fields) != {"url", "annexurl", "annex-uuid"} or
++                not re.fullmatch(r"[0-9a-fA-F-]{36}", fields["annex-uuid"])):
++            raise ValueError("Incomplete local source annex transport configuration")
++        # Reject embedded authentication and command transports without writing
++        # the rejected value to stdout or the retained report.
++        for key in ("url", "annexurl"):
++            value = fields[key]
++            if any(ord(char) < 32 for char in value):
++                raise ValueError("Unsupported local source transport address")
++            if pathlib.Path(value).is_absolute():
++                continue
++            parsed = urlsplit(value.removeprefix("annex+"))
++            if (parsed.scheme not in {"http", "https", "ssh", "file"} or
++                    parsed.password or parsed.query or parsed.fragment or
++                    (parsed.username and parsed.scheme != "ssh")):
++                raise ValueError("Unsupported or credential-bearing local source transport address")
++        destination = "replay-source-route-" + str(len(record["routes"]) + 1)
++        existing = subprocess.run(["git", "remote", "get-url", destination], cwd=clone,
++                                  capture_output=True)
++        if existing.returncode == 0:
++            raise ValueError("Replay transport name already exists")
++        for key, value in fields.items():
++            code, _ = _run(["git", "config", "--local",
++                            f"remote.{destination}.{key}", value], cwd=clone)
++            if code:
++                raise ValueError("Could not configure the disposable replay transport")
++        record["routes"].append({"source_remote": name, "replay_remote": destination,
++                                  **fields})
++    return record
++
++
+ def _annexed_bytes_missing(clone: pathlib.Path) -> int:
+     """Bytes of annexed content not here yet, this dataset and its modules.
+ 
+@@ -89,7 +151,19 @@ def _sha256(path: pathlib.Path) -> str | None:
+     try:
+         if path.is_symlink() and not path.exists():
+             return None  # annexed content not present
+-        return hashlib.sha256(path.read_bytes()).hexdigest()
++        content = path.read_bytes()
++        # An unavailable unlocked annex object is a regular pointer file, not
++        # the shipped payload. Use annex's index-aware content query rather
++        # than mistaking arbitrary pointer-looking ordinary text for annex.
++        if len(content) <= 32768 and (content.startswith(b"/annex/objects/") or
++                                     b".git/annex/objects/" in content.split(b"\n", 1)[0]):
++            missing = subprocess.run(
++                ["git", "annex", "find", "--not", "--in", "here",
++                 "--format=${file}", "--", path.name],
++                cwd=path.parent, capture_output=True, text=True)
++            if missing.returncode == 0 and missing.stdout:
++                return None
++        return hashlib.sha256(content).hexdigest()
+     except OSError:
+         return None
+ 
+@@ -204,6 +278,13 @@ def main(argv: list[str] | None = None) -> int:
+         report.update(status="unmet", reason=f"clone from {args.url or args.path} failed: nothing to reproduce.")
+         return _finish(report, args)
+ 
++    if args.path:
++        try:
++            report["local_source_transports"] = _local_annex_routes(pathlib.Path(args.path), clone)
++        except ValueError as error:
++            report.update(status="not-checked", reason=str(error))
++            return _finish(report, args)
++
+     get_failed = False
+     if shutil.which("datalad"):
+         # Modules first, without content: a rerun needs the submodules present

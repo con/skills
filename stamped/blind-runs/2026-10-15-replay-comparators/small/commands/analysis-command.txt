@@ -1,0 +1,1 @@
+pixi run --manifest-path /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/pixi.toml -- sh analysis.sh

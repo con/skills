@@ -1,0 +1,1 @@
+{"argv": ["pixi", "run", "--manifest-path", "/Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/pixi.toml", "python", "-m", "pytest", "evals/stamped/tests", "-q", "--run-eval", "--run-eval-analysis", "--out-path", "/tmp/stamped-replay-comparator-review/checks/eval-out"], "exit_code": 0}

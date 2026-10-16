@@ -1,0 +1,71 @@
+{
+  "probe": "fresh-rerun",
+  "items": [
+    "stamped-checklist:must/007",
+    "stamped-checklist:must/008",
+    "stamped-checklist:must/015",
+    "stamped-checklist:must/017",
+    "stamped-checklist:should/004",
+    "stamped-checklist:should/006"
+  ],
+  "source": "/tmp/stamped-replay-comparator-review/native-verified/ordinary-source",
+  "started_at": "2026-10-16T02:51:14+00:00",
+  "host": {
+    "uname": "Darwin vpn-two-factor-general-229-133-11.dartmouth.edu 27.0.0 Darwin Kernel Version",
+    "datalad": true,
+    "container_runtime": null
+  },
+  "steps": [
+    {
+      "step": "datalad clone",
+      "returncode": 0,
+      "log": "install(ok): /tmp/stamped-replay-comparator-review/native-verified/ordinary/clone (dataset)\n[INFO] Attempting a clone into /tmp/stamped-replay-comparator-review/native-verified/ordinary/clone \n[INFO] Attempting to clone from /tmp/stamped-replay-comparator-review/native-verified/ordinary-source to /tmp/stamped-replay-comparator-review/native-verified/ordinary/clone \n[INFO] Completed clone attempts for Dataset(/tmp/stamped-replay-comparator-review/native-verified/ordinary/clone) \n"
+    },
+    {
+      "step": "datalad get -n -r .",
+      "returncode": 0,
+      "log": "[INFO] Ensuring presence of Dataset(/private/tmp/stamped-replay-comparator-review/native-verified/ordinary/clone) to get /private/tmp/stamped-replay-comparator-review/native-verified/ordinary/clone \n"
+    },
+    {
+      "step": "fetched 1 output candidate(s) for comparison",
+      "returncode": 0,
+      "log": ""
+    },
+    {
+      "step": "removed 1 shipped output(s) before the rerun",
+      "returncode": 0,
+      "log": "results/plain.tsv"
+    },
+    {
+      "step": "committed output removal",
+      "returncode": 0,
+      "log": ""
+    },
+    {
+      "step": "entry: sh analysis.sh",
+      "returncode": 0,
+      "log": ""
+    }
+  ],
+  "local_source_transports": {
+    "source": "/private/tmp/stamped-replay-comparator-review/native-verified/ordinary-source",
+    "host_scope": "same-host",
+    "route_origin": "local-source-git-config",
+    "routes": []
+  },
+  "content_to_fetch_bytes": 0,
+  "outputs_shipped": {
+    "results/plain.tsv": "4dfffe26dd98b62cb5d400513c581bbb25d31a660b48fa42d220d8c2bd13c044"
+  },
+  "comparison": {
+    "identical": [
+      "results/plain.tsv"
+    ],
+    "within_tolerance": [],
+    "differing": [],
+    "missing_after_rerun": []
+  },
+  "status": "met",
+  "reason": "All 1 compared output(s) reproduced from a fresh clone via `sh analysis.sh`.",
+  "finished_at": "2026-10-16T02:51:15+00:00"
+}

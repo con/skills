@@ -90,3 +90,34 @@ def test_incomplete_route_is_not_silently_used(repositories):
     git(source, 'config', '--unset', 'remote.storage.annex-uuid')
     with pytest.raises(ValueError, match='Incomplete'):
         replay._local_annex_routes(source, clone)
+
+
+def test_pointer_looking_non_annex_text_remains_content(tmp_path):
+    import hashlib
+    payload = b"/annex/objects/this-is-ordinary-documentation\n"
+    path = tmp_path / "note.txt"
+    path.write_bytes(payload)
+    assert replay._sha256(path) == hashlib.sha256(payload).hexdigest()
+
+
+def test_unavailable_unlocked_pointer_is_not_a_comparator(tmp_path, monkeypatch):
+    path = tmp_path / "output.tsv"
+    path.write_text("/annex/objects/SHA256E-s3--example.tsv\n")
+    calls = []
+    def native_find(command, **kwargs):
+        calls.append(command)
+        return subprocess.CompletedProcess(command, 0, "output.tsv", "")
+    monkeypatch.setattr(replay.subprocess, "run", native_find)
+    assert replay._sha256(path) is None
+    assert calls[0][-2:] == ["--", "output.tsv"]
+
+
+def test_available_unlocked_payload_is_hashed_without_requiring_annex(tmp_path, monkeypatch):
+    import hashlib
+    payload = b"id,value\n1,2\n"
+    path = tmp_path / "output.csv"
+    path.write_bytes(payload)
+    def unexpected(*args, **kwargs):
+        raise AssertionError("Ordinary payload hashing should not need annex")
+    monkeypatch.setattr(replay.subprocess, "run", unexpected)
+    assert replay._sha256(path) == hashlib.sha256(payload).hexdigest()

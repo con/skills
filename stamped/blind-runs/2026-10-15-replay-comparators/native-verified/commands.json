@@ -1,0 +1,234 @@
+[
+  {
+    "argv": [
+      "git",
+      "--no-optional-locks",
+      "rev-parse",
+      "HEAD"
+    ],
+    "cwd": "/tmp/stamped-replay-comparator-review/native-clean/target",
+    "returncode": 0,
+    "stdout": "4b56f4b9a3643d2a79f23d2921f377d3eb70caf6\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "--no-optional-locks",
+      "status",
+      "--porcelain"
+    ],
+    "cwd": "/tmp/stamped-replay-comparator-review/native-clean/target",
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "--no-optional-locks",
+      "rev-parse",
+      "HEAD"
+    ],
+    "cwd": "/tmp/stamped-replay-comparator-review/native-clean/absent",
+    "returncode": 0,
+    "stdout": "4b56f4b9a3643d2a79f23d2921f377d3eb70caf6\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "--no-optional-locks",
+      "status",
+      "--porcelain"
+    ],
+    "cwd": "/tmp/stamped-replay-comparator-review/native-clean/absent",
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "init",
+      "-b",
+      "fixture"
+    ],
+    "cwd": "/tmp/stamped-replay-comparator-review/native-verified/ordinary-source",
+    "returncode": 0,
+    "stdout": "Initialized empty Git repository in /private/tmp/stamped-replay-comparator-review/native-verified/ordinary-source/.git/\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "config",
+      "core.hooksPath",
+      "/dev/null"
+    ],
+    "cwd": "/tmp/stamped-replay-comparator-review/native-verified/ordinary-source",
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "add",
+      "."
+    ],
+    "cwd": "/tmp/stamped-replay-comparator-review/native-verified/ordinary-source",
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/Users/johnlee/.agents/skills/commit-provenance/scripts/resolve.sh"
+    ],
+    "cwd": "/Users/johnlee/code/CON/stamped-ai-research-next",
+    "returncode": 0,
+    "stdout": "Co-Authored-By: Codex Desktop 26.1007.71326 (runtime codex-cli 0.162.0-alpha.17.2) / gpt-6-astra <codex@openai.com>\nCodex-Reasoning-Effort: high\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "commit",
+      "-m",
+      "test(replay): preserve ordinary non-annex output\n\nCo-Authored-By: Codex Desktop 26.1007.71326 (runtime codex-cli 0.162.0-alpha.17.2) / gpt-6-astra <codex@openai.com>\nCodex-Reasoning-Effort: high"
+    ],
+    "cwd": "/tmp/stamped-replay-comparator-review/native-verified/ordinary-source",
+    "returncode": 0,
+    "stdout": "[fixture (root-commit) 2fede0d] test(replay): preserve ordinary non-annex output\n 2 files changed, 4 insertions(+)\n create mode 100644 analysis.sh\n create mode 100644 results/plain.tsv\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/.pixi/envs/default/bin/python",
+      "/tmp/stamped-replay-comparator-review/snapshot/skills/assess-alignment-with-stamped-principles/scripts/fresh_rerun.py",
+      "--path",
+      "/tmp/stamped-replay-comparator-review/native-clean/target",
+      "--entry",
+      "sh analysis.sh",
+      "--outputs",
+      "results/*.tsv",
+      "--workdir",
+      "/tmp/stamped-replay-comparator-review/native-verified/available-mixed",
+      "--output",
+      "/tmp/stamped-replay-comparator-review/native-verified/available-mixed.json"
+    ],
+    "cwd": "/Users/johnlee/code/CON/stamped-ai-research-next",
+    "returncode": 0,
+    "stdout": "met: All 2 compared output(s) reproduced from a fresh clone via `sh analysis.sh`.\nwrote /tmp/stamped-replay-comparator-review/native-verified/available-mixed.json\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/.pixi/envs/default/bin/python",
+      "/tmp/stamped-replay-comparator-review/snapshot/skills/assess-alignment-with-stamped-principles/scripts/fresh_rerun.py",
+      "--path",
+      "/tmp/stamped-replay-comparator-review/native-clean/target",
+      "--entry",
+      "sh analysis.sh",
+      "--outputs",
+      "results/unlocked.tsv",
+      "--workdir",
+      "/tmp/stamped-replay-comparator-review/native-verified/available-unlocked",
+      "--output",
+      "/tmp/stamped-replay-comparator-review/native-verified/available-unlocked.json"
+    ],
+    "cwd": "/Users/johnlee/code/CON/stamped-ai-research-next",
+    "returncode": 0,
+    "stdout": "met: All 1 compared output(s) reproduced from a fresh clone via `sh analysis.sh`.\nwrote /tmp/stamped-replay-comparator-review/native-verified/available-unlocked.json\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/.pixi/envs/default/bin/python",
+      "/tmp/stamped-replay-comparator-review/snapshot/skills/assess-alignment-with-stamped-principles/scripts/fresh_rerun.py",
+      "--path",
+      "/tmp/stamped-replay-comparator-review/native-clean/absent",
+      "--entry",
+      "sh analysis.sh",
+      "--outputs",
+      "results/unlocked.tsv",
+      "--workdir",
+      "/tmp/stamped-replay-comparator-review/native-verified/absent-unlocked",
+      "--output",
+      "/tmp/stamped-replay-comparator-review/native-verified/absent-unlocked.json"
+    ],
+    "cwd": "/Users/johnlee/code/CON/stamped-ai-research-next",
+    "returncode": 0,
+    "stdout": "not-checked: Published output content was unavailable; no valid baseline exists for comparison.\nwrote /tmp/stamped-replay-comparator-review/native-verified/absent-unlocked.json\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/.pixi/envs/default/bin/python",
+      "/tmp/stamped-replay-comparator-review/snapshot/skills/assess-alignment-with-stamped-principles/scripts/fresh_rerun.py",
+      "--path",
+      "/tmp/stamped-replay-comparator-review/native-verified/ordinary-source",
+      "--entry",
+      "sh analysis.sh",
+      "--outputs",
+      "results/*.tsv",
+      "--workdir",
+      "/tmp/stamped-replay-comparator-review/native-verified/ordinary",
+      "--output",
+      "/tmp/stamped-replay-comparator-review/native-verified/ordinary.json"
+    ],
+    "cwd": "/Users/johnlee/code/CON/stamped-ai-research-next",
+    "returncode": 0,
+    "stdout": "met: All 1 compared output(s) reproduced from a fresh clone via `sh analysis.sh`.\nwrote /tmp/stamped-replay-comparator-review/native-verified/ordinary.json\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "--no-optional-locks",
+      "rev-parse",
+      "HEAD"
+    ],
+    "cwd": "/tmp/stamped-replay-comparator-review/native-clean/target",
+    "returncode": 0,
+    "stdout": "4b56f4b9a3643d2a79f23d2921f377d3eb70caf6\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "--no-optional-locks",
+      "status",
+      "--porcelain"
+    ],
+    "cwd": "/tmp/stamped-replay-comparator-review/native-clean/target",
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "--no-optional-locks",
+      "rev-parse",
+      "HEAD"
+    ],
+    "cwd": "/tmp/stamped-replay-comparator-review/native-clean/absent",
+    "returncode": 0,
+    "stdout": "4b56f4b9a3643d2a79f23d2921f377d3eb70caf6\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "--no-optional-locks",
+      "status",
+      "--porcelain"
+    ],
+    "cwd": "/tmp/stamped-replay-comparator-review/native-clean/absent",
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+]

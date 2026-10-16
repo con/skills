@@ -1,0 +1,56 @@
+{
+  "probe": "fresh-rerun",
+  "items": [
+    "stamped-checklist:must/007",
+    "stamped-checklist:must/008",
+    "stamped-checklist:must/015",
+    "stamped-checklist:must/017",
+    "stamped-checklist:should/004",
+    "stamped-checklist:should/006"
+  ],
+  "source": "/tmp/stamped-replay-route-review/native/absent",
+  "started_at": "2026-10-16T02:48:07+00:00",
+  "host": {
+    "uname": "Darwin vpn-two-factor-general-229-133-11.dartmouth.edu 27.0.0 Darwin Kernel Version",
+    "datalad": true,
+    "container_runtime": null
+  },
+  "steps": [
+    {
+      "step": "datalad clone",
+      "returncode": 0,
+      "log": "install(ok): /tmp/stamped-replay-comparator-review/native/absent-unlocked/clone (dataset)\n[INFO] Attempting a clone into /tmp/stamped-replay-comparator-review/native/absent-unlocked/clone \n[INFO] Attempting to clone from /tmp/stamped-replay-route-review/native/absent to /tmp/stamped-replay-comparator-review/native/absent-unlocked/clone \n[INFO] Completed clone attempts for Dataset(/tmp/stamped-replay-comparator-review/native/absent-unlocked/clone) \n"
+    },
+    {
+      "step": "datalad get -n -r .",
+      "returncode": 0,
+      "log": "[INFO] Ensuring presence of Dataset(/private/tmp/stamped-replay-comparator-review/native/absent-unlocked/clone) to get /private/tmp/stamped-replay-comparator-review/native/absent-unlocked/clone \n"
+    },
+    {
+      "step": "datalad get -r . (0.0 GiB)",
+      "returncode": 1,
+      "log": "get(error): input.tsv (file) [not available]\nget(error): results/unlocked.tsv (file) [not available]\nget(error): results/locked.tsv (file) [not available]\naction summary:\n  get (error: 3)\n[INFO] Ensuring presence of Dataset(/private/tmp/stamped-replay-comparator-review/native/absent-unlocked/clone) to get /private/tmp/stamped-replay-comparator-review/native/absent-unlocked/clone \n"
+    },
+    {
+      "step": "fetched 1 output candidate(s) for comparison",
+      "returncode": 1,
+      "log": "get(error): results/unlocked.tsv (file) [not available]\n"
+    }
+  ],
+  "local_source_transports": {
+    "source": "/private/tmp/stamped-replay-route-review/native/absent",
+    "host_scope": "same-host",
+    "route_origin": "local-source-git-config",
+    "routes": []
+  },
+  "content_to_fetch_bytes": 59,
+  "outputs_shipped": {
+    "results/unlocked.tsv": null
+  },
+  "status": "not-checked",
+  "unavailable_comparators": [
+    "results/unlocked.tsv"
+  ],
+  "reason": "Published output content was unavailable; no valid baseline exists for comparison.",
+  "finished_at": "2026-10-16T02:48:08+00:00"
+}

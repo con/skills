@@ -1,0 +1,11 @@
+Target entry (first invocation included an extra positional argument):
+pixi run --manifest-path /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/pixi.toml -- sh analysis.sh results/unlocked.tsv
+
+Target entry (recorded invocation):
+pixi run --manifest-path /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/pixi.toml -- sh analysis.sh
+
+Absent entry:
+pixi run --manifest-path /Users/johnlee/.codex/worktrees/harmonize-stamped-pr26/stamped-ai-research-next/pixi.toml -- sh analysis.sh
+
+Target result check after the entry:
+for f in results/*.tsv; do printf '\n--- %s ---\n' "$f"; cat "$f"; done
