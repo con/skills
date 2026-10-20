@@ -8,7 +8,7 @@ user-invocable: true
 # Fix git-annex and DataLad Worktree Path Errors
 
 When git-annex fails directly or through DataLad in a linked worktree, it may be resolving a relative `core.worktree` from the wrong directory.
-The trick is to give the failing Annex command absolute `GIT_DIR` and `GIT_WORK_TREE` paths derived by Git.
+The workaround is to give the failing Annex command absolute `GIT_DIR` and `GIT_WORK_TREE` paths derived by Git. It is needed only until your git-annex includes the upstream fix (<link to the git-annex issue>).
 
 Set `repo` to the affected worktree or subdataset, then check whether Git finds it while Annex reports the wrong path:
 
@@ -41,4 +41,4 @@ For a DataLad failure, apply the override to the failing underlying Annex operat
 Do not pass one dataset's Git paths to a recursive DataLad command that visits other datasets.
 Keep the override local; do not export it for the surrounding shell or rewrite `core.worktree` or Git metadata.
 
-Verify the result with the smallest appropriate check, such as `git annex find`, `git annex whereis`, or the original workflow, applying the same override if needed.
+Verify by rerunning the original failing command under the same override (for example `git annex find` or `git annex whereis`) and confirming it now succeeds.
