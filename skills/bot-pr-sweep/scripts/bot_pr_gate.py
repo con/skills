@@ -7,15 +7,17 @@ Two checks, both pure functions over JSON that the GitHub MCP tools return:
   account ID and the login together. The login alone is a name a sender can
   claim; the ID is what GitHub assigns to the account.
 * ``checks``  -- is the head commit green? Every check run must have finished
-  with success, skipped or neutral, and every commit status must be success.
+  with success, skipped or neutral, every commit status must be success, and
+  the check list must be complete. The gate fails closed: missing, empty or
+  truncated input is never reported as GREEN.
 
 Usage::
 
     bot_pr_gate.py author PR.json
     bot_pr_gate.py checks CHECK_RUNS.json COMMIT_STATUS.json
 
-Exit status is 0 when the check passes and 1 otherwise, so the script can gate
-a shell pipeline. The JSON files are the raw outputs of
+Exit status is 0 only for TRUSTED or GREEN, and 1 otherwise, so the script can
+gate a shell pipeline. The JSON files are the raw outputs of
 ``pull_request_read`` (``get``, ``get_check_runs``, ``get_status``).
 """
 
@@ -37,13 +39,17 @@ TRUSTED_BOTS = {
 PASSING_CHECK_CONCLUSIONS = {"success", "skipped", "neutral"}
 
 
-def check_author(pr: dict) -> tuple[bool, str]:
+def _as_dict(value: object) -> dict:
+    return value if isinstance(value, dict) else {}
+
+
+def check_author(pr: object) -> tuple[bool, str]:
     """Return (trusted, reason) for the PR's author."""
-    user = pr.get("user") or {}
+    user = _as_dict(_as_dict(pr).get("user"))
     user_id = user.get("id")
     login = user.get("login")
-    if user_id is None or login is None:
-        return False, "PR JSON has no user.id / user.login"
+    if isinstance(user_id, bool) or not isinstance(user_id, int) or not isinstance(login, str):
+        return False, "PR JSON has no integer user.id and string user.login"
     expected_login = TRUSTED_BOTS.get(user_id)
     if expected_login is None:
         return False, f"user.id {user_id} ({login!r}) is not a trusted bot ID"
@@ -52,18 +58,39 @@ def check_author(pr: dict) -> tuple[bool, str]:
     return True, f"author is {login} (id {user_id})"
 
 
-def check_head(check_runs: dict, commit_status: dict) -> tuple[str, list[str]]:
+def check_head(check_runs: object, commit_status: object) -> tuple[str, list[str]]:
     """Return (verdict, reasons) for the head commit.
 
     verdict is ``GREEN``, ``PENDING`` or ``RED``. ``PENDING`` means something
-    has not finished yet and the sweep should look again later. ``RED`` means a
-    finished check failed and the PR needs a human or a fix.
+    has not finished, or the data is incomplete, so the sweep should look again
+    later. ``RED`` means a finished check failed and the PR needs a human or a
+    fix. Only a complete, finished, passing set is ``GREEN``.
     """
+    runs_doc = _as_dict(check_runs)
+    status_doc = _as_dict(commit_status)
+    runs = runs_doc.get("check_runs") or []
+    contexts = status_doc.get("statuses") or []
     reasons: list[str] = []
     pending = False
     red = False
 
-    for run in check_runs.get("check_runs", []):
+    if not isinstance(runs, list) or not isinstance(contexts, list):
+        return "PENDING", ["check or status payload is not a list"]
+
+    total = runs_doc.get("total_count")
+    if not isinstance(total, int) or isinstance(total, bool):
+        pending = True
+        reasons.append("check run payload has no total_count; cannot confirm completeness")
+    elif len(runs) < total:
+        pending = True
+        reasons.append(f"incomplete check list: {len(runs)} of {total} runs; fetch further pages")
+
+    if not runs and not contexts:
+        pending = True
+        reasons.append("no check runs or commit statuses reported")
+
+    for run in runs:
+        run = _as_dict(run)
         name = run.get("name", "?")
         status = run.get("status")
         conclusion = run.get("conclusion")
@@ -74,15 +101,12 @@ def check_head(check_runs: dict, commit_status: dict) -> tuple[str, list[str]]:
             red = True
             reasons.append(f"check {name!r} concluded {conclusion}")
 
-    combined = commit_status.get("state")
-    contexts = commit_status.get("statuses", [])
-    if combined == "pending" and not contexts:
-        pending = True
-        reasons.append("combined status is pending with no contexts reported")
-    elif combined == "failure" or combined == "error":
+    combined = status_doc.get("state")
+    if combined in ("failure", "error"):
         red = True
         reasons.append(f"combined status is {combined}")
     for ctx in contexts:
+        ctx = _as_dict(ctx)
         state = ctx.get("state")
         if state == "pending":
             pending = True
@@ -98,7 +122,7 @@ def check_head(check_runs: dict, commit_status: dict) -> tuple[str, list[str]]:
     return "GREEN", reasons
 
 
-def _load(path: str) -> dict:
+def _load(path: str) -> object:
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
