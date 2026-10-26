@@ -50,7 +50,7 @@ con/tributors gains native CRediT support, the overlay folds back in.
 
 ## Renderers
 
-Two single-file Python tools (PyYAML-only). Set `SKILL_DIR` to this skill's absolute path: `~/.claude/skills/credit-contributions`, `./.claude/skills/credit-contributions`, `~/.agents/skills/credit-contributions` or `./.agents/skills/credit-contributions`, whichever holds the bundled files.
+Two single-file Python tools (PyYAML-only). Set `SKILL_DIR` to this skill's absolute path, found with the `find-skills-directory` skill.
 
 `render_credit.py` — Author Contributions section / JATS XML / matrix:
 

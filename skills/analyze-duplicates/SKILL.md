@@ -126,7 +126,7 @@ python3 SKILL_DIR/generate-report.py \
     [.tmp/jscpd-PROJECT2/jscpd-report.json ...]
 ```
 
-Set `SKILL_DIR` to this skill's absolute path: `~/.claude/skills/analyze-duplicates`, `./.claude/skills/analyze-duplicates`, `~/.agents/skills/analyze-duplicates` or `./.agents/skills/analyze-duplicates`, whichever holds the bundled files.
+Set `SKILL_DIR` to this skill's absolute path, found with the `find-skills-directory` skill.
 
 If `--badge` was requested and a badge was generated, pass `--badge-path` with
 a relative path to the SVG. Copy the badge SVG to the output directory so both
