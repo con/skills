@@ -53,7 +53,7 @@ Parse the output to get `OWNER/REPO`.  Use `--repo` if the user provided it.
 
 Skip this step if `--serve-only` is set and `.git/triage/issues.json` exists.
 
-Set `SKILL_DIR` to this skill's absolute path, found with the `find-skills-directory` skill.
+`SKILL_DIR` is the absolute path of the directory holding this SKILL.md; Claude Code reports it as "Base directory for this skill". If you do not know it, ask the user; do not search for or guess it.
 
 ```bash
 python3 SKILL_DIR/gather.py --repo OWNER/REPO --limit N --output .git/triage/issues.json

@@ -50,7 +50,7 @@ con/tributors gains native CRediT support, the overlay folds back in.
 
 ## Renderers
 
-Two single-file Python tools (PyYAML-only). Set `SKILL_DIR` to this skill's absolute path, found with the `find-skills-directory` skill.
+Two single-file Python tools (PyYAML-only). `SKILL_DIR` is the absolute path of the directory holding this SKILL.md; Claude Code reports it as "Base directory for this skill". If you do not know it, ask the user; do not search for or guess it.
 
 `render_credit.py` — Author Contributions section / JATS XML / matrix:
 
@@ -225,8 +225,10 @@ a **vendored-file header** so the copy records exactly where it came from:
 # License is kept as MIT (matches upstream) so refresh is a clean copy.
 ```
 
-Replace `<version>` with `git -C SKILL_DIR describe --always`
-(the short SHA or tag from the skills repo). This ties the vendored copy to
+Replace `<version>` with the con/skills commit the skill came from: its
+`resolved_commit` in the `apm.lock.yaml` that installed it, or
+`git -C SKILL_DIR describe --always` when `SKILL_DIR` is in a con/skills
+checkout. If neither applies, ask the user. This ties the vendored copy to
 an exact upstream commit so drift is visible in diffs.
 
 The `make fetch-*-renderer` targets handle this automatically: they copy the

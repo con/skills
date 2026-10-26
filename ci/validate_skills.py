@@ -18,6 +18,8 @@ Every SKILL.md:
         (pattern ``/home/<word>/`` or ``/Users/<Word>/``; tilde paths are fine)
   E004  Hardcoded secret-like assignment outside a code-block fence
         (pattern ``KEY = "..."``, ``token = '...'``, etc.)
+  E009  ``SKILL_DIR/<path>`` must name a file bundled with the skill, and a
+        skill using it must define ``SKILL_DIR`` with the shared sentence
 
 Every *.py bundled alongside a SKILL.md:
   E005  Python syntax error (py_compile)
@@ -64,6 +66,10 @@ _ABS_HOME = re.compile(r'/(?:home/[a-z][a-zA-Z0-9_.-]+|Users/[A-Z][a-zA-Z0-9_.-]
 _SECRET_ASSIGN = re.compile(
     r'(?i)\b(?:api_key|secret|token|password|passwd|credential|auth_key)\s*=\s*["\'][^"\']{6,}["\']'
 )
+
+# Bundled-file references, resolved against the loaded skill's own directory
+_SKILL_DIR_REF = re.compile(r'\bSKILL_DIR/([\w./-]*\w)')
+SKILL_DIR_DEFINITION = '`SKILL_DIR` is the absolute path of the directory holding this SKILL.md'
 
 # subprocess(..., shell=True) where the first arg is not a plain string literal
 _SHELL_TRUE = re.compile(r'shell\s*=\s*True')
@@ -155,6 +161,15 @@ def check_skill_md(skill_md: Path, result: Result) -> None:
     for i, line in enumerate(lines):
         if not _in_code_fence(lines, i) and _SECRET_ASSIGN.search(line):
             result.error("E004", skill_md, f"possible hardcoded secret: {line.strip()!r}", i + 1)
+
+    # E009 — SKILL_DIR references
+    refs = [(i, m.group(1)) for i, line in enumerate(lines, 1)
+            for m in _SKILL_DIR_REF.finditer(line)]
+    if refs and SKILL_DIR_DEFINITION not in text:
+        result.error("E009", skill_md, "uses SKILL_DIR without the shared definition sentence")
+    for i, ref in refs:
+        if not (skill_md.parent / ref).is_file():
+            result.error("E009", skill_md, f"SKILL_DIR/{ref} is not bundled with this skill", i)
 
 
 def check_python_file(py_path: Path, result: Result) -> None:

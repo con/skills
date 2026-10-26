@@ -126,7 +126,7 @@ python3 SKILL_DIR/generate-report.py \
     [.tmp/jscpd-PROJECT2/jscpd-report.json ...]
 ```
 
-Set `SKILL_DIR` to this skill's absolute path, found with the `find-skills-directory` skill.
+`SKILL_DIR` is the absolute path of the directory holding this SKILL.md; Claude Code reports it as "Base directory for this skill". If you do not know it, ask the user; do not search for or guess it.
 
 If `--badge` was requested and a badge was generated, pass `--badge-path` with
 a relative path to the SVG. Copy the badge SVG to the output directory so both
