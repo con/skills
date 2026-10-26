@@ -3,7 +3,6 @@
 import argparse
 import io
 import json
-import re
 import sys
 import tempfile
 import unittest
@@ -17,10 +16,12 @@ sys.path.insert(0, str(SKILL_DIR / "scripts"))
 import pr_gate as gate  # noqa: E402
 
 DEPENDABOT, PRE_COMMIT_CI, WEB_FLOW = 49699333, 66853113, 19864447
-RENOVATE = 29139614
+RENOVATE, MAINTAINER = 29139614, 51133164
 REPO = "acme/widgets"
 HEAD = "a" * 40
 OTHER = "b" * 40
+BASE = "c" * 40
+MERGE_SHA = "d" * 40
 NOW = datetime(2026, 10, 26, 12, 0, tzinfo=timezone.utc)
 
 
@@ -31,7 +32,7 @@ def user(login="dependabot[bot]", uid=DEPENDABOT, kind="Bot"):
 def pull(**overrides):
     pr = {
         "number": 7, "state": "open", "draft": False, "merged": False,
-        "mergeable": True, "mergeable_state": "clean", "commits": 1,
+        "mergeable": True, "mergeable_state": "clean", "commits": 1, "labels": [],
         "title": "Bump requests from 2.31.0 to 2.32.0", "user": user(),
         "head": {"sha": HEAD, "ref": "dependabot/pip/requests-2.32.0", "repo": {"full_name": REPO}},
         "base": {"ref": "main", "repo": {"full_name": REPO}},
@@ -40,14 +41,26 @@ def pull(**overrides):
     return pr
 
 
-def commit(sha=HEAD, author=DEPENDABOT, committer=WEB_FLOW, date="2026-10-26T11:00:00Z", parents=1):
-    return {
+def commit(sha=HEAD, author=DEPENDABOT, committer=WEB_FLOW, date="2026-10-26T11:00:00Z", parents=1, verified=None):
+    parent_shas = parents if isinstance(parents, list) else ["p%d" % i for i in range(parents)]
+    entry = {
         "sha": sha,
         "author": {"id": author, "login": "a"} if author is not None else None,
         "committer": {"id": committer, "login": "c"} if committer is not None else None,
-        "parents": [{"sha": "p%d" % i} for i in range(parents)],
+        "parents": [{"sha": parent} for parent in parent_shas],
         "commit": {"author": {"name": "dependabot[bot]"}, "committer": {"date": date}},
     }
+    if verified is not None:
+        entry["commit"]["verification"] = {"verified": verified, "reason": "valid" if verified else "unsigned"}
+    return entry
+
+
+def update_merge(**overrides):
+    """The merge commit GitHub's Update branch creates on top of the bot's commit."""
+    fields = dict(sha=MERGE_SHA, author=MAINTAINER, committer=WEB_FLOW, parents=[HEAD, BASE],
+                  date="2026-10-26T11:30:00Z", verified=True)
+    fields.update(overrides)
+    return commit(**fields)
 
 
 def run(name="tests", status="completed", conclusion="success", head=HEAD,
@@ -83,6 +96,7 @@ class AuthorTests(unittest.TestCase):
         self.assertEqual(decision["reasons"], [])
         self.assertEqual(decision["head_sha"], HEAD)
         self.assertEqual(decision["url"], "https://github.com/acme/widgets/pull/7")
+        self.assertFalse(decision["update_branch"])
 
     def test_trusted_login_with_unknown_id_is_rejected(self):
         decision = evaluate(pr=pull(user=user(uid=424242)))
@@ -141,7 +155,7 @@ class CheckRunTests(unittest.TestCase):
     def test_no_ci_at_all_blocks(self):
         decision = evaluate(check_pages=[runs()], status=status())
         self.assertEqual(decision["verdict"], "blocked")
-        self.assertIn("no check runs or commit statuses", decision["reasons"][0])
+        self.assertIn("no check run or status finished with success", decision["reasons"][0])
 
     def test_truncated_list_is_pending(self):
         pages = [runs(*[run(name=f"c{i}") for i in range(100)], total=150)]
@@ -180,20 +194,35 @@ class CheckRunTests(unittest.TestCase):
         self.assertIn("concluded failure", decision["reasons"][0])
         self.assertIn("https://github.com/acme/widgets/actions/runs/1/job/2", decision["reasons"][0])
         self.assertEqual(decision["checks"]["failed"], ["tests"])
+        self.assertEqual(decision["hints"], [])
 
     def test_other_bad_conclusions_block(self):
         for conclusion in ("cancelled", "timed_out", "action_required", "stale", "startup_failure", None):
             with self.subTest(conclusion=conclusion):
                 self.assertEqual(evaluate(check_pages=[runs(run(conclusion=conclusion))])["verdict"], "blocked")
 
-    def test_skipped_and_neutral_need_opt_in(self):
+    def test_died_jobs_get_a_rerun_hint(self):
+        decision = evaluate(check_pages=[runs(run(), run(name="deploy", conclusion="cancelled"))])
+        self.assertEqual(decision["verdict"], "blocked")
+        self.assertIn("`deploy` ended as cancelled", decision["hints"][0])
+        self.assertIn("never re-runs", decision["hints"][0])
+
+    def test_skipped_and_neutral_are_tolerated_unless_strict(self):
         for conclusion in ("skipped", "neutral"):
             with self.subTest(conclusion=conclusion):
-                decision = evaluate(check_pages=[runs(run(conclusion=conclusion))])
-                self.assertEqual(decision["verdict"], "blocked")
-                self.assertIn(f"--allow-conclusion {conclusion}", decision["reasons"][0])
-                allowed = evaluate(check_pages=[runs(run(conclusion=conclusion))], allow_conclusions=(conclusion,))
-                self.assertEqual(allowed["verdict"], "merge")
+                decision = evaluate(check_pages=[runs(run(), run(name="chromatic", conclusion=conclusion))])
+                self.assertEqual(decision["verdict"], "merge")
+                self.assertEqual(decision["checks"]["tolerated"], ["chromatic"])
+                strict = evaluate(check_pages=[runs(run(), run(name="chromatic", conclusion=conclusion))], strict=True)
+                self.assertEqual(strict["verdict"], "blocked")
+                self.assertIn("--strict refuses", strict["reasons"][0])
+
+    def test_only_skipped_checks_do_not_count_as_ci(self):
+        decision = evaluate(check_pages=[runs(run(conclusion="skipped"), run(name="b", conclusion="neutral"))])
+        self.assertEqual(decision["verdict"], "blocked")
+        self.assertIn("no check run or status finished with success", decision["reasons"][0])
+        queued = evaluate(check_pages=[runs(run(conclusion="skipped"), run(name="b", status="queued", conclusion=None))])
+        self.assertEqual(queued["verdict"], "pending")
 
     def test_check_for_another_commit_is_pending(self):
         self.assertEqual(evaluate(check_pages=[runs(run(head=OTHER))])["verdict"], "pending")
@@ -202,12 +231,14 @@ class CheckRunTests(unittest.TestCase):
         decision = evaluate(check_pages=[runs(run(name="tests `rm -rf`\n[click](https://x)"))])
         self.assertEqual(decision["checks"]["passed"], ["tests 'rm -rf' [click](https://x)"])
 
-    def test_required_check_must_be_reported(self):
+    def test_required_check_must_succeed(self):
         decision = evaluate(require_checks=("lint",))
         self.assertEqual(decision["verdict"], "blocked")
-        self.assertIn("required check `lint` was not reported", decision["reasons"][0])
+        self.assertIn("required check `lint` did not finish with success", decision["reasons"][0])
         self.assertEqual(evaluate(require_checks=("lint",), check_pages=[runs(run(), run(name="lint"))])["verdict"], "merge")
         self.assertEqual(evaluate(require_checks=("lint",), status=status(context("lint")))["verdict"], "merge")
+        skipped = evaluate(require_checks=("lint",), check_pages=[runs(run(), run(name="lint", conclusion="skipped"))])
+        self.assertEqual(skipped["verdict"], "blocked")
 
     def test_blocked_outranks_pending(self):
         pages = [runs(run(conclusion="failure"), run(name="b", status="queued", conclusion=None))]
@@ -269,6 +300,17 @@ class PullRequestStateTests(unittest.TestCase):
         self.assertEqual(decision["verdict"], "pending")
         self.assertIn("head moved", decision["reasons"][0])
 
+    def test_labels(self):
+        labelled = pull(labels=[{"name": "internal"}, {"name": "major"}])
+        self.assertEqual(evaluate(pr=labelled, require_labels=("internal",))["verdict"], "merge")
+        missing = evaluate(require_labels=("internal",))
+        self.assertEqual(missing["verdict"], "blocked")
+        self.assertIn("required label `internal` is missing", missing["reasons"][0])
+        forbidden = evaluate(pr=labelled, forbid_labels=("major",))
+        self.assertEqual(forbidden["verdict"], "blocked")
+        self.assertIn("label `major` excludes", forbidden["reasons"][0])
+        self.assertEqual(evaluate(forbid_labels=("major",))["verdict"], "merge")
+
     def test_unknown_mergeability_is_pending(self):
         self.assertEqual(evaluate(pr=pull(mergeable=None, mergeable_state="unknown"))["verdict"], "pending")
         self.assertEqual(evaluate(pr=pull(mergeable=None, mergeable_state=""))["verdict"], "pending")
@@ -278,6 +320,21 @@ class PullRequestStateTests(unittest.TestCase):
         self.assertEqual(decision["verdict"], "blocked")
         self.assertIn("behind main", decision["reasons"][0])
         self.assertIn("@dependabot rebase", decision["hints"][0])
+        self.assertFalse(decision["update_branch"])
+
+    def test_behind_is_flagged_for_update_only_when_it_is_the_sole_problem(self):
+        decision = evaluate(pr=pull(mergeable_state="behind"), allow_branch_update=True)
+        self.assertEqual(decision["verdict"], "blocked")
+        self.assertTrue(decision["update_branch"])
+        self.assertEqual(decision["hints"], [])
+        failing = evaluate(pr=pull(mergeable_state="behind"), allow_branch_update=True,
+                           check_pages=[runs(run(conclusion="failure"))])
+        self.assertFalse(failing["update_branch"])
+        queued = evaluate(pr=pull(mergeable_state="behind"), allow_branch_update=True,
+                          check_pages=[runs(run(status="queued", conclusion=None))])
+        self.assertFalse(queued["update_branch"])
+        rejected = evaluate(pr=pull(mergeable_state="behind", user=user(uid=1)), allow_branch_update=True)
+        self.assertFalse(rejected["update_branch"])
 
     def test_conflicts_block(self):
         decision = evaluate(pr=pull(mergeable=False, mergeable_state="dirty"))
@@ -331,10 +388,46 @@ class CommitTests(unittest.TestCase):
             with self.subTest(committer=committer):
                 self.assertEqual(evaluate(commits=[commit(committer=committer)])["verdict"], "blocked")
 
-    def test_merge_commit_blocks(self):
-        decision = evaluate(commits=[commit(parents=2)])
+    def test_merge_commit_blocks_by_default(self):
+        decision = evaluate(pr=pull(commits=2, head={"sha": MERGE_SHA, "ref": "x", "repo": {"full_name": REPO}}),
+                            commits=[commit(), update_merge()], check_pages=[runs(run(head=MERGE_SHA))],
+                            status=status(sha=MERGE_SHA))
         self.assertEqual(decision["verdict"], "blocked")
-        self.assertIn("merge commit", decision["reasons"][0])
+        self.assertIn("merge commit, so someone updated", decision["reasons"][0])
+
+    def updated(self, merge, **overrides):
+        kwargs = dict(pr=pull(commits=2, head={"sha": MERGE_SHA, "ref": "x", "repo": {"full_name": REPO}}),
+                      commits=[commit(), merge], check_pages=[runs(run(head=MERGE_SHA))],
+                      status=status(sha=MERGE_SHA), allow_branch_update=True)
+        kwargs.update(overrides)
+        return evaluate(**kwargs)
+
+    def test_githubs_update_branch_merge_is_accepted_when_allowed(self):
+        decision = self.updated(update_merge())
+        self.assertEqual(decision["verdict"], "merge")
+        self.assertEqual(decision["reasons"], [])
+
+    def test_update_merge_must_be_githubs_own(self):
+        cases = {
+            "committer": (update_merge(committer=MAINTAINER), "not committed by GitHub"),
+            "unsigned": (update_merge(verified=False), "no valid GitHub signature"),
+            "no verification": (update_merge(verified=None), "no valid GitHub signature"),
+            "parents": (update_merge(parents=[HEAD, BASE, OTHER]), "merges 3 parents"),
+            "chain": (update_merge(parents=[OTHER, BASE]), "does not continue the bot's previous commit"),
+        }
+        for name, (merge, text) in cases.items():
+            with self.subTest(case=name):
+                decision = self.updated(merge)
+                self.assertEqual(decision["verdict"], "blocked")
+                self.assertTrue(any(text in reason for reason in decision["reasons"]), decision["reasons"])
+
+    def test_commits_after_an_update_merge_still_need_a_bot_author(self):
+        human = commit(sha=OTHER, author=MAINTAINER, committer=MAINTAINER, parents=[MERGE_SHA], date="2026-10-26T11:40:00Z")
+        decision = self.updated(update_merge(), pr=pull(commits=3, head={"sha": OTHER, "ref": "x", "repo": {"full_name": REPO}}),
+                                commits=[commit(), update_merge(), human], check_pages=[runs(run(head=OTHER))],
+                                status=status(sha=OTHER))
+        self.assertEqual(decision["verdict"], "blocked")
+        self.assertIn(f"authored by account {MAINTAINER}", decision["reasons"][0])
 
     def test_incomplete_commit_list_is_pending(self):
         decision = evaluate(pr=pull(commits=2))
@@ -419,14 +512,16 @@ class ReportTests(unittest.TestCase):
         behind = evaluate(pr=pull(number=9, mergeable_state="behind"))
         pending = evaluate(pr=pull(number=10), check_pages=[runs(run(status="queued", conclusion=None))])
         rejected = evaluate(pr=pull(number=11, user=user(uid=5)))
+        updated = evaluate(pr=pull(number=13, mergeable_state="behind"), allow_branch_update=True)
         return [
-            {"event": "selection", "repo": REPO, "open_prs": 9, "bot_prs": [7, 8, 9, 10], "other_bots": 1,
+            {"event": "selection", "repo": REPO, "open_prs": 9, "bot_prs": [7, 8, 9, 10, 13], "other_bots": 1,
              "suspicious": [{"number": 12, "login": "dependabot[bot]", "id": 1, "reason": "account 1 is not trusted"}]},
-            merged, blocked, behind, pending, rejected,
+            merged, blocked, behind, pending, rejected, updated,
             {"event": "outcome", "repo": REPO, "number": 7, "result": "assigned", "detail": "maintainer"},
             {"event": "outcome", "repo": REPO, "number": 7, "result": "merged", "detail": "c" * 40},
             {"event": "outcome", "repo": REPO, "number": 8, "result": "assigned", "detail": "maintainer"},
             {"event": "outcome", "repo": REPO, "number": 9, "result": "assign-failed", "detail": "HTTP 422"},
+            {"event": "outcome", "repo": REPO, "number": 13, "result": "branch-updated", "detail": "main"},
             {"event": "outcome", "repo": "acme/other", "number": None, "result": "repo-error", "detail": "HTTP 403"},
         ]
 
@@ -437,7 +532,7 @@ class ReportTests(unittest.TestCase):
         self.assertIn("- Mode: live", text)
         self.assertIn("## Merged (1)", text)
         self.assertIn("## Blocked (1)", text)
-        self.assertIn("## Pending (1)", text)
+        self.assertIn("## Pending (2)", text)
         self.assertIn("## Needs attention (4)", text)
         self.assertIn("[acme/widgets#7](https://github.com/acme/widgets/pull/7)", text)
         self.assertIn("squash-merged as `ccccccc`; assigned to maintainer", text)
@@ -445,9 +540,10 @@ class ReportTests(unittest.TestCase):
         self.assertNotIn("\n[evil]", text)
         self.assertIn("@dependabot rebase", text)
         self.assertIn("assignment failed: HTTP 422", text)
+        self.assertIn("branch updated from the base; the next run re-evaluates it", text)
         self.assertIn("pull/12) — account 1 is not trusted; not touched", text)
         self.assertIn("- acme/other: HTTP 403", text)
-        self.assertIn("- acme/widgets: 9 open PRs, 4 from trusted bots, 1 suspicious, 1 from other bots", text)
+        self.assertIn("- acme/widgets: 9 open PRs, 5 from trusted bots, 1 suspicious, 1 from other bots", text)
 
     def test_dry_run_and_failed_merge(self):
         events = [evaluate(), {"event": "outcome", "repo": REPO, "number": 7, "result": "dry-run"}]
@@ -488,10 +584,11 @@ class CliTests(unittest.TestCase):
             code = gate.main(list(argv))
         return code, out.getvalue(), err.getvalue()
 
-    def gate_args(self, **extra):
+    def gate_args(self, *flags, **extra):
         argv = ["gate", "--repo", REPO, "--ledger", str(self.ledger), "--pr", self.path("pr"),
                 "--commits", self.path("commits"), "--check-runs", self.path("checks"),
                 "--status", self.path("status"), "--now", "2026-10-26T12:00:00Z", "--head-sha", HEAD]
+        argv += list(flags)
         for key, value in extra.items():
             argv += [key, value]
         return argv
@@ -514,12 +611,17 @@ class CliTests(unittest.TestCase):
         self.assertEqual(self.main(*self.gate_args())[0], 2)
 
     def test_gate_options(self):
-        (self.root / "checks.json").write_text(json.dumps(runs(run(conclusion="skipped"))), encoding="utf-8")
-        self.assertEqual(self.main(*self.gate_args())[0], 1)
-        self.assertEqual(self.main(*self.gate_args(**{"--allow-conclusion": "skipped"}))[0], 0)
-        self.assertEqual(self.main(*self.gate_args(**{"--require-check": "lint", "--allow-conclusion": "skipped"}))[0], 1)
+        (self.root / "checks.json").write_text(json.dumps(runs(run(), run(name="x", conclusion="skipped"))), encoding="utf-8")
+        self.assertEqual(self.main(*self.gate_args())[0], 0)
+        self.assertEqual(self.main(*self.gate_args("--strict"))[0], 1)
+        self.assertEqual(self.main(*self.gate_args(**{"--require-check": "lint"}))[0], 1)
+        self.assertEqual(self.main(*self.gate_args(**{"--require-label": "internal"}))[0], 1)
+        self.assertEqual(self.main(*self.gate_args(**{"--forbid-label": "major"}))[0], 0)
         self.assertEqual(self.main(*self.gate_args(**{"--head-sha": OTHER}))[0], 1)
-        (self.root / "checks.json").write_text(json.dumps(runs(run())), encoding="utf-8")
+        (self.root / "pr.json").write_text(json.dumps(pull(mergeable_state="behind")), encoding="utf-8")
+        code, out, _ = self.main(*self.gate_args("--allow-branch-update"))
+        self.assertEqual(code, 1)
+        self.assertTrue(json.loads(out)["update_branch"])
         (self.root / "pr.json").write_text(json.dumps(pull(user=user("renovate[bot]", RENOVATE))), encoding="utf-8")
         (self.root / "commits.json").write_text(json.dumps([commit(author=RENOVATE, committer=RENOVATE)]), encoding="utf-8")
         self.assertEqual(self.main(*self.gate_args())[0], 1)
