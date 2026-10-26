@@ -53,7 +53,7 @@ Parse the output to get `OWNER/REPO`.  Use `--repo` if the user provided it.
 
 Skip this step if `--serve-only` is set and `.git/triage/issues.json` exists.
 
-Resolve `SKILL_DIR` once to an absolute path: the directory containing this SKILL.md. Check `~/.claude/skills/issue-triage/`, `./.claude/skills/issue-triage/`, `~/.agents/skills/issue-triage/` and `./.agents/skills/issue-triage/` for the bundled file, and use the first match. Substitute that literal path into the commands; do not paste the string `SKILL_DIR` into the shell.
+Set `SKILL_DIR` to this skill's absolute path: `~/.claude/skills/issue-triage`, `./.claude/skills/issue-triage`, `~/.agents/skills/issue-triage` or `./.agents/skills/issue-triage`, whichever holds the bundled files.
 
 ```bash
 python3 SKILL_DIR/gather.py --repo OWNER/REPO --limit N --output .git/triage/issues.json

@@ -25,7 +25,7 @@ The `projects.tsv` file contains tab-separated columns:
 
 ### Phase 1: Scan Metadata
 
-Resolve `SKILL_DIR` once to an absolute path: the directory containing this SKILL.md. Check `~/.claude/skills/scan-projects/`, `./.claude/skills/scan-projects/`, `~/.agents/skills/scan-projects/` and `./.agents/skills/scan-projects/` for the bundled file, and use the first match. Substitute that literal path into the commands; do not paste the string `SKILL_DIR` into the shell.
+Set `SKILL_DIR` to this skill's absolute path: `~/.claude/skills/scan-projects`, `./.claude/skills/scan-projects`, `~/.agents/skills/scan-projects` or `./.agents/skills/scan-projects`, whichever holds the bundled files.
 ```bash
 python3 "$(dirname "$(realpath "$0")")/scan.py"
 # fallback if the above is not available:
