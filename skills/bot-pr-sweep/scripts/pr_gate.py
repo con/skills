@@ -62,6 +62,7 @@ MERGE, PENDING, BLOCKED, REJECTED = "merge", "pending", "blocked", "rejected"
 
 _URL = re.compile(r"https://[A-Za-z0-9._~:/?#@!$&'*+,;=%-]+")
 _REPO = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
+_SHA = re.compile(r"[0-9a-f]{40}")
 _VERSION = re.compile(r"^version:\s*([0-9]+\.[0-9]+\.[0-9]+)\s*$", re.MULTILINE)
 
 
@@ -145,6 +146,12 @@ def repo_name(value: str) -> str:
     return value
 
 
+def commit_sha(value: str) -> str:
+    if not _SHA.fullmatch(value):
+        raise argparse.ArgumentTypeError(f"expected a 40-character commit id, got {value!r}")
+    return value
+
+
 # --------------------------------------------------------------------------
 # select
 # --------------------------------------------------------------------------
@@ -175,12 +182,14 @@ def select_bot_prs(pulls: list) -> tuple[list, list, int]:
             "head_sha": _str(_dict(pull.get("head")).get("sha")),
         }
         if user_id in TRUSTED_BOTS:
-            if login == TRUSTED_BOTS[user_id]:
-                selected.append(entry)
-            else:
+            if login != TRUSTED_BOTS[user_id]:
                 suspicious.append({**entry, "reason": (
                     f"account {user_id} is {TRUSTED_BOTS[user_id]} but the login reads "
                     f"'{sanitize(login, 40)}'")})
+            elif not _SHA.fullmatch(entry["head_sha"]):
+                suspicious.append({**entry, "head_sha": "", "reason": "head commit id is malformed"})
+            else:
+                selected.append(entry)
         elif any(hint in login.lower() for hint in hints):
             suspicious.append({**entry, "reason": (
                 f"login '{sanitize(login, 40)}' resembles a trusted bot but account "
@@ -234,8 +243,8 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
     base_repo = _str(_dict(base.get("repo")).get("full_name"))
     head_repo = _str(_dict(head.get("repo")).get("full_name"))
     base_ref = sanitize(base.get("ref"), 60) or "the base branch"
-    if number is None or not head_sha:
-        raise GateInputError("PR JSON has no number or head.sha; is it a pull request object?")
+    if number is None or not _SHA.fullmatch(head_sha):
+        raise GateInputError("PR JSON has no number or no 40-character head.sha; is it a pull request object?")
     if base_repo.lower() != repo.lower():
         raise GateInputError(f"PR JSON belongs to '{sanitize(base_repo, 80) or 'an unknown repository'}', not {repo}")
 
@@ -261,11 +270,16 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
         blocked(f"head branch lives in '{sanitize(head_repo, 80) or 'a deleted or foreign repository'}', not {repo}")
     if expected_head != head_sha:
         pending(f"head moved from {expected_head[:7]} to {head_sha[:7]} since listing; run the gate again")
-    labels = {_str(_dict(label).get("name")).strip().casefold() for label in _list(pr.get("labels"))}
-    for label in require_labels:
+    label_entries = pr.get("labels")
+    labels_valid = isinstance(label_entries, list) and all(
+        isinstance(label, dict) and isinstance(label.get("name"), str) for label in label_entries)
+    if (require_labels or forbid_labels) and not labels_valid:
+        pending("labels payload is missing or malformed; fetch the pull request again")
+    labels = {label["name"].strip().casefold() for label in label_entries} if labels_valid else set()
+    for label in require_labels if labels_valid else ():
         if label.strip().casefold() not in labels:
             blocked(f"required label `{sanitize(label, 60)}` is missing")
-    for label in forbid_labels:
+    for label in forbid_labels if labels_valid else ():
         if label.strip().casefold() in labels:
             blocked(f"label `{sanitize(label, 60)}` excludes the pull request from automatic merging")
 
@@ -278,19 +292,16 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
     if mergeable is None or mergeable_state in ("", "unknown"):
         pending("GitHub has not finished computing mergeability; retry shortly")
     elif mergeable is False or mergeable_state == "dirty":
-        blocked(f"merge conflicts with {base_ref}")
+        blocked(f"merge conflicts with `{base_ref}`")
         hints.append(rebase_hint)
     elif mergeable_state == "behind":
         behind = True
-        blocked(f"branch is behind {base_ref} and the branch protection requires an up-to-date branch")
+        blocked(f"branch is behind `{base_ref}` and the branch protection requires an up-to-date branch")
         hints.append("" if allow_branch_update else rebase_hint)
     elif mergeable_state == "blocked":
         blocked("branch protection is not satisfied (reviews, required checks or merge queue)")
     elif mergeable_state == "unstable":
         blocked("GitHub reports failing status checks (mergeable_state is unstable)")
-    elif mergeable_state == "draft":
-        if pr.get("draft") is not True:
-            blocked("pull request is a draft")
     elif mergeable_state not in MERGEABLE_OK:
         blocked(f"unrecognized mergeable_state '{mergeable_state}'")
 
@@ -313,17 +324,19 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
                 for problem in merge_commit_problems(commit, parents, previous, allow_branch_update):
                     blocked(f"commit {short} {problem}")
             else:
+                # Every ordinary commit is bound to the PR's author, not to the bot table as a whole,
+                # so a commit spoofing another trusted bot's address does not pass.
                 author_id = _int(_dict(commit.get("author")).get("id"))
                 committer_id = _int(_dict(commit.get("committer")).get("id"))
                 if author_id is None:
                     blocked(f"commit {short} has no GitHub-linked author account (REST commits JSON needed)")
-                elif author_id not in TRUSTED_BOTS:
-                    blocked(f"commit {short} was authored by account {author_id}, not a trusted bot")
-                elif author_id in SIGNED_BOTS and not _signed(commit):
-                    blocked(f"commit {short} claims to be by {TRUSTED_BOTS[author_id]} but carries no verified "
+                elif author_id != user_id:
+                    blocked(f"commit {short} was authored by account {author_id}, not by the pull request's author")
+                elif user_id in SIGNED_BOTS and not _signed(commit):
+                    blocked(f"commit {short} claims to be by {TRUSTED_BOTS[user_id]} but carries no verified "
                             "GitHub signature")
-                if committer_id is None or (committer_id not in TRUSTED_BOTS and committer_id != WEB_FLOW_ID):
-                    blocked(f"commit {short} was committed by account {committer_id}, neither a trusted bot nor GitHub")
+                if committer_id not in (user_id, WEB_FLOW_ID):
+                    blocked(f"commit {short} was committed by account {committer_id}, neither the author nor GitHub")
             when = parse_time(_dict(_dict(commit.get("commit")).get("committer")).get("date"))
             if when and (newest is None or when > newest):
                 newest = when
@@ -387,9 +400,9 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
     status = _dict(status)
     contexts = [_dict(context) for context in _list(status.get("statuses"))]
     status_sha = _str(status.get("sha"))
-    if status_sha and status_sha != head_sha:
+    if status_sha != head_sha:
         ci_known = False
-        pending(f"combined status describes commit {sanitize(status_sha, 40)[:7]}, not {head_sha[:7]}")
+        pending(f"combined status describes commit {sanitize(status_sha, 40)[:7] or 'unknown'}, not {head_sha[:7]}")
     status_total = _int(status.get("total_count"))
     status_valid = "statuses" in status and status_total is not None
     ci_known = ci_known and status_valid
@@ -494,6 +507,11 @@ def render_report(events: list, *, version: str, now: datetime, dry_run: bool = 
         else:
             bucket = "Pending"
         buckets[bucket].append(_pr_line(decision, notes or ["green, not merged yet"]))
+    for key, results in sorted(outcomes.items(), key=lambda item: (str(item[0][0]), item[0][1] or 0)):
+        if key not in decisions:
+            recorded = ", ".join(f"`{sanitize(result, 20)}`" for result in sorted(results))
+            buckets["Needs attention"].append(
+                f"- {key[0]}#{key[1]}: {recorded} recorded without a gate decision; check the ledger")
     for selection in selections:
         for entry in _list(selection.get("suspicious")):
             entry = _dict(entry)
@@ -535,7 +553,7 @@ def append_event(ledger: str | None, event: dict) -> None:
             handle.write(json.dumps(event, sort_keys=True) + "\n")
 
 
-def cmd_init(args: argparse.Namespace) -> int:
+def cmd_init(_args: argparse.Namespace) -> int:
     print(tempfile.mkdtemp(prefix="bot-pr-sweep-"))
     return 0
 
@@ -581,8 +599,10 @@ def cmd_outcome(args: argparse.Namespace) -> int:
 
 
 def cmd_report(args: argparse.Namespace) -> int:
-    events = [json.loads(line) for line in Path(args.ledger).read_text(encoding="utf-8").splitlines()
-              if line.strip()] if Path(args.ledger).exists() else []
+    ledger = Path(args.ledger)
+    if not ledger.is_file():
+        raise GateInputError(f"ledger {args.ledger} does not exist; the run's records are missing")
+    events = [json.loads(line) for line in ledger.read_text(encoding="utf-8").splitlines() if line.strip()]
     skill_dir = Path(args.skill_dir) if args.skill_dir else Path(__file__).resolve().parent.parent
     print(render_report(events, version=skill_version(skill_dir),
                         now=parse_time(args.now) or utc_now(), dry_run=args.dry_run), end="")
@@ -609,7 +629,8 @@ def build_parser() -> argparse.ArgumentParser:
     gate.add_argument("--commits", required=True, help="JSON from GET /repos/O/R/pulls/N/commits, every page")
     gate.add_argument("--check-runs", required=True, help="JSON from GET /repos/O/R/commits/SHA/check-runs, every page")
     gate.add_argument("--status", required=True, help="JSON from GET /repos/O/R/commits/SHA/status")
-    gate.add_argument("--head-sha", required=True, help="head SHA seen when listing; the PR must still be there")
+    gate.add_argument("--head-sha", required=True, type=commit_sha,
+                      help="head SHA seen when listing; the PR must still be there")
     gate.add_argument("--require-check", action="append", metavar="NAME",
                       help="a check run or status context that must finish with success (repeatable)")
     gate.add_argument("--require-label", action="append", metavar="NAME", help="a label the PR must carry (repeatable)")

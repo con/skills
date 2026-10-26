@@ -1,7 +1,7 @@
 ---
 name: bot-pr-sweep
 version: 0.1.0
-description: Sweep GitHub repositories for open dependabot[bot] and pre-commit-ci[bot] pull requests, verify each author by numeric account ID, gate on complete and passing CI, squash-merge the green ones guarded by the head SHA, assign the maintainer, and report what is blocked with links. Use for dependency-bot PR triage, on demand or on a schedule.
+description: Sweep repositories for open dependabot[bot] and pre-commit-ci[bot] pull requests, verify authors by account ID, gate on complete and passing CI, squash-merge the green ones guarded by the head SHA, assign the maintainer, and report the rest. Use for dependency-bot PR triage, on demand or on a schedule.
 allowed-tools: Bash(gh api repos/*/pulls*), Bash(gh api repos/*/commits/*), Bash(gh api repos/*/issues/*/assignees *), Bash(gh api user *), Bash(gh repo list *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py init*), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py select *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py gate *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py outcome *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py report *)
 user-invocable: true
 ---
@@ -12,8 +12,9 @@ Sweep a set of GitHub repositories for open pull requests opened by
 `dependabot[bot]` and `pre-commit-ci[bot]`, squash-merge the ones whose CI is
 complete and green, assign the maintainer on every bot PR the sweep evaluates,
 and report the rest with links. A run is self-contained and idempotent, so the
-same invocation can run on a schedule, and with no options it does the right
-thing for a typical repository.
+same invocation can run on a schedule (daily at least, hourly if security
+updates should not wait), and with no options it does the right thing for a
+typical repository.
 
 Every decision is made by `scripts/pr_gate.py`, a standard-library Python
 script covered by `tests/test_pr_gate.py`. It reads raw GitHub REST JSON from
@@ -102,7 +103,7 @@ gh api repos/OWNER/REPO/pulls --method GET -f state=open -F per_page=1 --jq leng
 
 In Claude Code on the web this works for the repositories attached to the
 session even when `gh auth status` complains about the token. If it fails for
-a repository, record it and move on:
+a repository, record it, skip steps 1 to 5 for that repository, and move on:
 
 ```bash
 python3 SKILL_DIR/scripts/pr_gate.py outcome --repo OWNER/REPO --ledger WORK/ledger.jsonl --result repo-error --detail "gh api: <error text>"
@@ -159,8 +160,10 @@ JSON decision and exits 0 only for the verdict `merge`:
 | `blocked` | Needs a person: a failed check, no CI results at all, conflicts, behind the base, branch protection, draft, a missing or forbidden label, a commit by someone other than a trusted bot, a head branch outside the repository. | Assign and report, with the failing check's link and any hint. With `--allow-branch-update`, a decision whose only problem is being behind carries `"update_branch": true` and goes to step 4. |
 | `rejected` | The author is not a trusted bot by account ID. | Report only; never assign, merge or comment. |
 
-An exit status of 2 means the input is unusable (wrong file, wrong repository,
-unparsable JSON): correct the saved files and evaluate the PR again. Do not
+Exit status 1 is the normal result for every verdict other than `merge`, not
+a failed command. An exit status of 2 means the input is unusable (wrong file,
+wrong repository, unparsable JSON): correct the saved files and evaluate the
+PR again. Do not
 reason your way around any verdict. If a verdict looks wrong, report it as it
 is and let the maintainer decide. Precedence is `rejected`, then `blocked`,
 then `pending`, then `merge`; every rule fails closed, and the decision's
@@ -198,7 +201,9 @@ GitHub, CI runs on the new head, and the next run's gate accepts exactly that
 commit (two parents, one of them the bot's previous head, committed by
 `web-flow`, signature verified) before merging. Dependabot treats an updated
 branch as edited and stops rebasing it on its own; `@dependabot rebase` still
-works and replaces the merge commit, which is fine.
+works and replaces the merge commit, which is fine. Repositories that use
+this option usually also set Dependabot's `rebase-strategy: "disabled"` so it
+does not force-push over the refreshed branch between runs.
 
 ### 5. Squash-merge the green PRs
 
@@ -232,19 +237,3 @@ assignments and updates, repositories that could not be listed), each with a
 link, the gate's reasons, and the hint to give the bot or the maintainer
 where one applies. If the user asked for the report in a file, redirect the
 command's output there.
-
-## Repository options worth knowing
-
-A label scheme for bot PRs maps to `--require-label internal --forbid-label major`.
-Branch protection that requires up-to-date branches maps to
-`--allow-branch-update`, ideally with Dependabot's `rebase-strategy: "disabled"`
-so it does not force-push over the refreshed branch between runs. A failing
-version-check or lock-file conflict is reported for the maintainer; the sweep
-never pushes a fix or edits a lock file.
-
-## Running on a schedule
-
-Schedule the same invocation with whatever recurring-task mechanism the
-environment provides, daily at least and hourly if security updates should not
-wait, with an explicit time zone and a minute away from :00. A PR pushed just
-before a run is picked up by the next one.

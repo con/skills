@@ -120,6 +120,14 @@ class AuthorTests(unittest.TestCase):
         decision = evaluate(pr=pull(user=user("pre-commit-ci[bot]", PRE_COMMIT_CI)), commits=[pre_commit_commit()])
         self.assertEqual(decision["verdict"], "merge")
 
+    def test_commits_are_bound_to_the_pull_requests_author(self):
+        spoofed = evaluate(commits=[pre_commit_commit()])
+        self.assertEqual(spoofed["verdict"], "blocked")
+        self.assertIn(f"authored by account {PRE_COMMIT_CI}, not by the pull request's author", spoofed["reasons"][0])
+        foreign_committer = evaluate(commits=[commit(committer=PRE_COMMIT_CI)])
+        self.assertEqual(foreign_committer["verdict"], "blocked")
+        self.assertIn("neither the author nor GitHub", foreign_committer["reasons"][0])
+
     def test_other_bots_are_not_trusted(self):
         pr = pull(user=user("renovate[bot]", RENOVATE))
         self.assertEqual(evaluate(pr=pr, commits=[commit(author=RENOVATE, committer=RENOVATE)])["verdict"], "rejected")
@@ -139,11 +147,13 @@ class SelectTests(unittest.TestCase):
             pull(number=11, user=user("pre-commit-ci[bot]", PRE_COMMIT_CI)),
             pull(number=12, user=user("my-dependabot-mirror", 77, "User")),
             pull(number=13, user=user("stranger", DEPENDABOT)),
+            pull(number=14, head={"sha": "nope", "ref": "x", "repo": {"full_name": REPO}}),
         ]
         selected, suspicious, other_bots = gate.select_bot_prs(pulls)
         self.assertEqual([entry["number"] for entry in selected], [7, 11])
         self.assertEqual(selected[0]["head_sha"], HEAD)
-        self.assertEqual({entry["number"] for entry in suspicious}, {8, 12, 13})
+        self.assertEqual({entry["number"] for entry in suspicious}, {8, 12, 13, 14})
+        self.assertEqual([entry["reason"] for entry in suspicious if entry["number"] == 14], ["head commit id is malformed"])
         self.assertEqual(other_bots, 1)
 
     def test_malformed_entries_are_skipped(self):
@@ -272,6 +282,13 @@ class StatusTests(unittest.TestCase):
     def test_status_for_another_commit_is_pending(self):
         self.assertEqual(evaluate(status=status(sha=OTHER))["verdict"], "pending")
 
+    def test_status_without_sha_is_pending(self):
+        payload = status()
+        del payload["sha"]
+        decision = evaluate(status=payload)
+        self.assertEqual(decision["verdict"], "pending")
+        self.assertIn("combined status describes commit unknown", decision["reasons"][0])
+
     def test_incomplete_status_list_is_pending(self):
         self.assertEqual(evaluate(status=status(context(), total=3))["verdict"], "pending")
 
@@ -318,12 +335,21 @@ class PullRequestStateTests(unittest.TestCase):
         self.assertIn("label `Do-Not-Merge` excludes", forbidden["reasons"][0])
         self.assertEqual(evaluate(forbid_labels=("major",))["verdict"], "merge")
 
+    def test_label_options_need_a_well_formed_labels_list(self):
+        for labels in (None, "internal", [{"name": 5}], ["internal"], [{"id": 1}]):
+            with self.subTest(labels=labels):
+                decision = evaluate(pr=pull(labels=labels), forbid_labels=("major",))
+                self.assertEqual(decision["verdict"], "pending")
+                self.assertIn("labels payload is missing or malformed", decision["reasons"][0])
+                self.assertEqual(evaluate(pr=pull(labels=labels), require_labels=("internal",))["verdict"], "pending")
+        self.assertEqual(evaluate(pr=pull(labels=None))["verdict"], "merge")
+
     def test_payload_strings_are_sanitized_in_reasons(self):
         pr = pull(state="clo\nsed `x`", mergeable_state="behind", base={"ref": "ma<in>\n`", "repo": {"full_name": REPO}})
         decision = evaluate(pr=pr)
         self.assertEqual(decision["verdict"], "blocked")
         self.assertIn("pull request is clo sed 'x'", decision["reasons"][0])
-        self.assertIn("behind ma<in> '", decision["reasons"][1])
+        self.assertIn("behind `ma<in> '`", decision["reasons"][1])
         self.assertNotIn("\n", json.dumps(decision))
 
     def test_unknown_mergeability_is_pending(self):
@@ -333,7 +359,7 @@ class PullRequestStateTests(unittest.TestCase):
     def test_behind_blocks_with_the_bots_rebase_command(self):
         decision = evaluate(pr=pull(mergeable_state="behind"))
         self.assertEqual(decision["verdict"], "blocked")
-        self.assertIn("behind main", decision["reasons"][0])
+        self.assertIn("behind `main`", decision["reasons"][0])
         self.assertIn("@dependabot rebase", decision["hints"][0])
         self.assertFalse(decision["update_branch"])
 
@@ -377,7 +403,8 @@ class PullRequestStateTests(unittest.TestCase):
             evaluate(repo="acme/other")
 
     def test_non_pr_payload_is_an_input_error(self):
-        for payload in ({}, [], None, {"number": 7}):
+        bad_sha = {"number": 7, "head": {"sha": "nope"}, "base": {"repo": {"full_name": REPO}}}
+        for payload in ({}, [], None, {"number": 7}, bad_sha):
             with self.subTest(payload=payload), self.assertRaises(gate.GateInputError):
                 evaluate(pr=payload)
 
@@ -562,6 +589,12 @@ class ReportTests(unittest.TestCase):
         self.assertIn("## Needs attention (1)", text)
         self.assertIn("merge failed: HTTP 409", text)
 
+    def test_outcome_without_a_decision_is_flagged(self):
+        events = [{"event": "outcome", "repo": REPO, "number": 99, "result": "merged", "detail": "e" * 40}]
+        text = gate.render_report(events, version="0.1.0", now=NOW)
+        self.assertIn("## Needs attention (1)", text)
+        self.assertIn("- acme/widgets#99: `merged` recorded without a gate decision", text)
+
     def test_empty_report(self):
         text = gate.render_report([], version="0.1.0", now=NOW)
         self.assertIn("## Merged (0)\n\n- none", text)
@@ -629,6 +662,8 @@ class CliTests(unittest.TestCase):
             self.main(*[arg for arg in self.gate_args() if arg not in ("--head-sha", HEAD)])
         with self.assertRaises(SystemExit):
             self.main(*self.gate_args(**{"--repo": "acme/widgets/evil"}))
+        with self.assertRaises(SystemExit):
+            self.main(*self.gate_args(**{"--head-sha": "nope"}))
 
     def test_gate_options(self):
         (self.root / "checks.json").write_text(json.dumps([runs(run(), run(name="x", conclusion="skipped"))]), encoding="utf-8")
@@ -662,7 +697,10 @@ class CliTests(unittest.TestCase):
         self.assertIn("squash-merged as `ddddddd`", out)
         self.assertIn("pull/8) — login 'dependabot[bot]' resembles a trusted bot but account 1 is not trusted; not touched", out)
         self.assertIn("- acme/other: HTTP 403", out)
-        code, out, _ = self.main("report", "--ledger", str(self.root / "missing.jsonl"), "--dry-run")
+        code, _, err = self.main("report", "--ledger", str(self.root / "missing.jsonl"), "--dry-run")
+        self.assertEqual(code, 2)
+        self.assertIn("does not exist", err)
+        code, out, _ = self.main("report", "--ledger", str(self.ledger), "--dry-run")
         self.assertEqual(code, 0)
         self.assertIn("dry run", out)
 
