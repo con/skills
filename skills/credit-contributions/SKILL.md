@@ -50,19 +50,19 @@ con/tributors gains native CRediT support, the overlay folds back in.
 
 ## Renderers
 
-Two single-file Python tools (PyYAML-only):
+Two single-file Python tools (PyYAML-only). Resolve `SKILL_DIR` once to an absolute path: the directory containing this SKILL.md. Check `~/.claude/skills/credit-contributions/`, `./.claude/skills/credit-contributions/`, `~/.agents/skills/credit-contributions/` and `./.agents/skills/credit-contributions/` for the bundled file, and use the first match. Substitute that literal path into the commands; do not paste the string `SKILL_DIR` into the shell.
 
 `render_credit.py` — Author Contributions section / JATS XML / matrix:
 
 ```bash
-python3 ~/.claude/skills/credit-contributions/render_credit.py \
+python3 SKILL_DIR/render_credit.py \
     --format latex .tributors.credit.yaml -o author-contributions.tex
 
-python3 ~/.claude/skills/credit-contributions/render_credit.py \
+python3 SKILL_DIR/render_credit.py \
     --format jats .tributors.credit.yaml -o author-contributions.jats.xml
 
 # Validation only — no output, non-zero on bad role name / malformed entry:
-python3 ~/.claude/skills/credit-contributions/render_credit.py \
+python3 SKILL_DIR/render_credit.py \
     --validate-only .tributors.credit.yaml
 ```
 
@@ -74,7 +74,7 @@ listed in `CREDIT_ROLES.md` next to this file.
 `render_authors.py` — LaTeX `\author{}` block with affiliation references:
 
 ```bash
-python3 ~/.claude/skills/credit-contributions/render_authors.py \
+python3 SKILL_DIR/render_authors.py \
     .tributors.credit.yaml --tributors .tributors -o authors.tex
 ```
 
@@ -219,13 +219,13 @@ a **vendored-file header** so the copy records exactly where it came from:
 
 ```python
 # Vendored from the credit-contributions skill (https://github.com/con/skills):
-#   ~/.claude/skills/credit-contributions/render_authors.py @ <version>
+#   credit-contributions/render_authors.py @ <version>
 # Vendored so the <project> build is self-contained.
 # To refresh from upstream:  make fetch-authors-renderer
 # License is kept as MIT (matches upstream) so refresh is a clean copy.
 ```
 
-Replace `<version>` with `git -C ~/.claude/skills/credit-contributions describe --always`
+Replace `<version>` with `git -C SKILL_DIR describe --always`
 (the short SHA or tag from the skills repo). This ties the vendored copy to
 an exact upstream commit so drift is visible in diffs.
 
@@ -306,7 +306,7 @@ If the venue accepts JATS XML submission (most Nature, eLife, PLOS,
 Frontiers do), also emit the machine-readable form:
 
 ```bash
-python3 ~/.claude/skills/credit-contributions/render_credit.py \
+python3 SKILL_DIR/render_credit.py \
     --format jats .tributors.credit.yaml \
     -o submission/author-contributions.jats.xml
 ```
@@ -320,7 +320,7 @@ element when present in `.tributors`.
 ### Step 8 — Validate and integrate
 
 ```bash
-python3 ~/.claude/skills/credit-contributions/render_credit.py \
+python3 SKILL_DIR/render_credit.py \
     --validate-only .tributors.credit.yaml
 ```
 

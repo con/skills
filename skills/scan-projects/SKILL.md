@@ -24,10 +24,12 @@ The `projects.tsv` file contains tab-separated columns:
 ## Execution Instructions
 
 ### Phase 1: Scan Metadata
+
+Resolve `SKILL_DIR` once to an absolute path: the directory containing this SKILL.md. Check `~/.claude/skills/scan-projects/`, `./.claude/skills/scan-projects/`, `~/.agents/skills/scan-projects/` and `./.agents/skills/scan-projects/` for the bundled file, and use the first match. Substitute that literal path into the commands; do not paste the string `SKILL_DIR` into the shell.
 ```bash
 python3 "$(dirname "$(realpath "$0")")/scan.py"
 # fallback if the above is not available:
-# python3 ~/.claude/skills/scan-projects/scan.py
+# python3 SKILL_DIR/scan.py
 ```
 
 Collects metadata for all entries. Git repos get full metadata (language, license, commits, URL). Plain directories get language detection and license scanning. Files get type classification. All summaries start as "NEEDS_ANALYSIS".
