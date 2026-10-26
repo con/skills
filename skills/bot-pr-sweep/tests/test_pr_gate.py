@@ -1,8 +1,8 @@
 """Unit tests for pr_gate.py. Run with: python3 -m unittest discover -s tests -v"""
 
-import argparse
 import io
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -41,7 +41,7 @@ def pull(**overrides):
     return pr
 
 
-def commit(sha=HEAD, author=DEPENDABOT, committer=WEB_FLOW, date="2026-10-26T11:00:00Z", parents=1, verified=None):
+def commit(sha=HEAD, author=DEPENDABOT, committer=WEB_FLOW, date="2026-10-26T11:00:00Z", parents=1, verified=True):
     parent_shas = parents if isinstance(parents, list) else ["p%d" % i for i in range(parents)]
     entry = {
         "sha": sha,
@@ -53,6 +53,12 @@ def commit(sha=HEAD, author=DEPENDABOT, committer=WEB_FLOW, date="2026-10-26T11:
     if verified is not None:
         entry["commit"]["verification"] = {"verified": verified, "reason": "valid" if verified else "unsigned"}
     return entry
+
+
+def pre_commit_commit(**overrides):
+    fields = dict(author=PRE_COMMIT_CI, committer=PRE_COMMIT_CI, verified=False)
+    fields.update(overrides)
+    return commit(**fields)
 
 
 def update_merge(**overrides):
@@ -84,7 +90,7 @@ def status(*contexts, sha=HEAD, total=None):
 
 def evaluate(**overrides):
     kwargs = dict(pr=pull(), commits=[commit()], check_pages=[runs(run())], status=status(),
-                  repo=REPO, bots=gate.TRUSTED_BOTS, now=NOW)
+                  repo=REPO, expected_head=HEAD, now=NOW)
     kwargs.update(overrides)
     return gate.evaluate(**kwargs)
 
@@ -110,17 +116,13 @@ class AuthorTests(unittest.TestCase):
     def test_trusted_id_of_user_type_is_rejected(self):
         self.assertEqual(evaluate(pr=pull(user=user(kind="User")))["verdict"], "rejected")
 
-    def test_pre_commit_ci_commits_itself(self):
-        decision = evaluate(pr=pull(user=user("pre-commit-ci[bot]", PRE_COMMIT_CI)),
-                            commits=[commit(author=PRE_COMMIT_CI, committer=PRE_COMMIT_CI)])
+    def test_pre_commit_ci_commits_itself_unsigned(self):
+        decision = evaluate(pr=pull(user=user("pre-commit-ci[bot]", PRE_COMMIT_CI)), commits=[pre_commit_commit()])
         self.assertEqual(decision["verdict"], "merge")
 
-    def test_extra_bot_can_be_trusted_explicitly(self):
-        bots = gate.trusted_bots([(RENOVATE, "renovate[bot]")])
+    def test_other_bots_are_not_trusted(self):
         pr = pull(user=user("renovate[bot]", RENOVATE))
-        commits = [commit(author=RENOVATE, committer=RENOVATE)]
-        self.assertEqual(evaluate(pr=pr, commits=commits)["verdict"], "rejected")
-        self.assertEqual(evaluate(pr=pr, commits=commits, bots=bots)["verdict"], "merge")
+        self.assertEqual(evaluate(pr=pr, commits=[commit(author=RENOVATE, committer=RENOVATE)])["verdict"], "rejected")
 
     def test_rejected_outranks_everything_else(self):
         decision = evaluate(pr=pull(user=user(uid=1), draft=True), check_pages=[runs()])
@@ -138,17 +140,17 @@ class SelectTests(unittest.TestCase):
             pull(number=12, user=user("my-dependabot-mirror", 77, "User")),
             pull(number=13, user=user("stranger", DEPENDABOT)),
         ]
-        selected, suspicious, other_bots = gate.select_bot_prs(pulls, gate.TRUSTED_BOTS)
+        selected, suspicious, other_bots = gate.select_bot_prs(pulls)
         self.assertEqual([entry["number"] for entry in selected], [7, 11])
         self.assertEqual(selected[0]["head_sha"], HEAD)
         self.assertEqual({entry["number"] for entry in suspicious}, {8, 12, 13})
         self.assertEqual(other_bots, 1)
 
     def test_malformed_entries_are_skipped(self):
-        self.assertEqual(gate.select_bot_prs([None, "x", {"user": user()}], gate.TRUSTED_BOTS), ([], [], 0))
+        self.assertEqual(gate.select_bot_prs([None, "x", {"user": user()}]), ([], [], 0))
 
     def test_name_hints(self):
-        self.assertEqual(gate.bot_name_hints(gate.TRUSTED_BOTS), {"dependabot", "pre-commit-ci", "pre-commit"})
+        self.assertEqual(gate.bot_name_hints(), {"dependabot", "pre-commit-ci", "pre-commit"})
 
 
 class CheckRunTests(unittest.TestCase):
@@ -158,18 +160,18 @@ class CheckRunTests(unittest.TestCase):
         self.assertIn("no check run or status finished with success", decision["reasons"][0])
 
     def test_truncated_list_is_pending(self):
-        pages = [runs(*[run(name=f"c{i}") for i in range(100)], total=150)]
-        decision = evaluate(check_pages=pages)
+        check_pages = [runs(*[run(name=f"c{i}") for i in range(100)], total=150)]
+        decision = evaluate(check_pages=check_pages)
         self.assertEqual(decision["verdict"], "pending")
         self.assertIn("100 of 150", decision["reasons"][0])
 
     def test_inconsistent_totals_are_pending(self):
-        pages = [runs(run(name="a"), total=2), runs(run(name="b"), total=3)]
-        self.assertEqual(evaluate(check_pages=pages)["verdict"], "pending")
+        check_pages = [runs(run(name="a"), total=2), runs(run(name="b"), total=3)]
+        self.assertEqual(evaluate(check_pages=check_pages)["verdict"], "pending")
 
     def test_pages_are_merged(self):
-        pages = [runs(run(name="a"), total=2), runs(run(name="b"), total=2)]
-        decision = evaluate(check_pages=pages)
+        check_pages = [runs(run(name="a"), total=2), runs(run(name="b"), total=2)]
+        decision = evaluate(check_pages=check_pages)
         self.assertEqual(decision["verdict"], "merge")
         self.assertEqual(decision["checks"]["passed"], ["a", "b"])
 
@@ -177,9 +179,9 @@ class CheckRunTests(unittest.TestCase):
         self.assertEqual(evaluate(check_pages=[{"check_runs": [run()]}])["verdict"], "pending")
 
     def test_error_or_empty_payload_is_pending(self):
-        for pages in ([{"message": "Not Found"}], [], [None], ["oops"]):
-            with self.subTest(pages=pages):
-                self.assertEqual(evaluate(check_pages=pages)["verdict"], "pending")
+        for check_pages in ([{"message": "Not Found"}], [], [None], ["oops"]):
+            with self.subTest(pages=check_pages):
+                self.assertEqual(evaluate(check_pages=check_pages)["verdict"], "pending")
 
     def test_unfinished_check_is_pending(self):
         for state in ("queued", "in_progress", "waiting", ""):
@@ -197,7 +199,7 @@ class CheckRunTests(unittest.TestCase):
         self.assertEqual(decision["hints"], [])
 
     def test_other_bad_conclusions_block(self):
-        for conclusion in ("cancelled", "timed_out", "action_required", "stale", "startup_failure", None):
+        for conclusion in ("cancelled", "timed_out", "action_required", "stale", "startup_failure", None, "s\nuccess"):
             with self.subTest(conclusion=conclusion):
                 self.assertEqual(evaluate(check_pages=[runs(run(conclusion=conclusion))])["verdict"], "blocked")
 
@@ -224,8 +226,11 @@ class CheckRunTests(unittest.TestCase):
         queued = evaluate(check_pages=[runs(run(conclusion="skipped"), run(name="b", status="queued", conclusion=None))])
         self.assertEqual(queued["verdict"], "pending")
 
-    def test_check_for_another_commit_is_pending(self):
+    def test_check_for_another_or_unknown_commit_is_pending(self):
         self.assertEqual(evaluate(check_pages=[runs(run(head=OTHER))])["verdict"], "pending")
+        unbound = evaluate(check_pages=[runs(run(head=None))])
+        self.assertEqual(unbound["verdict"], "pending")
+        self.assertIn("use the REST check-runs endpoint", unbound["reasons"][0])
 
     def test_untrusted_check_name_is_sanitized(self):
         decision = evaluate(check_pages=[runs(run(name="tests `rm -rf`\n[click](https://x)"))])
@@ -241,8 +246,8 @@ class CheckRunTests(unittest.TestCase):
         self.assertEqual(skipped["verdict"], "blocked")
 
     def test_blocked_outranks_pending(self):
-        pages = [runs(run(conclusion="failure"), run(name="b", status="queued", conclusion=None))]
-        self.assertEqual(evaluate(check_pages=pages)["verdict"], "blocked")
+        check_pages = [runs(run(conclusion="failure"), run(name="b", status="queued", conclusion=None))]
+        self.assertEqual(evaluate(check_pages=check_pages)["verdict"], "blocked")
 
 
 class StatusTests(unittest.TestCase):
@@ -276,8 +281,10 @@ class StatusTests(unittest.TestCase):
                 self.assertEqual(evaluate(status=payload)["verdict"], "pending")
 
     def test_unsafe_target_url_is_dropped(self):
-        decision = evaluate(status=status(context(state="failure", url="javascript:alert(1)")))
-        self.assertNotIn("javascript", decision["reasons"][0])
+        for url in ("javascript:alert(1)", "https://evil.example/x\n", "https://x.y/<s>"):
+            with self.subTest(url=url):
+                decision = evaluate(status=status(context(state="failure", url=url)))
+                self.assertEqual(decision["reasons"][0], "status `pre-commit.ci - pr` is failure")
 
 
 class PullRequestStateTests(unittest.TestCase):
@@ -300,16 +307,24 @@ class PullRequestStateTests(unittest.TestCase):
         self.assertEqual(decision["verdict"], "pending")
         self.assertIn("head moved", decision["reasons"][0])
 
-    def test_labels(self):
-        labelled = pull(labels=[{"name": "internal"}, {"name": "major"}])
+    def test_labels_match_case_insensitively(self):
+        labelled = pull(labels=[{"name": "Internal"}, {"name": "do-not-merge"}])
         self.assertEqual(evaluate(pr=labelled, require_labels=("internal",))["verdict"], "merge")
         missing = evaluate(require_labels=("internal",))
         self.assertEqual(missing["verdict"], "blocked")
         self.assertIn("required label `internal` is missing", missing["reasons"][0])
-        forbidden = evaluate(pr=labelled, forbid_labels=("major",))
+        forbidden = evaluate(pr=labelled, forbid_labels=("Do-Not-Merge",))
         self.assertEqual(forbidden["verdict"], "blocked")
-        self.assertIn("label `major` excludes", forbidden["reasons"][0])
+        self.assertIn("label `Do-Not-Merge` excludes", forbidden["reasons"][0])
         self.assertEqual(evaluate(forbid_labels=("major",))["verdict"], "merge")
+
+    def test_payload_strings_are_sanitized_in_reasons(self):
+        pr = pull(state="clo\nsed `x`", mergeable_state="behind", base={"ref": "ma<in>\n`", "repo": {"full_name": REPO}})
+        decision = evaluate(pr=pr)
+        self.assertEqual(decision["verdict"], "blocked")
+        self.assertIn("pull request is clo sed 'x'", decision["reasons"][0])
+        self.assertIn("behind ma<in> '", decision["reasons"][1])
+        self.assertNotIn("\n", json.dumps(decision))
 
     def test_unknown_mergeability_is_pending(self):
         self.assertEqual(evaluate(pr=pull(mergeable=None, mergeable_state="unknown"))["verdict"], "pending")
@@ -343,7 +358,7 @@ class PullRequestStateTests(unittest.TestCase):
 
     def test_pre_commit_ci_gets_no_dependabot_hint(self):
         pr = pull(user=user("pre-commit-ci[bot]", PRE_COMMIT_CI), mergeable_state="behind")
-        decision = evaluate(pr=pr, commits=[commit(author=PRE_COMMIT_CI, committer=PRE_COMMIT_CI)])
+        decision = evaluate(pr=pr, commits=[pre_commit_commit()])
         self.assertEqual(decision["verdict"], "blocked")
         self.assertEqual(decision["hints"], [])
 
@@ -383,6 +398,14 @@ class CommitTests(unittest.TestCase):
                      "author": {"name": "dependabot[bot]", "email": "x@y", "date": "2026-10-26T11:00:00Z"}}
         self.assertEqual(evaluate(commits=[mcp_shape])["verdict"], "blocked")
 
+    def test_dependabot_commit_must_carry_githubs_signature(self):
+        for verified in (False, None):
+            with self.subTest(verified=verified):
+                decision = evaluate(commits=[commit(verified=verified)])
+                self.assertEqual(decision["verdict"], "blocked")
+                self.assertIn("claims to be by dependabot[bot] but carries no verified GitHub signature",
+                              decision["reasons"][0])
+
     def test_unknown_committer_blocks(self):
         for committer in (999, None):
             with self.subTest(committer=committer):
@@ -390,14 +413,14 @@ class CommitTests(unittest.TestCase):
 
     def test_merge_commit_blocks_by_default(self):
         decision = evaluate(pr=pull(commits=2, head={"sha": MERGE_SHA, "ref": "x", "repo": {"full_name": REPO}}),
-                            commits=[commit(), update_merge()], check_pages=[runs(run(head=MERGE_SHA))],
-                            status=status(sha=MERGE_SHA))
+                            expected_head=MERGE_SHA, commits=[commit(), update_merge()],
+                            check_pages=[runs(run(head=MERGE_SHA))], status=status(sha=MERGE_SHA))
         self.assertEqual(decision["verdict"], "blocked")
         self.assertIn("merge commit, so someone updated", decision["reasons"][0])
 
     def updated(self, merge, **overrides):
         kwargs = dict(pr=pull(commits=2, head={"sha": MERGE_SHA, "ref": "x", "repo": {"full_name": REPO}}),
-                      commits=[commit(), merge], check_pages=[runs(run(head=MERGE_SHA))],
+                      expected_head=MERGE_SHA, commits=[commit(), merge], check_pages=[runs(run(head=MERGE_SHA))],
                       status=status(sha=MERGE_SHA), allow_branch_update=True)
         kwargs.update(overrides)
         return evaluate(**kwargs)
@@ -424,8 +447,8 @@ class CommitTests(unittest.TestCase):
     def test_commits_after_an_update_merge_still_need_a_bot_author(self):
         human = commit(sha=OTHER, author=MAINTAINER, committer=MAINTAINER, parents=[MERGE_SHA], date="2026-10-26T11:40:00Z")
         decision = self.updated(update_merge(), pr=pull(commits=3, head={"sha": OTHER, "ref": "x", "repo": {"full_name": REPO}}),
-                                commits=[commit(), update_merge(), human], check_pages=[runs(run(head=OTHER))],
-                                status=status(sha=OTHER))
+                                expected_head=OTHER, commits=[commit(), update_merge(), human],
+                                check_pages=[runs(run(head=OTHER))], status=status(sha=OTHER))
         self.assertEqual(decision["verdict"], "blocked")
         self.assertIn(f"authored by account {MAINTAINER}", decision["reasons"][0])
 
@@ -461,7 +484,8 @@ class HelperTests(unittest.TestCase):
 
     def test_safe_url(self):
         self.assertEqual(gate.safe_url("https://github.com/a/b/pull/1"), "https://github.com/a/b/pull/1")
-        for bad in ("javascript:alert(1)", "http://insecure", "https://x.y/<s>", "https://x.y/a b", 7, None):
+        for bad in ("javascript:alert(1)", "http://insecure", "https://x.y/<s>", "https://x.y/a b",
+                    "https://evil.example/x\n", "\nhttps://evil.example/x", 7, None):
             with self.subTest(bad=bad):
                 self.assertEqual(gate.safe_url(bad), "")
 
@@ -470,30 +494,12 @@ class HelperTests(unittest.TestCase):
         self.assertIsNone(gate.parse_time("yesterday"))
         self.assertIsNone(gate.parse_time(None))
 
-    def test_parse_bot(self):
-        self.assertEqual(gate.parse_bot("renovate[bot]=29139614"), (RENOVATE, "renovate[bot]"))
-        for bad in ("renovate[bot]", "=1", "renovate[bot]=abc", "renovate[bot]=-1"):
-            with self.subTest(bad=bad), self.assertRaises(argparse.ArgumentTypeError):
-                gate.parse_bot(bad)
-
-    def test_documents_in_every_gh_output_shape(self):
-        with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "pages.json"
-            cases = {
-                '[{"number": 1}, {"number": 2}]\n[{"number": 3}]': [1, 2, 3],
-                '[[{"number": 1}], [{"number": 2}]]': [1, 2],
-                '[{"number": 1}]': [1],
-                '{"number": 1}\n{"number": 2}': [1, 2],
-                '': [],
-            }
-            for text, numbers in cases.items():
-                with self.subTest(text=text):
-                    path.write_text(text, encoding="utf-8")
-                    items = gate.flatten(gate.load_documents(path))
-                    self.assertEqual([item["number"] for item in items], numbers)
-            path.write_text("[not json", encoding="utf-8")
-            with self.assertRaises(ValueError):
-                gate.load_documents(path)
+    def test_pages_unnests_slurped_output(self):
+        self.assertEqual(gate.pages([[{"n": 1}], [{"n": 2}, {"n": 3}]]), [{"n": 1}, {"n": 2}, {"n": 3}])
+        self.assertEqual(gate.pages([{"total_count": 1}, {"total_count": 1}]), [{"total_count": 1}, {"total_count": 1}])
+        self.assertEqual(gate.pages([{"n": 1}]), [{"n": 1}])
+        self.assertEqual(gate.pages({"n": 1}), [{"n": 1}])
+        self.assertEqual(gate.pages([[]]), [])
 
     def test_skill_version_comes_from_the_frontmatter(self):
         self.assertRegex(gate.skill_version(SKILL_DIR), r"^\d+\.\d+\.\d+$")
@@ -569,8 +575,8 @@ class CliTests(unittest.TestCase):
         self.root = Path(self.directory.name)
         self.ledger = self.root / "ledger.jsonl"
         self.files = {
-            "pr": pull(), "commits": [commit()], "checks": runs(run()), "status": status(),
-            "pulls": [pull(), pull(number=8, user=user("dependabot[bot]", 1))],
+            "pr": pull(), "commits": [[commit()]], "checks": [runs(run())], "status": status(),
+            "pulls": [[pull()], [pull(number=8, user=user("dependabot[bot]", 1))]],
         }
         for name, payload in self.files.items():
             (self.root / f"{name}.json").write_text(json.dumps(payload), encoding="utf-8")
@@ -593,12 +599,20 @@ class CliTests(unittest.TestCase):
             argv += [key, value]
         return argv
 
+    def test_init_creates_a_fresh_directory(self):
+        code, out, _ = self.main("init")
+        self.assertEqual(code, 0)
+        work = out.strip()
+        self.addCleanup(os.rmdir, work)
+        self.assertTrue(Path(work).is_dir())
+        self.assertIn("bot-pr-sweep-", Path(work).name)
+
     def test_gate_exit_codes(self):
         code, out, _ = self.main(*self.gate_args())
         self.assertEqual(code, 0)
         self.assertEqual(json.loads(out)["verdict"], "merge")
         self.assertEqual(json.loads(self.ledger.read_text().splitlines()[0])["event"], "decision")
-        (self.root / "checks.json").write_text(json.dumps(runs(run(conclusion="failure"))), encoding="utf-8")
+        (self.root / "checks.json").write_text(json.dumps([runs(run(conclusion="failure"))]), encoding="utf-8")
         code, out, _ = self.main(*self.gate_args())
         self.assertEqual(code, 1)
         self.assertEqual(json.loads(out)["verdict"], "blocked")
@@ -610,8 +624,14 @@ class CliTests(unittest.TestCase):
         (self.root / "pr.json").write_text("", encoding="utf-8")
         self.assertEqual(self.main(*self.gate_args())[0], 2)
 
+    def test_gate_rejects_bad_arguments(self):
+        with self.assertRaises(SystemExit):
+            self.main(*[arg for arg in self.gate_args() if arg not in ("--head-sha", HEAD)])
+        with self.assertRaises(SystemExit):
+            self.main(*self.gate_args(**{"--repo": "acme/widgets/evil"}))
+
     def test_gate_options(self):
-        (self.root / "checks.json").write_text(json.dumps(runs(run(), run(name="x", conclusion="skipped"))), encoding="utf-8")
+        (self.root / "checks.json").write_text(json.dumps([runs(run(), run(name="x", conclusion="skipped"))]), encoding="utf-8")
         self.assertEqual(self.main(*self.gate_args())[0], 0)
         self.assertEqual(self.main(*self.gate_args("--strict"))[0], 1)
         self.assertEqual(self.main(*self.gate_args(**{"--require-check": "lint"}))[0], 1)
@@ -622,10 +642,6 @@ class CliTests(unittest.TestCase):
         code, out, _ = self.main(*self.gate_args("--allow-branch-update"))
         self.assertEqual(code, 1)
         self.assertTrue(json.loads(out)["update_branch"])
-        (self.root / "pr.json").write_text(json.dumps(pull(user=user("renovate[bot]", RENOVATE))), encoding="utf-8")
-        (self.root / "commits.json").write_text(json.dumps([commit(author=RENOVATE, committer=RENOVATE)]), encoding="utf-8")
-        self.assertEqual(self.main(*self.gate_args())[0], 1)
-        self.assertEqual(self.main(*self.gate_args(**{"--bot": f"renovate[bot]={RENOVATE}"}))[0], 0)
 
     def test_select_outcome_and_report(self):
         code, out, err = self.main("select", "--repo", REPO, "--ledger", str(self.ledger), self.path("pulls"))
