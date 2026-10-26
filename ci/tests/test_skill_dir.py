@@ -14,6 +14,9 @@ class SkillDirTests(unittest.TestCase):
             skill = Path(directory) / 'example'
             (skill / 'scripts').mkdir(parents=True)
             (skill / 'scripts' / 'run.py').write_text('')
+            (Path(directory) / 'other').mkdir()
+            (Path(directory) / 'other' / 'run.py').write_text('')
+            (skill / 'scripts' / 'outside.py').symlink_to(Path(directory) / 'other' / 'run.py')
             (skill / 'SKILL.md').write_text(
                 f'---\nname: example\ndescription: Example.\n---\n{body}\n')
             result = Result()
@@ -27,6 +30,8 @@ class SkillDirTests(unittest.TestCase):
         self.assertEqual(self.check(defined + 'Run `SKILL_DIR/scripts/run.py`.'), [])
         for body in ('python3 SKILL_DIR/scripts/run.py',
                      defined + 'python3 SKILL_DIR/missing.py',
-                     defined + 'python3 SKILL_DIR/scripts'):
+                     defined + 'python3 SKILL_DIR/scripts',
+                     defined + 'python3 SKILL_DIR/../other/run.py',
+                     defined + 'python3 SKILL_DIR/scripts/outside.py'):
             with self.subTest(body=body):
                 self.assertEqual(len(self.check(body)), 1)

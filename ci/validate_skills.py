@@ -167,9 +167,11 @@ def check_skill_md(skill_md: Path, result: Result) -> None:
             for m in _SKILL_DIR_REF.finditer(line)]
     if refs and SKILL_DIR_DEFINITION not in text:
         result.error("E009", skill_md, "uses SKILL_DIR without the shared definition sentence")
+    root = skill_md.parent.resolve()
     for i, ref in refs:
-        if not (skill_md.parent / ref).is_file():
-            result.error("E009", skill_md, f"SKILL_DIR/{ref} is not bundled with this skill", i)
+        target = (root / ref).resolve()
+        if not (target.is_file() and target.is_relative_to(root)):
+            result.error("E009", skill_md, f"SKILL_DIR/{ref} is not a file bundled with this skill", i)
 
 
 def check_python_file(py_path: Path, result: Result) -> None:

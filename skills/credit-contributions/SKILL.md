@@ -50,7 +50,9 @@ con/tributors gains native CRediT support, the overlay folds back in.
 
 ## Renderers
 
-Two single-file Python tools (PyYAML-only). `SKILL_DIR` is the absolute path of the directory holding this SKILL.md; Claude Code reports it as "Base directory for this skill". If you do not know it, ask the user; do not search for or guess it.
+Two single-file Python tools (PyYAML-only).
+
+`SKILL_DIR` is the absolute path of the directory holding this SKILL.md; Claude Code reports it as "Base directory for this skill". If you do not know it, ask the user; do not search for or guess it.
 
 `render_credit.py` — Author Contributions section / JATS XML / matrix:
 
