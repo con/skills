@@ -336,7 +336,8 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
                     blocked(f"commit {short} claims to be by {TRUSTED_BOTS[user_id]} but carries no verified "
                             "GitHub signature")
                 if committer_id not in (user_id, WEB_FLOW_ID):
-                    blocked(f"commit {short} was committed by account {committer_id}, neither the author nor GitHub")
+                    blocked(f"commit {short} was committed by account "
+                            f"{'unknown' if committer_id is None else committer_id}, neither the author nor GitHub")
             when = parse_time(_dict(_dict(commit.get("commit")).get("committer")).get("date"))
             if when and (newest is None or when > newest):
                 newest = when

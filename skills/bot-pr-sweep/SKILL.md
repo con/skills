@@ -81,6 +81,10 @@ be registered by a person, but an App can be named to resemble another one.
 Account IDs are assigned by GitHub and never change, so the script matches
 `user.id` first and then requires the login to agree with it. To confirm the
 IDs, read `user.id` off a PR each bot opened in one of your repositories.
+Because pre-commit.ci's commits are unsigned, an unsigned commit using its
+noreply address would pass as the bot's: safety there depends on nobody else
+having push access to the bot's branch, which is what branch protection
+provides.
 
 ## Procedure
 
@@ -155,19 +159,18 @@ JSON decision and exits 0 only for the verdict `merge`:
 
 | Verdict | Meaning | Sweep action |
 |---|---|---|
-| `merge` | Trusted author, every commit by a trusted bot, PR open and mergeable, complete check list with every check run completed and none failed, at least one success, every status `success`, head commit older than the settle time. | Assign, then squash-merge (steps 3 and 5). |
+| `merge` | Trusted author, every commit by that same bot (or GitHub's "Update branch"), PR open and mergeable, complete check list with every check run completed and none failed, at least one success, every status `success`, head commit older than the settle time. | Assign, then squash-merge (steps 3 and 5). |
 | `pending` | Something is unfinished or not yet knowable: checks still running, mergeability not computed, head commit younger than the settle time, a truncated or malformed payload, payloads describing another commit, the head moved since listing. | Assign and report; the next run looks again. If a reason says a payload was incomplete, save that payload once more and evaluate the PR again before moving on. |
-| `blocked` | Needs a person: a failed check, no CI results at all, conflicts, behind the base, branch protection, draft, a missing or forbidden label, a commit by someone other than a trusted bot, a head branch outside the repository. | Assign and report, with the failing check's link and any hint. With `--allow-branch-update`, a decision whose only problem is being behind carries `"update_branch": true` and goes to step 4. |
+| `blocked` | Needs a person: a failed check, no CI results at all, conflicts, behind the base, branch protection, draft, a missing or forbidden label, a commit not by the pull request's author, a head branch outside the repository. | Assign and report, with the failing check's link and any hint. With `--allow-branch-update`, a decision whose only problem is being behind carries `"update_branch": true` and goes to step 4. |
 | `rejected` | The author is not a trusted bot by account ID. | Report only; never assign, merge or comment. |
 
 Exit status 1 is the normal result for every verdict other than `merge`, not
 a failed command. An exit status of 2 means the input is unusable (wrong file,
 wrong repository, unparsable JSON): correct the saved files and evaluate the
-PR again. Do not
-reason your way around any verdict. If a verdict looks wrong, report it as it
-is and let the maintainer decide. Precedence is `rejected`, then `blocked`,
-then `pending`, then `merge`; every rule fails closed, and the decision's
-`reasons` name exactly what stopped the merge.
+PR again. Do not reason your way around any verdict. If a verdict looks wrong,
+report it as it is and let the maintainer decide. Precedence is `rejected`,
+then `blocked`, then `pending`, then `merge`; every rule fails closed, and the
+decision's `reasons` name exactly what stopped the merge.
 
 ### 3. Assign the maintainer
 
@@ -230,7 +233,9 @@ they are handled by step 4 or the maintainer on the next run.
 python3 SKILL_DIR/scripts/pr_gate.py report --ledger WORK/ledger.jsonl
 ```
 
-Add `--dry-run` when the run was one. Give the user the output verbatim; it
+Add `--dry-run` when the run was one. If `report` exits 2, the ledger is
+missing or corrupt and nothing is known about the run: tell the user so
+instead of reporting an empty sweep. Give the user the output verbatim; it
 groups PRs into Merged, Blocked, Pending (including branches just updated)
 and Needs attention (rejected and suspicious authors, failed merges,
 assignments and updates, repositories that could not be listed), each with a

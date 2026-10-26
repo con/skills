@@ -127,6 +127,12 @@ class AuthorTests(unittest.TestCase):
         foreign_committer = evaluate(commits=[commit(committer=PRE_COMMIT_CI)])
         self.assertEqual(foreign_committer["verdict"], "blocked")
         self.assertIn("neither the author nor GitHub", foreign_committer["reasons"][0])
+        reverse = evaluate(pr=pull(user=user("pre-commit-ci[bot]", PRE_COMMIT_CI)), commits=[commit()])
+        self.assertEqual(reverse["verdict"], "blocked")
+        self.assertIn(f"authored by account {DEPENDABOT}, not by the pull request's author", reverse["reasons"][0])
+        null_committer = evaluate(commits=[commit(committer=None)])
+        self.assertEqual(null_committer["verdict"], "blocked")
+        self.assertIn("committed by account unknown", null_committer["reasons"][0])
 
     def test_other_bots_are_not_trusted(self):
         pr = pull(user=user("renovate[bot]", RENOVATE))
@@ -703,6 +709,11 @@ class CliTests(unittest.TestCase):
         code, out, _ = self.main("report", "--ledger", str(self.ledger), "--dry-run")
         self.assertEqual(code, 0)
         self.assertIn("dry run", out)
+        with self.ledger.open("a", encoding="utf-8") as handle:
+            handle.write('{"event": "outcome", "repo": "acme/widgets"\n')
+        code, _, err = self.main("report", "--ledger", str(self.ledger))
+        self.assertEqual(code, 2)
+        self.assertIn("error:", err)
 
     def test_outcome_rejects_unknown_results(self):
         with self.assertRaises(SystemExit):
