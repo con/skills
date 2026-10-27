@@ -1,6 +1,6 @@
 ---
 name: review-org-code-quality
-version: 0.1.0
+version: 0.1.1
 description: Audit code health across an organization-wide ecosystem of similarly styled, interconnected data/ML/ETL pipelines or repositories. Focuses on systemic risk (template drift, contract fragility, cross-repo duplication, blast radius, bus factor) rather than single-repo code smells, and writes a dated report. Use when asked to review, audit, or assess the health of a set of related repositories or pipelines. For one repository use review-repo-code-quality instead.
 allowed-tools: Bash, Read, Write, Glob, Grep, AskUserQuestion, Agent, Skill
 user-invocable: true
@@ -79,7 +79,7 @@ Before judging anything, define what "correct" looks like in this ecosystem.
 
 ## Phase 1 — Map the graph
 
-- Build an inventory: pipeline name, owner/team, orchestrator, last meaningful commit, shared-lib version, upstream inputs, downstream consumers, SLA/criticality if known. Start from the `scan-projects` skill's metadata scan only (repo list, language, license, URL as `projects.tsv`; skip its summary pass) when the repositories are checked out side by side. Its `scan.py` scans and writes `projects.tsv` to the current directory, so run it from the parent directory holding the checkouts (never from inside a reviewed repository), calling `scan.py` from wherever `scan-projects` is installed rather than the `~/.claude/skills/` path its instructions assume. Use `github-project-status` for commit/release/PR activity and staleness per repository. Add the pipeline-specific columns by hand.
+- Build an inventory: pipeline name, owner/team, orchestrator, last meaningful commit, shared-lib version, upstream inputs, downstream consumers, SLA/criticality if known. Start from the `scan-projects` skill's metadata scan only (repo list, language, license, URL as `projects.tsv`; skip its summary pass) when the repositories are checked out side by side. Its `scan.py` scans and writes `projects.tsv` to the current directory, so run it from the parent directory holding the checkouts (never from inside a reviewed repository), calling `scan.py` from the `scan-projects` skill's own directory. Use `github-project-status` for commit/release/PR activity and staleness per repository. Add the pipeline-specific columns by hand.
 - Derive edges from: orchestrator dependencies, table/topic/bucket reads and writes, import graphs, cross-repo API calls, machine-readable declarations (`cache.toml`, `dbt` sources, …) when they exist — prefer declared edges to guessed ones and say which you used.
 - Compute for each node: **fan-in, fan-out, depth**, and whether it's on the path to anything business-critical.
 - Flag: orphaned pipelines (no consumers, still running), hub nodes (high fan-out), long chains (depth well above the ecosystem median; state the threshold you used), cycles. Distinguish an orphan from a *product* — a leaf with external consumers is not a candidate for retirement.

@@ -12,9 +12,9 @@
 #   back into .tributors directly.
 #
 # Render the in-paper section and JATS XML from this file:
-#   ~/.claude/skills/credit-contributions/render_credit.py \
+#   python3 <path-to>/credit-contributions/render_credit.py \
 #       --format latex   .tributors.credit.yaml -o author-contributions.tex
-#   ~/.claude/skills/credit-contributions/render_credit.py \
+#   python3 <path-to>/credit-contributions/render_credit.py \
 #       --format jats    .tributors.credit.yaml -o author-contributions.jats.xml
 #
 # Roles MUST be one of the 14 official CRediT terms (see CREDIT_ROLES.md

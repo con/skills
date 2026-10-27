@@ -53,8 +53,10 @@ Parse the output to get `OWNER/REPO`.  Use `--repo` if the user provided it.
 
 Skip this step if `--serve-only` is set and `.git/triage/issues.json` exists.
 
+`SKILL_DIR` is the absolute path of the directory holding this SKILL.md; Claude Code reports it as "Base directory for this skill". If you do not know it, ask the user; do not search for or guess it.
+
 ```bash
-python3 ~/.claude/skills/issue-triage/gather.py --repo OWNER/REPO --limit N --output .git/triage/issues.json
+python3 SKILL_DIR/gather.py --repo OWNER/REPO --limit N --output .git/triage/issues.json
 ```
 
 Add `--label LABEL` if the user specified one.
@@ -108,7 +110,7 @@ Use the Bash tool with `run_in_background: true` to launch the server and save t
 task ID (for later use with `TaskOutput`/`TaskStop`):
 
 ```bash
-python3 ~/.claude/skills/issue-triage/server.py --triage-dir .git/triage --repo OWNER/REPO --port PORT
+python3 SKILL_DIR/server.py --triage-dir .git/triage --repo OWNER/REPO --port PORT
 ```
 
 The server binds to `0.0.0.0` so it is accessible from outside containers.  Print the URL

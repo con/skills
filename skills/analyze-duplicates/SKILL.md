@@ -115,6 +115,8 @@ temporary parent directory with symlinks to all paths and run one combined scan.
 Read each `.tmp/jscpd-PROJECTNAME/jscpd-report.json` and generate the report
 using the helper script:
 
+`SKILL_DIR` is the absolute path of the directory holding this SKILL.md; Claude Code reports it as "Base directory for this skill". If you do not know it, ask the user; do not search for or guess it.
+
 ```bash
 python3 SKILL_DIR/generate-report.py \
     --threshold THRESHOLD \
@@ -125,9 +127,6 @@ python3 SKILL_DIR/generate-report.py \
     .tmp/jscpd-PROJECT1/jscpd-report.json \
     [.tmp/jscpd-PROJECT2/jscpd-report.json ...]
 ```
-
-Where `SKILL_DIR` is the directory containing this SKILL.md file. Resolve it
-by searching for `generate-report.py` in `~/.claude/skills/analyze-duplicates/`.
 
 If `--badge` was requested and a badge was generated, pass `--badge-path` with
 a relative path to the SVG. Copy the badge SVG to the output directory so both
