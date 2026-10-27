@@ -211,8 +211,10 @@ def _signed(commit: dict) -> bool:
     return _dict(_dict(commit.get("commit")).get("verification")).get("verified") is True
 
 
-_VERSION_CHECK = re.compile(r"\bversion[-_ ]?(check|bump|guard|lint|gate|verif)"
-                            r"|\b(check|bump|verify|validate|ensure|require)[-_ ]version")
+# Names like `version-check`, `ci_version_check` or `Check Version`, not `python-version 3.9`
+# or `check-versioning`; `\b` would miss a leading `_`, hence the lookbehind.
+_VERSION_CHECK = re.compile(r"(?<![a-z0-9])versions?[-_ ]?(check|bump|guard|lint|gate|verif)"
+                            r"|(?<![a-z0-9])(check|bump|verify|validate|ensure|require)[-_ ]versions?\b")
 
 
 def version_hint(name: str) -> str:
@@ -304,9 +306,10 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
     for label in strip_labels:
         blocked(f"carries the `{label}` label, which a label-driven release tool reads as a major "
                 "release of the application")
-        hints.append(f"`{label}` on a bot PR is usually Dependabot's own doing (a known bug) and interacts badly "
-                     "with intuit/auto: remove it unless a person put it there on purpose, then evaluate "
-                     "the PR again")
+        if not reasons[REJECTED]:  # a rejected PR is report-only; no advice to touch it
+            hints.append(f"`{label}` on a bot PR is usually Dependabot's own doing (a known bug) and interacts "
+                         "badly with intuit/auto: remove it unless a person put it there on purpose "
+                         "(SKILL.md step 3)")
 
     mergeable, mergeable_state = pr.get("mergeable"), sanitize(pr.get("mergeable_state"), 20)
     behind = False

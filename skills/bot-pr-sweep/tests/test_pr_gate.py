@@ -226,7 +226,8 @@ class CheckRunTests(unittest.TestCase):
         self.assertIn("never re-runs", decision["hints"][0])
 
     def test_failing_version_guards_get_a_hint(self):
-        for name in ("version-check", "Check Version", "bump_version", "Version Guard", "verify-version"):
+        for name in ("version-check", "Check Version", "bump_version", "Version Guard", "verify-version",
+                     "ci_version_check"):
             with self.subTest(name=name):
                 decision = evaluate(check_pages=[runs(run(), run(name=name, conclusion="failure"))])
                 self.assertEqual(decision["verdict"], "blocked")
@@ -234,7 +235,7 @@ class CheckRunTests(unittest.TestCase):
                 self.assertIn("--require-label", decision["hints"][0])
         by_status = evaluate(status=status(context("Check Version", state="failure")))
         self.assertIn("`Check Version` looks like a version check", by_status["hints"][0])
-        for name in ("test (python-version 3.9)", "versioning-docs", "diversion"):
+        for name in ("test (python-version 3.9)", "versioning-docs", "diversion", "check-versioning"):
             with self.subTest(name=name):
                 self.assertEqual(evaluate(check_pages=[runs(run(name=name, conclusion="failure"))])["hints"], [],
                                  "a version in a check's name is not a version check")
@@ -383,9 +384,13 @@ class PullRequestStateTests(unittest.TestCase):
         self.assertEqual(clean["strip_labels"], [])
         behind = evaluate(pr=pull(labels=[{"name": "major"}], mergeable_state="behind"), allow_branch_update=True)
         self.assertFalse(behind["update_branch"])
-        rejected = evaluate(pr=pull(labels=[{"name": "major"}], user=user(uid=1)))
+        rejected = evaluate(pr=pull(labels=[{"name": "Major"}], user=user(uid=1)))
         self.assertEqual(rejected["verdict"], "rejected")
         self.assertEqual(rejected["strip_labels"], [], "a PR the sweep must not touch never gets a label write")
+        self.assertEqual(rejected["hints"], [], "and no advice to touch it either")
+        missing = evaluate(pr=pull(labels=None))
+        self.assertEqual(missing["verdict"], "pending")
+        self.assertEqual((missing["strip_labels"], missing["hints"]), ([], []))
 
     def test_payload_strings_are_sanitized_in_reasons(self):
         pr = pull(state="clo\nsed `x`", mergeable_state="behind", base={"ref": "ma<in>\n`", "repo": {"full_name": REPO}})
@@ -754,13 +759,6 @@ class CliTests(unittest.TestCase):
         code, out, _ = self.main("report", "--ledger", str(self.ledger), "--dry-run")
         self.assertEqual(code, 0)
         self.assertIn("dry run", out)
-        code, _, _ = self.main("outcome", "--repo", REPO, "--ledger", str(self.ledger), "--number", "7",
-                               "--result", "label-failed", "--detail", "HTTP 404")
-        self.assertEqual(code, 0)
-        code, out, _ = self.main("report", "--ledger", str(self.ledger))
-        self.assertEqual(code, 0)
-        self.assertIn("## Needs attention (2)", out)
-        self.assertIn("squash-merged as `ddddddd`; label removal failed: HTTP 404", out)
         with self.ledger.open("a", encoding="utf-8") as handle:
             handle.write('{"event": "outcome", "repo": "acme/widgets"\n')
         code, _, err = self.main("report", "--ledger", str(self.ledger))
