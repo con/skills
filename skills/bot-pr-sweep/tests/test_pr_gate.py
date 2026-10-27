@@ -651,6 +651,11 @@ class ReportTests(unittest.TestCase):
         self.assertIn("## Needs attention (1)", text)
         self.assertIn("- acme/widgets#99: `merged` recorded without a gate decision", text)
 
+    def test_schedule_line_is_optional_and_sanitized(self):
+        text = gate.render_report([], version="0.1.0", now=NOW, schedule="daily at 06:00 UTC\n[evil](https://e)")
+        self.assertIn("- Mode: live\n- Schedule: daily at 06:00 UTC [evil](https://e)\n- Repositories swept", text)
+        self.assertNotIn("Schedule", gate.render_report([], version="0.1.0", now=NOW))
+
     def test_empty_report(self):
         text = gate.render_report([], version="0.1.0", now=NOW)
         self.assertIn("## Merged (0)\n\n- none", text)
@@ -759,6 +764,9 @@ class CliTests(unittest.TestCase):
         code, out, _ = self.main("report", "--ledger", str(self.ledger), "--dry-run")
         self.assertEqual(code, 0)
         self.assertIn("dry run", out)
+        code, out, _ = self.main("report", "--ledger", str(self.ledger), "--schedule", "hourly")
+        self.assertEqual(code, 0)
+        self.assertIn("- Schedule: hourly\n", out)
         with self.ledger.open("a", encoding="utf-8") as handle:
             handle.write('{"event": "outcome", "repo": "acme/widgets"\n')
         code, _, err = self.main("report", "--ledger", str(self.ledger))

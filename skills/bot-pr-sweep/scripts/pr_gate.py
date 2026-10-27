@@ -493,7 +493,8 @@ def _pr_line(decision: dict, notes: list[str]) -> str:
     return f"- [{decision['repo']}#{decision['number']}]({decision['url']}){title} — " + "; ".join(notes)
 
 
-def render_report(events: list, *, version: str, now: datetime, dry_run: bool = False) -> str:
+def render_report(events: list, *, version: str, now: datetime, dry_run: bool = False,
+                  schedule: str = "") -> str:
     decisions: dict[tuple, dict] = {}
     outcomes: dict[tuple, dict[str, str]] = {}
     selections: list[dict] = []
@@ -562,6 +563,7 @@ def render_report(events: list, *, version: str, now: datetime, dry_run: bool = 
         "",
         f"- Generated {iso(now)} by the bot-pr-sweep skill, version {version}",
         f"- Mode: {'dry run (nothing merged or assigned)' if dry_run else 'live'}",
+        *([f"- Schedule: {sanitize(schedule, 80)}"] if schedule else []),
         f"- Repositories swept: {len(selections)}; trusted-bot PRs evaluated: {len(decisions)}",
     ]
     for heading, entries in buckets.items():
@@ -639,8 +641,8 @@ def cmd_report(args: argparse.Namespace) -> int:
         raise GateInputError(f"ledger {args.ledger} does not exist; the run's records are missing")
     events = [json.loads(line) for line in ledger.read_text(encoding="utf-8").splitlines() if line.strip()]
     skill_dir = Path(args.skill_dir) if args.skill_dir else Path(__file__).resolve().parent.parent
-    print(render_report(events, version=skill_version(skill_dir),
-                        now=parse_time(args.now) or utc_now(), dry_run=args.dry_run), end="")
+    print(render_report(events, version=skill_version(skill_dir), now=parse_time(args.now) or utc_now(),
+                        dry_run=args.dry_run, schedule=args.schedule or ""), end="")
     return 0
 
 
@@ -688,6 +690,7 @@ def build_parser() -> argparse.ArgumentParser:
     report.add_argument("--ledger", required=True)
     report.add_argument("--skill-dir", help="directory holding SKILL.md (default: this skill)")
     report.add_argument("--dry-run", action="store_true", help="label the run as a dry run")
+    report.add_argument("--schedule", help="the agreed cadence to state in the report, e.g. 'daily at 06:00 UTC'")
     report.add_argument("--now", help="ISO 8601 time to stamp (tests)")
     return parser
 
