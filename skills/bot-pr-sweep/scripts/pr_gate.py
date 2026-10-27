@@ -52,9 +52,13 @@ TOLERATED_CONCLUSIONS = frozenset({"skipped", "neutral"})
 # Conclusions that often mean the job never ran rather than that it failed.
 RERUN_CONCLUSIONS = frozenset({"cancelled", "timed_out", "startup_failure", "stale"})
 MERGEABLE_OK = frozenset({"clean", "has_hooks"})
+# Labels the sweep removes from a bot PR before gating it again: Dependabot can
+# label a major dependency upgrade `major`, and a label-driven release tool
+# reads that same label as a major release of the application.
+STRIPPED_LABELS = frozenset({"major"})
 RESULTS = frozenset({
     "merged", "merge-failed", "assigned", "assign-failed", "dry-run", "repo-error",
-    "branch-updated", "update-failed",
+    "branch-updated", "update-failed", "label-removed", "label-failed",
 })
 DEFAULT_SETTLE = timedelta(minutes=10)
 
@@ -207,6 +211,15 @@ def _signed(commit: dict) -> bool:
     return _dict(_dict(commit.get("commit")).get("verification")).get("verified") is True
 
 
+def version_hint(name: str) -> str:
+    """Explain a failed check whose name suggests a version-bump guard."""
+    if "version" not in name.casefold():
+        return ""
+    return (f"`{name}` looks like a version check: this repository wants a version bump alongside "
+            "dependency changes. Bump it by hand (the sweep never pushes to the bot's branch), or derive "
+            "versions from labels at release time and run the sweep with --require-label")
+
+
 def merge_commit_problems(commit: dict, parents: list[str], previous: str, allowed: bool) -> list[str]:
     """Why a merge commit on the bot's branch is not GitHub's own Update branch merge.
 
@@ -273,7 +286,7 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
     label_entries = pr.get("labels")
     labels_valid = isinstance(label_entries, list) and all(
         isinstance(label, dict) and isinstance(label.get("name"), str) for label in label_entries)
-    if (require_labels or forbid_labels) and not labels_valid:
+    if not labels_valid:
         pending("labels payload is missing or malformed; fetch the pull request again")
     labels = {label["name"].strip().casefold() for label in label_entries} if labels_valid else set()
     for label in require_labels if labels_valid else ():
@@ -282,6 +295,11 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
     for label in forbid_labels if labels_valid else ():
         if label.strip().casefold() in labels:
             blocked(f"label `{sanitize(label, 60)}` excludes the pull request from automatic merging")
+    strip_labels = [label["name"] for label in label_entries
+                    if label["name"].strip().casefold() in STRIPPED_LABELS] if labels_valid else []
+    for label in strip_labels:
+        blocked(f"carries the `{sanitize(label, 60)}` label, which a label-driven release tool reads as a major "
+                "release of the application; the sweep removes it and evaluates the PR again")
 
     mergeable, mergeable_state = pr.get("mergeable"), sanitize(pr.get("mergeable_state"), 20)
     behind = False
@@ -396,6 +414,7 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
             if conclusion in RERUN_CONCLUSIONS:
                 hints.append(f"`{name}` ended as {conclusion}, which can mean the job never ran; a maintainer "
                              "can re-run it if its log shows no test output (the sweep never re-runs jobs)")
+            hints.append(version_hint(name))
 
     # Commit statuses (the older API that pre-commit.ci, codecov and others use).
     status = _dict(status)
@@ -423,6 +442,7 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
         else:
             failed.append(name)
             blocked(f"status `{name}` is {context_state or 'unknown'}" + (f" ({url})" if url else ""))
+            hints.append(version_hint(name))
 
     if ci_known and not passed and not unfinished:
         blocked("no check run or status finished with success for the head commit; unverified PRs are never merged")
@@ -445,6 +465,8 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
         "reasons": reasons.get(verdict, []),
         "hints": [hint for hint in dict.fromkeys(hints) if hint],
         "checks": {"passed": passed, "tolerated": tolerated, "failed": failed, "unfinished": unfinished},
+        # Labels the sweep removes (step 3) before gating the PR again; never on a PR it must not touch.
+        "strip_labels": strip_labels if verdict != REJECTED else [],
         # True when being behind the base is the only problem and the sweep may fix it.
         "update_branch": bool(allow_branch_update and behind and verdict == BLOCKED
                               and len(reasons[BLOCKED]) == 1 and not reasons[PENDING]),
@@ -490,15 +512,17 @@ def render_report(events: list, *, version: str, now: datetime, dry_run: bool = 
             notes.append("would merge (dry run)")
         if "branch-updated" in results:
             notes.append("branch updated from the base; the next run re-evaluates it")
+        if "label-removed" in results:
+            notes.append(f"label `{sanitize(results['label-removed'], 40)}` removed")
         for result, label in (("merge-failed", "merge failed"), ("assign-failed", "assignment failed"),
-                              ("update-failed", "branch update failed")):
+                              ("update-failed", "branch update failed"), ("label-failed", "label removal failed")):
             if result in results:
                 notes.append(f"{label}: {sanitize(results[result], 160)}")
         if "assigned" in results:
             notes.append(f"assigned to {sanitize(results['assigned'], 40)}")
         if verdict != MERGE:
             notes.extend(decision.get("hints", []))
-        failures = {"merge-failed", "assign-failed", "update-failed"} & results.keys()
+        failures = {"merge-failed", "assign-failed", "update-failed", "label-failed"} & results.keys()
         if verdict == MERGE and "merged" in results:
             bucket = "Merged"
         elif verdict == REJECTED or failures:

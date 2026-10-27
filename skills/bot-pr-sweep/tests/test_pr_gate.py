@@ -225,6 +225,15 @@ class CheckRunTests(unittest.TestCase):
         self.assertIn("`deploy` ended as cancelled", decision["hints"][0])
         self.assertIn("never re-runs", decision["hints"][0])
 
+    def test_failing_version_guards_get_a_hint(self):
+        decision = evaluate(check_pages=[runs(run(), run(name="version-check", conclusion="failure"))])
+        self.assertEqual(decision["verdict"], "blocked")
+        self.assertIn("`version-check` looks like a version check", decision["hints"][0])
+        self.assertIn("--require-label", decision["hints"][0])
+        by_status = evaluate(status=status(context("Check Version", state="failure")))
+        self.assertIn("`Check Version` looks like a version check", by_status["hints"][0])
+        self.assertEqual(evaluate(check_pages=[runs(run(name="version-check"))])["hints"], [])
+
     def test_skipped_and_neutral_are_tolerated_unless_strict(self):
         for conclusion in ("skipped", "neutral"):
             with self.subTest(conclusion=conclusion):
@@ -348,7 +357,24 @@ class PullRequestStateTests(unittest.TestCase):
                 self.assertEqual(decision["verdict"], "pending")
                 self.assertIn("labels payload is missing or malformed", decision["reasons"][0])
                 self.assertEqual(evaluate(pr=pull(labels=labels), require_labels=("internal",))["verdict"], "pending")
-        self.assertEqual(evaluate(pr=pull(labels=None))["verdict"], "merge")
+        self.assertEqual(evaluate(pr=pull(labels=None))["verdict"], "pending")
+
+    def test_major_label_is_stripped_before_any_merge(self):
+        for name in ("major", "Major", "MAJOR"):
+            with self.subTest(name=name):
+                decision = evaluate(pr=pull(labels=[{"name": "dependencies"}, {"name": name}]))
+                self.assertEqual(decision["verdict"], "blocked")
+                self.assertEqual(decision["strip_labels"], [name])
+                self.assertIn(f"carries the `{name}` label", decision["reasons"][0])
+                self.assertIn("major release of the application", decision["reasons"][0])
+        clean = evaluate(pr=pull(labels=[{"name": "dependencies"}, {"name": "majority"}]))
+        self.assertEqual(clean["verdict"], "merge")
+        self.assertEqual(clean["strip_labels"], [])
+        behind = evaluate(pr=pull(labels=[{"name": "major"}], mergeable_state="behind"), allow_branch_update=True)
+        self.assertFalse(behind["update_branch"])
+        rejected = evaluate(pr=pull(labels=[{"name": "major"}], user=user(uid=1)))
+        self.assertEqual(rejected["verdict"], "rejected")
+        self.assertEqual(rejected["strip_labels"], [], "a PR the sweep must not touch never gets a label write")
 
     def test_payload_strings_are_sanitized_in_reasons(self):
         pr = pull(state="clo\nsed `x`", mergeable_state="behind", base={"ref": "ma<in>\n`", "repo": {"full_name": REPO}})
@@ -561,6 +587,7 @@ class ReportTests(unittest.TestCase):
             {"event": "outcome", "repo": REPO, "number": 8, "result": "assigned", "detail": "maintainer"},
             {"event": "outcome", "repo": REPO, "number": 9, "result": "assign-failed", "detail": "HTTP 422"},
             {"event": "outcome", "repo": REPO, "number": 13, "result": "branch-updated", "detail": "main"},
+            {"event": "outcome", "repo": REPO, "number": 8, "result": "label-removed", "detail": "major"},
             {"event": "outcome", "repo": "acme/other", "number": None, "result": "repo-error", "detail": "HTTP 403"},
         ]
 
@@ -580,6 +607,7 @@ class ReportTests(unittest.TestCase):
         self.assertIn("@dependabot rebase", text)
         self.assertIn("assignment failed: HTTP 422", text)
         self.assertIn("branch updated from the base; the next run re-evaluates it", text)
+        self.assertIn("label `major` removed; assigned to maintainer", text)
         self.assertIn("pull/12) — account 1 is not trusted; not touched", text)
         self.assertIn("- acme/other: HTTP 403", text)
         self.assertIn("- acme/widgets: 9 open PRs, 5 from trusted bots, 1 suspicious, 1 from other bots", text)
