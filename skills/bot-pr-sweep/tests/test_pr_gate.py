@@ -653,8 +653,13 @@ class ReportTests(unittest.TestCase):
 
     def test_schedule_line_is_optional_and_sanitized(self):
         text = gate.render_report([], version="0.1.0", now=NOW, schedule="daily at 06:00 UTC\n[evil](https://e)")
-        self.assertIn("- Mode: live\n- Schedule: daily at 06:00 UTC [evil](https://e)\n- Repositories swept", text)
-        self.assertNotIn("Schedule", gate.render_report([], version="0.1.0", now=NOW))
+        self.assertIn("- Mode: live\n- Schedule: `daily at 06:00 UTC [evil](https://e)`\n- Repositories swept", text)
+        long = gate.render_report([], version="0.1.0", now=NOW, schedule="every " + "x" * 100)
+        self.assertRegex(long, r"- Schedule: `every x+…`\n")
+        self.assertNotIn("x" * 100, long)
+        for text in (gate.render_report([], version="0.1.0", now=NOW),
+                     gate.render_report([], version="0.1.0", now=NOW, schedule="")):
+            self.assertNotIn("Schedule", text)
 
     def test_empty_report(self):
         text = gate.render_report([], version="0.1.0", now=NOW)
@@ -766,7 +771,7 @@ class CliTests(unittest.TestCase):
         self.assertIn("dry run", out)
         code, out, _ = self.main("report", "--ledger", str(self.ledger), "--schedule", "hourly")
         self.assertEqual(code, 0)
-        self.assertIn("- Schedule: hourly\n", out)
+        self.assertIn("- Schedule: `hourly`\n", out)
         with self.ledger.open("a", encoding="utf-8") as handle:
             handle.write('{"event": "outcome", "repo": "acme/widgets"\n')
         code, _, err = self.main("report", "--ledger", str(self.ledger))

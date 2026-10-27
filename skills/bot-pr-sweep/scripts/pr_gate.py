@@ -563,7 +563,7 @@ def render_report(events: list, *, version: str, now: datetime, dry_run: bool = 
         "",
         f"- Generated {iso(now)} by the bot-pr-sweep skill, version {version}",
         f"- Mode: {'dry run (nothing merged or assigned)' if dry_run else 'live'}",
-        *([f"- Schedule: {sanitize(schedule, 80)}"] if schedule else []),
+        *([f"- Schedule: `{sanitize(schedule, 80)}`"] if schedule else []),
         f"- Repositories swept: {len(selections)}; trusted-bot PRs evaluated: {len(decisions)}",
     ]
     for heading, entries in buckets.items():

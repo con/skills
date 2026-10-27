@@ -67,10 +67,7 @@ of that name. The rules above are what the sweep follows.
   invocation ("remove `major` labels" or "keep `major` labels") applies to
   the whole run. With no answer and no user to ask (a scheduled or headless
   run), the label is left in place and the PR is reported as blocked.
-- **Cadence**: how often the sweep runs. Proposed and confirmed in step 7
-  (daily by default, hourly when security updates should not wait), written
-  into the scheduled invocation, and stated in each report through
-  `report --schedule TEXT`.
+- **Cadence**: agreed in step 7 and carried by the scheduled invocation.
 - **`--dry-run`**: evaluate and report, but neither assign, update, remove a
   label nor merge.
 
@@ -99,7 +96,7 @@ IDs, read `user.id` off a PR each bot opened in one of your repositories.
 Run steps 1 to 5 for each repository, sharing one ledger file
 (`WORK/ledger.jsonl`) for the whole run; then ask the step 3 question about
 `major` labels once, if it arose, and produce the report in step 6. An
-attended run ends with step 7.
+attended run, dry or live, ends with step 7.
 
 ### 0. Prepare
 
@@ -273,19 +270,20 @@ and Needs attention (rejected and suspicious authors, failed merges,
 assignments and updates, repositories that could not be listed), each with a
 link, the gate's reasons, and the hint to give the bot or the maintainer
 where one applies. If the user asked for the report in a file, redirect the
-command's output there. Add `--schedule "<cadence>"` when the run has one
-(step 7), so the report states when the next sweep comes.
+command's output there. Add `--schedule "<cadence>"` when the invocation
+states one, so the report says when the next sweep comes.
 
 ### 7. Agree a cadence
 
-Skip this step in an unattended run: its cadence is already set. Otherwise,
-after the report, propose a cadence and confirm it with the user:
+Skip this step in an unattended run, which was already scheduled; it takes
+the cadence stated in its invocation. Otherwise, after the report, propose a
+cadence and confirm it with the user:
 
 - **Daily** by default. Dependabot opens PRs on its own schedule and CI takes
   minutes, so a daily sweep merges a PR within a day of it turning green.
 - **Hourly** when the user says security updates should not wait. With
   `--allow-branch-update`, a branch updated in one run merges in the next, so
-  the cadence is also that delay.
+  the cadence is also the delay between updating a branch and merging it.
 
 Confirm in one question: the cadence, the repository list, the maintainer,
 each repository's options, and the standing `major` answer, which an
@@ -295,8 +293,8 @@ schedule, with those answers written in so the run is self-contained:
 
 ```text
 Run the bot-pr-sweep skill on acme/widgets and acme/gadgets, maintainer jdoe,
-with --require-label patch on acme/widgets; remove `major` labels. This sweep
-runs daily at 06:00 UTC.
+with --require-label patch on acme/widgets; remove `major` labels. Report
+with --schedule "daily at 06:00 UTC".
 ```
 
 The user puts it on a Claude Code scheduled task, a cron entry, or a workflow
