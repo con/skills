@@ -35,8 +35,8 @@ or comment through any other route.
   update looks. A red security update goes to the maintainer.
 - Approve PRs, dismiss reviews, re-run jobs, or touch PRs whose author is not
   a trusted bot. Those are only reported.
-- Add labels to any PR. Removing `major` from a bot PR is the one exception,
-  and only as step 3 describes.
+- Add or change labels on any PR. The one label write is removing `major`
+  from a bot PR, as step 3 describes.
 - Act on repositories outside the list it was given.
 
 The `allowed-tools` patterns are hardening, not a guarantee: a glob cannot pin
@@ -94,7 +94,8 @@ IDs, read `user.id` off a PR each bot opened in one of your repositories.
 ## Procedure
 
 Run steps 1 to 5 for each repository, sharing one ledger file
-(`WORK/ledger.jsonl`) for the whole run, then produce the report in step 6.
+(`WORK/ledger.jsonl`) for the whole run; then ask the step 3 question about
+`major` labels once, if it arose, and produce the report in step 6.
 
 ### 0. Prepare
 
@@ -193,11 +194,13 @@ assignee is a no-op, so repeated runs are safe.
 
 A decision that lists `strip_labels` (always `major`: the gate reports the
 canonical name whatever spelling the PR carries) needs the user's answer.
-Collect every such decision across all repositories, then ask once, unless
-the `major` labels input already answers, and advise removal: Dependabot's
-known bug often adds `major`, and intuit/auto would cut a major release on
-merge (see "Version bumps" below). Remove the label only on the PRs the user
-approves, record each removal, and run step 2 once more for each:
+Collect every such decision across all repositories and, once steps 1 to 5
+have run for the last repository, ask once, unless the `major` labels input
+already answers, and advise removal: Dependabot's known bug often adds
+`major`, and intuit/auto would cut a major release on merge (see "Version
+bumps" below). Remove the label only on the PRs the user approves; otherwise
+leave it, per Inputs. Record each removal and run step 2 once more for that
+PR; one that now gates to `merge` goes on through step 5 before the report:
 
 ```bash
 gh api repos/OWNER/REPO/issues/N/labels/major --method DELETE --silent
