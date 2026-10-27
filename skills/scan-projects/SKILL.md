@@ -24,10 +24,11 @@ The `projects.tsv` file contains tab-separated columns:
 ## Execution Instructions
 
 ### Phase 1: Scan Metadata
+
+`SKILL_DIR` is the absolute path of the directory holding this SKILL.md; Claude Code reports it as "Base directory for this skill". If you do not know it, ask the user; do not search for or guess it.
+
 ```bash
-python3 "$(dirname "$(realpath "$0")")/scan.py"
-# fallback if the above is not available:
-# python3 ~/.claude/skills/scan-projects/scan.py
+python3 SKILL_DIR/scan.py
 ```
 
 Collects metadata for all entries. Git repos get full metadata (language, license, commits, URL). Plain directories get language detection and license scanning. Files get type classification. All summaries start as "NEEDS_ANALYSIS".
@@ -53,7 +54,7 @@ Collects metadata for all entries. Git repos get full metadata (language, licens
    - Focus on **purpose and goal**, not implementation
    - Be specific about the domain
    - Avoid generic phrases — just state what it does
-5. **Batch update the TSV** via inline Python or `batch_update.py`
+5. **Batch update the TSV** via inline Python or `SKILL_DIR/batch_update.py`
 
 ### Summary Guidelines
 
@@ -64,6 +65,8 @@ Collects metadata for all entries. Git repos get full metadata (language, licens
 - Bad: "A directory with some files"
 
 ### Helper Scripts
+
+All in `SKILL_DIR`:
 
 - `update_summary.py --list [N]`: List N entries needing analysis
 - `update_summary.py <folder> <summary>`: Update single entry

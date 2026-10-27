@@ -50,19 +50,21 @@ con/tributors gains native CRediT support, the overlay folds back in.
 
 ## Renderers
 
-Two single-file Python tools (PyYAML-only):
+Two single-file Python tools (PyYAML-only).
+
+`SKILL_DIR` is the absolute path of the directory holding this SKILL.md; Claude Code reports it as "Base directory for this skill". If you do not know it, ask the user; do not search for or guess it.
 
 `render_credit.py` — Author Contributions section / JATS XML / matrix:
 
 ```bash
-python3 ~/.claude/skills/credit-contributions/render_credit.py \
+python3 SKILL_DIR/render_credit.py \
     --format latex .tributors.credit.yaml -o author-contributions.tex
 
-python3 ~/.claude/skills/credit-contributions/render_credit.py \
+python3 SKILL_DIR/render_credit.py \
     --format jats .tributors.credit.yaml -o author-contributions.jats.xml
 
 # Validation only — no output, non-zero on bad role name / malformed entry:
-python3 ~/.claude/skills/credit-contributions/render_credit.py \
+python3 SKILL_DIR/render_credit.py \
     --validate-only .tributors.credit.yaml
 ```
 
@@ -74,7 +76,7 @@ listed in `CREDIT_ROLES.md` next to this file.
 `render_authors.py` — LaTeX `\author{}` block with affiliation references:
 
 ```bash
-python3 ~/.claude/skills/credit-contributions/render_authors.py \
+python3 SKILL_DIR/render_authors.py \
     .tributors.credit.yaml --tributors .tributors -o authors.tex
 ```
 
@@ -219,14 +221,16 @@ a **vendored-file header** so the copy records exactly where it came from:
 
 ```python
 # Vendored from the credit-contributions skill (https://github.com/con/skills):
-#   ~/.claude/skills/credit-contributions/render_authors.py @ <version>
+#   credit-contributions/render_authors.py @ <version>
 # Vendored so the <project> build is self-contained.
 # To refresh from upstream:  make fetch-authors-renderer
 # License is kept as MIT (matches upstream) so refresh is a clean copy.
 ```
 
-Replace `<version>` with `git -C ~/.claude/skills/credit-contributions describe --always`
-(the short SHA or tag from the skills repo). This ties the vendored copy to
+Replace `<version>` with the con/skills commit the skill came from: its
+`resolved_commit` in the `apm.lock.yaml` that installed it, or
+`git -C SKILL_DIR describe --always` when `SKILL_DIR` is in a con/skills
+checkout. If neither applies, ask the user. This ties the vendored copy to
 an exact upstream commit so drift is visible in diffs.
 
 The `make fetch-*-renderer` targets handle this automatically: they copy the
@@ -306,7 +310,7 @@ If the venue accepts JATS XML submission (most Nature, eLife, PLOS,
 Frontiers do), also emit the machine-readable form:
 
 ```bash
-python3 ~/.claude/skills/credit-contributions/render_credit.py \
+python3 SKILL_DIR/render_credit.py \
     --format jats .tributors.credit.yaml \
     -o submission/author-contributions.jats.xml
 ```
@@ -320,7 +324,7 @@ element when present in `.tributors`.
 ### Step 8 — Validate and integrate
 
 ```bash
-python3 ~/.claude/skills/credit-contributions/render_credit.py \
+python3 SKILL_DIR/render_credit.py \
     --validate-only .tributors.credit.yaml
 ```
 
