@@ -226,12 +226,18 @@ class CheckRunTests(unittest.TestCase):
         self.assertIn("never re-runs", decision["hints"][0])
 
     def test_failing_version_guards_get_a_hint(self):
-        decision = evaluate(check_pages=[runs(run(), run(name="version-check", conclusion="failure"))])
-        self.assertEqual(decision["verdict"], "blocked")
-        self.assertIn("`version-check` looks like a version check", decision["hints"][0])
-        self.assertIn("--require-label", decision["hints"][0])
+        for name in ("version-check", "Check Version", "bump_version", "Version Guard", "verify-version"):
+            with self.subTest(name=name):
+                decision = evaluate(check_pages=[runs(run(), run(name=name, conclusion="failure"))])
+                self.assertEqual(decision["verdict"], "blocked")
+                self.assertIn(f"`{name}` looks like a version check", decision["hints"][0])
+                self.assertIn("--require-label", decision["hints"][0])
         by_status = evaluate(status=status(context("Check Version", state="failure")))
         self.assertIn("`Check Version` looks like a version check", by_status["hints"][0])
+        for name in ("test (python-version 3.9)", "versioning-docs", "diversion"):
+            with self.subTest(name=name):
+                self.assertEqual(evaluate(check_pages=[runs(run(name=name, conclusion="failure"))])["hints"], [],
+                                 "a version in a check's name is not a version check")
         self.assertEqual(evaluate(check_pages=[runs(run(name="version-check"))])["hints"], [])
 
     def test_skipped_and_neutral_are_tolerated_unless_strict(self):
@@ -360,13 +366,18 @@ class PullRequestStateTests(unittest.TestCase):
         self.assertEqual(evaluate(pr=pull(labels=None))["verdict"], "pending")
 
     def test_major_label_is_stripped_before_any_merge(self):
-        for name in ("major", "Major", "MAJOR"):
+        for name in ("major", "Major", "MAJOR", " major", "major\n"):
             with self.subTest(name=name):
                 decision = evaluate(pr=pull(labels=[{"name": "dependencies"}, {"name": name}]))
                 self.assertEqual(decision["verdict"], "blocked")
-                self.assertEqual(decision["strip_labels"], [name])
-                self.assertIn(f"carries the `{name}` label", decision["reasons"][0])
+                self.assertEqual(decision["strip_labels"], ["major"], "the canonical name, never the payload's spelling")
+                self.assertIn("carries the `major` label", decision["reasons"][0])
                 self.assertIn("major release of the application", decision["reasons"][0])
+                self.assertIn("remove it unless a person put it there on purpose", decision["hints"][0])
+        twice = evaluate(pr=pull(labels=[{"name": "Major"}, {"name": "major "}]))
+        self.assertEqual(twice["strip_labels"], ["major"])
+        self.assertEqual(len(twice["reasons"]), 1)
+        self.assertEqual(len(twice["hints"]), 1)
         clean = evaluate(pr=pull(labels=[{"name": "dependencies"}, {"name": "majority"}]))
         self.assertEqual(clean["verdict"], "merge")
         self.assertEqual(clean["strip_labels"], [])
@@ -622,6 +633,12 @@ class ReportTests(unittest.TestCase):
         text = gate.render_report(events, version="0.1.0", now=NOW)
         self.assertIn("## Needs attention (1)", text)
         self.assertIn("merge failed: HTTP 409", text)
+        events = [evaluate(pr=pull(labels=[{"name": "major"}])),
+                  {"event": "outcome", "repo": REPO, "number": 7, "result": "label-failed", "detail": "re-added after removal"}]
+        text = gate.render_report(events, version="0.1.0", now=NOW)
+        self.assertIn("## Needs attention (1)", text)
+        self.assertIn("label removal failed: re-added after removal", text)
+        self.assertIn("## Blocked (0)", text)
 
     def test_outcome_without_a_decision_is_flagged(self):
         events = [{"event": "outcome", "repo": REPO, "number": 99, "result": "merged", "detail": "e" * 40}]
@@ -737,6 +754,13 @@ class CliTests(unittest.TestCase):
         code, out, _ = self.main("report", "--ledger", str(self.ledger), "--dry-run")
         self.assertEqual(code, 0)
         self.assertIn("dry run", out)
+        code, _, _ = self.main("outcome", "--repo", REPO, "--ledger", str(self.ledger), "--number", "7",
+                               "--result", "label-failed", "--detail", "HTTP 404")
+        self.assertEqual(code, 0)
+        code, out, _ = self.main("report", "--ledger", str(self.ledger))
+        self.assertEqual(code, 0)
+        self.assertIn("## Needs attention (2)", out)
+        self.assertIn("squash-merged as `ddddddd`; label removal failed: HTTP 404", out)
         with self.ledger.open("a", encoding="utf-8") as handle:
             handle.write('{"event": "outcome", "repo": "acme/widgets"\n')
         code, _, err = self.main("report", "--ledger", str(self.ledger))

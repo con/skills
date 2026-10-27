@@ -52,9 +52,9 @@ TOLERATED_CONCLUSIONS = frozenset({"skipped", "neutral"})
 # Conclusions that often mean the job never ran rather than that it failed.
 RERUN_CONCLUSIONS = frozenset({"cancelled", "timed_out", "startup_failure", "stale"})
 MERGEABLE_OK = frozenset({"clean", "has_hooks"})
-# Labels the sweep removes from a bot PR before gating it again: Dependabot can
-# label a major dependency upgrade `major`, and a label-driven release tool
-# reads that same label as a major release of the application.
+# Labels the sweep offers to remove from a bot PR (SKILL.md step 3): Dependabot
+# tends to add `major` on its own, and a label-driven release tool such as
+# intuit/auto reads it as a major release of the application.
 STRIPPED_LABELS = frozenset({"major"})
 RESULTS = frozenset({
     "merged", "merge-failed", "assigned", "assign-failed", "dry-run", "repo-error",
@@ -211,12 +211,16 @@ def _signed(commit: dict) -> bool:
     return _dict(_dict(commit.get("commit")).get("verification")).get("verified") is True
 
 
+_VERSION_CHECK = re.compile(r"\bversion[-_ ]?(check|bump|guard|lint|gate|verif)"
+                            r"|\b(check|bump|verify|validate|ensure|require)[-_ ]version")
+
+
 def version_hint(name: str) -> str:
     """Explain a failed check whose name suggests a version-bump guard."""
-    if "version" not in name.casefold():
+    if not _VERSION_CHECK.search(name.casefold()):
         return ""
-    return (f"`{name}` looks like a version check: this repository wants a version bump alongside "
-            "dependency changes. Bump it by hand (the sweep never pushes to the bot's branch), or derive "
+    return (f"`{name}` looks like a version check. If this repository wants a version bump alongside "
+            "dependency changes, bump it by hand (the sweep never pushes to the bot's branch), or derive "
             "versions from labels at release time and run the sweep with --require-label")
 
 
@@ -295,11 +299,14 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
     for label in forbid_labels if labels_valid else ():
         if label.strip().casefold() in labels:
             blocked(f"label `{sanitize(label, 60)}` excludes the pull request from automatic merging")
-    strip_labels = [label["name"] for label in label_entries
-                    if label["name"].strip().casefold() in STRIPPED_LABELS] if labels_valid else []
+    # Canonical names only: the payload's spelling never reaches a command line.
+    strip_labels = sorted(labels & STRIPPED_LABELS) if labels_valid else []
     for label in strip_labels:
-        blocked(f"carries the `{sanitize(label, 60)}` label, which a label-driven release tool reads as a major "
-                "release of the application; the sweep removes it and evaluates the PR again")
+        blocked(f"carries the `{label}` label, which a label-driven release tool reads as a major "
+                "release of the application")
+        hints.append(f"`{label}` on a bot PR is usually Dependabot's own doing (a known bug) and interacts badly "
+                     "with intuit/auto: remove it unless a person put it there on purpose, then evaluate "
+                     "the PR again")
 
     mergeable, mergeable_state = pr.get("mergeable"), sanitize(pr.get("mergeable_state"), 20)
     behind = False
@@ -465,7 +472,7 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
         "reasons": reasons.get(verdict, []),
         "hints": [hint for hint in dict.fromkeys(hints) if hint],
         "checks": {"passed": passed, "tolerated": tolerated, "failed": failed, "unfinished": unfinished},
-        # Labels the sweep removes (step 3) before gating the PR again; never on a PR it must not touch.
+        # Labels the sweep offers to remove (step 3); never on a PR it must not touch.
         "strip_labels": strip_labels if verdict != REJECTED else [],
         # True when being behind the base is the only problem and the sweep may fix it.
         "update_branch": bool(allow_branch_update and behind and verdict == BLOCKED
