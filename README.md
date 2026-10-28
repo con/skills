@@ -35,19 +35,20 @@ apm install --global con/skills --skill install-apm-skills --target agent-skills
 This installs the installer skill in `~/.agents/skills/`.
 Reload your agent if needed, then ask it:
 
-> Use install-apm-skills to install introduce-codespell from con/skills into this project.
+> Use install-apm-skills to install tinuous-analyzer from con/skills into this project.
 
-Or run manually from any project directory: `apm install con/skills --skill introduce-codespell --target agent-skills`.
+Or install at project scope from the project directory: `apm install con/skills --skill tinuous-analyzer --target agent-skills`.
 
 The installer uses APM to select and install skills, record their commit and content hashes, ignore downloaded skill directories, and verify restoration.
 Projects track `apm.yml`, `apm.lock.yaml`, and setup instructions—not the installed skills themselves.
 It also supports other APM-compatible sources and user-level installations.
-Provide any skill-specific configuration in your request rather than editing installed copies.
+For configuration options, see each skill’s `SKILL.md` (for example, [pr-review-update](skills/pr-review-update/SKILL.md#configuration) and [pr-feedback-review](skills/pr-feedback-review/SKILL.md#configuration)); supply values in your request rather than editing installed copies.
 
 ## Development
 
 Skill sources live in `skills/`.
 See [author-apm-skills](skills/author-apm-skills/SKILL.md) for authoring and validation guidance.
+Run `tox -e validate,apm,security-static,security-deps` before submitting changes (environment requirements are in `tox.ini`).
 CI checks skill structure, package restoration, and security; passing checks do not guarantee safety.
 
 ## Repo-wide conventions
