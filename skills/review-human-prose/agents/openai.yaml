@@ -2,5 +2,3 @@ interface:
   display_name: "Review prose for human readers"
   short_description: "Make documentation and explanations easier to follow"
   default_prompt: "Use $review-human-prose to revise this draft for clarity while preserving its meaning."
-policy:
-  allow_implicit_invocation: true

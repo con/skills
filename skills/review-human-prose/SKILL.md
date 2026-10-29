@@ -1,6 +1,6 @@
 ---
 name: review-human-prose
-description: Review substantial prose before delivery and all documentation or README edits. Also use when a user says an answer is difficult to read, confusing, too dense, full of jargon, or hard to understand, even for a short answer.
+description: Revise prose that is difficult to follow, including dense, jargon-heavy, or compressed explanations in documentation, READMEs, reports, and chat. Use when asked to improve clarity or when a user says an answer is confusing or hard to understand, even for a short answer.
 allowed-tools: Read, Glob, Grep, Write, Edit, Bash
 ---
 
@@ -11,8 +11,8 @@ Prefer an extra sentence over wording that makes the reader decode compressed id
 
 ## Scope
 
-- For documentation and READMEs, review changed passages in context; do not rewrite unrelated sections.
-- Review substantial explanations, reports, proposals, correspondence, and PR descriptions once before delivery.
+- Apply when clarity is requested or the prose is difficult to follow; document type or length alone does not trigger this skill.
+- For documentation and READMEs, review the affected passages in context; do not rewrite unrelated sections.
 - When a user reports confusion, re-explain using their feedback; do not just apologize or shorten the same wording.
 - Skip routine one-line acknowledgments.
   Review prose around literal code, data, and quotations without changing those literals.

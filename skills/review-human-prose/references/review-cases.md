@@ -7,9 +7,10 @@ Judge behavior and meaning, not exact wording.
 
 | Request or situation | Expected behavior |
 | --- | --- |
-| Write a short README installation section. | Apply, even if the section is only one paragraph. |
-| Change two sentences in an existing runbook. | Review the changed sentences in context; leave unrelated sections alone. |
-| Draft a report, proposal, or detailed chat explanation. | Review and revise before delivery. |
+| Write a clear, short README installation section. | No separate review workflow solely because it is a README. |
+| Clarify two dense sentences in an existing runbook. | Apply to those sentences in context; leave unrelated sections alone. |
+| Draft a long but clear report. | Length alone does not trigger this skill. |
+| A draft explanation contains compressed jargon that obscures who does what. | Apply even without an explicit clarity request. |
 | "I can't follow that. What are you saying?" after one dense sentence. | Apply immediately and give a clearer explanation. |
 | "Too much jargon" or "This is difficult to read." | Revisit the explanation, rather than only offering a shorter summary. |
 | "Thanks" followed by a one-line acknowledgment. | No separate review workflow needed. |
