@@ -1,51 +1,22 @@
-# Consumer setup template
+# Project setup
 
-Adapt the command to the existing environment manager; keep one authoritative setup task and reuse it in documentation and CI.
-Pin the APM CLI itself as a setup/development dependency. The tested version is recorded in `[testenv:apm]` in con/skills `tox.ini`.
-Do not upgrade an existing pin without checking compatibility.
+Add `apm install --frozen` to the project's existing setup task.
+Document the runnable command and any environment prerequisite; setup must work before the skill is loaded.
+Reuse that command in agent guidance and CI rather than duplicating setup logic.
 
-For a Pixi project, pin that version under `[pypi-dependencies]`, update `pixi.lock`, and add a task equivalent to:
+Suggested agent guidance (replace SETUP_COMMAND):
 
-```toml
-[tasks]
-setup-skills = "apm install --frozen"
-```
+> Run `SETUP_COMMAND` to restore skills from `apm.lock.yaml` before starting work.
+> Installed copies are generated and ignored; edit their upstream source and update the dependency instead.
+> Report setup failures rather than claiming missing skills were loaded.
 
-Do not replace an existing `[tasks]` table.
-A clean checkout can then use `pixi run --locked setup-skills`.
-For uv, tox, or another manager, use its existing locked setup convention instead.
-
-## AGENTS.md note
-
-Replace SETUP_COMMAND with the real runnable project command:
-
-> Reusable skills are APM dependencies.
-> Run `SETUP_COMMAND` before starting
-> work; it restores the versions in `apm.lock.yaml`.
-> Installed skill files are
-> generated and Git-ignored.
-> Develop reusable skills in their dedicated source
-> repository (normally `con/skills`), then update this project's APM pin and
-> lock.
-> Do not edit or commit deployed skill copies.
-> If setup fails, report it
-> rather than claiming the missing skills were loaded.
-
-## README/development setup note
-
-Document the environment prerequisite, exact setup command, and that it needs network access on first installation (and appropriate credentials for private sources).
-State where skills appear and how to update a dependency deliberately.
-Fresh-clone setup must work without any preinstalled skill.
-
-## Git ignores
-
-An example for a single external skill; use actual lockfile deployment paths:
+Track `apm.yml`, `apm.lock.yaml`, and setup files.
+For a project with only generated `.agents/` content:
 
 ```gitignore
 /apm_modules/
-/.agents/skills/example-skill/
+/.agents/
 ```
 
-Include target-specific deployed paths when selected.
-Keep the manifest, lock, setup/environment files, and instructions tracked.
-Use `git check-ignore` and `git ls-files` to verify both sides of this boundary.
+If `.agents/` also contains project-owned files, ignore only APM's deployed skill directories instead.
+Use the lock's actual paths for other targets and verify ignores with `git check-ignore`.

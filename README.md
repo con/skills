@@ -24,92 +24,33 @@ A collection of [Claude Code Agent Skills](https://agentskills.io/) for software
 | [setup-chromatic](skills/setup-chromatic/) | Set up [Chromatic](https://www.chromatic.com) visual regression testing for a web app with two feeds: Storybook stories (component states) and Playwright snapshots (whole-page states, several viewports). Covers configs, two GitHub Actions workflows, two Chromatic projects, and the README section explaining them. |
 | [tinuous-analyzer](skills/tinuous-analyzer/) | Analyze CI log collections gathered by [con/tinuous](https://github.com/con/tinuous/) to pinpoint when a test started failing, diff environment/dependency changes between passing and failing runs, and recommend investigation steps. |
 
-## Installation
+## Getting started
 
-Use APM for reproducible installation. Pin the tested `apm-cli` version from
-`[testenv:apm]` in `tox.ini` through your existing environment manager.
-Replace FULL_COMMIT_SHA with a reviewed, published 40-hex commit reachable from the intended upstream branch or tag.
-A fork commit resolving through GitHub's parent repository is not evidence that upstream accepted it.
-Review the dry-run file list and the selected skills and scripts before use; after installation, verify the lock's repository URL and `resolved_commit` match the requested repository and SHA.
-Audit checks integrity, not safety.
-See [installation guidance](skills/install-apm-skills/SKILL.md).
+Install [install-apm-skills](skills/install-apm-skills/SKILL.md) once at user scope so your agent can use it across projects.
+With APM installed:
 
 ```console
-apm install con/skills#FULL_COMMIT_SHA --skill install-apm-skills --target agent-skills --dry-run
-apm install con/skills#FULL_COMMIT_SHA --skill install-apm-skills --target agent-skills
-apm install --frozen
-apm audit --ci
+apm install --global con/skills --skill install-apm-skills --target agent-skills
 ```
 
-Track the manifest, lock, environment/setup files and concise agent guidance.
-Ignore `apm_modules/` and the specific deployed skill directories; keep native
-project skills tracked. See [consumer setup](skills/install-apm-skills/references/consumer-setup.md).
+This installs the installer skill in `~/.agents/skills/`.
+Reload your agent if needed, then ask it:
 
-For installation without APM, copy or symlink `skills/<name>/` into your client's skills directory.
+> Use install-apm-skills to install tinuous-analyzer from con/skills into this project.
 
-The root `apm.yml` publishes the canonical `skills/<name>/` collection.
+Or install at project scope from the project directory: `apm install con/skills --skill tinuous-analyzer --target agent-skills`.
 
-## Automated checks
+The installer uses APM to select and install skills, record their commit and content hashes, ignore downloaded skill directories, and verify restoration.
+Projects track `apm.yml`, `apm.lock.yaml`, and setup instructions—not the installed skills themselves.
+It also supports other APM-compatible sources and user-level installations.
+For configuration options, see each skill’s `SKILL.md` (for example, [pr-review-update](skills/pr-review-update/SKILL.md#configuration) and [pr-feedback-review](skills/pr-feedback-review/SKILL.md#configuration)); supply values in your request rather than editing installed copies.
 
-With Python 3.12 and `tox==4.64.1` installed, run:
+## Development
 
-```console
-tox -e validate,apm,security-static,security-deps
-```
-
-CI runs these checks on pull requests, pushes to `master`, and weekly, using read-only permissions and pinned tools/actions. No model credentials are needed. The structural validator checks skill metadata and bundled Python recursively. Cisco's static skill scanner fails on HIGH/CRITICAL findings.
-`pip-audit` checks the installed APM/validation/scanner dependency environment for known Python vulnerabilities; it does not cover every external command a skill can invoke.
-Review lower-severity findings too; passing scans do not prove a skill is safe.
-
-Optional local review: `tox -e security-llm` requires Claude Code 2.1.248+ and authentication.
-The runner restricts tools to Read/Glob/Grep and file access to the reviewed directory, disables discovered customizations and MCP, and is excluded from CI.
-Use a trusted driver, CLI installation, and `SECURITY_CMD` launcher that honors these restrictions; model verdicts remain advisory.
-
-The APM check installs this collection into a disposable consumer, restores its
-metadata in a fresh directory, and checks the installed resources and audit.
-To verify the documented Git installation path and a selected subset after
-publishing a commit, run:
-
-```console
-tox -e apm -- --source con/skills#FULL_COMMIT_SHA
-```
-
-Use the actual fork coordinate when the revision is not published in con/skills.
-Pull-request CI runs this Git check against the published PR head as well.
-
-## Configuration
-
-Some skills require user-specific configuration.
-Following the [Agent Skills specification](https://agentskills.io/specification), configuration is handled via documented variables in each skill's `SKILL.md` rather than environment variables or config files — the Claude agent reads these values and substitutes them at runtime.
-
-### pr-review-update
-
-This skill has a `## Configuration` section at the top of its `SKILL.md` with the following variables:
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `DASHBOARD_DIR` | `~/proj/improveit-dashboard` | Path to improveit-dashboard checkout |
-| `REPOS_DIR` | `~/proj/misc` | Directory where PR repos are cloned |
-| `GITHUB_USER` | `yarikoptic` | Your GitHub username |
-| `FORK_REMOTE` | `gh-yarikoptic` | Git remote name for your fork |
-
-Edit the defaults in `skills/pr-review-update/SKILL.md` to match your setup.
-
-### pr-feedback-review
-
-This skill has a `## Configuration` section at the top of its `SKILL.md` with the following variables:
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `SCAN_DIRS` | `~/proj` | Comma-separated parent directories to scan for git repos |
-| `GITHUB_USER` | `yarikoptic` | Your GitHub username |
-| `MAX_SCAN_DEPTH` | `3` | How deep to recurse when scanning for repos |
-
-Edit the defaults in `skills/pr-feedback-review/SKILL.md` to match your setup.
-
-### Other skills
-
-The remaining skills use runtime discovery (e.g., `git remote -v`, `gh auth status`) and do not require pre-configuration.
+Skill sources live in `skills/`.
+See [author-apm-skills](skills/author-apm-skills/SKILL.md) for authoring and validation guidance.
+Run `tox -e validate,apm,security-static,security-deps` before submitting changes (environment requirements are in `tox.ini`).
+CI checks skill structure, package restoration, and security; passing checks do not guarantee safety.
 
 ## Repo-wide conventions
 
