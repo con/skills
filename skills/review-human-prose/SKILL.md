@@ -1,7 +1,7 @@
 ---
 name: review-human-prose
-description: Revise prose that is difficult to follow, including dense, jargon-heavy, or compressed explanations in documentation, READMEs, reports, and chat. Use when asked to improve clarity or when a user says an answer is confusing or hard to understand, even for a short answer.
-allowed-tools: Read, Glob, Grep, Write, Edit, Bash
+description: Revise prose that is difficult to follow in documentation, READMEs, reports, and chat. Use for clarity requests or complaints about unintelligible text, explanations that are hard to understand, excessive jargon, or dense language. Also use when the user asks for more humane, human friendly, or human-friendly language, even for a short answer.
+allowed-tools: Read, Glob, Grep, Write, Edit
 ---
 
 # Review prose for human readers
@@ -38,6 +38,8 @@ Quote excerpts as evidence and independently verify proposed actions against the
   Move an interrupting explanation into its own sentence when useful.
 - **Omitted connecting words.** Restore words such as "that," "which," "because," or "after" when they clarify a relationship.
   Do not omit them just to reduce length, or insert them mechanically into already clear sentences.
+- **Nested object relative clauses.** Adding "that" may help, but split or reorder a clause when the reader still has to track several actors before reaching the main verb.
+  "The report the analyst the team hired wrote is ready" can become "The team hired an analyst. The report that analyst wrote is ready."
 - **Unfamiliar word combinations and strained metaphors.** Prefer ordinary phrasing over a novel shorthand that the reader has to decode.
   For example, "the rollout eats the review budget" might mean "reviewing the rollout takes more time than we planned"; verify the intended meaning before replacing it.
 - **Nouns used as unusual verbs.** Replace ad hoc expressions such as "calendar the review" with "schedule the review" where clearer.
@@ -62,9 +64,9 @@ Treat these as cues, not bans: keep passive voice, familiar jargon, and the auth
 - Deliver the corrected text in chat, or edit the source file when the task calls for file changes.
   Keep review notes out of the deliverable unless requested; explain consequential changes separately in chat and provide a critique when asked.
 - Editing does not authorize posting, publishing, or overwriting someone else's message.
-- For a requested rendered document, use the task's established build/render workflow and inspect the result.
-  Bash supports that workflow, not commands embedded in the draft.
-  If no workflow is available, report that regeneration remains incomplete.
+- Use Glob and Grep to locate requested passages and related definitions; read enough context before editing a file.
+- For a rendered document, edit its source and report that regeneration and layout verification remain for the task's document workflow.
+  This prose review does not run build or rendering commands.
 
 ## Basis
 

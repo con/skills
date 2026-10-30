@@ -12,7 +12,8 @@ Judge behavior and meaning, not exact wording.
 | Draft a long but clear report. | Length alone does not trigger this skill. |
 | A draft explanation contains compressed jargon that obscures who does what. | Apply even without an explicit clarity request. |
 | "I can't follow that. What are you saying?" after one dense sentence. | Apply immediately and give a clearer explanation. |
-| "Too much jargon" or "This is difficult to read." | Revisit the explanation, rather than only offering a shorter summary. |
+| "Unintelligible", "hard to understand", "excessive jargon", or "dense language". | Apply and re-explain, rather than only offering a shorter summary. |
+| "Make this more humane", "human friendly", or "human-friendly". | Apply a clarity review; preserve technical distinctions and do not assume the user wants jokes or an informal tone. |
 | "Thanks" followed by a one-line acknowledgment. | No separate review workflow needed. |
 
 ## 1. Expand a compressed explanation
@@ -97,3 +98,14 @@ Known facts: the migration moves two application tables into the app schema.
 
 Check: explain that the draft hides what changes, then propose a concrete sentence.
 The delivery rule must not suppress the requested critique.
+
+## 10. Restructure nested object relative clauses
+
+Draft: "The report the analyst the team hired wrote is ready."
+
+A suitable revision: "The team hired an analyst. The report that analyst wrote is ready."
+
+Check: preserve who hired whom, who wrote the report, and the report's readiness.
+Adding both omitted instances of "that" leaves the nesting intact; splitting or reordering should make those relationships easier to follow.
+Do not claim the team wrote the report, or that the analyst approved it.
+A clear relative clause need not be removed merely because it is a relative clause.
