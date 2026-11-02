@@ -230,15 +230,10 @@ matrix cell was scored from, with `file:line` citations.
 
 ## When the skill falls short
 
-After writing the report, if the optional `suggest-skill-fixes` skill is
-installed (`../suggest-skill-fixes/SKILL.md`), read it and follow it for
-anything this run showed this skill lacking. Examples are a dimension the
-user rescores by hand every time, an ecosystem layout Phase 1 cannot map, or
-a house pattern Phase 0 has no way to express. Its suggestions go in your
-reply, not in the report, which is about the ecosystem. When it is
-installed, the report's provenance stamp also names it in the `using` slot,
-with the `version:` from its frontmatter. If it is not installed, skip this
-step.
+At the end, if `../suggest-skill-fixes/SKILL.md` exists, follow it. Typical
+triggers here: a dimension the user rescores by hand every time, an
+ecosystem layout Phase 1 cannot map, or a house pattern Phase 0 has no way
+to express. Suggestions go in the reply, not in the report.
 
 ## Suggested mechanical helpers
 
