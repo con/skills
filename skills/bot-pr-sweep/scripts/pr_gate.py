@@ -56,6 +56,21 @@ MERGEABLE_OK = frozenset({"clean", "has_hooks"})
 # tends to add `major` on its own, and a label-driven release tool such as
 # intuit/auto reads it as a major release of the application.
 STRIPPED_LABELS = frozenset({"major"})
+# Ruleset rules an admin merge may skip under --allow-admin-bypass: the review the
+# option exists for, rules a squash merge satisfies anyway, and required status
+# checks, which the gate verifies itself. Any other rule (a merge queue, required
+# deployments, code scanning, `update` locks, rules GitHub adds later) refuses the bypass.
+BYPASSABLE_RULES = frozenset({
+    "pull_request", "required_status_checks", "required_signatures", "required_linear_history",
+    "non_fast_forward", "deletion", "creation",
+})
+# Commit statuses name the account that posted them, not the GitHub App. A required
+# check pinned to one of these apps is satisfied by a status only when the app's bot
+# account posted its latest state. Verify an account against a status the app posted
+# in one of your repositories (GET .../commits/SHA/statuses) before adding a row.
+STATUS_APP_ACCOUNTS = {
+    68672: 66853113,  # pre-commit.ci posts `pre-commit.ci - pr` as pre-commit-ci[bot]
+}
 RESULTS = frozenset({
     "merged", "merge-failed", "assigned", "assign-failed", "dry-run", "repo-error",
     "branch-updated", "update-failed", "label-removed", "label-failed",
@@ -67,6 +82,8 @@ MERGE, PENDING, BLOCKED, REJECTED = "merge", "pending", "blocked", "rejected"
 _URL = re.compile(r"https://[A-Za-z0-9._~:/?#@!$&'*+,;=%-]+")
 _REPO = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
 _SHA = re.compile(r"[0-9a-f]{40}")
+# Branch names safe to write into a `gh api repos/O/R/branches/NAME` command line.
+_REF = re.compile(r"(?!-)(?!.*\.\.)[A-Za-z0-9._/-]{1,200}")
 _VERSION = re.compile(r"^version:\s*([0-9]+\.[0-9]+\.[0-9]+)\s*$", re.MULTILINE)
 
 
@@ -181,9 +198,13 @@ def select_bot_prs(pulls: list) -> tuple[list, list, int]:
         number, user_id, login = _int(pull.get("number")), _int(user.get("id")), _str(user.get("login"))
         if number is None:
             continue
+        base_ref = _str(_dict(pull.get("base")).get("ref"))
         entry = {
             "number": number, "login": login, "id": user_id,
             "head_sha": _str(_dict(pull.get("head")).get("sha")),
+            # `?` when the name is unsafe to write into a command; such a PR is gated
+            # without --allow-admin-bypass.
+            "base": base_ref if _REF.fullmatch(base_ref) else "?",
         }
         if user_id in TRUSTED_BOTS:
             if login != TRUSTED_BOTS[user_id]:
@@ -248,10 +269,108 @@ def merge_commit_problems(commit: dict, parents: list[str], previous: str, allow
     return problems
 
 
+def admin_bypass_review(*, branch: object, rules: list, status_list: list, compare: object, base_ref: str,
+                        head_sha: str, passing_runs: dict[str, set], passing_statuses: set[str],
+                        unfinished: list[str], ci_known: bool) -> dict:
+    """Decide whether an admin merge may skip the branch protection that blocks a PR.
+
+    The gate re-checks everything it can read, because an admin merge skips all of
+    it: every required status check of the base branch (classic protection and
+    rulesets) must have passed on the head, from the app it is pinned to; no ruleset
+    rule outside BYPASSABLE_RULES may apply; and the head must contain the base tip,
+    because the up-to-date requirement is skipped too. What the gate cannot read
+    (reviews, conversation resolution, classic deployment rules) is what the
+    maintainer accepts to skip by turning the option on.
+    """
+    pending: list[str] = []
+    blocked: list[str] = []
+    behind = False
+    branch = _dict(branch)
+    shown = sanitize(base_ref, 60) or "the base branch"
+    if not base_ref or _str(branch.get("name")) != base_ref:
+        pending.append(f"branch payload describes `{sanitize(branch.get('name'), 60) or 'nothing'}`, "
+                       f"not `{shown}`; fetch it again")
+        return {"pending": pending, "blocked": blocked, "behind": behind}
+
+    # Required checks: name -> pinned app IDs (None when any app may report it).
+    required: dict[str, set] = {}
+    protection = branch.get("protection")
+    classic = protection.get("required_status_checks") if isinstance(protection, dict) else None
+    contexts = _dict(classic).get("contexts")
+    pinned = _dict(classic).get("checks")
+    if not (isinstance(classic, dict) and isinstance(contexts, list) and isinstance(pinned, list)
+            and all(isinstance(name, str) for name in contexts)
+            and all(isinstance(check, dict) and isinstance(check.get("context"), str) for check in pinned)):
+        pending.append("branch payload has no readable required status checks; fetch it again")
+    else:
+        for name in contexts:
+            required.setdefault(sanitize(name, 60), set()).add(None)
+        for check in pinned:
+            required.setdefault(sanitize(check["context"], 60), set()).add(_int(check.get("app_id")))
+
+    if not all(isinstance(rule, dict) and isinstance(rule.get("type"), str) for rule in rules):
+        pending.append("rules payload is not a list of GitHub branch rules; fetch it again")
+    else:
+        for rule in rules:
+            kind = rule["type"]
+            if kind not in BYPASSABLE_RULES:
+                blocked.append(f"ruleset rule `{sanitize(kind, 40)}` on `{shown}` is not one an admin merge may skip")
+            elif kind == "required_status_checks":
+                listed = _dict(rule.get("parameters")).get("required_status_checks")
+                if not (isinstance(listed, list) and all(
+                        isinstance(check, dict) and isinstance(check.get("context"), str) for check in listed)):
+                    pending.append("rules payload lists malformed required status checks; fetch it again")
+                    continue
+                for check in listed:
+                    required.setdefault(sanitize(check["context"], 60), set()).add(_int(check.get("integration_id")))
+
+    # The latest state of each status context and the account that posted it.
+    posters: dict[str, tuple] = {}
+    for entry in (_dict(entry) for entry in status_list):
+        if not _str(entry.get("url")).endswith(f"/statuses/{head_sha}"):
+            pending.append("status list describes another commit or is malformed; fetch it again")
+            break
+        name = sanitize(entry.get("context"), 60)
+        stamp = (_str(entry.get("created_at")), _int(entry.get("id")) or 0)
+        if name not in posters or stamp > posters[name][0]:
+            posters[name] = (stamp, _int(_dict(entry.get("creator")).get("id")), _str(entry.get("state")))
+    if pending:  # the required checks are not fully known; judging them now would mislabel the PR
+        return {"pending": pending, "blocked": blocked, "behind": behind}
+
+    for name, pins in sorted(required.items()) if ci_known else ():
+        if name in unfinished:
+            continue  # already pending
+        apps = sorted(app for app in pins if app is not None)
+        if not apps and name not in passing_runs and name not in passing_statuses:
+            blocked.append(f"required check `{name}` has not passed on the head commit")
+        for app in apps:
+            poster = posters.get(name)
+            by_status = (name in passing_statuses and poster is not None and poster[2] == "success"
+                         and app in STATUS_APP_ACCOUNTS and poster[1] == STATUS_APP_ACCOUNTS[app])
+            if app not in passing_runs.get(name, set()) and not by_status:
+                blocked.append(f"required check `{name}` has not passed from app {app}, the one branch protection names")
+
+    compare = _dict(compare)
+    tip = _str(_dict(branch.get("commit")).get("sha"))
+    behind_by = _int(compare.get("behind_by"))
+    if (not _str(compare.get("url")).endswith(f"/compare/{base_ref}...{head_sha}")
+            or behind_by is None or not _SHA.fullmatch(tip)):
+        pending.append(f"compare payload does not describe `{shown}` against the head commit; fetch it again")
+    elif _str(_dict(compare.get("base_commit")).get("sha")) != tip:
+        pending.append(f"`{shown}` moved between the branch and compare payloads; fetch both again")
+    elif behind_by > 0:
+        behind = True
+        blocked.append(f"branch is behind `{shown}`; an admin merge would skip the up-to-date requirement, "
+                       "so the bypass waits for an up-to-date branch")
+    return {"pending": pending, "blocked": blocked, "behind": behind}
+
+
 def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
              repo: str, expected_head: str, require_checks: tuple[str, ...] = (),
              require_labels: tuple[str, ...] = (), forbid_labels: tuple[str, ...] = (),
              strict: bool = False, allow_branch_update: bool = False,
+             allow_admin_bypass: bool = False, branch: object = None, rules: list | tuple = (),
+             status_list: list | tuple = (), compare: object = None,
              settle: timedelta = DEFAULT_SETTLE, now: datetime | None = None) -> dict:
     """Decide one pull request. Returns the decision record (see SKILL.md)."""
     now = now or utc_now()
@@ -313,6 +432,7 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
 
     mergeable, mergeable_state = pr.get("mergeable"), sanitize(pr.get("mergeable_state"), 20)
     behind = False
+    bypass = False
     rebase_hint = ""
     if TRUSTED_BOTS.get(user_id) == "dependabot[bot]":
         rebase_hint = ("comment `@dependabot rebase` on the PR so the bot updates its own branch; "
@@ -326,6 +446,8 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
         behind = True
         blocked(f"branch is behind `{base_ref}` and the branch protection requires an up-to-date branch")
         hints.append("" if allow_branch_update else rebase_hint)
+    elif mergeable_state == "blocked" and allow_admin_bypass:
+        bypass = True  # admin_bypass_review() decides once CI is known
     elif mergeable_state == "blocked":
         blocked("branch protection is not satisfied (reviews, required checks or merge queue)")
     elif mergeable_state == "unstable":
@@ -382,6 +504,8 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
     tolerated: list[str] = []
     failed: list[str] = []
     unfinished: list[str] = []
+    passing_runs: dict[str, set] = {}  # check name -> app IDs of the runs that passed
+    passing_statuses: set[str] = set()
     runs: list = []
     check_pages = list(check_pages)
     checks_valid = bool(check_pages) and all(isinstance(page, dict) and "check_runs" in page for page in check_pages)
@@ -413,8 +537,10 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
             pending(f"check `{name}` is {run_status or 'not reported'}")
         elif conclusion in PASSING_CONCLUSIONS:
             passed.append(name)
+            passing_runs.setdefault(name, set()).add(_int(_dict(run.get("app")).get("id")))
         elif conclusion in TOLERATED_CONCLUSIONS and not strict:
             tolerated.append(name)
+            passing_runs.setdefault(name, set()).add(_int(_dict(run.get("app")).get("id")))
         elif conclusion in TOLERATED_CONCLUSIONS:
             failed.append(name)
             blocked(f"check `{name}` concluded {conclusion}, which --strict refuses")
@@ -446,6 +572,7 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
         context_state = sanitize(context.get("state"), 20)
         if context_state == "success":
             passed.append(name)
+            passing_statuses.add(name)
         elif context_state == "pending":
             unfinished.append(name)
             pending(f"status `{name}` is pending")
@@ -460,6 +587,19 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
         wanted = sanitize(required, 60)
         if ci_known and wanted not in passed and wanted not in failed and wanted not in unfinished:
             blocked(f"required check `{wanted}` did not finish with success")
+
+    if bypass:
+        review = admin_bypass_review(
+            branch=branch, rules=list(rules), status_list=list(status_list), compare=compare,
+            base_ref=_str(base.get("ref")), head_sha=head_sha, passing_runs=passing_runs,
+            passing_statuses=passing_statuses, unfinished=unfinished, ci_known=ci_known)
+        for reason in review["pending"]:
+            pending(reason)
+        for reason in review["blocked"]:
+            blocked(reason)
+        if review["behind"]:
+            behind = True
+            hints.append("" if allow_branch_update else rebase_hint)
 
     verdict = next((kind for kind in (REJECTED, BLOCKED, PENDING) if reasons[kind]), MERGE)
     return {
@@ -480,6 +620,8 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
         # True when being behind the base is the only problem and the sweep may fix it.
         "update_branch": bool(allow_branch_update and behind and verdict == BLOCKED
                               and len(reasons[BLOCKED]) == 1 and not reasons[PENDING]),
+        # True when the merge goes past branch protection on the strength of an admin merge.
+        "admin_bypass": bypass and verdict == MERGE,
         "evaluated_at": iso(now),
     }
 
@@ -521,6 +663,8 @@ def render_report(events: list, *, version: str, now: datetime, dry_run: bool = 
             notes.append("squash-merged" + (f" as `{sanitize(results['merged'], 40)[:7]}`" if results["merged"] else ""))
         if "dry-run" in results:
             notes.append("would merge (dry run)")
+        if decision.get("admin_bypass") and ("merged" in results or "dry-run" in results):
+            notes.append("an admin merge past branch protection (--allow-admin-bypass)")
         if "branch-updated" in results:
             notes.append("branch updated from the base; the next run re-evaluates it")
         if "label-removed" in results:
@@ -599,7 +743,7 @@ def cmd_select(args: argparse.Namespace) -> int:
     pulls = pages(load_json(args.pulls))
     selected, suspicious, other_bots = select_bot_prs(pulls)
     for entry in selected:
-        print(f"{entry['number']}\t{entry['head_sha']}\t{entry['login']}\t{entry['id']}")
+        print(f"{entry['number']}\t{entry['head_sha']}\t{entry['login']}\t{entry['id']}\t{entry['base']}")
     print(f"{args.repo}: {len(pulls)} open PRs, {len(selected)} from trusted bots, "
           f"{len(suspicious)} suspicious, {other_bots} from other bots", file=sys.stderr)
     append_event(args.ledger, {
@@ -611,6 +755,9 @@ def cmd_select(args: argparse.Namespace) -> int:
 
 
 def cmd_gate(args: argparse.Namespace) -> int:
+    bypass_files = (args.branch, args.rules, args.status_list, args.compare)
+    if args.allow_admin_bypass and not all(bypass_files):
+        raise GateInputError("--allow-admin-bypass needs --branch, --rules, --status-list and --compare")
     decision = evaluate(
         load_json(args.pr), pages(load_json(args.commits)), pages(load_json(args.check_runs)),
         load_json(args.status),
@@ -619,6 +766,11 @@ def cmd_gate(args: argparse.Namespace) -> int:
         require_labels=tuple(args.require_label or ()),
         forbid_labels=tuple(args.forbid_label or ()),
         strict=args.strict, allow_branch_update=args.allow_branch_update,
+        allow_admin_bypass=args.allow_admin_bypass,
+        branch=load_json(args.branch) if args.allow_admin_bypass else None,
+        rules=pages(load_json(args.rules)) if args.allow_admin_bypass else (),
+        status_list=pages(load_json(args.status_list)) if args.allow_admin_bypass else (),
+        compare=load_json(args.compare) if args.allow_admin_bypass else None,
         settle=timedelta(minutes=args.settle_minutes),
         now=parse_time(args.now) if args.now else None,
     )
@@ -676,6 +828,13 @@ def build_parser() -> argparse.ArgumentParser:
                       help="refuse skipped and neutral conclusions (by default they are tolerated, as GitHub does)")
     gate.add_argument("--allow-branch-update", action="store_true",
                       help="accept GitHub's own Update branch merge commit and flag behind PRs for it")
+    gate.add_argument("--allow-admin-bypass", action="store_true",
+                      help="merge past branch protection the gate cannot read (typically a required review) "
+                           "as an admin, once it has re-checked everything it can read; needs the four files below")
+    gate.add_argument("--branch", help="JSON from GET /repos/O/R/branches/BASE")
+    gate.add_argument("--rules", help="JSON from GET /repos/O/R/rules/branches/BASE, every page")
+    gate.add_argument("--status-list", help="JSON from GET /repos/O/R/commits/SHA/statuses, every page")
+    gate.add_argument("--compare", help="JSON from GET /repos/O/R/compare/BASE...SHA")
     gate.add_argument("--settle-minutes", type=int, default=int(DEFAULT_SETTLE.total_seconds() // 60),
                       help="minimum age of the head commit before trusting the check list (0 disables)")
     gate.add_argument("--now", help="ISO 8601 time to evaluate at (tests)")
