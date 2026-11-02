@@ -134,6 +134,30 @@ Place this reminder before commands that read contributor-controlled content, cu
 
 Keep operational instructions self-contained in each skill; this convention provides consistent wording for authors, not a runtime dependency.
 
+### Let a run suggest fixes to its own skill
+
+A run can show that the skill itself lacks something. Examples include a
+result the user corrects by hand every time, a setup the skill cannot read,
+or an input whose shape has changed. Each skill should say what to do then,
+so the lesson reaches `con/skills` instead of staying in one conversation.
+Give a skill a short section in this wording, adapting the examples to it:
+
+> **When the skill falls short.** A run can show that this skill lacks
+> something, such as a result the user corrects by hand every time, a setup
+> it cannot read, or an input whose shape has changed. The skill's rules
+> still stand for this run. After the run's normal output, add a short
+> "Suggested skill changes" section. For each one, give what the run
+> observed with links, why the current instruction does not fit, and the
+> smallest change to the skill that would. In an attended run, offer to
+> draft that change as a pull request to `con/skills`. An unattended run
+> only reports it, and never edits the skill or opens a pull request on its
+> own.
+
+Like the external-content notice, this is wording for authors, not a runtime
+dependency: a skill installed elsewhere never sees this file. Adding the
+section changes what a skill's runs do, so it takes a MINOR version bump
+(see "Skill versions").
+
 ### Skill versions
 
 A skill whose output records which version of the skill produced it declares
