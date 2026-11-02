@@ -1090,6 +1090,9 @@ class CliTests(unittest.TestCase):
                 self.assertEqual(save(path, '{"evil": true}'), 2)
         self.assertEqual(outside.read_text(encoding="utf-8"), "{}")
         self.assertFalse((work / "acme-widgets-10-branch.json").exists())
+        os.link(outside, work / "acme-widgets-11-branch.json")
+        self.assertEqual(save(work / "acme-widgets-11-branch.json", '{"evil": true}'), 2)
+        self.assertEqual(outside.read_text(encoding="utf-8"), "{}")
 
     def test_outcome_rejects_unknown_results(self):
         with self.assertRaises(SystemExit):

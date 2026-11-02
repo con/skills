@@ -27,7 +27,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
+import stat
 import sys
 import tempfile
 from datetime import datetime, timedelta, timezone
@@ -780,7 +782,7 @@ def cmd_init(_args: argparse.Namespace) -> int:
     return 0
 
 
-# What `save` may write: a protection payload, inside a directory `init` made.
+# What `save` may write: a protection payload, inside a directory that holds the `init` marker.
 _SAVE_NAME = re.compile(r"[A-Za-z0-9._-]+-(branch|rules)\.json")
 
 
@@ -788,13 +790,26 @@ def cmd_save(args: argparse.Namespace) -> int:
     """Write the JSON piped in from a protection read, so the sweep needs no shell redirect."""
     target = Path(args.path)
     parent = target.parent
+    refusal = ("save writes only *-branch.json or *-rules.json, as a regular file, inside a directory "
+               "of yours that holds the `init` marker")
     if not (_SAVE_NAME.fullmatch(target.name) and parent.name.startswith("bot-pr-sweep-")
-            and not parent.is_symlink() and (parent / INIT_MARKER).is_file() and not target.is_symlink()):
-        raise GateInputError("save writes only *-branch.json or *-rules.json, as a regular file, "
-                             "inside a directory `init` made")
+            and not parent.is_symlink() and parent.is_dir() and parent.stat().st_uid == os.getuid()
+            and (parent / INIT_MARKER).is_file()):
+        raise GateInputError(refusal)
     text = sys.stdin.read()
     json.loads(text)  # refuse anything that is not JSON
-    target.write_text(text, encoding="utf-8")
+    # O_NOFOLLOW refuses a symlink at open time, so nothing can swap one in after a check;
+    # truncate only once the descriptor is known to be this user's plain, unlinked-elsewhere file.
+    try:
+        descriptor = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_NOFOLLOW, 0o600)
+    except OSError as error:
+        raise GateInputError(refusal) from error
+    with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+        info = os.fstat(handle.fileno())
+        if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or info.st_uid != os.getuid():
+            raise GateInputError(refusal)
+        handle.truncate()
+        handle.write(text)
     return 0
 
 
