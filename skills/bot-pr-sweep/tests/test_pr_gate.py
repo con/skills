@@ -949,8 +949,10 @@ class CliTests(unittest.TestCase):
         self.assertEqual(code, 0)
         work = out.strip()
         self.addCleanup(os.rmdir, work)
+        self.addCleanup(os.remove, Path(work) / gate.INIT_MARKER)
         self.assertTrue(Path(work).is_dir())
         self.assertIn("bot-pr-sweep-", Path(work).name)
+        self.assertTrue((Path(work) / gate.INIT_MARKER).is_file())
 
     def test_gate_exit_codes(self):
         code, out, _ = self.main(*self.gate_args())
@@ -1053,7 +1055,8 @@ class CliTests(unittest.TestCase):
         self.assertIn("error:", err)
 
     def test_save_writes_only_protection_payloads_into_a_run_directory(self):
-        work = Path(tempfile.mkdtemp(prefix="bot-pr-sweep-", dir=self.root))
+        with mock.patch.object(tempfile, "tempdir", str(self.root)):
+            work = Path(self.main("init")[1].strip())
 
         def save(path, text):
             with mock.patch.object(sys, "stdin", io.StringIO(text)):
@@ -1062,17 +1065,31 @@ class CliTests(unittest.TestCase):
         self.assertEqual(save(work / "acme-widgets-7-branch.json", json.dumps(protected_branch())), 0)
         self.assertEqual(json.loads((work / "acme-widgets-7-branch.json").read_text())["name"], "main")
         self.assertEqual(save(work / "acme-widgets-7-rules.json", "[[]]"), 0)
+        lookalike = self.root / "bot-pr-sweep-lookalike"
+        lookalike.mkdir()
+        linked_dir = self.root / "bot-pr-sweep-linked"
+        linked_dir.symlink_to(work, target_is_directory=True)
+        outside = self.root / "outside.json"
+        outside.write_text("{}", encoding="utf-8")
+        (work / "acme-widgets-9-branch.json").symlink_to(outside)
         refused = {
             "other name": (work / "acme-widgets-7-pr.json", "{}"),
             "no suffix": (work / "notes.json", "{}"),
             "not a run directory": (self.root / "acme-widgets-7-branch.json", "{}"),
             "missing run directory": (self.root / "bot-pr-sweep-gone" / "a-branch.json", "{}"),
+            "directory init did not make": (lookalike / "a-branch.json", "{}"),
             "not JSON": (work / "acme-widgets-8-branch.json", "{broken"),
         }
         for label, (path, text) in refused.items():
             with self.subTest(label):
                 self.assertEqual(save(path, text), 2)
                 self.assertFalse(path.exists())
+        for label, path in (("symlinked file", work / "acme-widgets-9-branch.json"),
+                            ("symlinked directory", linked_dir / "acme-widgets-10-branch.json")):
+            with self.subTest(label):
+                self.assertEqual(save(path, '{"evil": true}'), 2)
+        self.assertEqual(outside.read_text(encoding="utf-8"), "{}")
+        self.assertFalse((work / "acme-widgets-10-branch.json").exists())
 
     def test_outcome_rejects_unknown_results(self):
         with self.assertRaises(SystemExit):

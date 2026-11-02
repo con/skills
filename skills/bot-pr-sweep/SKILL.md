@@ -47,8 +47,9 @@ any text, so most entries cannot pin an HTTP method, and
 `*/bot-pr-sweep/scripts/pr_gate.py` matches any directory of that name. The
 two protection reads for `--allow-admin-bypass` are the exception: their
 entry ends in `--method GET`, which gh applies last, and they pipe into
-`pr_gate.py save` instead of a shell redirect, so nothing can follow the
-method flag. The rules above are what the sweep follows.
+`pr_gate.py save` instead of a shell redirect. That pin is best effort too,
+since a pattern matches raw text. The rules above are what the sweep
+follows.
 
 ## Inputs
 
@@ -178,9 +179,11 @@ Append the repository's options from the Inputs section. With
 `--allow-admin-bypass`, also save the base branch's protection and rulesets,
 the head commit's status history and the PR's reviews, with `BASE` taken from
 the `select` line. Every call is a GET. The two protection reads end in
-`--method GET`, which gh applies last, and pipe into `pr_gate.py save`, which
-writes only `*-branch.json` or `*-rules.json` inside `WORK` and refuses
-anything that is not JSON:
+`--method GET`, which gh applies last, and pipe into `pr_gate.py save`. It
+writes only `*-branch.json` or `*-rules.json` as regular files inside the
+`WORK` that `init` made, and refuses anything that is not JSON. A read that
+fails saves GitHub's error object, and the gate then reports the PR as
+`pending`:
 
 ```bash
 gh api repos/OWNER/REPO/branches/BASE --method GET | python3 SKILL_DIR/scripts/pr_gate.py save WORK/OWNER-REPO-N-branch.json

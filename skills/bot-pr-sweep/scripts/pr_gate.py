@@ -2,7 +2,8 @@
 """Fail-closed gate for dependency-bot pull requests.
 
 Standard library only. Every subcommand reads raw GitHub REST JSON that the
-sweep saved to files (``gh api ... > file``) and never contacts GitHub itself,
+sweep saved to files (``gh api ... > file``, or piped through ``save``) and
+never contacts GitHub itself,
 so the decision logic is unit-testable and the agent running the sweep has no
 reason to read pull-request titles, bodies, comments or check output.
 
@@ -294,7 +295,8 @@ def read_protection(inputs: dict, *, repo: str, base_ref: str, head_sha: str, nu
     shown = sanitize(base_ref, 60) or "the base branch"
     result = {"pending": pending, "blocked": blocked, "required": required, "status_apps": status_apps,
               "tip": _str(_dict(branch.get("commit")).get("sha"))}
-    # Every payload is bound to this repository (compared case-insensitively, as GitHub does).
+    # The branch, statuses and reviews payloads are bound to this repository (compared
+    # case-insensitively, as GitHub does); the rules payload carries no repository to check.
     api = f"/repos/{repo}".lower()
     branch_url = _str(_dict(branch.get("_links")).get("self")).lower()
     if (not base_ref or _str(branch.get("name")) != base_ref or not _SHA.fullmatch(result["tip"])
@@ -767,8 +769,14 @@ def append_event(ledger: str | None, event: dict) -> None:
             handle.write(json.dumps(event, sort_keys=True) + "\n")
 
 
+# `init` leaves this file in the directory it makes; `save` writes only next to it.
+INIT_MARKER = ".bot-pr-sweep"
+
+
 def cmd_init(_args: argparse.Namespace) -> int:
-    print(tempfile.mkdtemp(prefix="bot-pr-sweep-"))
+    work = Path(tempfile.mkdtemp(prefix="bot-pr-sweep-"))
+    (work / INIT_MARKER).touch()
+    print(work)
     return 0
 
 
@@ -779,9 +787,11 @@ _SAVE_NAME = re.compile(r"[A-Za-z0-9._-]+-(branch|rules)\.json")
 def cmd_save(args: argparse.Namespace) -> int:
     """Write the JSON piped in from a protection read, so the sweep needs no shell redirect."""
     target = Path(args.path)
-    if not (_SAVE_NAME.fullmatch(target.name) and target.parent.name.startswith("bot-pr-sweep-")
-            and target.parent.is_dir()):
-        raise GateInputError("save writes only *-branch.json or *-rules.json inside a directory `init` made")
+    parent = target.parent
+    if not (_SAVE_NAME.fullmatch(target.name) and parent.name.startswith("bot-pr-sweep-")
+            and not parent.is_symlink() and (parent / INIT_MARKER).is_file() and not target.is_symlink()):
+        raise GateInputError("save writes only *-branch.json or *-rules.json, as a regular file, "
+                             "inside a directory `init` made")
     text = sys.stdin.read()
     json.loads(text)  # refuse anything that is not JSON
     target.write_text(text, encoding="utf-8")
