@@ -148,10 +148,11 @@ Give a skill a short section in this wording, adapting the examples to it:
 > still stand for this run. After the run's normal output, add a short
 > "Suggested skill changes" section. For each one, give what the run
 > observed with links, why the current instruction does not fit, and the
-> smallest change to the skill that would. In an attended run, offer to
-> draft that change as a pull request to `con/skills`. An unattended run
-> only reports it, and never edits the skill or opens a pull request on its
-> own.
+> smallest change to the skill that would. In an attended run, ask the user
+> with a yes-or-no confirmation prompt whether to draft that change as a
+> pull request to `con/skills`, and draft it only after a yes. An unattended
+> run only reports it, and never edits the skill or opens a pull request on
+> its own.
 
 Like the external-content notice, this is wording for authors, not a runtime
 dependency: a skill installed elsewhere never sees this file. Adding the
