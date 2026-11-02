@@ -228,13 +228,6 @@ matrix cell was scored from, with `file:line` citations.
 - **Say whether a risk has ever fired.** "Never triggered; fully armed" is a different finding from "has bitten twice". Check run history where it exists.
 - **Don't audit the data itself** unless asked — this is code health. Note where data-quality tooling is missing; don't run it.
 
-## When the skill falls short
-
-At the end, if `../suggest-skill-fixes/SKILL.md` exists, follow it. Typical
-triggers here: a dimension the user rescores by hand every time, an
-ecosystem layout Phase 1 cannot map, or a house pattern Phase 0 has no way
-to express. Suggestions go in the reply, not in the report.
-
 ## Suggested mechanical helpers
 
 - **Dependency/version matrix:** parse every `requirements*.txt` / `pyproject.toml` / `package.json` and pivot by shared-lib version.
@@ -245,3 +238,10 @@ to express. Suggestions go in the reply, not in the report.
 - If you already have a lineage tool (OpenLineage, Marquez, dbt docs, Dagster asset graph), feed it in at Phase 1 instead of deriving edges by hand.
 - If the ecosystem is a monorepo, score Phase 2 per package (same checkout, different scope), run the depth reviews per package, and spend the saved time on Phase 3.
 - The 0–3 scoring is deliberately coarse; finer scales invite arguments about 2 vs. 3 rather than action.
+
+## When the skill falls short
+
+At the end, if `../suggest-skill-fixes/SKILL.md` exists, follow it. Typical
+triggers here: a dimension the user rescores by hand every time, an
+ecosystem layout Phase 1 cannot map, or a house pattern Phase 0 has no way
+to express. Suggestions go in the reply, not in the report.
