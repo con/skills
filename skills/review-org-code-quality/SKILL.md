@@ -230,17 +230,13 @@ matrix cell was scored from, with `file:line` citations.
 
 ## When the skill falls short
 
-A run can show that this skill lacks something, such as a dimension the user
-rescores by hand every time, an ecosystem layout Phase 1 cannot map, or a
-house pattern Phase 0 has no way to express. The skill's rules still stand for
-this run. After writing the report, add a short "Suggested skill changes"
-section to your reply, not to the report, which is about the ecosystem. For
-each one, give what the run observed with links, why the current instruction
-does not fit, and the smallest change to the skill that would. In an attended
-run, ask the user with a yes-or-no confirmation prompt whether to draft that
-change as a pull request to `con/skills`, and draft it only after a yes. An
-unattended run only reports it, and never edits the skill or opens a pull
-request on its own.
+After writing the report, if the optional `suggest-skill-fixes` skill is
+installed (`../suggest-skill-fixes/SKILL.md`), read it and follow it for
+anything this run showed this skill lacking. Examples are a dimension the
+user rescores by hand every time, an ecosystem layout Phase 1 cannot map, or
+a house pattern Phase 0 has no way to express. Its suggestions go in your
+reply, not in the report, which is about the ecosystem. If it is not
+installed, skip this step.
 
 ## Suggested mechanical helpers
 

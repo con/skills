@@ -138,26 +138,25 @@ Keep operational instructions self-contained in each skill; this convention prov
 
 A run can show that the skill itself lacks something. Examples include a
 result the user corrects by hand every time, a setup the skill cannot read,
-or an input whose shape has changed. Each skill should say what to do then,
-so the lesson reaches `con/skills` instead of staying in one conversation.
-Give a skill a short section in this wording, adapting the examples to it:
+or an input whose shape has changed. So that the lesson reaches `con/skills`
+instead of staying in one conversation, the shared `suggest-skill-fixes`
+skill holds the procedure. A run reports "Suggested skill changes" after its
+normal output. An attended run then asks the user with a yes-or-no
+confirmation prompt before drafting a pull request to `con/skills`. An
+unattended run only reports.
 
-> **When the skill falls short.** A run can show that this skill lacks
-> something, such as a result the user corrects by hand every time, a setup
-> it cannot read, or an input whose shape has changed. The skill's rules
-> still stand for this run. After the run's normal output, add a short
-> "Suggested skill changes" section. For each one, give what the run
-> observed with links, why the current instruction does not fit, and the
-> smallest change to the skill that would. In an attended run, ask the user
-> with a yes-or-no confirmation prompt whether to draft that change as a
-> pull request to `con/skills`, and draft it only after a yes. An unattended
-> run only reports it, and never edits the skill or opens a pull request on
-> its own.
+A skill adopts it with a short "When the skill falls short" section at the
+end of its procedure that:
 
-Like the external-content notice, this is wording for authors, not a runtime
-dependency: a skill installed elsewhere never sees this file. Adding the
-section changes what a skill's runs do, so it takes a MINOR version bump
-(see "Skill versions").
+- points to `../suggest-skill-fixes/SKILL.md`, relative to its own directory;
+- names two or three ways of falling short that fit the skill;
+- says where suggestions go: the reply, not the files the skill writes;
+- skips the step when `suggest-skill-fixes` is not installed.
+
+Like `code-quality-report-conventions`, this is a reference a skill follows
+at run time, but an optional one: a skill never stops for lack of it.
+Adding the section changes what a skill's runs do, so a skill that declares
+`version:` takes a MINOR bump (see "Skill versions").
 
 ### Skill versions
 

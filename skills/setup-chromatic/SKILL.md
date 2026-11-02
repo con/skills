@@ -250,3 +250,10 @@ Follow their branch, commit and changelog rules; fill every template section and
 Then stop and report: what was added, what step 0's answers decided, what step 6 still needs, the commit and push the user should make (this skill does not push), and what only they can do afterwards: enable "allow edits from maintainers" on the pull request, and link the PR number into the changelog entry once GitHub assigns it.
 Once pushed, both workflows (three, with forks) should go green, the first build of each project becomes its baseline (look it over in Chromatic once), and the two badges render.
 Symptoms after that are in [references/troubleshooting.md](references/troubleshooting.md).
+
+## When the skill falls short
+
+After the hand-over, if the optional `suggest-skill-fixes` skill is installed (`../suggest-skill-fixes/SKILL.md`), read it and follow it for anything this run showed this skill lacking.
+Examples are a framework or build layout the steps do not cover, a Storybook, Playwright or Chromatic option that has changed since the skill was written, or a step the user redoes by hand.
+Its suggestions go in your reply, not in the files this skill adds to the repository.
+If it is not installed, skip this step.

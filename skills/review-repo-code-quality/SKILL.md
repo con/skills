@@ -248,14 +248,10 @@ under the finding, and offer to record the preference in `AGENTS.md`.
 
 ## When the skill falls short
 
-A run can show that this skill lacks something, such as a finding the user
+After writing the report, if the optional `suggest-skill-fixes` skill is
+installed (`../suggest-skill-fixes/SKILL.md`), read it and follow it for
+anything this run showed this skill lacking. Examples are a finding the user
 rejects every time, a language or layout the Step 2 sweep does not cover, or
-a project rule the procedure has no place for. The skill's rules still stand
-for this run. After writing the report, add a short "Suggested skill changes"
-section to your reply, not to the report, which is about the code. For each
-one, give what the run observed with links, why the current instruction does
-not fit, and the smallest change to the skill that would. In an attended run,
-ask the user with a yes-or-no confirmation prompt whether to draft that change
-as a pull request to `con/skills`, and draft it only after a yes. An
-unattended run only reports it, and never edits the skill or opens a pull
-request on its own.
+a project rule the procedure has no place for. Its suggestions go in your
+reply, not in the report, which is about the code. If it is not installed,
+skip this step.
