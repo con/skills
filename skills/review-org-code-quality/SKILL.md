@@ -1,6 +1,6 @@
 ---
 name: review-org-code-quality
-version: 0.1.1
+version: 0.2.0
 description: Audit code health across an organization-wide ecosystem of similarly styled, interconnected data/ML/ETL pipelines or repositories. Focuses on systemic risk (template drift, contract fragility, cross-repo duplication, blast radius, bus factor) rather than single-repo code smells, and writes a dated report. Use when asked to review, audit, or assess the health of a set of related repositories or pipelines. For one repository use review-repo-code-quality instead.
 allowed-tools: Bash, Read, Write, Glob, Grep, AskUserQuestion, Agent, Skill
 user-invocable: true
@@ -227,6 +227,19 @@ matrix cell was scored from, with `file:line` citations.
 - **Distinguish intentional from accidental divergence.** Ask, or check commit messages/ADRs, before flagging.
 - **Say whether a risk has ever fired.** "Never triggered; fully armed" is a different finding from "has bitten twice". Check run history where it exists.
 - **Don't audit the data itself** unless asked — this is code health. Note where data-quality tooling is missing; don't run it.
+
+## When the skill falls short
+
+A run can show that this skill lacks something, such as a dimension the user
+rescores by hand every time, an ecosystem layout Phase 1 cannot map, or a
+house pattern Phase 0 has no way to express. The skill's rules still stand for
+this run. After writing the report, add a short "Suggested skill changes"
+section to your reply, not to the report, which is about the ecosystem. For
+each one, give what the run observed with links, why the current instruction
+does not fit, and the smallest change to the skill that would. In an attended
+run, offer to draft that change as a pull request to `con/skills`. An
+unattended run only reports it, and never edits the skill or opens a pull
+request on its own.
 
 ## Suggested mechanical helpers
 
