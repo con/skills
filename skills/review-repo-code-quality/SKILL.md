@@ -253,5 +253,6 @@ installed (`../suggest-skill-fixes/SKILL.md`), read it and follow it for
 anything this run showed this skill lacking. Examples are a finding the user
 rejects every time, a language or layout the Step 2 sweep does not cover, or
 a project rule the procedure has no place for. Its suggestions go in your
-reply, not in the report, which is about the code. If it is not installed,
-skip this step.
+reply, not in the report, which is about the code. When it is installed, the
+report's provenance stamp also names it in the `using` slot, with the
+`version:` from its frontmatter. If it is not installed, skip this step.

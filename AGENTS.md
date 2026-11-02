@@ -151,7 +151,12 @@ end of its procedure that:
 - points to `../suggest-skill-fixes/SKILL.md`, relative to its own directory;
 - names two or three ways of falling short that fit the skill;
 - says where suggestions go: the reply, not the files the skill writes;
+- names `suggest-skill-fixes` and its version in the provenance stamp of the
+  skill's own output, where the skill has one;
 - skips the step when `suggest-skill-fixes` is not installed.
+
+`suggest-skill-fixes` declares `version:` like any other skill, and its
+suggestions open with their own provenance line naming both skills' versions.
 
 Like `code-quality-report-conventions`, this is a reference a skill follows
 at run time, but an optional one: a skill never stops for lack of it.
