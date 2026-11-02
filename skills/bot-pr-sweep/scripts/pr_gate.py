@@ -12,6 +12,7 @@ init                      create the run's working directory and print its path
 select    PULLS.json      pick the open PRs opened by a trusted bot, matched on
                           the numeric account ID (``user.id``), never the login
 gate      decide ``merge`` / ``pending`` / ``blocked`` / ``rejected`` for one PR
+save      PATH  write a protection payload piped in from ``gh api`` (for the bypass)
 outcome   record what the sweep then did (merged, failed, dry run, repo error)
 report    render the Markdown report from the ledger the commands above write
 
@@ -70,8 +71,10 @@ BYPASSABLE_RULES = frozenset({
 # commonly require its `pre-commit.ci - pr` status pinned to its app. Verify an account
 # against a status the app posted (GET .../commits/SHA/statuses) before adding a row.
 STATUS_APP_ACCOUNTS = {
-    68672: next(uid for uid, login in TRUSTED_BOTS.items() if login == "pre-commit-ci[bot]"),
-}
+    app: uid
+    for app, bot in {68672: "pre-commit-ci[bot]"}.items()
+    for uid, login in TRUSTED_BOTS.items() if login == bot
+}  # a bot dropped from TRUSTED_BOTS drops out here too, so its pinned statuses stop counting
 # Review states that settle a reviewer's verdict; COMMENTED leaves the previous one standing.
 DECISIVE_REVIEWS = frozenset({"APPROVED", "CHANGES_REQUESTED", "DISMISSED"})
 RESULTS = frozenset({
@@ -272,7 +275,7 @@ def merge_commit_problems(commit: dict, parents: list[str], previous: str, allow
     return problems
 
 
-def read_protection(inputs: dict, *, base_ref: str, head_sha: str, number: int) -> dict:
+def read_protection(inputs: dict, *, repo: str, base_ref: str, head_sha: str, number: int) -> dict:
     """Read what an admin merge would skip, for --allow-admin-bypass.
 
     `inputs` holds the raw `branch`, `rules`, `statuses` and `reviews` payloads.
@@ -291,31 +294,34 @@ def read_protection(inputs: dict, *, base_ref: str, head_sha: str, number: int) 
     shown = sanitize(base_ref, 60) or "the base branch"
     result = {"pending": pending, "blocked": blocked, "required": required, "status_apps": status_apps,
               "tip": _str(_dict(branch.get("commit")).get("sha"))}
-    if not base_ref or _str(branch.get("name")) != base_ref or not _SHA.fullmatch(result["tip"]):
-        pending.append(f"branch payload describes `{sanitize(branch.get('name'), 60) or 'nothing'}`, "
-                       f"not `{shown}`; fetch it again")
+    # Every payload is bound to this repository (compared case-insensitively, as GitHub does).
+    api = f"/repos/{repo}".lower()
+    branch_url = _str(_dict(branch.get("_links")).get("self")).lower()
+    if (not base_ref or _str(branch.get("name")) != base_ref or not _SHA.fullmatch(result["tip"])
+            or not branch_url.endswith(f"{api}/branches/{base_ref.lower()}")):
+        pending.append(f"branch payload does not describe `{shown}` in {repo}; fetch it again")
         return result
 
     def pin(name: str, app: object) -> None:
         pins = required.setdefault(name, set())
-        if _int(app) is not None and _int(app) > 0:  # GitHub writes -1 (or null) for "any source"
-            pins.add(_int(app))
+        app = _int(app)
+        if app is not None and app > 0:  # GitHub writes -1 (or null) for "any source"
+            pins.add(app)
 
     # Classic protection; a payload without the block counts as none only when protection is off.
     protection = _dict(branch.get("protection"))
     classic = protection.get("required_status_checks")
     contexts, pinned = _dict(classic).get("contexts"), _dict(classic).get("checks")
-    if classic is None and protection.get("enabled") is False:
-        pass
-    elif not (isinstance(contexts, list) and isinstance(pinned, list)
-              and all(isinstance(name, str) for name in contexts)
-              and all(isinstance(check, dict) and isinstance(check.get("context"), str) for check in pinned)):
-        pending.append("branch payload has no readable required status checks; fetch it again")
-    else:
-        for name in contexts:
-            pin(name, None)
-        for check in pinned:
-            pin(check["context"], check.get("app_id"))
+    if not (classic is None and protection.get("enabled") is False):
+        if not (isinstance(contexts, list) and isinstance(pinned, list)
+                and all(isinstance(name, str) for name in contexts)
+                and all(isinstance(check, dict) and isinstance(check.get("context"), str) for check in pinned)):
+            pending.append("branch payload has no readable required status checks; fetch it again")
+        else:
+            for name in contexts:
+                pin(name, None)
+            for check in pinned:
+                pin(check["context"], check.get("app_id"))
 
     rules = list(inputs.get("rules") or ())
     if not all(isinstance(rule, dict) and isinstance(rule.get("type"), str) for rule in rules):
@@ -337,8 +343,8 @@ def read_protection(inputs: dict, *, base_ref: str, head_sha: str, number: int) 
     apps_by_account = {account: app for app, account in STATUS_APP_ACCOUNTS.items()}
     latest: dict[str, tuple] = {}
     for entry in (_dict(entry) for entry in inputs.get("statuses") or ()):
-        if not _str(entry.get("url")).endswith(f"/statuses/{head_sha}"):
-            pending.append("status list describes another commit or is malformed; fetch it again")
+        if not _str(entry.get("url")).lower().endswith(f"{api}/statuses/{head_sha}"):
+            pending.append("status list describes another commit or repository, or is malformed; fetch it again")
             break
         stamp = (_str(entry.get("created_at")), _int(entry.get("id")) or 0)
         name = _str(entry.get("context"))
@@ -350,12 +356,16 @@ def read_protection(inputs: dict, *, base_ref: str, head_sha: str, number: int) 
     verdicts: dict[object, tuple] = {}
     for review in sorted((_dict(review) for review in inputs.get("reviews") or ()),
                          key=lambda review: (_str(review.get("submitted_at")), _int(review.get("id")) or 0)):
-        if not _str(review.get("pull_request_url")).endswith(f"/pulls/{number}"):
+        if not _str(review.get("pull_request_url")).lower().endswith(f"{api}/pulls/{number}"):
             pending.append("reviews payload describes another pull request or is malformed; fetch it again")
             break
         reviewer = _dict(review.get("user"))
+        # A deleted account (user: null) has no ID: each of its reviews stands on its own, so
+        # one ghost's approval cannot clear another's requested changes.
+        key = _int(reviewer.get("id"))
+        key = key if key is not None else ("deleted", _int(review.get("id")), _str(review.get("submitted_at")))
         if _str(review.get("state")) in DECISIVE_REVIEWS:
-            verdicts[_int(reviewer.get("id"))] = (_str(review.get("state")), sanitize(reviewer.get("login"), 40))
+            verdicts[key] = (_str(review.get("state")), sanitize(reviewer.get("login"), 40))
     for state, login in verdicts.values():
         if state == "CHANGES_REQUESTED":
             blocked.append(f"`{login or 'a reviewer'}` requested changes, which an admin merge would override")
@@ -500,7 +510,8 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
 
     protection = None
     if bypass:
-        protection = read_protection(admin_bypass, base_ref=_str(base.get("ref")), head_sha=head_sha, number=number)
+        protection = read_protection(admin_bypass, repo=repo, base_ref=_str(base.get("ref")), head_sha=head_sha,
+                                     number=number)
         for reason in protection["pending"]:
             pending(reason)
         for reason in protection["blocked"]:
@@ -614,8 +625,9 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
     # An admin merge also skips the up-to-date requirement: the base tip must be one of the
     # commits the PR's commits sit on (the bot's branch point or an Update branch merge).
     if protection and not protection["pending"]:
-        own ={_str(commit.get("sha")) for commit in commits}
+        own = {_str(commit.get("sha")) for commit in commits}
         roots = {_str(_dict(parent).get("sha")) for commit in commits for parent in _list(commit.get("parents"))}
+        # An empty commit list is already pending above ("no commits returned").
         if commits and protection["tip"] not in roots - own:
             behind = True
             blocked(f"branch is behind `{base_ref}`; an admin merge would skip the up-to-date requirement, "
@@ -760,6 +772,22 @@ def cmd_init(_args: argparse.Namespace) -> int:
     return 0
 
 
+# What `save` may write: a protection payload, inside a directory `init` made.
+_SAVE_NAME = re.compile(r"[A-Za-z0-9._-]+-(branch|rules)\.json")
+
+
+def cmd_save(args: argparse.Namespace) -> int:
+    """Write the JSON piped in from a protection read, so the sweep needs no shell redirect."""
+    target = Path(args.path)
+    if not (_SAVE_NAME.fullmatch(target.name) and target.parent.name.startswith("bot-pr-sweep-")
+            and target.parent.is_dir()):
+        raise GateInputError("save writes only *-branch.json or *-rules.json inside a directory `init` made")
+    text = sys.stdin.read()
+    json.loads(text)  # refuse anything that is not JSON
+    target.write_text(text, encoding="utf-8")
+    return 0
+
+
 def cmd_select(args: argparse.Namespace) -> int:
     pulls = pages(load_json(args.pulls))
     selected, suspicious, other_bots = select_bot_prs(pulls)
@@ -860,6 +888,9 @@ def build_parser() -> argparse.ArgumentParser:
                       help="minimum age of the head commit before trusting the check list (0 disables)")
     gate.add_argument("--now", help="ISO 8601 time to evaluate at (tests)")
 
+    save = subparsers.add_parser("save", help="write a protection payload piped in from `gh api` (stdin)")
+    save.add_argument("path", help="WORK/OWNER-REPO-N-branch.json or WORK/OWNER-REPO-N-rules.json")
+
     outcome = subparsers.add_parser("outcome", help="record what the sweep did")
     common(outcome, ledger_required=True)
     outcome.add_argument("--number", type=int, help="PR number; omit for a repository-level error")
@@ -877,8 +908,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    handlers = {"init": cmd_init, "select": cmd_select, "gate": cmd_gate, "outcome": cmd_outcome,
-                "report": cmd_report}
+    handlers = {"init": cmd_init, "select": cmd_select, "gate": cmd_gate, "save": cmd_save,
+                "outcome": cmd_outcome, "report": cmd_report}
     try:
         return handlers[args.command](args)
     except (GateInputError, OSError, ValueError) as error:

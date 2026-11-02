@@ -9,6 +9,7 @@ import unittest
 from contextlib import redirect_stderr, redirect_stdout
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from unittest import mock
 
 SKILL_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(SKILL_DIR / "scripts"))
@@ -101,9 +102,10 @@ def evaluate(**overrides):
 GITHUB_ACTIONS, PRE_COMMIT_APP = 15368, 68672
 
 
-def protected_branch(name="main", tip=BASE, contexts=(), checks=()):
+def protected_branch(name="main", tip=BASE, contexts=(), checks=(), repo=REPO):
     """GET /repos/O/R/branches/NAME as a reader sees it."""
     return {"name": name, "commit": {"sha": tip}, "protected": True,
+            "_links": {"self": f"https://api.github.com/repos/{repo}/branches/{name}"},
             "protection": {"enabled": True, "required_status_checks": {
                 "enforcement_level": "non_admins", "contexts": list(contexts),
                 "checks": [{"context": name, "app_id": app} for name, app in checks]}}}
@@ -663,14 +665,31 @@ class AdminBypassTests(unittest.TestCase):
             "malformed rule checks": dict(rules=[{"type": "required_status_checks", "parameters": {}}]),
             "statuses of another commit": dict(statuses=[posted(sha=OTHER)]),
             "reviews of another pull request": dict(reviews=[reviewed(number=8)]),
+            "branch of another repository": dict(branch=protected_branch(repo="acme/other")),
+            "statuses of another repository": dict(statuses=[
+                {**posted(), "url": f"https://api.github.com/repos/acme/other/statuses/{HEAD}"}]),
+            "reviews of another repository": dict(reviews=[
+                {**reviewed(), "pull_request_url": "https://api.github.com/repos/acme/other/pulls/7"}]),
+            "no commits": dict(commits=[]),
         }
         for label, overrides in cases.items():
             with self.subTest(label):
                 decision = bypass(**overrides)
                 self.assertEqual(decision["verdict"], "pending")
                 self.assertFalse(decision["admin_bypass"])
-        unprotected = {"name": "main", "commit": {"sha": BASE}, "protected": False, "protection": {"enabled": False}}
+        unprotected = {"name": "main", "commit": {"sha": BASE}, "protected": False, "protection": {"enabled": False},
+                       "_links": {"self": f"https://api.github.com/repos/{REPO}/branches/main"}}
         self.assertEqual(bypass(branch=unprotected)["verdict"], "merge")
+        upper = protected_branch()
+        upper["_links"]["self"] = f"https://api.github.com/repos/{REPO.upper()}/branches/main"
+        self.assertEqual(bypass(branch=upper)["verdict"], "merge")
+
+    def test_deleted_reviewers_do_not_clear_each_other(self):
+        asked = {**reviewed("CHANGES_REQUESTED"), "user": None}
+        cleared = {**reviewed(at="2026-10-26T11:40:00Z", uid=2), "user": None}
+        decision = bypass(reviews=[asked, cleared])
+        self.assertEqual(decision["verdict"], "blocked")
+        self.assertIn("`a reviewer` requested changes, which an admin merge would override", decision["reasons"])
 
 
 class CommitTests(unittest.TestCase):
@@ -1032,6 +1051,28 @@ class CliTests(unittest.TestCase):
         code, _, err = self.main("report", "--ledger", str(self.ledger))
         self.assertEqual(code, 2)
         self.assertIn("error:", err)
+
+    def test_save_writes_only_protection_payloads_into_a_run_directory(self):
+        work = Path(tempfile.mkdtemp(prefix="bot-pr-sweep-", dir=self.root))
+
+        def save(path, text):
+            with mock.patch.object(sys, "stdin", io.StringIO(text)):
+                return self.main("save", str(path))[0]
+
+        self.assertEqual(save(work / "acme-widgets-7-branch.json", json.dumps(protected_branch())), 0)
+        self.assertEqual(json.loads((work / "acme-widgets-7-branch.json").read_text())["name"], "main")
+        self.assertEqual(save(work / "acme-widgets-7-rules.json", "[[]]"), 0)
+        refused = {
+            "other name": (work / "acme-widgets-7-pr.json", "{}"),
+            "no suffix": (work / "notes.json", "{}"),
+            "not a run directory": (self.root / "acme-widgets-7-branch.json", "{}"),
+            "missing run directory": (self.root / "bot-pr-sweep-gone" / "a-branch.json", "{}"),
+            "not JSON": (work / "acme-widgets-8-branch.json", "{broken"),
+        }
+        for label, (path, text) in refused.items():
+            with self.subTest(label):
+                self.assertEqual(save(path, text), 2)
+                self.assertFalse(path.exists())
 
     def test_outcome_rejects_unknown_results(self):
         with self.assertRaises(SystemExit):

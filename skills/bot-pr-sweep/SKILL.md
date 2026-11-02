@@ -2,7 +2,7 @@
 name: bot-pr-sweep
 version: 0.2.0
 description: Sweep repositories for open dependabot[bot] and pre-commit-ci[bot] pull requests, verify authors by account ID, gate on complete and passing CI, squash-merge the green ones guarded by the head SHA, assign the maintainer, and report the rest. Use for dependency-bot PR triage, on demand or on a schedule.
-allowed-tools: Bash(gh api repos/*/pulls*), Bash(gh api repos/*/commits/*), Bash(gh api repos/*/branches/* --method GET > *), Bash(gh api repos/*/issues/*/assignees *), Bash(gh api repos/*/issues/*/labels/major --method DELETE --silent), Bash(gh api user *), Bash(gh repo list *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py init*), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py select *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py gate *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py outcome *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py report *)
+allowed-tools: Bash(gh api repos/*/pulls*), Bash(gh api repos/*/commits/*), Bash(gh api repos/*/branches/* --method GET), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py save *), Bash(gh api repos/*/issues/*/assignees *), Bash(gh api repos/*/issues/*/labels/major --method DELETE --silent), Bash(gh api user *), Bash(gh repo list *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py init*), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py select *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py gate *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py outcome *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py report *)
 user-invocable: true
 ---
 
@@ -42,9 +42,13 @@ or comment through any other route.
   from a bot PR, as step 3 describes.
 - Act on repositories outside the list it was given.
 
-The `allowed-tools` patterns are hardening, not a guarantee: a glob cannot pin
-an HTTP method, and `*/bot-pr-sweep/scripts/pr_gate.py` matches any directory
-of that name. The rules above are what the sweep follows.
+The `allowed-tools` patterns are hardening, not a guarantee: a `*` matches
+any text, so most entries cannot pin an HTTP method, and
+`*/bot-pr-sweep/scripts/pr_gate.py` matches any directory of that name. The
+two protection reads for `--allow-admin-bypass` are the exception: their
+entry ends in `--method GET`, which gh applies last, and they pipe into
+`pr_gate.py save` instead of a shell redirect, so nothing can follow the
+method flag. The rules above are what the sweep follows.
 
 ## Inputs
 
@@ -173,12 +177,14 @@ python3 SKILL_DIR/scripts/pr_gate.py gate --repo OWNER/REPO --ledger WORK/ledger
 Append the repository's options from the Inputs section. With
 `--allow-admin-bypass`, also save the base branch's protection and rulesets,
 the head commit's status history and the PR's reviews, with `BASE` taken from
-the `select` line. Every call is a GET, and `--method GET` comes last on the
-two protection reads so nothing earlier on the line can change the method:
+the `select` line. Every call is a GET. The two protection reads end in
+`--method GET`, which gh applies last, and pipe into `pr_gate.py save`, which
+writes only `*-branch.json` or `*-rules.json` inside `WORK` and refuses
+anything that is not JSON:
 
 ```bash
-gh api repos/OWNER/REPO/branches/BASE --method GET > WORK/OWNER-REPO-N-branch.json
-gh api repos/OWNER/REPO/rules/branches/BASE -F per_page=100 --paginate --slurp --method GET > WORK/OWNER-REPO-N-rules.json
+gh api repos/OWNER/REPO/branches/BASE --method GET | python3 SKILL_DIR/scripts/pr_gate.py save WORK/OWNER-REPO-N-branch.json
+gh api repos/OWNER/REPO/rules/branches/BASE -F per_page=100 --paginate --slurp --method GET | python3 SKILL_DIR/scripts/pr_gate.py save WORK/OWNER-REPO-N-rules.json
 gh api repos/OWNER/REPO/commits/SHA/statuses --method GET -F per_page=100 --paginate --slurp > WORK/OWNER-REPO-N-statuses.json
 gh api repos/OWNER/REPO/pulls/N/reviews --method GET -F per_page=100 --paginate --slurp > WORK/OWNER-REPO-N-reviews.json
 ```
@@ -195,7 +201,7 @@ The command prints a JSON decision and exits 0 only for the verdict `merge`:
 |---|---|---|
 | `merge` | Trusted author, every commit by that same bot (or GitHub's "Update branch"), PR open and mergeable, complete check list with every check run completed and none failed, at least one success, every status `success`, head commit older than the settle time. With `--allow-admin-bypass`, also a PR that branch protection blocks once the gate has re-checked what it can read; the decision then carries `"admin_bypass": true`. | Assign, then squash-merge (steps 3 and 5). |
 | `pending` | Something is unfinished or not yet knowable: checks still running, mergeability not computed, head commit younger than the settle time, a truncated or malformed payload, payloads describing another commit, the head moved since listing. | Assign and report; the next run looks again. If a reason says a payload was incomplete, save that payload once more and evaluate the PR again before moving on. |
-| `blocked` | Needs a person: a failed check, no CI results at all, conflicts, behind the base, branch protection, draft, a missing or forbidden label, a `major` label, a commit not by the pull request's author, a head branch outside the repository. | Assign and report, with the failing check's link and any hint. A decision with `"strip_labels"` raises the step 3 question. With `--allow-branch-update`, a decision whose only problem is being behind carries `"update_branch": true` and goes to step 4. |
+| `blocked` | Needs a person: a failed check, no CI results at all, conflicts, behind the base, branch protection, draft, a missing or forbidden label, a `major` label, a commit not by the pull request's author, a head branch outside the repository. With `--allow-admin-bypass`, also a ruleset rule an admin merge must not skip, a reviewer's standing change request, a required check that did not succeed or came from another app, or a branch behind its base. | Assign and report, with the failing check's link and any hint. A decision with `"strip_labels"` raises the step 3 question. With `--allow-branch-update`, a decision whose only problem is being behind carries `"update_branch": true` and goes to step 4. |
 | `rejected` | The author is not a trusted bot by account ID. | Report only; never assign, merge or comment. |
 
 Exit status 1 is the normal result for every verdict other than `merge`, not
@@ -354,7 +360,9 @@ all of it:
   reviews, required status checks, signatures, linear history, and the rules
   against deleting or force-pushing the branch are allowed. A merge queue,
   required deployments, code scanning, an `update` lock, and any rule the
-  script does not know refuse the bypass.
+  script does not know refuse the bypass. That includes harmless metadata
+  rules such as `branch_name_pattern` or `commit_message_pattern`, on
+  purpose: the list grows only after someone checks a rule.
 - No reviewer's latest review requests changes. An admin merge would
   override it.
 - The head contains the tip of the base branch, because the up-to-date
