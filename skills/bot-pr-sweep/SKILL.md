@@ -303,9 +303,7 @@ assignments and updates, repositories that could not be listed), each with a
 link, the gate's reasons, and the hint to give the bot or the maintainer
 where one applies. If the user asked for the report in a file, redirect the
 command's output there. Add `--schedule "<cadence>"` when the invocation
-states one, so the report says when the next sweep comes. If the run showed
-the skill falling short, follow the report with suggested skill changes
-("When the skill falls short" below).
+states one, so the report says when the next sweep comes.
 
 ### 7. Agree a cadence
 
@@ -334,18 +332,6 @@ with --schedule "daily at 06:00 UTC".
 The user puts it on a Claude Code scheduled task, a cron entry, or a workflow
 of their own; the sweep never creates or changes a schedule itself. If the
 user declines a schedule, say so in one line and stop.
-
-## When the skill falls short
-
-A run can show that the skill itself lacks something. Examples include a
-verdict the maintainer overrides by hand every time, a repository setup the
-gate cannot read, or a payload GitHub has started shaping differently. The
-verdict still stands for this run. After the report, add a short "Suggested
-skill changes" section. For each one, give what the run observed with links,
-why the current rule does not fit, and the smallest change to the skill that
-would. In an attended run, offer to draft that change as a pull request to
-`con/skills`. An unattended run only reports it. It never changes the skill
-or opens a pull request on its own.
 
 ## Admin bypass
 
