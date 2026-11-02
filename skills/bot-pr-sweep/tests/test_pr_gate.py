@@ -124,15 +124,18 @@ def posted(name="pre-commit.ci - pr", state="success", creator=PRE_COMMIT_CI, sh
             "state": state, "created_at": created, "creator": {"id": creator, "login": "x", "type": "Bot"}}
 
 
-def comparison(behind=0, tip=BASE, head=HEAD, base="main"):
-    return {"url": f"https://api.github.com/repos/{REPO}/compare/{base}...{head}",
-            "status": "diverged" if behind else "ahead", "ahead_by": 1, "behind_by": behind,
-            "base_commit": {"sha": tip}}
+def reviewed(state="APPROVED", reviewer=MAINTAINER, number=7, at="2026-10-26T11:30:00Z", uid=1):
+    """One entry of GET /repos/O/R/pulls/N/reviews."""
+    return {"id": uid, "state": state, "submitted_at": at, "user": {"id": reviewer, "login": f"user{reviewer}"},
+            "pull_request_url": f"https://api.github.com/repos/{REPO}/pulls/{number}"}
 
 
-def bypass(**overrides):
-    kwargs = dict(pr=pull(mergeable_state="blocked"), allow_admin_bypass=True, branch=protected_branch(),
-                  rules=[rule("pull_request")], status_list=[], compare=comparison())
+def bypass(branch=None, rules=None, statuses=(), reviews=(), **overrides):
+    """Gate a PR that protection blocks, with --allow-admin-bypass and its four payloads."""
+    inputs = {"branch": protected_branch() if branch is None else branch,
+              "rules": [rule("pull_request")] if rules is None else rules,
+              "statuses": list(statuses), "reviews": list(reviews)}
+    kwargs = dict(pr=pull(mergeable_state="blocked"), commits=[commit(parents=[BASE])], admin_bypass=inputs)
     kwargs.update(overrides)
     return evaluate(**kwargs)
 
@@ -524,25 +527,49 @@ class AdminBypassTests(unittest.TestCase):
             with self.subTest(state=state):
                 self.assertEqual(bypass(pr=pull(mergeable_state=state, mergeable=state != "dirty"))["verdict"], "blocked")
         self.assertEqual(bypass(pr=pull(mergeable_state="blocked", user=user(uid=1)))["verdict"], "rejected")
-        red = bypass(check_pages=[runs(run(conclusion="failure"))])
-        self.assertEqual(red["verdict"], "blocked")
-        self.assertFalse(red["admin_bypass"])
 
-    def test_required_checks_of_protection_and_rulesets_must_pass(self):
+    def test_other_blockers_still_block(self):
+        cases = {
+            "red check": dict(check_pages=[runs(run(conclusion="failure"))]),
+            "draft": dict(pr=pull(mergeable_state="blocked", draft=True)),
+            "forbidden label": dict(pr=pull(mergeable_state="blocked", labels=[{"name": "hold"}]), forbid_labels=("hold",)),
+            "missing --require-check": dict(require_checks=("lint",)),
+            "foreign commit": dict(commits=[commit(parents=[BASE], author=MAINTAINER)]),
+        }
+        for label, overrides in cases.items():
+            with self.subTest(label):
+                decision = bypass(**overrides)
+                self.assertEqual(decision["verdict"], "blocked")
+                self.assertFalse(decision["admin_bypass"])
+
+    def test_required_checks_must_finish_with_success(self):
         protected = protected_branch(contexts=["lint"])
         ruled = [rule("required_status_checks", [("e2e", None)])]
         decision = bypass(branch=protected, rules=ruled)
         self.assertEqual(decision["verdict"], "blocked")
-        self.assertIn("required check `e2e` has not passed on the head commit", decision["reasons"])
-        self.assertIn("required check `lint` has not passed on the head commit", decision["reasons"])
-        passing = [runs(run(name="lint"), run(name="e2e", conclusion="skipped"))]
+        self.assertIn("required check `lint` did not finish with success", decision["reasons"])
+        self.assertIn("required check `e2e` did not finish with success", decision["reasons"])
+        passing = [runs(run(name="lint"), run(name="e2e"))]
         self.assertEqual(bypass(branch=protected, rules=ruled, check_pages=passing)["verdict"], "merge")
-        self.assertEqual(bypass(branch=protected, rules=ruled, check_pages=passing, strict=True)["verdict"], "blocked")
+        skipped = [runs(run(name="lint"), run(name="e2e", conclusion="skipped"))]
+        self.assertEqual(bypass(branch=protected, rules=ruled, check_pages=skipped)["reasons"],
+                         ["required check `e2e` did not finish with success"])
+
+    def test_required_names_are_compared_whole(self):
+        prefix = "x" * 60
+        decision = bypass(branch=protected_branch(contexts=[prefix + "-unit"]),
+                          check_pages=[runs(run(name=prefix + "-lint"))])
+        self.assertEqual(decision["verdict"], "blocked")
 
     def test_unfinished_required_check_stays_pending(self):
         decision = bypass(branch=protected_branch(contexts=["tests"]),
                           check_pages=[runs(run(status="in_progress", conclusion=None))])
         self.assertEqual(decision["verdict"], "pending")
+
+    def test_ci_for_another_commit_leaves_the_pr_pending(self):
+        decision = bypass(branch=protected_branch(contexts=["lint"]), check_pages=[runs(run(head=OTHER))])
+        self.assertEqual(decision["verdict"], "pending")
+        self.assertFalse(any("required check" in reason for reason in decision["reasons"]))
 
     def test_check_run_must_come_from_the_pinned_app(self):
         pinned = protected_branch(checks=[("tests", GITHUB_ACTIONS)])
@@ -551,23 +578,38 @@ class AdminBypassTests(unittest.TestCase):
             with self.subTest(app=app):
                 decision = bypass(branch=pinned, check_pages=[runs(run(app=app))])
                 self.assertEqual(decision["verdict"], "blocked")
-                self.assertIn("has not passed from app 15368", decision["reasons"][0])
+                self.assertIn("did not come from app 15368", decision["reasons"][0])
+
+    def test_any_source_is_not_a_pin(self):
+        for app in (-1, 0, None):
+            with self.subTest(app=app):
+                branch = protected_branch(checks=[("tests", app)])
+                ruled = [rule("required_status_checks", [("tests", app)])]
+                self.assertEqual(bypass(branch=branch, rules=ruled, check_pages=[runs(run(app=424242))])["verdict"], "merge")
+
+    def test_classic_and_ruleset_requirements_combine(self):
+        branch = protected_branch(contexts=["tests", "lint"], checks=[("tests", GITHUB_ACTIONS)])
+        ruled = [rule("pull_request"), rule("required_status_checks", [("lint", None), ("e2e", GITHUB_ACTIONS)])]
+        green = [runs(run(app=GITHUB_ACTIONS), run(name="lint", app=424242), run(name="e2e", app=GITHUB_ACTIONS))]
+        self.assertEqual(bypass(branch=branch, rules=ruled, check_pages=green)["verdict"], "merge")
+        wrong = [runs(run(app=GITHUB_ACTIONS), run(name="lint", app=424242), run(name="e2e", app=424242))]
+        self.assertEqual(bypass(branch=branch, rules=ruled, check_pages=wrong)["reasons"],
+                         ["required check `e2e` did not come from app 15368, the one branch protection names"])
 
     def test_status_must_be_posted_by_the_pinned_apps_account(self):
+        self.assertEqual(gate.STATUS_APP_ACCOUNTS[PRE_COMMIT_APP], PRE_COMMIT_CI)
         ruled = [rule("required_status_checks", [("pre-commit.ci - pr", PRE_COMMIT_APP)])]
         combined = status(context())
-        decision = bypass(rules=ruled, status=combined, status_list=[posted()])
+        decision = bypass(rules=ruled, status=combined, statuses=[posted()])
         self.assertEqual(decision["verdict"], "merge")
         self.assertTrue(decision["admin_bypass"])
-        spoofed = bypass(rules=ruled, status=combined, status_list=[posted(creator=MAINTAINER)])
+        spoofed = bypass(rules=ruled, status=combined, statuses=[posted(creator=MAINTAINER)])
         self.assertEqual(spoofed["verdict"], "blocked")
-        self.assertIn("has not passed from app 68672", spoofed["reasons"][0])
+        self.assertIn("did not come from app 68672", spoofed["reasons"][0])
         later = posted(creator=MAINTAINER, created="2026-10-26T11:20:00Z", uid=2)
-        self.assertEqual(bypass(rules=ruled, status=combined, status_list=[posted(), later])["verdict"], "blocked")
+        self.assertEqual(bypass(rules=ruled, status=combined, statuses=[posted(), later])["verdict"], "blocked")
         unknown_app = [rule("required_status_checks", [("pre-commit.ci - pr", 1234)])]
-        self.assertEqual(bypass(rules=unknown_app, status=combined, status_list=[posted()])["verdict"], "blocked")
-        other_commit = bypass(rules=ruled, status=combined, status_list=[posted(sha=OTHER)])
-        self.assertEqual(other_commit["verdict"], "pending")
+        self.assertEqual(bypass(rules=unknown_app, status=combined, statuses=[posted()])["verdict"], "blocked")
 
     def test_rules_outside_the_bypassable_set_refuse(self):
         for kind in ("merge_queue", "required_deployments", "code_scanning", "workflows", "update", "rule_from_2030"):
@@ -576,36 +618,59 @@ class AdminBypassTests(unittest.TestCase):
                 self.assertEqual(decision["verdict"], "blocked")
                 self.assertIn(f"ruleset rule `{kind}` on `main` is not one an admin merge may skip", decision["reasons"])
 
-    def test_behind_base_waits_for_an_update(self):
-        decision = bypass(compare=comparison(behind=2))
+    def test_requested_changes_block_until_that_reviewer_relents(self):
+        asked = reviewed("CHANGES_REQUESTED")
+        decision = bypass(reviews=[asked])
+        self.assertEqual(decision["verdict"], "blocked")
+        self.assertIn(f"`user{MAINTAINER}` requested changes, which an admin merge would override", decision["reasons"])
+        self.assertEqual(bypass(reviews=[reviewed("DISMISSED")])["verdict"], "merge")
+        self.assertEqual(bypass(reviews=[asked, reviewed(at="2026-10-26T11:40:00Z", uid=2)])["verdict"], "merge")
+        comment = reviewed("COMMENTED", at="2026-10-26T11:40:00Z", uid=2)
+        self.assertEqual(bypass(reviews=[asked, comment])["verdict"], "blocked")
+        someone_else = reviewed(reviewer=RENOVATE, at="2026-10-26T11:40:00Z", uid=3)
+        self.assertEqual(bypass(reviews=[asked, someone_else])["verdict"], "blocked")
+        out_of_order = [reviewed(at="2026-10-26T11:40:00Z", uid=2), asked]
+        self.assertEqual(bypass(reviews=out_of_order)["verdict"], "merge")
+
+    def test_head_must_contain_the_base_tip(self):
+        moved = protected_branch(tip=MERGE_SHA)
+        decision = bypass(branch=moved)
         self.assertEqual(decision["verdict"], "blocked")
         self.assertIn("branch is behind `main`", decision["reasons"][0])
         self.assertIn("@dependabot rebase", decision["hints"][0])
         self.assertFalse(decision["update_branch"])
-        updatable = bypass(compare=comparison(behind=2), allow_branch_update=True)
+        updatable = bypass(branch=moved, allow_branch_update=True)
         self.assertTrue(updatable["update_branch"])
         self.assertEqual(updatable["hints"], [])
 
+    def test_update_branch_merge_brings_the_base_tip_in(self):
+        commits = [commit(sha=OTHER, parents=[BASE]), update_merge(sha=HEAD, parents=[OTHER, MERGE_SHA])]
+        decision = bypass(pr=pull(mergeable_state="blocked", commits=2), commits=commits,
+                          branch=protected_branch(tip=MERGE_SHA), allow_branch_update=True)
+        self.assertEqual(decision["verdict"], "merge")
+        self.assertTrue(decision["admin_bypass"])
+
     def test_payloads_must_describe_this_pull_request(self):
-        no_protection = protected_branch()
-        del no_protection["protection"]
+        no_block = protected_branch()
+        del no_block["protection"]["required_status_checks"]
         cases = {
+            "empty branch payload": dict(branch={}),
             "branch for another name": dict(branch=protected_branch(name="dev")),
-            "no branch payload": dict(branch=None),
-            "branch without protection details": dict(branch=no_protection),
+            "branch without a tip": dict(branch=protected_branch(tip="")),
+            "protection on but no checks block": dict(branch=no_block),
             "branch with malformed checks": dict(branch=protected_branch(contexts=[7])),
             "rules error object": dict(rules=[{"message": "Not Found"}]),
             "malformed rule checks": dict(rules=[{"type": "required_status_checks", "parameters": {}}]),
-            "compare for another head": dict(compare=comparison(head=OTHER)),
-            "compare against another base": dict(compare=comparison(base="dev")),
-            "base moved between payloads": dict(compare=comparison(tip=MERGE_SHA)),
-            "missing compare": dict(compare=None),
+            "statuses of another commit": dict(statuses=[posted(sha=OTHER)]),
+            "reviews of another pull request": dict(reviews=[reviewed(number=8)]),
         }
         for label, overrides in cases.items():
             with self.subTest(label):
                 decision = bypass(**overrides)
                 self.assertEqual(decision["verdict"], "pending")
                 self.assertFalse(decision["admin_bypass"])
+        unprotected = {"name": "main", "commit": {"sha": BASE}, "protected": False, "protection": {"enabled": False}}
+        self.assertEqual(bypass(branch=unprotected)["verdict"], "merge")
 
 
 class CommitTests(unittest.TestCase):
@@ -837,8 +902,7 @@ class CliTests(unittest.TestCase):
         self.files = {
             "pr": pull(), "commits": [[commit()]], "checks": [runs(run())], "status": status(),
             "pulls": [[pull()], [pull(number=8, user=user("dependabot[bot]", 1))]],
-            "branch": protected_branch(), "rules": [[rule("pull_request")]], "statuses": [[]],
-            "compare": comparison(),
+            "branch": protected_branch(), "rules": [[rule("pull_request")]], "statuses": [[]], "reviews": [[]],
         }
         for name, payload in self.files.items():
             (self.root / f"{name}.json").write_text(json.dumps(payload), encoding="utf-8")
@@ -909,18 +973,31 @@ class CliTests(unittest.TestCase):
 
     def test_gate_admin_bypass(self):
         (self.root / "pr.json").write_text(json.dumps(pull(mergeable_state="blocked")), encoding="utf-8")
+        (self.root / "commits.json").write_text(json.dumps([[commit(parents=[BASE])]]), encoding="utf-8")
         files = {"--branch": self.path("branch"), "--rules": self.path("rules"),
-                 "--status-list": self.path("statuses"), "--compare": self.path("compare")}
+                 "--status-list": self.path("statuses"), "--reviews": self.path("reviews")}
         self.assertEqual(self.main(*self.gate_args())[0], 1)
         code, out, _ = self.main(*self.gate_args("--allow-admin-bypass", **files))
         self.assertEqual(code, 0)
         self.assertTrue(json.loads(out)["admin_bypass"])
-        partial = {key: value for key, value in files.items() if key != "--compare"}
+        partial = {key: value for key, value in files.items() if key != "--reviews"}
         code, _, err = self.main(*self.gate_args("--allow-admin-bypass", **partial))
         self.assertEqual(code, 2)
         self.assertIn("--allow-admin-bypass needs", err)
+        pages = [[rule("pull_request")], [rule("merge_queue")]]  # --paginate --slurp output
+        (self.root / "rules.json").write_text(json.dumps(pages), encoding="utf-8")
+        code, out, _ = self.main(*self.gate_args("--allow-admin-bypass", **files))
+        self.assertEqual(code, 1)
+        self.assertIn("ruleset rule `merge_queue` on `main` is not one an admin merge may skip", json.loads(out)["reasons"])
         (self.root / "rules.json").write_text("{broken", encoding="utf-8")
         self.assertEqual(self.main(*self.gate_args("--allow-admin-bypass", **files))[0], 2)
+
+    def test_select_marks_an_unsafe_base(self):
+        unsafe = pull(base={"ref": "main;id", "repo": {"full_name": REPO}})
+        (self.root / "pulls.json").write_text(json.dumps([[unsafe]]), encoding="utf-8")
+        code, out, _ = self.main("select", "--repo", REPO, "--ledger", str(self.ledger), self.path("pulls"))
+        self.assertEqual(code, 0)
+        self.assertEqual(out, f"7\t{HEAD}\tdependabot[bot]\t{DEPENDABOT}\t?\n")
 
     def test_select_outcome_and_report(self):
         code, out, err = self.main("select", "--repo", REPO, "--ledger", str(self.ledger), self.path("pulls"))
