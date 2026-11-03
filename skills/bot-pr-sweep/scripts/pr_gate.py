@@ -66,7 +66,7 @@ RESULTS = frozenset({
 # Review states that set a reviewer's standing. COMMENTED and PENDING do not,
 # and a DISMISSED review is skipped, so the reviewer's previous decisive review
 # stands again: a request for changes followed by a dismissed approval still
-# blocks. Skipping can only block more, never less.
+# blocks, so the gate never approves over a request that is still live.
 DECISIVE_REVIEWS = frozenset({"APPROVED", "CHANGES_REQUESTED"})
 DEFAULT_SETTLE = timedelta(minutes=10)
 

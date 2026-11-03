@@ -596,6 +596,11 @@ def approve(*reviews, **overrides):
     return evaluate(allow_approve=True, reviews=list(reviews), **overrides)
 
 
+def held(**overrides):
+    """A PR that branch protection holds back, the one case the sweep approves."""
+    return pull(**{"mergeable_state": "blocked", **overrides})
+
+
 class ApproveTests(unittest.TestCase):
     def test_off_by_default(self):
         self.assertFalse(evaluate()["approve"])
@@ -632,7 +637,8 @@ class ApproveTests(unittest.TestCase):
         self.assertFalse(decision["approve"])
         cases = {
             "then a comment": ([review("CHANGES_REQUESTED"), review("COMMENTED")], "blocked"),
-            "the request dismissed": ([review("DISMISSED")], "merge"),
+            # A dismissed request shows up as one DISMISSED entry, which is skipped.
+            "a dismissed review on its own": ([review("DISMISSED")], "merge"),
             # The approval that followed the request was dismissed: the request stands again.
             "then an approval, dismissed": ([review("CHANGES_REQUESTED"), review("DISMISSED")], "blocked"),
             "then an approval": ([review("CHANGES_REQUESTED", sha=OTHER), review(sha=OTHER)], "merge"),
@@ -643,9 +649,15 @@ class ApproveTests(unittest.TestCase):
                 self.assertEqual(approve(*reviews)["verdict"], verdict)
         self.assertTrue(approve(review("CHANGES_REQUESTED", sha=OTHER), review(sha=OTHER),
                                 pr=pull(mergeable_state="blocked"))["approve"])
-        held = approve(review("CHANGES_REQUESTED"), pr=pull(mergeable_state="blocked"))
-        self.assertEqual(held["verdict"], "blocked")
-        self.assertFalse(held["approve"])
+        blocked = approve(review("CHANGES_REQUESTED"), pr=held())
+        self.assertEqual(blocked["verdict"], "blocked")
+        self.assertFalse(blocked["approve"])
+        # A's approval sits on the head; B's request outlives B's dismissed approval.
+        second = approve(review(), review("CHANGES_REQUESTED", uid=5, login="bob"),
+                         review("DISMISSED", uid=5, login="bob"), pr=held())
+        self.assertEqual(second["verdict"], "blocked")
+        self.assertIn("bob requested changes", second["reasons"][0])
+        self.assertFalse(second["approve"])
 
     def test_deleted_reviewers_do_not_cancel_each_other(self):
         decision = approve(review("CHANGES_REQUESTED", uid=None), review("APPROVED", uid=None))
@@ -675,18 +687,17 @@ class ApproveTests(unittest.TestCase):
             "too fresh": dict(now=datetime(2026, 10, 26, 11, 5, tzinfo=timezone.utc)),
             "behind": dict(pr=pull(mergeable_state="behind")),
             "conflicts": dict(pr=pull(mergeable=False, mergeable_state="dirty")),
-            "untrusted author": dict(pr=pull(user=user(uid=5))),
-            "major label": dict(pr=pull(labels=[{"name": "major"}])),
+            "untrusted author": dict(pr=held(user=user(uid=5))),
+            "major label": dict(pr=held(labels=[{"name": "major"}])),
             "mergeability unknown": dict(pr=pull(mergeable=None, mergeable_state="unknown")),
         }
         for name, overrides in cases.items():
             with self.subTest(name):
-                # Branch protection blocks too, so only the case itself can stop the approval.
-                pr = overrides.pop("pr", pull())
-                pr["mergeable_state"] = pr["mergeable_state"] if pr["mergeable_state"] != "clean" else "blocked"
-                self.assertFalse(approve(pr=pr, **overrides)["approve"])
-        self.assertTrue(approve(pr=pull(mergeable_state="blocked"))["approve"])
-        running_and_blocked = approve(pr=pull(mergeable_state="blocked"),
+                # Unless the case is about mergeability itself, protection holds the PR back
+                # as well, so only the case can stop the approval.
+                self.assertFalse(approve(**{"pr": held(), **overrides})["approve"])
+        self.assertTrue(approve(pr=held())["approve"])
+        running_and_blocked = approve(pr=held(),
                                       check_pages=[runs(run(status="queued", conclusion=None))])
         self.assertEqual(running_and_blocked["verdict"], "blocked")
         self.assertFalse(running_and_blocked["approve"])
