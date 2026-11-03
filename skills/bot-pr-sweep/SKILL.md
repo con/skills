@@ -180,9 +180,9 @@ Append the repository's options from the Inputs section. With
 the head commit's status history and the PR's reviews, with `BASE` taken from
 the `select` line. Every call is a GET. The two protection reads end in
 `--method GET`, which gh applies last, and pipe into `pr_gate.py save`. It
-writes only `*-branch.json` or `*-rules.json` as regular files inside `WORK`,
-the directory of yours that holds the `init` marker, and refuses anything that
-is not JSON. A read that fails saves GitHub's error object, and the gate
+writes only `*-branch.json` or `*-rules.json`, each as a regular file you own
+with a single link, inside `WORK`, the directory of yours that holds the `init`
+marker, and refuses anything that is not JSON. A read that fails saves GitHub's error object, and the gate
 then reports the PR as `pending`:
 
 ```bash

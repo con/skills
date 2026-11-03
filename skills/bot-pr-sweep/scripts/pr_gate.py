@@ -790,8 +790,8 @@ def cmd_save(args: argparse.Namespace) -> int:
     """Write the JSON piped in from a protection read, so the sweep needs no shell redirect."""
     target = Path(args.path)
     parent = target.parent
-    refusal = ("save writes only *-branch.json or *-rules.json, as a regular file, inside a directory "
-               "of yours that holds the `init` marker")
+    refusal = ("save writes only *-branch.json or *-rules.json, as a regular file you own with a single "
+               "link, inside a directory of yours that holds the `init` marker")
     if not (_SAVE_NAME.fullmatch(target.name) and parent.name.startswith("bot-pr-sweep-")
             and not parent.is_symlink() and parent.stat().st_uid == os.getuid()
             and (parent / INIT_MARKER).is_file()):
@@ -800,8 +800,9 @@ def cmd_save(args: argparse.Namespace) -> int:
     json.loads(text)  # refuse anything that is not JSON
     data = text.encode("utf-8")  # encode before touching the target, so a bad character leaves it intact
     # O_NOFOLLOW refuses a symlink as the final path component at open time (the parent is checked by
-    # path above, which the 0700 run directory makes safe), and O_NONBLOCK makes a FIFO fail instead of
-    # hanging. Truncate only once the descriptor is a regular file owned by this user with a single link.
+    # path above, which is safe because `init` creates WORK as 0700), and O_NONBLOCK makes a FIFO fail
+    # instead of hanging (it stays set on a regular file's descriptor, where it changes nothing).
+    # Truncate only once the descriptor is a regular file owned by this user with a single link.
     try:
         descriptor = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_NOFOLLOW | os.O_NONBLOCK, 0o600)
     except OSError as error:

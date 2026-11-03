@@ -3,6 +3,7 @@
 import io
 import json
 import os
+import signal
 import sys
 import tempfile
 import unittest
@@ -1091,7 +1092,21 @@ class CliTests(unittest.TestCase):
         self.assertEqual(outside.read_text(encoding="utf-8"), "{}")
         self.assertFalse((work / "acme-widgets-10-branch.json").exists())
         os.mkfifo(work / "acme-widgets-12-branch.json")
-        self.assertEqual(save(work / "acme-widgets-12-branch.json", "{}"), 2)  # refused, not hung
+
+        def hung(_signum, _frame):
+            raise AssertionError("save blocked on a FIFO; is O_NONBLOCK still set?")
+
+        previous = signal.signal(signal.SIGALRM, hung)
+        signal.alarm(5)
+        try:
+            self.assertEqual(save(work / "acme-widgets-12-branch.json", "{}"), 2)  # refused, not hung
+        finally:
+            signal.alarm(0)
+            signal.signal(signal.SIGALRM, previous)
+        kept = work / "acme-widgets-14-branch.json"
+        self.assertEqual(save(kept, "[]"), 0)
+        self.assertEqual(save(kept, '"\ud800"'), 2)  # unencodable
+        self.assertEqual(kept.read_text(encoding="utf-8"), "[]")
         long_payload = json.dumps(protected_branch(contexts=["x" * 200]))
         self.assertEqual(save(work / "acme-widgets-13-branch.json", long_payload), 0)
         self.assertEqual(save(work / "acme-widgets-13-branch.json", "[]"), 0)
