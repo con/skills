@@ -586,6 +586,95 @@ class HelperTests(unittest.TestCase):
             self.assertEqual(gate.skill_version(Path(directory)), "1.2.3")
 
 
+def review(state="APPROVED", uid=MAINTAINER, sha=HEAD, number=7, repo=REPO, login="maintainer"):
+    return {"id": 1, "state": state, "commit_id": sha,
+            "user": {"id": uid, "login": login} if uid is not None else None,
+            "pull_request_url": f"https://api.github.com/repos/{repo}/pulls/{number}"}
+
+
+def approve(*reviews, **overrides):
+    return evaluate(allow_approve=True, reviews=list(reviews), **overrides)
+
+
+class ApproveTests(unittest.TestCase):
+    def test_off_by_default(self):
+        self.assertFalse(evaluate()["approve"])
+        self.assertFalse(evaluate(pr=pull(mergeable_state="blocked"))["approve"])
+
+    def test_green_pr_is_approved_whether_or_not_protection_blocks(self):
+        clean = approve()
+        self.assertEqual(clean["verdict"], "merge")
+        self.assertTrue(clean["approve"])
+        blocked = approve(pr=pull(mergeable_state="blocked"))
+        self.assertEqual(blocked["verdict"], "blocked")
+        self.assertEqual(blocked["reasons"], [gate.PROTECTION_REASON])
+        self.assertTrue(blocked["approve"])
+
+    def test_no_second_approval_on_the_same_head(self):
+        clean = approve(review())
+        self.assertEqual(clean["verdict"], "merge")
+        self.assertFalse(clean["approve"])
+        still = approve(review(), pr=pull(mergeable_state="blocked"))
+        self.assertEqual(still["verdict"], "blocked")
+        self.assertFalse(still["approve"])
+        self.assertIn("still blocks although the head commit is approved", still["reasons"][0])
+        self.assertTrue(approve(review(sha=OTHER), pr=pull(mergeable_state="blocked"))["approve"])
+        self.assertTrue(approve(review(), review(state="DISMISSED"))["approve"])
+        self.assertFalse(approve(review(), review(state="COMMENTED"))["approve"])
+
+    def test_requested_changes_block_approval_and_merge(self):
+        decision = approve(review("CHANGES_REQUESTED", login="alice"))
+        self.assertEqual(decision["verdict"], "blocked")
+        self.assertIn("alice requested changes", decision["reasons"][0])
+        self.assertFalse(decision["approve"])
+        self.assertEqual(approve(review("CHANGES_REQUESTED"), review("COMMENTED"))["verdict"], "blocked")
+        self.assertEqual(approve(review("CHANGES_REQUESTED"), review("DISMISSED"))["verdict"], "merge")
+        later = approve(review("CHANGES_REQUESTED", sha=OTHER), review("APPROVED", sha=OTHER))
+        self.assertEqual(later["verdict"], "merge")
+        self.assertTrue(later["approve"])
+        others = approve(review("CHANGES_REQUESTED", uid=5, login="bob"), review("APPROVED"))
+        self.assertEqual(others["verdict"], "blocked")
+        self.assertIn("bob requested changes", others["reasons"][0])
+
+    def test_deleted_reviewers_do_not_cancel_each_other(self):
+        decision = approve(review("CHANGES_REQUESTED", uid=None), review("APPROVED", uid=None))
+        self.assertEqual(decision["verdict"], "blocked")
+        self.assertIn("a deleted account requested changes", decision["reasons"][0])
+
+    def test_reviews_must_belong_to_this_pull_request(self):
+        for reviews in ([review(number=70)], [review(repo="acme/other")], [review(), review(number=8)],
+                        [{"message": "Not Found"}], ["APPROVED"]):
+            decision = approve(*reviews)
+            self.assertEqual(decision["verdict"], "pending", reviews)
+            self.assertFalse(decision["approve"])
+        upper = approve(review(repo="ACME/Widgets"))
+        self.assertEqual(upper["verdict"], "merge")
+        for payload in (None, {"message": "Not Found"}):
+            decision = evaluate(allow_approve=True, reviews=payload)
+            self.assertEqual(decision["verdict"], "pending")
+            self.assertIn("not a list of GitHub reviews", decision["reasons"][0])
+
+    def test_only_green_ci_on_the_head_is_approved(self):
+        cases = {
+            "failed check": dict(check_pages=[runs(run(conclusion="failure"))]),
+            "running check": dict(check_pages=[runs(run(status="in_progress", conclusion=None))]),
+            "no CI at all": dict(check_pages=[runs()]),
+            "head moved": dict(expected_head=OTHER),
+            "too fresh": dict(now=datetime(2026, 10, 26, 11, 5, tzinfo=timezone.utc)),
+            "behind": dict(pr=pull(mergeable_state="behind")),
+            "conflicts": dict(pr=pull(mergeable=False, mergeable_state="dirty")),
+            "untrusted author": dict(pr=pull(user=user(uid=5))),
+            "major label": dict(pr=pull(labels=[{"name": "major"}])),
+            "mergeability unknown": dict(pr=pull(mergeable=None, mergeable_state="unknown")),
+        }
+        for name, overrides in cases.items():
+            self.assertFalse(approve(**overrides)["approve"], name)
+        running_and_blocked = approve(pr=pull(mergeable_state="blocked"),
+                                      check_pages=[runs(run(status="queued", conclusion=None))])
+        self.assertEqual(running_and_blocked["verdict"], "blocked")
+        self.assertFalse(running_and_blocked["approve"])
+
+
 class ReportTests(unittest.TestCase):
     def events(self):
         merged = evaluate()
@@ -644,6 +733,26 @@ class ReportTests(unittest.TestCase):
         self.assertIn("## Needs attention (1)", text)
         self.assertIn("label removal failed: re-added after removal", text)
         self.assertIn("## Blocked (0)", text)
+
+    def test_approvals_in_the_report(self):
+        merged = approve()
+        still_blocked = approve(review(number=8), pr=pull(number=8, mergeable_state="blocked"))
+        failed = approve(pr=pull(number=9, mergeable_state="blocked"))
+        events = [merged, still_blocked, failed,
+                  {"event": "outcome", "repo": REPO, "number": 7, "result": "approved", "detail": HEAD},
+                  {"event": "outcome", "repo": REPO, "number": 7, "result": "merged", "detail": "c" * 40},
+                  {"event": "outcome", "repo": REPO, "number": 8, "result": "approved", "detail": HEAD},
+                  {"event": "outcome", "repo": REPO, "number": 9, "result": "approve-failed", "detail": "HTTP 403"}]
+        text = gate.render_report(events, version="0.2.0", now=NOW)
+        self.assertIn("## Merged (1)", text)
+        self.assertIn("approved by the sweep at `aaaaaaa`; squash-merged as `ccccccc`", text)
+        self.assertIn("## Blocked (1)", text)
+        self.assertIn("still blocks although the head commit is approved", text)
+        self.assertIn("## Needs attention (1)", text)
+        self.assertIn("approval failed: HTTP 403", text)
+        dry = gate.render_report([approve(pr=pull(mergeable_state="blocked"))], version="0.2.0", now=NOW, dry_run=True)
+        self.assertIn("would approve (dry run)", dry)
+        self.assertNotIn("would approve", gate.render_report([approve()], version="0.2.0", now=NOW))
 
     def test_outcome_without_a_decision_is_flagged(self):
         events = [{"event": "outcome", "repo": REPO, "number": 99, "result": "merged", "detail": "e" * 40}]
@@ -743,6 +852,21 @@ class CliTests(unittest.TestCase):
         code, out, _ = self.main(*self.gate_args("--allow-branch-update"))
         self.assertEqual(code, 1)
         self.assertTrue(json.loads(out)["update_branch"])
+
+    def test_gate_approve_option(self):
+        code, _, err = self.main(*self.gate_args("--allow-approve"))
+        self.assertEqual(code, 2)
+        self.assertIn("--allow-approve needs --reviews", err)
+        (self.root / "reviews.json").write_text(json.dumps([[], [review(state="COMMENTED")]]), encoding="utf-8")
+        (self.root / "pr.json").write_text(json.dumps(pull(mergeable_state="blocked")), encoding="utf-8")
+        code, out, _ = self.main(*self.gate_args("--allow-approve", **{"--reviews": self.path("reviews")}))
+        self.assertEqual(code, 1)
+        self.assertTrue(json.loads(out)["approve"])
+        code, out, _ = self.main(*self.gate_args(**{"--reviews": self.path("reviews")}))
+        self.assertFalse(json.loads(out)["approve"])
+        code, _, _ = self.main("outcome", "--repo", REPO, "--ledger", str(self.ledger), "--number", "7",
+                               "--result", "approved", "--detail", HEAD)
+        self.assertEqual(code, 0)
 
     def test_select_outcome_and_report(self):
         code, out, err = self.main("select", "--repo", REPO, "--ledger", str(self.ledger), self.path("pulls"))
