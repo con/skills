@@ -793,23 +793,29 @@ def cmd_save(args: argparse.Namespace) -> int:
     refusal = ("save writes only *-branch.json or *-rules.json, as a regular file, inside a directory "
                "of yours that holds the `init` marker")
     if not (_SAVE_NAME.fullmatch(target.name) and parent.name.startswith("bot-pr-sweep-")
-            and not parent.is_symlink() and parent.is_dir() and parent.stat().st_uid == os.getuid()
+            and not parent.is_symlink() and parent.stat().st_uid == os.getuid()
             and (parent / INIT_MARKER).is_file()):
         raise GateInputError(refusal)
     text = sys.stdin.read()
     json.loads(text)  # refuse anything that is not JSON
-    # O_NOFOLLOW refuses a symlink at open time, so nothing can swap one in after a check;
-    # truncate only once the descriptor is known to be this user's plain, unlinked-elsewhere file.
+    data = text.encode("utf-8")  # encode before touching the target, so a bad character leaves it intact
+    # O_NOFOLLOW refuses a symlink as the final path component at open time (the parent is checked by
+    # path above, which the 0700 run directory makes safe), and O_NONBLOCK makes a FIFO fail instead of
+    # hanging. Truncate only once the descriptor is a regular file owned by this user with a single link.
     try:
-        descriptor = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_NOFOLLOW, 0o600)
+        descriptor = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_NOFOLLOW | os.O_NONBLOCK, 0o600)
     except OSError as error:
         raise GateInputError(refusal) from error
-    with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
-        info = os.fstat(handle.fileno())
+    try:
+        info = os.fstat(descriptor)
         if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or info.st_uid != os.getuid():
             raise GateInputError(refusal)
-        handle.truncate()
-        handle.write(text)
+        os.ftruncate(descriptor, 0)
+        view = memoryview(data)
+        while view:
+            view = view[os.write(descriptor, view):]
+    finally:
+        os.close(descriptor)
     return 0
 
 

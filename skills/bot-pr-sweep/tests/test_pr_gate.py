@@ -1090,6 +1090,12 @@ class CliTests(unittest.TestCase):
                 self.assertEqual(save(path, '{"evil": true}'), 2)
         self.assertEqual(outside.read_text(encoding="utf-8"), "{}")
         self.assertFalse((work / "acme-widgets-10-branch.json").exists())
+        os.mkfifo(work / "acme-widgets-12-branch.json")
+        self.assertEqual(save(work / "acme-widgets-12-branch.json", "{}"), 2)  # refused, not hung
+        long_payload = json.dumps(protected_branch(contexts=["x" * 200]))
+        self.assertEqual(save(work / "acme-widgets-13-branch.json", long_payload), 0)
+        self.assertEqual(save(work / "acme-widgets-13-branch.json", "[]"), 0)
+        self.assertEqual((work / "acme-widgets-13-branch.json").read_text(encoding="utf-8"), "[]")
         os.link(outside, work / "acme-widgets-11-branch.json")
         self.assertEqual(save(work / "acme-widgets-11-branch.json", '{"evil": true}'), 2)
         self.assertEqual(outside.read_text(encoding="utf-8"), "{}")
