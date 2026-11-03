@@ -1,7 +1,7 @@
 ---
 name: bot-pr-sweep
 version: 0.2.0
-description: Sweep repositories for open dependabot[bot] and pre-commit-ci[bot] pull requests, verify authors by account ID, gate on complete and passing CI, squash-merge the green ones guarded by the head SHA (optionally approving them first), assign the maintainer, and report the rest. Use for dependency-bot PR triage, on demand or on a schedule.
+description: Sweep repositories for open dependabot[bot] and pre-commit-ci[bot] pull requests, verify authors by account ID, gate on complete and passing CI, squash-merge the green ones guarded by the head SHA (optionally approving the ones branch protection holds back), assign the maintainer, and report the rest. Use for dependency-bot PR triage, on demand or on a schedule.
 allowed-tools: Bash(gh api repos/*/pulls*), Bash(gh api repos/*/commits/*), Bash(gh api repos/*/issues/*/assignees *), Bash(gh api repos/*/issues/*/labels/major --method DELETE --silent), Bash(gh api user *), Bash(gh repo list *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py init*), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py select *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py gate *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py outcome *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py report *)
 user-invocable: true
 ---
@@ -63,8 +63,8 @@ that name. The rules above are what the sweep follows.
   required checks), `--allow-branch-update` (let the sweep press GitHub's
   "Update branch" on PRs whose only problem is being behind),
   `--allow-approve` (let the sweep approve, in the name of the account running
-  it, every PR whose CI is green on the head commit, so branch protection that
-  requires a review lets it merge; step 5),
+  it, a PR whose CI is green on the head commit when branch protection is all
+  that holds it back, so a required review does not block it; step 5),
   `--settle-minutes N` (default 10, how old the head commit must be before its
   check list is trusted to be complete).
 
@@ -189,7 +189,7 @@ verdict `merge`:
 
 | Verdict | Meaning | Sweep action |
 |---|---|---|
-| `merge` | Trusted author, every commit by that same bot (or GitHub's "Update branch"), PR open and mergeable, complete check list with every check run completed and none failed, at least one success, every status `success`, head commit older than the settle time. | Assign, then squash-merge (steps 3 and 5), approving first when the decision says `"approve": true`. |
+| `merge` | Trusted author, every commit by that same bot (or GitHub's "Update branch"), PR open and mergeable, complete check list with every check run completed and none failed, at least one success, every status `success`, head commit older than the settle time. | Assign, then squash-merge (steps 3 and 5). |
 | `pending` | Something is unfinished or not yet knowable: checks still running, mergeability not computed, head commit younger than the settle time, a truncated or malformed payload, payloads describing another commit, the head moved since listing. | Assign and report; the next run looks again. If a reason says a payload was incomplete, save that payload once more and evaluate the PR again before moving on. |
 | `blocked` | Needs a person: a failed check, no CI results at all, conflicts, behind the base, branch protection, draft, a missing or forbidden label, a `major` label, a commit not by the pull request's author, a head branch outside the repository. | Assign and report, with the failing check's link and any hint. A decision with `"strip_labels"` raises the step 3 question. With `--allow-branch-update`, a decision whose only problem is being behind carries `"update_branch": true` and goes to step 4. With `--allow-approve`, `"approve": true` sends it to step 5, and a reviewer's requested changes also block. |
 | `rejected` | The author is not a trusted bot by account ID. | Report only; never assign, merge or comment. |
@@ -263,9 +263,10 @@ does not force-push over the refreshed branch between runs.
 ### 5. Approve (only with `--allow-approve`) and squash-merge the green PRs
 
 With `--allow-approve`, unless this is a dry run, first approve every PR
-whose decision says `"approve": true`. The gate sets it when CI is green on
-the head commit, nothing but branch protection stands in the way, no approval
-sits on that commit yet and no reviewer's latest review requests changes.
+whose decision says `"approve": true`. The gate sets it only on a `blocked`
+decision whose one problem is branch protection, with CI green on the head
+commit, no approval on that commit yet and no reviewer's latest review
+requesting changes. A PR that merges as it is gets no approval.
 Name the gated commit, so the approval can never cover a commit the gate did
 not see, and use exactly this body:
 
@@ -276,7 +277,7 @@ python3 SKILL_DIR/scripts/pr_gate.py outcome --repo OWNER/REPO --ledger WORK/led
 
 Record `--result approve-failed --detail "<error text>"` when the call fails
 (a 403 means the account cannot review there; for a 422, GitHub's error text
-says why). After approving a `blocked` decision, rerun step 2 for that PR,
+says why). After approving, rerun step 2 for that PR,
 fetching the PR and its reviews afresh and reusing the other saved files, and
 act on the new verdict: `merge` goes on to the merge below, and `pending`
 only because GitHub has not finished computing mergeability gets one more

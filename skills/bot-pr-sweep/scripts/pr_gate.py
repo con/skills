@@ -534,11 +534,11 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
         # True when being behind the base is the only problem and the sweep may fix it.
         "update_branch": bool(allow_branch_update and behind and verdict == BLOCKED
                               and len(reasons[BLOCKED]) == 1 and not reasons[PENDING]),
-        # True when CI is green on the head and the PR would merge but for branch protection
-        # (or merges as it is), and no approval sits on the head yet: the sweep approves it.
-        "approve": bool(allow_approve and not approved_at_head and not reasons[PENDING]
-                        and (verdict == MERGE
-                             or (verdict == BLOCKED and protected and len(reasons[BLOCKED]) == 1))),
+        # True when CI is green on the head, branch protection is the one thing in the way
+        # and no approval sits on the head yet: the sweep approves it. A PR that merges as
+        # it is gets no approval.
+        "approve": bool(allow_approve and protected and not approved_at_head and verdict == BLOCKED
+                        and not reasons[PENDING] and len(reasons[BLOCKED]) == 1),
         "evaluated_at": iso(now),
     }
 
