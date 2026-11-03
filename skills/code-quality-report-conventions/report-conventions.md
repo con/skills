@@ -36,9 +36,12 @@ Fill the fields like this:
   `code-quality-report-conventions/SKILL.md`, so the report shows which
   layout and evidence rules it followed even when the calling skill did
   not change.
-- **`using …`** (optional) — a skill this run delegated to, with its
-  version, e.g. `review-org-code-quality` naming
-  `review-repo-code-quality`.
+- **`using …`** (optional) — a skill this run delegated to or followed,
+  with its version, e.g. `review-org-code-quality` naming
+  `review-repo-code-quality`. When `../suggest-skill-fixes/SKILL.md` exists,
+  the run follows it as its closing step, so name `suggest-skill-fixes` here
+  too, as the procedure in effect, whether or not it ends up suggesting
+  anything. Its suggestions still stay out of the report.
 - **`Previous review`** — see §4.
 
 `version:` is bumped by whoever changes a skill's procedure or report

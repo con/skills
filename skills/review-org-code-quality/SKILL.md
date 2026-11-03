@@ -1,6 +1,6 @@
 ---
 name: review-org-code-quality
-version: 0.1.1
+version: 0.2.0
 description: Audit code health across an organization-wide ecosystem of similarly styled, interconnected data/ML/ETL pipelines or repositories. Focuses on systemic risk (template drift, contract fragility, cross-repo duplication, blast radius, bus factor) rather than single-repo code smells, and writes a dated report. Use when asked to review, audit, or assess the health of a set of related repositories or pipelines. For one repository use review-repo-code-quality instead.
 allowed-tools: Bash, Read, Write, Glob, Grep, AskUserQuestion, Agent, Skill
 user-invocable: true
@@ -238,3 +238,10 @@ matrix cell was scored from, with `file:line` citations.
 - If you already have a lineage tool (OpenLineage, Marquez, dbt docs, Dagster asset graph), feed it in at Phase 1 instead of deriving edges by hand.
 - If the ecosystem is a monorepo, score Phase 2 per package (same checkout, different scope), run the depth reviews per package, and spend the saved time on Phase 3.
 - The 0–3 scoring is deliberately coarse; finer scales invite arguments about 2 vs. 3 rather than action.
+
+## When the skill falls short
+
+At the end, if `../suggest-skill-fixes/SKILL.md` exists, follow it. Typical
+triggers here: a dimension the user rescores by hand every time, an
+ecosystem layout Phase 1 cannot map, or a house pattern Phase 0 has no way
+to express. Suggestions go in the reply, not in the report.
