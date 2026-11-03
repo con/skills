@@ -60,13 +60,14 @@ MERGEABLE_OK = frozenset({"clean", "has_hooks"})
 STRIPPED_LABELS = frozenset({"major"})
 RESULTS = frozenset({
     "merged", "merge-failed", "assigned", "assign-failed", "dry-run", "repo-error",
-    "branch-updated", "update-failed", "label-removed", "label-failed", "approved", "approve-failed",
+    "branch-updated", "update-failed", "label-removed", "label-failed",
+    "approved", "approve-failed",
 })
-# The reason for `mergeable_state: blocked`. With --allow-approve it is the one
-# blocked reason an approval may clear, so the gate compares against this text.
-PROTECTION_REASON = "branch protection is not satisfied (reviews, required checks or merge queue)"
-# Review states that change a reviewer's standing; COMMENTED and PENDING do not.
-DECISIVE_REVIEWS = frozenset({"APPROVED", "CHANGES_REQUESTED", "DISMISSED"})
+# Review states that set a reviewer's standing. COMMENTED and PENDING do not,
+# and a DISMISSED review is skipped, so the reviewer's previous decisive review
+# stands again: a request for changes followed by a dismissed approval still
+# blocks. Skipping can only block more, never less.
+DECISIVE_REVIEWS = frozenset({"APPROVED", "CHANGES_REQUESTED"})
 DEFAULT_SETTLE = timedelta(minutes=10)
 
 MERGE, PENDING, BLOCKED, REJECTED = "merge", "pending", "blocked", "rejected"
@@ -359,7 +360,7 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
             blocked(f"{reviewer} requested changes; the sweep never approves or merges over a person's review")
 
     mergeable, mergeable_state = pr.get("mergeable"), sanitize(pr.get("mergeable_state"), 20)
-    behind = False
+    behind = protected = False
     rebase_hint = ""
     if TRUSTED_BOTS.get(user_id) == "dependabot[bot]":
         rebase_hint = ("comment `@dependabot rebase` on the PR so the bot updates its own branch; "
@@ -374,11 +375,13 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
         blocked(f"branch is behind `{base_ref}` and the branch protection requires an up-to-date branch")
         hints.append("" if allow_branch_update else rebase_hint)
     elif mergeable_state == "blocked" and approved_at_head:
+        protected = True
         blocked("branch protection still blocks although the head commit is approved; it needs something "
                 "this approval cannot give (a required check that has not reported, more approvals, a code "
                 "owner, or approval of the latest push by someone other than its pusher)")
     elif mergeable_state == "blocked":
-        blocked(PROTECTION_REASON)
+        protected = True
+        blocked("branch protection is not satisfied (reviews, required checks or merge queue)")
     elif mergeable_state == "unstable":
         blocked("GitHub reports failing status checks (mergeable_state is unstable)")
     elif mergeable_state not in MERGEABLE_OK:
@@ -533,9 +536,9 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
                               and len(reasons[BLOCKED]) == 1 and not reasons[PENDING]),
         # True when CI is green on the head and the PR would merge but for branch protection
         # (or merges as it is), and no approval sits on the head yet: the sweep approves it.
-        "approve": bool(allow_approve and not approved_at_head and verdict in (MERGE, BLOCKED)
-                        and not reasons[PENDING]
-                        and all(reason == PROTECTION_REASON for reason in reasons[BLOCKED])),
+        "approve": bool(allow_approve and not approved_at_head and not reasons[PENDING]
+                        and (verdict == MERGE
+                             or (verdict == BLOCKED and protected and len(reasons[BLOCKED]) == 1))),
         "evaluated_at": iso(now),
     }
 
@@ -624,7 +627,7 @@ def render_report(events: list, *, version: str, now: datetime, dry_run: bool = 
         "# Bot PR sweep",
         "",
         f"- Generated {iso(now)} by the bot-pr-sweep skill, version {version}",
-        f"- Mode: {'dry run (nothing merged or assigned)' if dry_run else 'live'}",
+        f"- Mode: {'dry run (nothing approved, merged or assigned)' if dry_run else 'live'}",
         *([f"- Schedule: `{sanitize(schedule, 80)}`"] if schedule else []),
         f"- Repositories swept: {len(selections)}; trusted-bot PRs evaluated: {len(decisions)}",
     ]
@@ -673,9 +676,9 @@ def cmd_select(args: argparse.Namespace) -> int:
 
 
 def cmd_gate(args: argparse.Namespace) -> int:
-    if args.allow_approve and not args.reviews:
-        raise GateInputError("--allow-approve needs --reviews, the PR's reviews, to avoid approving twice "
-                             "or over a person's requested changes")
+    if bool(args.allow_approve) != bool(args.reviews):
+        raise GateInputError("--allow-approve and --reviews go together: the gate reads the PR's reviews only "
+                             "to avoid approving twice or over a person's requested changes")
     decision = evaluate(
         load_json(args.pr), pages(load_json(args.commits)), pages(load_json(args.check_runs)),
         load_json(args.status),
@@ -685,7 +688,7 @@ def cmd_gate(args: argparse.Namespace) -> int:
         forbid_labels=tuple(args.forbid_label or ()),
         strict=args.strict, allow_branch_update=args.allow_branch_update,
         allow_approve=args.allow_approve,
-        reviews=pages(load_json(args.reviews)) if args.allow_approve else None,
+        reviews=pages(load_json(args.reviews)) if args.reviews else None,
         settle=timedelta(minutes=args.settle_minutes),
         now=parse_time(args.now) if args.now else None,
     )

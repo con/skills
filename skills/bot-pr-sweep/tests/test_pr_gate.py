@@ -607,7 +607,8 @@ class ApproveTests(unittest.TestCase):
         self.assertTrue(clean["approve"])
         blocked = approve(pr=pull(mergeable_state="blocked"))
         self.assertEqual(blocked["verdict"], "blocked")
-        self.assertEqual(blocked["reasons"], [gate.PROTECTION_REASON])
+        self.assertEqual(len(blocked["reasons"]), 1)
+        self.assertIn("branch protection is not satisfied", blocked["reasons"][0])
         self.assertTrue(blocked["approve"])
 
     def test_no_second_approval_on_the_same_head(self):
@@ -618,23 +619,32 @@ class ApproveTests(unittest.TestCase):
         self.assertEqual(still["verdict"], "blocked")
         self.assertFalse(still["approve"])
         self.assertIn("still blocks although the head commit is approved", still["reasons"][0])
-        self.assertTrue(approve(review(sha=OTHER), pr=pull(mergeable_state="blocked"))["approve"])
-        self.assertTrue(approve(review(), review(state="DISMISSED"))["approve"])
-        self.assertFalse(approve(review(), review(state="COMMENTED"))["approve"])
+        cases = {
+            "approval on an older commit": ([review(sha=OTHER)], True),
+            "approval on the head, dismissed": ([review(state="DISMISSED")], True),
+            "approval on the head, then a comment": ([review(), review(state="COMMENTED")], False),
+        }
+        for name, (reviews, expected) in cases.items():
+            with self.subTest(name):
+                self.assertEqual(approve(*reviews, pr=pull(mergeable_state="blocked"))["approve"], expected)
 
     def test_requested_changes_block_approval_and_merge(self):
         decision = approve(review("CHANGES_REQUESTED", login="alice"))
         self.assertEqual(decision["verdict"], "blocked")
         self.assertIn("alice requested changes", decision["reasons"][0])
         self.assertFalse(decision["approve"])
-        self.assertEqual(approve(review("CHANGES_REQUESTED"), review("COMMENTED"))["verdict"], "blocked")
-        self.assertEqual(approve(review("CHANGES_REQUESTED"), review("DISMISSED"))["verdict"], "merge")
-        later = approve(review("CHANGES_REQUESTED", sha=OTHER), review("APPROVED", sha=OTHER))
-        self.assertEqual(later["verdict"], "merge")
-        self.assertTrue(later["approve"])
-        others = approve(review("CHANGES_REQUESTED", uid=5, login="bob"), review("APPROVED"))
-        self.assertEqual(others["verdict"], "blocked")
-        self.assertIn("bob requested changes", others["reasons"][0])
+        cases = {
+            "then a comment": ([review("CHANGES_REQUESTED"), review("COMMENTED")], "blocked"),
+            "the request dismissed": ([review("DISMISSED")], "merge"),
+            # The approval that followed the request was dismissed: the request stands again.
+            "then an approval, dismissed": ([review("CHANGES_REQUESTED"), review("DISMISSED")], "blocked"),
+            "then an approval": ([review("CHANGES_REQUESTED", sha=OTHER), review(sha=OTHER)], "merge"),
+            "by someone else": ([review("CHANGES_REQUESTED", uid=5, login="bob"), review()], "blocked"),
+        }
+        for name, (reviews, verdict) in cases.items():
+            with self.subTest(name):
+                self.assertEqual(approve(*reviews)["verdict"], verdict)
+        self.assertTrue(approve(review("CHANGES_REQUESTED", sha=OTHER), review(sha=OTHER))["approve"])
 
     def test_deleted_reviewers_do_not_cancel_each_other(self):
         decision = approve(review("CHANGES_REQUESTED", uid=None), review("APPROVED", uid=None))
@@ -642,11 +652,12 @@ class ApproveTests(unittest.TestCase):
         self.assertIn("a deleted account requested changes", decision["reasons"][0])
 
     def test_reviews_must_belong_to_this_pull_request(self):
-        for reviews in ([review(number=70)], [review(repo="acme/other")], [review(), review(number=8)],
-                        [{"message": "Not Found"}], ["APPROVED"]):
-            decision = approve(*reviews)
-            self.assertEqual(decision["verdict"], "pending", reviews)
-            self.assertFalse(decision["approve"])
+        for reviews in ([review(number=70)], [review(number=17)], [review(repo="acme/other")],
+                        [review(), review(number=8)], [{"message": "Not Found"}], ["APPROVED"]):
+            with self.subTest(reviews=reviews):
+                decision = approve(*reviews)
+                self.assertEqual(decision["verdict"], "pending")
+                self.assertFalse(decision["approve"])
         upper = approve(review(repo="ACME/Widgets"))
         self.assertEqual(upper["verdict"], "merge")
         for payload in (None, {"message": "Not Found"}):
@@ -856,13 +867,20 @@ class CliTests(unittest.TestCase):
     def test_gate_approve_option(self):
         code, _, err = self.main(*self.gate_args("--allow-approve"))
         self.assertEqual(code, 2)
-        self.assertIn("--allow-approve needs --reviews", err)
+        self.assertIn("--allow-approve and --reviews go together", err)
         (self.root / "reviews.json").write_text(json.dumps([[], [review(state="COMMENTED")]]), encoding="utf-8")
         (self.root / "pr.json").write_text(json.dumps(pull(mergeable_state="blocked")), encoding="utf-8")
         code, out, _ = self.main(*self.gate_args("--allow-approve", **{"--reviews": self.path("reviews")}))
         self.assertEqual(code, 1)
         self.assertTrue(json.loads(out)["approve"])
-        code, out, _ = self.main(*self.gate_args(**{"--reviews": self.path("reviews")}))
+        code, _, err = self.main(*self.gate_args(**{"--reviews": self.path("reviews")}))
+        self.assertEqual(code, 2)
+        self.assertIn("go together", err)
+        (self.root / "reviews.json").write_text(json.dumps({"message": "Not Found"}), encoding="utf-8")
+        (self.root / "pr.json").write_text(json.dumps(pull()), encoding="utf-8")
+        code, out, _ = self.main(*self.gate_args("--allow-approve", **{"--reviews": self.path("reviews")}))
+        self.assertEqual(code, 1)
+        self.assertEqual(json.loads(out)["verdict"], "pending")
         self.assertFalse(json.loads(out)["approve"])
         code, _, _ = self.main("outcome", "--repo", REPO, "--ledger", str(self.ledger), "--number", "7",
                                "--result", "approved", "--detail", HEAD)
