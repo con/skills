@@ -601,10 +601,10 @@ class ApproveTests(unittest.TestCase):
         self.assertFalse(evaluate()["approve"])
         self.assertFalse(evaluate(pr=pull(mergeable_state="blocked"))["approve"])
 
-    def test_green_pr_is_approved_whether_or_not_protection_blocks(self):
+    def test_only_a_pr_held_back_by_protection_is_approved(self):
         clean = approve()
         self.assertEqual(clean["verdict"], "merge")
-        self.assertTrue(clean["approve"])
+        self.assertFalse(clean["approve"])
         blocked = approve(pr=pull(mergeable_state="blocked"))
         self.assertEqual(blocked["verdict"], "blocked")
         self.assertEqual(len(blocked["reasons"]), 1)
@@ -612,9 +612,6 @@ class ApproveTests(unittest.TestCase):
         self.assertTrue(blocked["approve"])
 
     def test_no_second_approval_on_the_same_head(self):
-        clean = approve(review())
-        self.assertEqual(clean["verdict"], "merge")
-        self.assertFalse(clean["approve"])
         still = approve(review(), pr=pull(mergeable_state="blocked"))
         self.assertEqual(still["verdict"], "blocked")
         self.assertFalse(still["approve"])
@@ -644,7 +641,11 @@ class ApproveTests(unittest.TestCase):
         for name, (reviews, verdict) in cases.items():
             with self.subTest(name):
                 self.assertEqual(approve(*reviews)["verdict"], verdict)
-        self.assertTrue(approve(review("CHANGES_REQUESTED", sha=OTHER), review(sha=OTHER))["approve"])
+        self.assertTrue(approve(review("CHANGES_REQUESTED", sha=OTHER), review(sha=OTHER),
+                                pr=pull(mergeable_state="blocked"))["approve"])
+        held = approve(review("CHANGES_REQUESTED"), pr=pull(mergeable_state="blocked"))
+        self.assertEqual(held["verdict"], "blocked")
+        self.assertFalse(held["approve"])
 
     def test_deleted_reviewers_do_not_cancel_each_other(self):
         decision = approve(review("CHANGES_REQUESTED", uid=None), review("APPROVED", uid=None))
@@ -679,7 +680,12 @@ class ApproveTests(unittest.TestCase):
             "mergeability unknown": dict(pr=pull(mergeable=None, mergeable_state="unknown")),
         }
         for name, overrides in cases.items():
-            self.assertFalse(approve(**overrides)["approve"], name)
+            with self.subTest(name):
+                # Branch protection blocks too, so only the case itself can stop the approval.
+                pr = overrides.pop("pr", pull())
+                pr["mergeable_state"] = pr["mergeable_state"] if pr["mergeable_state"] != "clean" else "blocked"
+                self.assertFalse(approve(pr=pr, **overrides)["approve"])
+        self.assertTrue(approve(pr=pull(mergeable_state="blocked"))["approve"])
         running_and_blocked = approve(pr=pull(mergeable_state="blocked"),
                                       check_pages=[runs(run(status="queued", conclusion=None))])
         self.assertEqual(running_and_blocked["verdict"], "blocked")
@@ -746,7 +752,7 @@ class ReportTests(unittest.TestCase):
         self.assertIn("## Blocked (0)", text)
 
     def test_approvals_in_the_report(self):
-        merged = approve()
+        merged = approve(review())  # gated again after the approval, now clean
         still_blocked = approve(review(number=8), pr=pull(number=8, mergeable_state="blocked"))
         failed = approve(pr=pull(number=9, mergeable_state="blocked"))
         events = [merged, still_blocked, failed,
