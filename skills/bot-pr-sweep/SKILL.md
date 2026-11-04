@@ -280,12 +280,11 @@ says why). After approving, rerun step 2 for that PR, fetching the PR and its
 reviews afresh and reusing the other saved files, and act on the new verdict:
 `merge` goes on to the merge below, and `pending` only because GitHub has not
 finished computing mergeability gets one more try. Anything else is reported.
-A PR that protection still blocks (see Inputs) is reported with the reason
-that the head is approved but protection still blocks, and the next run does
-not approve it again. A later push leaves the approval on the old commit,
-where repositories that dismiss stale approvals drop it, but the gate
-evaluates the new head in full before anything merges. If a merge fails, the
-approval stays.
+A PR that protection still blocks (see Inputs) is reported as approved at the
+head but still blocked by protection, and the next run does not approve it
+again. A later push leaves the approval on the old commit, where repositories
+that dismiss stale approvals drop it, but the gate evaluates the new head in
+full before anything merges. If a merge fails, the approval stays.
 
 Then, for every PR whose verdict is `merge`, unless this is a dry run, pass
 the head SHA from the decision so GitHub refuses the merge if the branch
