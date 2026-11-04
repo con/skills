@@ -767,16 +767,25 @@ class ReportTests(unittest.TestCase):
         merged = approve(review())  # gated again after the approval, now clean
         still_blocked = approve(review(number=8), pr=held(number=8))
         failed = approve(pr=held(number=9))
-        events = [merged, still_blocked, failed,
+        declined = approve(pr=held(number=10))
+        unasked = approve(pr=held(number=11))
+        events = [merged, still_blocked, failed, declined, unasked,
                   {"event": "outcome", "repo": REPO, "number": 7, "result": "approved", "detail": HEAD},
                   {"event": "outcome", "repo": REPO, "number": 7, "result": "merged", "detail": "c" * 40},
                   {"event": "outcome", "repo": REPO, "number": 8, "result": "approved", "detail": HEAD},
-                  {"event": "outcome", "repo": REPO, "number": 9, "result": "approve-failed", "detail": "HTTP 403"}]
+                  {"event": "outcome", "repo": REPO, "number": 9, "result": "approve-failed", "detail": "HTTP 403"},
+                  {"event": "outcome", "repo": REPO, "number": 10, "result": "approve-skipped",
+                   "detail": "declined by the user"},
+                  {"event": "outcome", "repo": REPO, "number": 11, "result": "approve-skipped",
+                   "detail": "no one to ask (--approve-mode ask)"}]
         text = gate.render_report(events, version="0.2.0", now=NOW)
         self.assertIn("## Merged (1)", text)
         self.assertIn("approved by the sweep at `aaaaaaa`; squash-merged as `ccccccc`", text)
-        self.assertIn("## Blocked (1)", text)
+        # Skipped approvals are a choice, not a failure: the PRs stay under Blocked.
+        self.assertIn("## Blocked (3)", text)
         self.assertIn("still blocks although the head commit is approved", text)
+        self.assertIn("not approved: declined by the user", text)
+        self.assertIn("not approved: no one to ask (--approve-mode ask)", text)
         self.assertIn("## Needs attention (1)", text)
         self.assertIn("approval failed: HTTP 403", text)
         dry = gate.render_report([approve(pr=held())], version="0.2.0", now=NOW, dry_run=True)
@@ -900,9 +909,10 @@ class CliTests(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertEqual(json.loads(out)["verdict"], "pending")
         self.assertFalse(json.loads(out)["approve"])
-        code, _, _ = self.main("outcome", "--repo", REPO, "--ledger", str(self.ledger), "--number", "7",
-                               "--result", "approved", "--detail", HEAD)
-        self.assertEqual(code, 0)
+        for result in ("approved", "approve-skipped"):
+            code, _, _ = self.main("outcome", "--repo", REPO, "--ledger", str(self.ledger), "--number", "7",
+                                   "--result", result, "--detail", HEAD)
+            self.assertEqual(code, 0)
 
     def test_select_outcome_and_report(self):
         code, out, err = self.main("select", "--repo", REPO, "--ledger", str(self.ledger), self.path("pulls"))

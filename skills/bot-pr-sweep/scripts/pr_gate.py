@@ -61,7 +61,7 @@ STRIPPED_LABELS = frozenset({"major"})
 RESULTS = frozenset({
     "merged", "merge-failed", "assigned", "assign-failed", "dry-run", "repo-error",
     "branch-updated", "update-failed", "label-removed", "label-failed",
-    "approved", "approve-failed",
+    "approved", "approve-failed", "approve-skipped",
 })
 # Review states that set a reviewer's standing. COMMENTED and PENDING do not,
 # and a DISMISSED review is skipped, so the reviewer's previous decisive review
@@ -581,6 +581,8 @@ def render_report(events: list, *, version: str, now: datetime, dry_run: bool = 
                                                      if results["approved"] else ""))
         elif dry_run and decision.get("approve"):
             notes.append("would approve (dry run)")
+        if "approve-skipped" in results:
+            notes.append(f"not approved: {sanitize(results['approve-skipped'], 160)}")
         if "merged" in results:
             notes.append("squash-merged" + (f" as `{sanitize(results['merged'], 40)[:7]}`" if results["merged"] else ""))
         if "dry-run" in results:
