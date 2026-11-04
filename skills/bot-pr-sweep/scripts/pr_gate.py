@@ -11,8 +11,10 @@ Subcommands
 init                      create the run's working directory and print its path
 select    PULLS.json      pick the open PRs opened by a trusted bot, matched on
                           the numeric account ID (``user.id``), never the login
-gate      decide ``merge`` / ``pending`` / ``blocked`` / ``rejected`` for one PR
-outcome   record what the sweep then did (merged, failed, dry run, repo error)
+gate      decide ``merge`` / ``pending`` / ``blocked`` / ``rejected`` for one PR,
+          and with ``--allow-approve`` whether the sweep approves it
+outcome   record what the sweep then did (approved, merged, failed, dry run,
+          repo error)
 report    render the Markdown report from the ledger the commands above write
 
 Exit status: ``gate`` exits 0 only for the verdict ``merge``, 1 for any other
@@ -59,7 +61,13 @@ STRIPPED_LABELS = frozenset({"major"})
 RESULTS = frozenset({
     "merged", "merge-failed", "assigned", "assign-failed", "dry-run", "repo-error",
     "branch-updated", "update-failed", "label-removed", "label-failed",
+    "approved", "approve-failed", "approve-skipped",
 })
+# Review states that set a reviewer's standing. COMMENTED and PENDING do not,
+# and a DISMISSED review is skipped, so the reviewer's previous decisive review
+# stands again: a request for changes followed by a dismissed approval still
+# blocks, so the gate never approves over a request that is still live.
+DECISIVE_REVIEWS = frozenset({"APPROVED", "CHANGES_REQUESTED"})
 DEFAULT_SETTLE = timedelta(minutes=10)
 
 MERGE, PENDING, BLOCKED, REJECTED = "merge", "pending", "blocked", "rejected"
@@ -248,10 +256,39 @@ def merge_commit_problems(commit: dict, parents: list[str], previous: str, allow
     return problems
 
 
+def read_reviews(reviews: object, *, repo: str, number: int, head_sha: str) -> tuple[str, list[str], bool]:
+    """Each reviewer's latest decisive review: (problem, who requests changes, head approved).
+
+    The payload is GET /repos/O/R/pulls/N/reviews, every page, oldest first as
+    GitHub returns it. Every review must point at this pull request, so a
+    payload saved for another PR or repository, or an error object, is a
+    problem rather than "no reviews". Each review by a deleted account
+    (``user: null``) stands on its own, so one ghost's approval cannot cancel
+    another's requested changes.
+    """
+    if not isinstance(reviews, list) or not all(isinstance(review, dict) for review in reviews):
+        return "reviews payload is not a list of GitHub reviews; fetch it again", [], False
+    suffix = f"/repos/{repo}/pulls/{number}".lower()
+    latest: dict[tuple, dict] = {}
+    for index, review in enumerate(reviews):
+        if not _str(review.get("pull_request_url")).lower().endswith(suffix):
+            return "reviews payload does not describe this pull request's reviews; fetch it again", [], False
+        if _str(review.get("state")) not in DECISIVE_REVIEWS:
+            continue
+        reviewer = _int(_dict(review.get("user")).get("id"))
+        latest[("user", reviewer) if reviewer is not None else ("review", index)] = review
+    changes = [sanitize(_dict(review.get("user")).get("login"), 40) or "a deleted account"
+               for review in latest.values() if review.get("state") == "CHANGES_REQUESTED"]
+    approved = any(review.get("state") == "APPROVED" and review.get("commit_id") == head_sha
+                   for review in latest.values())
+    return "", changes, approved
+
+
 def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
              repo: str, expected_head: str, require_checks: tuple[str, ...] = (),
              require_labels: tuple[str, ...] = (), forbid_labels: tuple[str, ...] = (),
              strict: bool = False, allow_branch_update: bool = False,
+             allow_approve: bool = False, reviews: object = None,
              settle: timedelta = DEFAULT_SETTLE, now: datetime | None = None) -> dict:
     """Decide one pull request. Returns the decision record (see SKILL.md)."""
     now = now or utc_now()
@@ -311,8 +348,19 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
                          "badly with intuit/auto: remove it unless a person put it there on purpose "
                          "(SKILL.md step 3)")
 
+    # Reviews (only with --allow-approve): a person's requested changes stop the
+    # sweep from approving or merging, and an approval already on the head
+    # commit is not given twice.
+    approved_at_head = False
+    if allow_approve:
+        problem, changes, approved_at_head = read_reviews(reviews, repo=repo, number=number, head_sha=head_sha)
+        if problem:
+            pending(problem)
+        for reviewer in changes:
+            blocked(f"{reviewer} requested changes; the sweep never approves or merges over a person's review")
+
     mergeable, mergeable_state = pr.get("mergeable"), sanitize(pr.get("mergeable_state"), 20)
-    behind = False
+    behind = protected = False
     rebase_hint = ""
     if TRUSTED_BOTS.get(user_id) == "dependabot[bot]":
         rebase_hint = ("comment `@dependabot rebase` on the PR so the bot updates its own branch; "
@@ -326,7 +374,13 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
         behind = True
         blocked(f"branch is behind `{base_ref}` and the branch protection requires an up-to-date branch")
         hints.append("" if allow_branch_update else rebase_hint)
+    elif mergeable_state == "blocked" and approved_at_head:
+        protected = True
+        blocked("branch protection still blocks although the head commit is approved; it needs something "
+                "this approval cannot give (a required check that has not reported, more approvals, a code "
+                "owner, or approval of the latest push by someone other than its pusher)")
     elif mergeable_state == "blocked":
+        protected = True
         blocked("branch protection is not satisfied (reviews, required checks or merge queue)")
     elif mergeable_state == "unstable":
         blocked("GitHub reports failing status checks (mergeable_state is unstable)")
@@ -480,6 +534,11 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
         # True when being behind the base is the only problem and the sweep may fix it.
         "update_branch": bool(allow_branch_update and behind and verdict == BLOCKED
                               and len(reasons[BLOCKED]) == 1 and not reasons[PENDING]),
+        # True when CI is green on the head, branch protection is the one thing in the way
+        # and no approval sits on the head yet: the sweep approves it. A PR that merges as
+        # it is gets no approval.
+        "approve": bool(allow_approve and protected and not approved_at_head and verdict == BLOCKED
+                        and not reasons[PENDING] and len(reasons[BLOCKED]) == 1),
         "evaluated_at": iso(now),
     }
 
@@ -517,6 +576,13 @@ def render_report(events: list, *, version: str, now: datetime, dry_run: bool = 
         results = outcomes.get(key, {})
         verdict = decision.get("verdict")
         notes = [] if verdict == MERGE else list(decision.get("reasons", []))[:4]
+        if "approved" in results:
+            notes.append("approved by the sweep" + (f" at `{sanitize(results['approved'], 40)[:7]}`"
+                                                     if results["approved"] else ""))
+        elif dry_run and decision.get("approve"):
+            notes.append("would approve (dry run)")
+        if "approve-skipped" in results:
+            notes.append(f"not approved: {sanitize(results['approve-skipped'], 160)}")
         if "merged" in results:
             notes.append("squash-merged" + (f" as `{sanitize(results['merged'], 40)[:7]}`" if results["merged"] else ""))
         if "dry-run" in results:
@@ -525,15 +591,16 @@ def render_report(events: list, *, version: str, now: datetime, dry_run: bool = 
             notes.append("branch updated from the base; the next run re-evaluates it")
         if "label-removed" in results:
             notes.append(f"label `{sanitize(results['label-removed'], 40)}` removed")
-        for result, label in (("merge-failed", "merge failed"), ("assign-failed", "assignment failed"),
-                              ("update-failed", "branch update failed"), ("label-failed", "label removal failed")):
+        for result, label in (("approve-failed", "approval failed"), ("merge-failed", "merge failed"),
+                              ("assign-failed", "assignment failed"), ("update-failed", "branch update failed"),
+                              ("label-failed", "label removal failed")):
             if result in results:
                 notes.append(f"{label}: {sanitize(results[result], 160)}")
         if "assigned" in results:
             notes.append(f"assigned to {sanitize(results['assigned'], 40)}")
         if verdict != MERGE:
             notes.extend(decision.get("hints", []))
-        failures = {"merge-failed", "assign-failed", "update-failed", "label-failed"} & results.keys()
+        failures = {"approve-failed", "merge-failed", "assign-failed", "update-failed", "label-failed"} & results.keys()
         if verdict == MERGE and "merged" in results:
             bucket = "Merged"
         elif verdict == REJECTED or failures:
@@ -562,7 +629,7 @@ def render_report(events: list, *, version: str, now: datetime, dry_run: bool = 
         "# Bot PR sweep",
         "",
         f"- Generated {iso(now)} by the bot-pr-sweep skill, version {version}",
-        f"- Mode: {'dry run (nothing merged or assigned)' if dry_run else 'live'}",
+        f"- Mode: {'dry run (nothing approved, merged or assigned)' if dry_run else 'live'}",
         *([f"- Schedule: `{sanitize(schedule, 80)}`"] if schedule else []),
         f"- Repositories swept: {len(selections)}; trusted-bot PRs evaluated: {len(decisions)}",
     ]
@@ -611,6 +678,9 @@ def cmd_select(args: argparse.Namespace) -> int:
 
 
 def cmd_gate(args: argparse.Namespace) -> int:
+    if bool(args.allow_approve) != bool(args.reviews):
+        raise GateInputError("--allow-approve and --reviews go together: the gate reads the PR's reviews only "
+                             "to avoid approving twice or over a person's requested changes")
     decision = evaluate(
         load_json(args.pr), pages(load_json(args.commits)), pages(load_json(args.check_runs)),
         load_json(args.status),
@@ -619,6 +689,8 @@ def cmd_gate(args: argparse.Namespace) -> int:
         require_labels=tuple(args.require_label or ()),
         forbid_labels=tuple(args.forbid_label or ()),
         strict=args.strict, allow_branch_update=args.allow_branch_update,
+        allow_approve=args.allow_approve,
+        reviews=pages(load_json(args.reviews)) if args.reviews else None,
         settle=timedelta(minutes=args.settle_minutes),
         now=parse_time(args.now) if args.now else None,
     )
@@ -676,6 +748,9 @@ def build_parser() -> argparse.ArgumentParser:
                       help="refuse skipped and neutral conclusions (by default they are tolerated, as GitHub does)")
     gate.add_argument("--allow-branch-update", action="store_true",
                       help="accept GitHub's own Update branch merge commit and flag behind PRs for it")
+    gate.add_argument("--allow-approve", action="store_true",
+                      help="flag PRs whose CI is green on the head for the sweep's approval (needs --reviews)")
+    gate.add_argument("--reviews", help="JSON from GET /repos/O/R/pulls/N/reviews, every page (with --allow-approve)")
     gate.add_argument("--settle-minutes", type=int, default=int(DEFAULT_SETTLE.total_seconds() // 60),
                       help="minimum age of the head commit before trusting the check list (0 disables)")
     gate.add_argument("--now", help="ISO 8601 time to evaluate at (tests)")
