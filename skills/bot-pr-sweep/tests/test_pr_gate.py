@@ -909,7 +909,8 @@ class CliTests(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertEqual(json.loads(out)["verdict"], "pending")
         self.assertFalse(json.loads(out)["approve"])
-        for result, detail in (("approved", HEAD), ("approve-skipped", "declined by the user")):
+        for result, detail in (("approved", HEAD), ("approve-skipped", "declined by the user"),
+                               ("approve-skipped", "no one to ask (--approve-mode ask)")):
             code, _, _ = self.main("outcome", "--repo", REPO, "--ledger", str(self.ledger), "--number", "7",
                                    "--result", result, "--detail", detail)
             self.assertEqual(code, 0)
