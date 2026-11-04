@@ -604,20 +604,20 @@ def held(**overrides):
 class ApproveTests(unittest.TestCase):
     def test_off_by_default(self):
         self.assertFalse(evaluate()["approve"])
-        self.assertFalse(evaluate(pr=pull(mergeable_state="blocked"))["approve"])
+        self.assertFalse(evaluate(pr=held())["approve"])
 
     def test_only_a_pr_held_back_by_protection_is_approved(self):
         clean = approve()
         self.assertEqual(clean["verdict"], "merge")
         self.assertFalse(clean["approve"])
-        blocked = approve(pr=pull(mergeable_state="blocked"))
+        blocked = approve(pr=held())
         self.assertEqual(blocked["verdict"], "blocked")
         self.assertEqual(len(blocked["reasons"]), 1)
         self.assertIn("branch protection is not satisfied", blocked["reasons"][0])
         self.assertTrue(blocked["approve"])
 
     def test_no_second_approval_on_the_same_head(self):
-        still = approve(review(), pr=pull(mergeable_state="blocked"))
+        still = approve(review(), pr=held())
         self.assertEqual(still["verdict"], "blocked")
         self.assertFalse(still["approve"])
         self.assertIn("still blocks although the head commit is approved", still["reasons"][0])
@@ -628,7 +628,7 @@ class ApproveTests(unittest.TestCase):
         }
         for name, (reviews, expected) in cases.items():
             with self.subTest(name):
-                self.assertEqual(approve(*reviews, pr=pull(mergeable_state="blocked"))["approve"], expected)
+                self.assertEqual(approve(*reviews, pr=held())["approve"], expected)
 
     def test_requested_changes_block_approval_and_merge(self):
         decision = approve(review("CHANGES_REQUESTED", login="alice"))
@@ -648,11 +648,12 @@ class ApproveTests(unittest.TestCase):
             with self.subTest(name):
                 self.assertEqual(approve(*reviews)["verdict"], verdict)
         self.assertTrue(approve(review("CHANGES_REQUESTED", sha=OTHER), review(sha=OTHER),
-                                pr=pull(mergeable_state="blocked"))["approve"])
+                                pr=held())["approve"])
         blocked = approve(review("CHANGES_REQUESTED"), pr=held())
         self.assertEqual(blocked["verdict"], "blocked")
         self.assertFalse(blocked["approve"])
         # A's approval sits on the head; B's request outlives B's dismissed approval.
+        # A = the default maintainer reviewer, B = bob.
         second = approve(review(), review("CHANGES_REQUESTED", uid=5, login="bob"),
                          review("DISMISSED", uid=5, login="bob"), pr=held())
         self.assertEqual(second["verdict"], "blocked")
@@ -764,8 +765,8 @@ class ReportTests(unittest.TestCase):
 
     def test_approvals_in_the_report(self):
         merged = approve(review())  # gated again after the approval, now clean
-        still_blocked = approve(review(number=8), pr=pull(number=8, mergeable_state="blocked"))
-        failed = approve(pr=pull(number=9, mergeable_state="blocked"))
+        still_blocked = approve(review(number=8), pr=held(number=8))
+        failed = approve(pr=held(number=9))
         events = [merged, still_blocked, failed,
                   {"event": "outcome", "repo": REPO, "number": 7, "result": "approved", "detail": HEAD},
                   {"event": "outcome", "repo": REPO, "number": 7, "result": "merged", "detail": "c" * 40},
@@ -778,7 +779,7 @@ class ReportTests(unittest.TestCase):
         self.assertIn("still blocks although the head commit is approved", text)
         self.assertIn("## Needs attention (1)", text)
         self.assertIn("approval failed: HTTP 403", text)
-        dry = gate.render_report([approve(pr=pull(mergeable_state="blocked"))], version="0.2.0", now=NOW, dry_run=True)
+        dry = gate.render_report([approve(pr=held())], version="0.2.0", now=NOW, dry_run=True)
         self.assertIn("would approve (dry run)", dry)
         self.assertNotIn("would approve", gate.render_report([approve()], version="0.2.0", now=NOW))
 
@@ -886,7 +887,7 @@ class CliTests(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertIn("--allow-approve and --reviews go together", err)
         (self.root / "reviews.json").write_text(json.dumps([[], [review(state="COMMENTED")]]), encoding="utf-8")
-        (self.root / "pr.json").write_text(json.dumps(pull(mergeable_state="blocked")), encoding="utf-8")
+        (self.root / "pr.json").write_text(json.dumps(held()), encoding="utf-8")
         code, out, _ = self.main(*self.gate_args("--allow-approve", **{"--reviews": self.path("reviews")}))
         self.assertEqual(code, 1)
         self.assertTrue(json.loads(out)["approve"])
