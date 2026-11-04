@@ -298,7 +298,8 @@ python3 SKILL_DIR/scripts/pr_gate.py outcome --repo OWNER/REPO --ledger WORK/led
 Record `--result approve-failed --detail "<error text>"` when the call fails
 (a 403 means the account cannot review there; for a 422, GitHub's error text
 says why). After approving, rerun step 2 for that PR, fetching the PR and its
-reviews afresh and reusing the other saved files, and act on the new verdict:
+reviews afresh (not the saved reviews file, which predates the approval) and
+reusing the other saved files, and act on the new verdict:
 `merge` goes on to the merge below, and `pending` only because GitHub has not
 finished computing mergeability gets one more try. Anything else is reported.
 PRs approved in the deferred `ask` pass are re-gated and merged in that pass,
