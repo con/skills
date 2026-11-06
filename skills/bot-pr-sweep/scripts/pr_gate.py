@@ -75,6 +75,7 @@ MERGE, PENDING, BLOCKED, REJECTED = "merge", "pending", "blocked", "rejected"
 _URL = re.compile(r"https://[A-Za-z0-9._~:/?#@!$&'*+,;=%-]+")
 _REPO = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
 _SHA = re.compile(r"[0-9a-f]{40}")
+_LOGIN = re.compile(r"[A-Za-z0-9][A-Za-z0-9-]{0,38}")
 _VERSION = re.compile(r"^version:\s*([0-9]+\.[0-9]+\.[0-9]+)\s*$", re.MULTILINE)
 
 
@@ -552,6 +553,38 @@ def _pr_line(decision: dict, notes: list[str]) -> str:
     return f"- [{decision['repo']}#{decision['number']}]({decision['url']}){title} — " + "; ".join(notes)
 
 
+# Every repository, pull request, commit and account the report names links to
+# GitHub. Values that do not have the expected shape stay plain text, so ledger
+# content can never become a link to somewhere else.
+def _repo_link(repo: object, path: str = "") -> str:
+    name = _str(repo)
+    if not _REPO.fullmatch(name):
+        return sanitize(name, 100) or "an unknown repository"
+    return f"[{name}](https://github.com/{name}{path})"
+
+
+def _pull_link(repo: object, number: object) -> str:
+    name, pull = _str(repo), _int(number)
+    if not _REPO.fullmatch(name) or pull is None:
+        return f"{sanitize(name, 100)}#{sanitize(str(number), 20)}"
+    return f"[{name}#{pull}](https://github.com/{name}/pull/{pull})"
+
+
+def _commit_link(repo: object, sha: object) -> str:
+    text, name = _str(sha), _str(repo)
+    short = f"`{sanitize(text, 40)[:7]}`"
+    if _SHA.fullmatch(text) and _REPO.fullmatch(name):
+        return f"[{short}](https://github.com/{name}/commit/{text})"
+    return short
+
+
+def _user_link(login: object) -> str:
+    text = _str(login)
+    if _LOGIN.fullmatch(text):
+        return f"[{text}](https://github.com/{text})"
+    return sanitize(text, 40)
+
+
 def render_report(events: list, *, version: str, now: datetime, dry_run: bool = False,
                   schedule: str = "") -> str:
     decisions: dict[tuple, dict] = {}
@@ -576,15 +609,16 @@ def render_report(events: list, *, version: str, now: datetime, dry_run: bool = 
         results = outcomes.get(key, {})
         verdict = decision.get("verdict")
         notes = [] if verdict == MERGE else list(decision.get("reasons", []))[:4]
+        repo = decision.get("repo")
         if "approved" in results:
-            notes.append("approved by the sweep" + (f" at `{sanitize(results['approved'], 40)[:7]}`"
+            notes.append("approved by the sweep" + (f" at {_commit_link(repo, results['approved'])}"
                                                      if results["approved"] else ""))
         elif dry_run and decision.get("approve"):
             notes.append("would approve (dry run)")
         if "approve-skipped" in results:
             notes.append(f"not approved: {sanitize(results['approve-skipped'], 160)}")
         if "merged" in results:
-            notes.append("squash-merged" + (f" as `{sanitize(results['merged'], 40)[:7]}`" if results["merged"] else ""))
+            notes.append("squash-merged" + (f" as {_commit_link(repo, results['merged'])}" if results["merged"] else ""))
         if "dry-run" in results:
             notes.append("would merge (dry run)")
         if "branch-updated" in results:
@@ -597,7 +631,7 @@ def render_report(events: list, *, version: str, now: datetime, dry_run: bool = 
             if result in results:
                 notes.append(f"{label}: {sanitize(results[result], 160)}")
         if "assigned" in results:
-            notes.append(f"assigned to {sanitize(results['assigned'], 40)}")
+            notes.append(f"assigned to {_user_link(results['assigned'])}")
         if verdict != MERGE:
             notes.extend(decision.get("hints", []))
         failures = {"approve-failed", "merge-failed", "assign-failed", "update-failed", "label-failed"} & results.keys()
@@ -614,16 +648,15 @@ def render_report(events: list, *, version: str, now: datetime, dry_run: bool = 
         if key not in decisions:
             recorded = ", ".join(f"`{sanitize(result, 20)}`" for result in sorted(results))
             buckets["Needs attention"].append(
-                f"- {key[0]}#{key[1]}: {recorded} recorded without a gate decision; check the ledger")
+                f"- {_pull_link(key[0], key[1])}: {recorded} recorded without a gate decision; check the ledger")
     for selection in selections:
         for entry in _list(selection.get("suspicious")):
             entry = _dict(entry)
             number = entry.get("number")
             buckets["Needs attention"].append(
-                f"- [{selection.get('repo')}#{number}](https://github.com/{selection.get('repo')}/pull/{number})"
-                f" — {sanitize(entry.get('reason'), 200)}; not touched")
+                f"- {_pull_link(selection.get('repo'), number)} — {sanitize(entry.get('reason'), 200)}; not touched")
     for error in repo_errors:
-        buckets["Needs attention"].append(f"- {error.get('repo')}: {sanitize(error.get('detail'), 200)}")
+        buckets["Needs attention"].append(f"- {_repo_link(error.get('repo'))}: {sanitize(error.get('detail'), 200)}")
 
     lines = [
         "# Bot PR sweep",
@@ -636,12 +669,19 @@ def render_report(events: list, *, version: str, now: datetime, dry_run: bool = 
     for heading, entries in buckets.items():
         lines += ["", f"## {heading} ({len(entries)})", ""]
         lines += entries or ["- none"]
+    # Repositories with open PRs get a line each; the rest are counted in one line.
     lines += ["", "## Repositories", ""]
-    for selection in sorted(selections, key=lambda item: str(item.get("repo"))):
-        lines.append(f"- {selection.get('repo')}: {selection.get('open_prs')} open PRs, "
+    shown = [selection for selection in sorted(selections, key=lambda item: str(item.get("repo")))
+             if _int(selection.get("open_prs")) != 0]
+    for selection in shown:
+        lines.append(f"- {_repo_link(selection.get('repo'), '/pulls')}: {selection.get('open_prs')} open PRs, "
                      f"{len(_list(selection.get('bot_prs')))} from trusted bots, "
                      f"{len(_list(selection.get('suspicious')))} suspicious, "
                      f"{selection.get('other_bots')} from other bots")
+    empty = len(selections) - len(shown)
+    if empty:
+        lines.append(f"- {empty} {'more ' if shown else ''}{'repository' if empty == 1 else 'repositories'} "
+                     "with no open PRs")
     if not selections:
         lines.append("- none recorded")
     return "\n".join(lines) + "\n"

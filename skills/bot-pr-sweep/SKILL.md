@@ -1,6 +1,6 @@
 ---
 name: bot-pr-sweep
-version: 0.2.0
+version: 0.3.0
 description: Sweep repositories for open dependabot[bot] and pre-commit-ci[bot] pull requests, verify authors by account ID, gate on complete and passing CI, squash-merge the green ones guarded by the head SHA (optionally approving the ones branch protection holds back), assign the maintainer, and report the rest. Use for dependency-bot PR triage, on demand or on a schedule.
 allowed-tools: Bash(gh api repos/*/pulls*), Bash(gh api repos/*/commits/*), Bash(gh api repos/*/issues/*/assignees *), Bash(gh api repos/*/issues/*/labels/major --method DELETE --silent), Bash(gh api user *), Bash(gh repo list *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py init*), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py select *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py gate *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py outcome *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py report *)
 user-invocable: true
@@ -337,14 +337,16 @@ python3 SKILL_DIR/scripts/pr_gate.py report --ledger WORK/ledger.jsonl
 Add `--dry-run` when the run was one. If `report` exits 2, the ledger is
 missing or corrupt and nothing is known about the run: tell the user so
 instead of reporting an empty sweep. Give the user the output verbatim; it
-groups PRs into Merged, Blocked, Pending (including branches just updated)
-and Needs attention (rejected and suspicious authors, failed approvals,
-merges, assignments and updates, repositories that could not be listed),
-notes each approval the sweep gave, and gives each PR a
-link, the gate's reasons, and the hint to give the bot or the maintainer
-where one applies. If the user asked for the report in a file, redirect the
-command's output there. Add `--schedule "<cadence>"` when the invocation
-states one, so the report says when the next sweep comes.
+groups PRs into Merged, Blocked, Pending (including branches just updated) and
+Needs attention (rejected and suspicious authors, failed approvals, merges,
+assignments and updates, repositories that could not be listed), notes each
+approval the sweep gave, and gives each PR a link, the gate's reasons, and the
+hint to give the bot or the maintainer where one applies. Every repository,
+pull request, commit and account it names links to GitHub. Its Repositories
+section lists the repositories with open PRs and counts the rest in one line.
+If the user asked for the report in a file, redirect the command's output
+there. Add `--schedule "<cadence>"` when the invocation states one, so the
+report says when the next sweep comes.
 
 ### 7. Agree a cadence
 

@@ -735,16 +735,18 @@ class ReportTests(unittest.TestCase):
         self.assertIn("## Pending (2)", text)
         self.assertIn("## Needs attention (4)", text)
         self.assertIn("[acme/widgets#7](https://github.com/acme/widgets/pull/7)", text)
-        self.assertIn("squash-merged as `ccccccc`; assigned to maintainer", text)
+        self.assertIn("squash-merged as [`ccccccc`](https://github.com/acme/widgets/commit/cccccccccccccccccccccccccccccccccccccccc); "
+                      "assigned to [maintainer](https://github.com/maintainer)", text)
         self.assertIn("`Bump x [evil](https://e)`", text)
         self.assertNotIn("\n[evil]", text)
         self.assertIn("@dependabot rebase", text)
         self.assertIn("assignment failed: HTTP 422", text)
         self.assertIn("branch updated from the base; the next run re-evaluates it", text)
-        self.assertIn("label `major` removed; assigned to maintainer", text)
+        self.assertIn("label `major` removed; assigned to [maintainer](https://github.com/maintainer)", text)
         self.assertIn("pull/12) — account 1 is not trusted; not touched", text)
-        self.assertIn("- acme/other: HTTP 403", text)
-        self.assertIn("- acme/widgets: 9 open PRs, 5 from trusted bots, 1 suspicious, 1 from other bots", text)
+        self.assertIn("- [acme/other](https://github.com/acme/other): HTTP 403", text)
+        self.assertIn("- [acme/widgets](https://github.com/acme/widgets/pulls): 9 open PRs, 5 from trusted bots, 1 suspicious, "
+                      "1 from other bots", text)
 
     def test_dry_run_and_failed_merge(self):
         events = [evaluate(), {"event": "outcome", "repo": REPO, "number": 7, "result": "dry-run"}]
@@ -780,7 +782,8 @@ class ReportTests(unittest.TestCase):
                    "detail": "no one to ask (--approve-mode ask)"}]
         text = gate.render_report(events, version="0.2.0", now=NOW)
         self.assertIn("## Merged (1)", text)
-        self.assertIn("approved by the sweep at `aaaaaaa`; squash-merged as `ccccccc`", text)
+        self.assertIn(f"approved by the sweep at [`aaaaaaa`](https://github.com/acme/widgets/commit/{HEAD}); "
+                      f"squash-merged as [`ccccccc`](https://github.com/acme/widgets/commit/{'c' * 40})", text)
         # Skipped approvals are a choice, not a failure: the PRs stay under Blocked.
         self.assertIn("## Blocked (3)", text)
         self.assertIn("still blocks although the head commit is approved", text)
@@ -792,11 +795,41 @@ class ReportTests(unittest.TestCase):
         self.assertIn("would approve (dry run)", dry)
         self.assertNotIn("would approve", gate.render_report([approve()], version="0.2.0", now=NOW))
 
+    def test_repositories_without_open_prs_are_counted_not_listed(self):
+        def selection(repo, open_prs):
+            return {"event": "selection", "repo": repo, "open_prs": open_prs, "bot_prs": [],
+                    "suspicious": [], "other_bots": 0}
+        text = gate.render_report([selection("acme/a", 2), selection("acme/b", 0), selection("acme/c", 0)],
+                                  version="0.3.0", now=NOW)
+        self.assertIn("- [acme/a](https://github.com/acme/a/pulls): 2 open PRs", text)
+        self.assertNotIn("acme/b", text)
+        self.assertIn("- 2 more repositories with no open PRs\n", text)
+        self.assertIn("- Repositories swept: 3;", text)
+        one = gate.render_report([selection("acme/a", 1), selection("acme/b", 0)], version="0.3.0", now=NOW)
+        self.assertIn("- 1 more repository with no open PRs\n", one)
+        quiet = gate.render_report([selection("acme/a", 0), selection("acme/b", 0)], version="0.3.0", now=NOW)
+        self.assertIn("## Repositories\n\n- 2 repositories with no open PRs\n", quiet)
+        # A selection without a usable count is listed rather than hidden.
+        odd = gate.render_report([selection("acme/a", None)], version="0.3.0", now=NOW)
+        self.assertIn("[acme/a](https://github.com/acme/a/pulls): None open PRs", odd)
+        self.assertNotIn("no open PRs", odd)
+
+    def test_links_only_well_formed_values(self):
+        self.assertEqual(gate._repo_link("acme/widgets"), "[acme/widgets](https://github.com/acme/widgets)")
+        self.assertEqual(gate._repo_link("evil](https://e"), "evil](https://e")
+        self.assertEqual(gate._pull_link("acme/widgets", 7), "[acme/widgets#7](https://github.com/acme/widgets/pull/7)")
+        self.assertEqual(gate._pull_link("acme/widgets", None), "acme/widgets#None")
+        self.assertEqual(gate._commit_link("acme/widgets", HEAD),
+                         f"[`aaaaaaa`](https://github.com/acme/widgets/commit/{HEAD})")
+        self.assertEqual(gate._commit_link("acme/widgets", "not-a-sha"), "`not-a-s`")
+        self.assertEqual(gate._user_link("jdoe"), "[jdoe](https://github.com/jdoe)")
+        self.assertEqual(gate._user_link("j doe](https://e"), "j doe](https://e")
+
     def test_outcome_without_a_decision_is_flagged(self):
         events = [{"event": "outcome", "repo": REPO, "number": 99, "result": "merged", "detail": "e" * 40}]
         text = gate.render_report(events, version="0.1.0", now=NOW)
         self.assertIn("## Needs attention (1)", text)
-        self.assertIn("- acme/widgets#99: `merged` recorded without a gate decision", text)
+        self.assertIn("- [acme/widgets#99](https://github.com/acme/widgets/pull/99): `merged` recorded without a gate decision", text)
 
     def test_schedule_line_is_optional_and_sanitized(self):
         text = gate.render_report([], version="0.1.0", now=NOW, schedule="daily at 06:00 UTC\n[evil](https://e)")
@@ -931,9 +964,9 @@ class CliTests(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertRegex(out, r"version \d+\.\d+\.\d+")
         self.assertIn("## Merged (1)", out)
-        self.assertIn("squash-merged as `ddddddd`", out)
+        self.assertIn(f"squash-merged as [`ddddddd`](https://github.com/acme/widgets/commit/{'d' * 40})", out)
         self.assertIn("pull/8) — login 'dependabot[bot]' resembles a trusted bot but account 1 is not trusted; not touched", out)
-        self.assertIn("- acme/other: HTTP 403", out)
+        self.assertIn("- [acme/other](https://github.com/acme/other): HTTP 403", out)
         code, _, err = self.main("report", "--ledger", str(self.root / "missing.jsonl"), "--dry-run")
         self.assertEqual(code, 2)
         self.assertIn("does not exist", err)
