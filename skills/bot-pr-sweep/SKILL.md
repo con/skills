@@ -337,16 +337,17 @@ python3 SKILL_DIR/scripts/pr_gate.py report --ledger WORK/ledger.jsonl
 Add `--dry-run` when the run was one. If `report` exits 2, the ledger is
 missing or corrupt and nothing is known about the run: tell the user so
 instead of reporting an empty sweep. Give the user the output verbatim; it
-groups PRs into Merged, Blocked, Pending (including branches just updated) and
-Needs attention (rejected and suspicious authors, failed approvals, merges,
-assignments and updates, repositories that could not be listed), notes each
-approval the sweep gave, and gives each PR a link, the gate's reasons, and the
-hint to give the bot or the maintainer where one applies. Every repository,
-pull request, commit and account it names links to GitHub. Its Repositories
+groups PRs into Merged, Blocked, Pending (including branches just updated)
+and Needs attention (rejected and suspicious authors, failed approvals,
+merges, assignments and updates, repositories that could not be listed),
+notes each approval the sweep gave, and gives each PR a
+link, the gate's reasons, and the hint to give the bot or the maintainer
+where one applies. It links each repository, pull request, commit and account
+it names when the value has the shape GitHub gives it, and its Repositories
 section lists the repositories with open PRs and counts the rest in one line.
-If the user asked for the report in a file, redirect the command's output
-there. Add `--schedule "<cadence>"` when the invocation states one, so the
-report says when the next sweep comes.
+If the user asked for the report in a file, redirect the
+command's output there. Add `--schedule "<cadence>"` when the invocation
+states one, so the report says when the next sweep comes.
 
 ### 7. Agree a cadence
 

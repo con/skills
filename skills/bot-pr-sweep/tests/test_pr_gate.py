@@ -266,7 +266,7 @@ class CheckRunTests(unittest.TestCase):
 
     def test_untrusted_check_name_is_sanitized(self):
         decision = evaluate(check_pages=[runs(run(name="tests `rm -rf`\n[click](https://x)"))])
-        self.assertEqual(decision["checks"]["passed"], ["tests 'rm -rf' [click](https://x)"])
+        self.assertEqual(decision["checks"]["passed"], ["tests 'rm -rf' [click] (https://x)"])
 
     def test_required_check_must_succeed(self):
         decision = evaluate(require_checks=("lint",))
@@ -552,7 +552,7 @@ class CommitTests(unittest.TestCase):
 
 class HelperTests(unittest.TestCase):
     def test_sanitize(self):
-        self.assertEqual(gate.sanitize("Bump `x`\n[evil](http://e)\x07 now"), "Bump 'x' [evil](http://e) now")
+        self.assertEqual(gate.sanitize("Bump `x`\n[evil](http://e)\x07 now"), "Bump 'x' [evil] (http://e) now")
         self.assertEqual(gate.sanitize("x" * 120, 10), "x" * 9 + "…")
         self.assertEqual(gate.sanitize(None), "")
         self.assertEqual(gate.sanitize(["list"]), "")
@@ -737,7 +737,7 @@ class ReportTests(unittest.TestCase):
         self.assertIn("[acme/widgets#7](https://github.com/acme/widgets/pull/7)", text)
         self.assertIn("squash-merged as [`ccccccc`](https://github.com/acme/widgets/commit/cccccccccccccccccccccccccccccccccccccccc); "
                       "assigned to [maintainer](https://github.com/maintainer)", text)
-        self.assertIn("`Bump x [evil](https://e)`", text)
+        self.assertIn("`Bump x [evil] (https://e)`", text)
         self.assertNotIn("\n[evil]", text)
         self.assertIn("@dependabot rebase", text)
         self.assertIn("assignment failed: HTTP 422", text)
@@ -796,34 +796,58 @@ class ReportTests(unittest.TestCase):
         self.assertNotIn("would approve", gate.render_report([approve()], version="0.2.0", now=NOW))
 
     def test_repositories_without_open_prs_are_counted_not_listed(self):
-        def selection(repo, open_prs):
+        def selection(repo, open_prs, **extra):
             return {"event": "selection", "repo": repo, "open_prs": open_prs, "bot_prs": [],
-                    "suspicious": [], "other_bots": 0}
-        text = gate.render_report([selection("acme/a", 2), selection("acme/b", 0), selection("acme/c", 0)],
-                                  version="0.3.0", now=NOW)
-        self.assertIn("- [acme/a](https://github.com/acme/a/pulls): 2 open PRs", text)
-        self.assertNotIn("acme/b", text)
-        self.assertIn("- 2 more repositories with no open PRs\n", text)
-        self.assertIn("- Repositories swept: 3;", text)
-        one = gate.render_report([selection("acme/a", 1), selection("acme/b", 0)], version="0.3.0", now=NOW)
-        self.assertIn("- 1 more repository with no open PRs\n", one)
-        quiet = gate.render_report([selection("acme/a", 0), selection("acme/b", 0)], version="0.3.0", now=NOW)
-        self.assertIn("## Repositories\n\n- 2 repositories with no open PRs\n", quiet)
-        # A selection without a usable count is listed rather than hidden.
-        odd = gate.render_report([selection("acme/a", None)], version="0.3.0", now=NOW)
-        self.assertIn("[acme/a](https://github.com/acme/a/pulls): None open PRs", odd)
-        self.assertNotIn("no open PRs", odd)
+                    "suspicious": [], "other_bots": 0, **extra}
+
+        def report(*selections):
+            return gate.render_report(list(selections), version="0.3.0", now=NOW)
+
+        with self.subTest("some quiet"):
+            text = report(selection("acme/a", 2), selection("acme/b", 0), selection("acme/c", 0))
+            self.assertIn("- [acme/a](https://github.com/acme/a/pulls): 2 open PRs", text)
+            self.assertNotIn("acme/b", text)
+            self.assertIn("- 2 more repositories with no open PRs\n", text)
+            self.assertIn("- Repositories swept: 3;", text)
+        with self.subTest("one quiet"):
+            self.assertIn("- 1 more repository with no open PRs\n", report(selection("acme/a", 1), selection("acme/b", 0)))
+        with self.subTest("all quiet"):
+            text = report(selection("acme/a", 0), selection("acme/b", 0))
+            self.assertIn("## Repositories\n\n- 2 repositories with no open PRs\n", text)
+        with self.subTest("unusable count"):
+            text = report(selection("acme/a", None))
+            self.assertIn("- [acme/a](https://github.com/acme/a/pulls): ", text)
+            self.assertNotIn("no open PRs", text)
+        with self.subTest("suspicious PR in a zero count"):
+            text = report(selection("acme/a", 0, suspicious=[{"number": 3, "reason": "look-alike"}]))
+            self.assertIn("- [acme/a](https://github.com/acme/a/pulls): ", text)
 
     def test_links_only_well_formed_values(self):
-        self.assertEqual(gate._repo_link("acme/widgets"), "[acme/widgets](https://github.com/acme/widgets)")
-        self.assertEqual(gate._repo_link("evil](https://e"), "evil](https://e")
-        self.assertEqual(gate._pull_link("acme/widgets", 7), "[acme/widgets#7](https://github.com/acme/widgets/pull/7)")
-        self.assertEqual(gate._pull_link("acme/widgets", None), "acme/widgets#None")
-        self.assertEqual(gate._commit_link("acme/widgets", HEAD),
-                         f"[`aaaaaaa`](https://github.com/acme/widgets/commit/{HEAD})")
-        self.assertEqual(gate._commit_link("acme/widgets", "not-a-sha"), "`not-a-s`")
-        self.assertEqual(gate._user_link("jdoe"), "[jdoe](https://github.com/jdoe)")
-        self.assertEqual(gate._user_link("j doe](https://e"), "j doe](https://e")
+        evil = "[x](https://e.com)"
+        good = {
+            "repository": (gate._repo_link("acme/widgets"), "[acme/widgets](https://github.com/acme/widgets)"),
+            "pull request": (gate._pull_link("acme/widgets", 7), "[acme/widgets#7](https://github.com/acme/widgets/pull/7)"),
+            "commit": (gate._commit_link("acme/widgets", HEAD), f"[`aaaaaaa`](https://github.com/acme/widgets/commit/{HEAD})"),
+            "account": (gate._user_link("jdoe"), "[jdoe](https://github.com/jdoe)"),
+        }
+        for name, (got, expected) in good.items():
+            with self.subTest(name):
+                self.assertEqual(got, expected)
+        plain = {
+            "repository": gate._repo_link(evil),
+            "pull request": gate._pull_link(evil, 1),
+            "commit in a bad repository": gate._commit_link(evil, HEAD),
+            "bad commit": gate._commit_link("acme/widgets", evil),
+            "account": gate._user_link(evil),
+            "dot-dot repository": gate._repo_link("../.."),
+            "dot owner": gate._repo_link(".git/x"),
+            "missing number": gate._pull_link("acme/widgets", None),
+            "trailing hyphen": gate._user_link("abc-"),
+        }
+        for name, got in plain.items():
+            with self.subTest(name):
+                self.assertNotIn("](", got)
+                self.assertNotIn("https://github.com", got)
 
     def test_outcome_without_a_decision_is_flagged(self):
         events = [{"event": "outcome", "repo": REPO, "number": 99, "result": "merged", "detail": "e" * 40}]
@@ -833,7 +857,7 @@ class ReportTests(unittest.TestCase):
 
     def test_schedule_line_is_optional_and_sanitized(self):
         text = gate.render_report([], version="0.1.0", now=NOW, schedule="daily at 06:00 UTC\n[evil](https://e)")
-        self.assertIn("- Mode: live\n- Schedule: `daily at 06:00 UTC [evil](https://e)`\n- Repositories swept", text)
+        self.assertIn("- Mode: live\n- Schedule: `daily at 06:00 UTC [evil] (https://e)`\n- Repositories swept", text)
         long = gate.render_report([], version="0.1.0", now=NOW, schedule="every " + "x" * 100)
         self.assertRegex(long, r"- Schedule: `every x+…`\n")
         self.assertNotIn("x" * 100, long)

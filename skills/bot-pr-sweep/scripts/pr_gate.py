@@ -75,7 +75,7 @@ MERGE, PENDING, BLOCKED, REJECTED = "merge", "pending", "blocked", "rejected"
 _URL = re.compile(r"https://[A-Za-z0-9._~:/?#@!$&'*+,;=%-]+")
 _REPO = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
 _SHA = re.compile(r"[0-9a-f]{40}")
-_LOGIN = re.compile(r"[A-Za-z0-9][A-Za-z0-9-]{0,38}")
+_LOGIN = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?")
 _VERSION = re.compile(r"^version:\s*([0-9]+\.[0-9]+\.[0-9]+)\s*$", re.MULTILINE)
 
 
@@ -104,9 +104,14 @@ def _str(value: object) -> str:
 
 
 def sanitize(value: object, limit: int = 100) -> str:
-    """Make contributor-controlled text safe to print inside backticks."""
+    """Make contributor-controlled text safe to print inside backticks or as plain Markdown.
+
+    No control characters, no backticks, and no `](`, which an inline link or
+    image needs, so `[label](https://elsewhere)` cannot pass for a link the
+    report built. A bare URL can still be autolinked, but then it shows itself.
+    """
     text = "".join(ch if ch.isprintable() else " " for ch in _str(value))
-    text = " ".join(text.replace("`", "'").split())
+    text = " ".join(text.replace("`", "'").split()).replace("](", "] (")
     return text if len(text) <= limit else text[: limit - 1] + "…"
 
 
@@ -548,41 +553,43 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
 # report
 # --------------------------------------------------------------------------
 
-def _pr_line(decision: dict, notes: list[str]) -> str:
-    title = f" `{decision['title']}`" if decision.get("title") else ""
-    return f"- [{decision['repo']}#{decision['number']}]({decision['url']}){title} — " + "; ".join(notes)
+# The report links each repository, pull request, commit and account it names
+# when the value has the shape GitHub gives it. Anything else is printed as
+# sanitized plain text, so ledger content cannot dress itself up as a link.
+def _linkable(repo: str) -> bool:
+    owner, _, name = repo.partition("/")
+    return bool(_REPO.fullmatch(repo)) and not owner.startswith(".") and name not in (".", "..")
 
 
-# Every repository, pull request, commit and account the report names links to
-# GitHub. Values that do not have the expected shape stay plain text, so ledger
-# content can never become a link to somewhere else.
-def _repo_link(repo: object, path: str = "") -> str:
+def _repo_link(repo: object, path: str = "", label: str = "") -> str:
+    """Link LABEL (default: the repository name) to github.com/REPO/PATH, or give plain text."""
     name = _str(repo)
-    if not _REPO.fullmatch(name):
-        return sanitize(name, 100) or "an unknown repository"
-    return f"[{name}](https://github.com/{name}{path})"
+    text = label or name
+    return f"[{text}](https://github.com/{name}{path})" if _linkable(name) else sanitize(text, 120)
 
 
 def _pull_link(repo: object, number: object) -> str:
     name, pull = _str(repo), _int(number)
-    if not _REPO.fullmatch(name) or pull is None:
-        return f"{sanitize(name, 100)}#{sanitize(str(number), 20)}"
-    return f"[{name}#{pull}](https://github.com/{name}/pull/{pull})"
+    if pull is None:
+        return sanitize(f"{name}#{number}", 120)
+    return _repo_link(name, f"/pull/{pull}", f"{name}#{pull}")
 
 
 def _commit_link(repo: object, sha: object) -> str:
-    text, name = _str(sha), _str(repo)
-    short = f"`{sanitize(text, 40)[:7]}`"
-    if _SHA.fullmatch(text) and _REPO.fullmatch(name):
-        return f"[{short}](https://github.com/{name}/commit/{text})"
-    return short
+    text = _str(sha)
+    if not _SHA.fullmatch(text):
+        return f"`{sanitize(text, 40)[:7]}`"
+    return _repo_link(repo, f"/commit/{text}", f"`{text[:7]}`")
 
 
 def _user_link(login: object) -> str:
     text = _str(login)
-    if _LOGIN.fullmatch(text):
-        return f"[{text}](https://github.com/{text})"
-    return sanitize(text, 40)
+    return f"[{text}](https://github.com/{text})" if _LOGIN.fullmatch(text) else sanitize(text, 40)
+
+
+def _pr_line(decision: dict, notes: list[str]) -> str:
+    title = f" `{decision['title']}`" if decision.get("title") else ""
+    return f"- {_pull_link(decision.get('repo'), decision.get('number'))}{title} — " + "; ".join(notes)
 
 
 def render_report(events: list, *, version: str, now: datetime, dry_run: bool = False,
@@ -672,7 +679,8 @@ def render_report(events: list, *, version: str, now: datetime, dry_run: bool = 
     # Repositories with open PRs get a line each; the rest are counted in one line.
     lines += ["", "## Repositories", ""]
     shown = [selection for selection in sorted(selections, key=lambda item: str(item.get("repo")))
-             if _int(selection.get("open_prs")) != 0]
+             if _int(selection.get("open_prs")) != 0 or _list(selection.get("bot_prs"))
+             or _list(selection.get("suspicious"))]
     for selection in shown:
         lines.append(f"- {_repo_link(selection.get('repo'), '/pulls')}: {selection.get('open_prs')} open PRs, "
                      f"{len(_list(selection.get('bot_prs')))} from trusted bots, "
