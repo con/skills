@@ -106,12 +106,13 @@ def _str(value: object) -> str:
 def sanitize(value: object, limit: int = 100) -> str:
     """Make contributor-controlled text safe to print inside backticks or as plain Markdown.
 
-    No control characters, no backticks, and no `](`, which an inline link or
-    image needs, so `[label](https://elsewhere)` cannot pass for a link the
-    report built. A bare URL can still be autolinked, but then it shows itself.
+    No control characters, no backticks, no `<` (raw HTML such as `<a href=...>`
+    or an `<https://...>` autolink would render), and no `](`, which an inline
+    link or image needs, so `[label](https://elsewhere)` cannot pass for a link
+    the report built. A bare URL can still be autolinked, but then it shows itself.
     """
     text = "".join(ch if ch.isprintable() else " " for ch in _str(value))
-    text = " ".join(text.replace("`", "'").split()).replace("](", "] (")
+    text = " ".join(text.replace("`", "'").replace("<", "‹").split()).replace("](", "] (")
     return text if len(text) <= limit else text[: limit - 1] + "…"
 
 
@@ -556,16 +557,16 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
 # The report links each repository, pull request, commit and account it names
 # when the value has the shape GitHub gives it. Anything else is printed as
 # sanitized plain text, so ledger content cannot dress itself up as a link.
-def _linkable(repo: str) -> bool:
-    owner, _, name = repo.partition("/")
-    return bool(_REPO.fullmatch(repo)) and not owner.startswith(".") and name not in (".", "..")
-
-
 def _repo_link(repo: object, path: str = "", label: str = "") -> str:
-    """Link LABEL (default: the repository name) to github.com/REPO/PATH, or give plain text."""
+    """Link LABEL (default: the repository name) to github.com/REPO/PATH, or give plain text.
+
+    LABEL goes into the link as it is, so callers build it from validated parts.
+    """
     name = _str(repo)
-    text = label or name
-    return f"[{text}](https://github.com/{name}{path})" if _linkable(name) else sanitize(text, 120)
+    owner, _, short = name.partition("/")
+    if _REPO.fullmatch(name) and not owner.startswith(".") and short not in (".", ".."):
+        return f"[{label or name}](https://github.com/{name}{path})"
+    return sanitize(label or name, 120) or "unknown"
 
 
 def _pull_link(repo: object, number: object) -> str:
@@ -577,9 +578,11 @@ def _pull_link(repo: object, number: object) -> str:
 
 def _commit_link(repo: object, sha: object) -> str:
     text = _str(sha)
+    short = f"`{sanitize(text, 40)[:7]}`"
     if not _SHA.fullmatch(text):
-        return f"`{sanitize(text, 40)[:7]}`"
-    return _repo_link(repo, f"/commit/{text}", f"`{text[:7]}`")
+        return short
+    link = _repo_link(repo, f"/commit/{text}", short)
+    return link if link.startswith("[") else short
 
 
 def _user_link(login: object) -> str:

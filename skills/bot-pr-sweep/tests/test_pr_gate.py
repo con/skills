@@ -397,7 +397,7 @@ class PullRequestStateTests(unittest.TestCase):
         decision = evaluate(pr=pr)
         self.assertEqual(decision["verdict"], "blocked")
         self.assertIn("pull request is clo sed 'x'", decision["reasons"][0])
-        self.assertIn("behind `ma<in> '`", decision["reasons"][1])
+        self.assertIn("behind `ma‹in> '`", decision["reasons"][1])
         self.assertNotIn("\n", json.dumps(decision))
 
     def test_unknown_mergeability_is_pending(self):
@@ -824,6 +824,7 @@ class ReportTests(unittest.TestCase):
 
     def test_links_only_well_formed_values(self):
         evil = "[x](https://e.com)"
+        html = '<a href="https://e.com">x</a>'
         good = {
             "repository": (gate._repo_link("acme/widgets"), "[acme/widgets](https://github.com/acme/widgets)"),
             "pull request": (gate._pull_link("acme/widgets", 7), "[acme/widgets#7](https://github.com/acme/widgets/pull/7)"),
@@ -843,11 +844,19 @@ class ReportTests(unittest.TestCase):
             "dot owner": gate._repo_link(".git/x"),
             "missing number": gate._pull_link("acme/widgets", None),
             "trailing hyphen": gate._user_link("abc-"),
+            "raw HTML account": gate._user_link(html),
+            "raw HTML repository": gate._repo_link(html),
+            "angle-bracket autolink": gate.sanitize("<https://e.com>"),
         }
         for name, got in plain.items():
             with self.subTest(name):
                 self.assertNotIn("](", got)
+                self.assertNotIn("<", got)
                 self.assertNotIn("https://github.com", got)
+        with self.subTest("no repository at all"):
+            self.assertEqual(gate._repo_link(None), "unknown")
+        with self.subTest("good commit in a bad repository keeps its backticks"):
+            self.assertEqual(gate._commit_link("../..", HEAD), "`aaaaaaa`")
 
     def test_outcome_without_a_decision_is_flagged(self):
         events = [{"event": "outcome", "repo": REPO, "number": 99, "result": "merged", "detail": "e" * 40}]
