@@ -704,6 +704,53 @@ class ApproveTests(unittest.TestCase):
         self.assertFalse(running_and_blocked["approve"])
 
 
+class NoCiTests(unittest.TestCase):
+    """A bot PR on whose head no CI reported at all: refresh it once, otherwise hint."""
+
+    def pre_commit(self, **overrides):
+        fields = dict(pr=pull(user=user("pre-commit-ci[bot]", PRE_COMMIT_CI), mergeable_state="blocked"),
+                      commits=[pre_commit_commit()], check_pages=[runs()], status=status())
+        fields.update(overrides)
+        return evaluate(**fields)
+
+    def test_branch_update_gives_ci_a_new_commit(self):
+        decision = self.pre_commit(allow_branch_update=True)
+        self.assertEqual(decision["verdict"], "blocked")
+        self.assertTrue(decision["update_branch"])
+        self.assertFalse(self.pre_commit()["update_branch"])
+
+    def test_bots_get_their_own_rerun_hint(self):
+        self.assertTrue(any("pre-commit.ci run" in hint for hint in self.pre_commit()["hints"]))
+        dependabot = evaluate(pr=pull(mergeable_state="blocked"), check_pages=[runs()], status=status())
+        self.assertTrue(any("@dependabot rebase" in hint for hint in dependabot["hints"]))
+
+    def test_not_again_once_the_head_is_an_update_merge(self):
+        decision = evaluate(pr=pull(mergeable_state="blocked", commits=2, head={"sha": MERGE_SHA, "repo": {"full_name": REPO}}),
+                            commits=[commit(), update_merge()], check_pages=[runs()], status=status(sha=MERGE_SHA),
+                            expected_head=MERGE_SHA, allow_branch_update=True)
+        self.assertEqual(decision["verdict"], "blocked")
+        self.assertFalse(decision["update_branch"])
+        self.assertTrue(any("even on GitHub's Update branch merge" in hint for hint in decision["hints"]))
+
+    def test_failed_checks_and_other_problems_are_not_refreshed(self):
+        cases = {
+            "every check failed": dict(check_pages=[runs(run(conclusion="failure"))]),
+            "a missing label too": dict(require_labels=("internal",)),
+        }
+        for name, overrides in cases.items():
+            with self.subTest(name):
+                decision = self.pre_commit(allow_branch_update=True, **overrides)
+                self.assertFalse(decision["update_branch"])
+                if name == "every check failed":
+                    self.assertFalse(any("pre-commit.ci run" in hint for hint in decision["hints"]))
+
+    def test_behind_and_without_ci(self):
+        decision = self.pre_commit(pr=pull(user=user("pre-commit-ci[bot]", PRE_COMMIT_CI), mergeable_state="behind"),
+                                   allow_branch_update=True)
+        self.assertEqual(len(decision["reasons"]), 2)
+        self.assertTrue(decision["update_branch"])
+
+
 class ReportTests(unittest.TestCase):
     def events(self):
         merged = evaluate()

@@ -1,6 +1,6 @@
 ---
 name: bot-pr-sweep
-version: 0.3.0
+version: 0.4.0
 description: Sweep repositories for open dependabot[bot] and pre-commit-ci[bot] pull requests, verify authors by account ID, gate on complete and passing CI, squash-merge the green ones guarded by the head SHA (optionally approving the ones branch protection holds back), assign the maintainer, and report the rest. Use for dependency-bot PR triage, on demand or on a schedule.
 allowed-tools: Bash(gh api repos/*/pulls*), Bash(gh api repos/*/commits/*), Bash(gh api repos/*/issues/*/assignees *), Bash(gh api repos/*/issues/*/labels/major --method DELETE --silent), Bash(gh api user *), Bash(gh repo list *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py init*), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py select *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py gate *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py outcome *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py report *)
 user-invocable: true
@@ -200,7 +200,7 @@ verdict `merge`:
 |---|---|---|
 | `merge` | Trusted author, every commit by that same bot (or GitHub's "Update branch"), PR open and mergeable, complete check list with every check run completed and none failed, at least one success, every status `success`, head commit older than the settle time. | Assign, then squash-merge (steps 3 and 5). |
 | `pending` | Something is unfinished or not yet knowable: checks still running, mergeability not computed, head commit younger than the settle time, a truncated or malformed payload, payloads describing another commit, the head moved since listing. | Assign and report; the next run looks again. If a reason says a payload was incomplete, save that payload once more and evaluate the PR again before moving on. |
-| `blocked` | Needs a person: a failed check, no CI results at all, conflicts, behind the base, branch protection, draft, a missing or forbidden label, a `major` label, a commit not by the pull request's author, a head branch outside the repository. | Assign and report, with the failing check's link and any hint. A decision with `"strip_labels"` raises the step 3 question. With `--allow-branch-update`, a decision whose only problem is being behind carries `"update_branch": true` and goes to step 4. With `--allow-approve`, `"approve": true` sends it to step 5, and a reviewer's requested changes also block. |
+| `blocked` | Needs a person: a failed check, no CI results at all, conflicts, behind the base, branch protection, draft, a missing or forbidden label, a `major` label, a commit not by the pull request's author, a head branch outside the repository. | Assign and report, with the failing check's link and any hint. A decision with `"strip_labels"` raises the step 3 question. With `--allow-branch-update`, a decision whose only problems are being behind or no CI on the head (besides branch protection) carries `"update_branch": true` and goes to step 4. With `--allow-approve`, `"approve": true` sends it to step 5, and a reviewer's requested changes also block. |
 | `rejected` | The author is not a trusted bot by account ID. | Report only; never assign, merge or comment. |
 
 Exit status 1 is the normal result for every verdict other than `merge`, not
@@ -257,8 +257,17 @@ gh api repos/OWNER/REPO/pulls/N/update-branch --method PUT -f expected_head_sha=
 python3 SKILL_DIR/scripts/pr_gate.py outcome --repo OWNER/REPO --ledger WORK/ledger.jsonl --number N --result branch-updated --detail "<base branch>"
 ```
 
+The gate sets `"update_branch"` when being behind is all that stops the PR,
+or when no CI reported on the head at all: a bot's CI run can be dropped, and
+a path-filtered workflow skips a config-only change, so the merge gives CI a
+new commit to run on. It does that once. When the head is already GitHub's
+Update branch merge and CI still did not report, the PR is left for a person,
+with a hint.
+
 Record `--result update-failed --detail "<error text>"` when it fails (a 422
-means the head moved or the branch is no longer behind). Do this at most once
+means the head moved or the branch is not behind; for a PR without CI, the
+hint says how to make the bot run its own check, such as commenting
+`pre-commit.ci run`). Do this at most once
 per PR per run, and do not merge the PR in the same run: GitHub adds one merge
 commit authored by the account running the sweep and committed and signed by
 GitHub, CI runs on the new head, and the next run's gate accepts exactly that

@@ -367,11 +367,14 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
             blocked(f"{reviewer} requested changes; the sweep never approves or merges over a person's review")
 
     mergeable, mergeable_state = pr.get("mergeable"), sanitize(pr.get("mergeable_state"), 20)
-    behind = protected = False
-    rebase_hint = ""
+    behind = protected = no_ci = False
+    rebase_hint = rerun_hint = ""
     if TRUSTED_BOTS.get(user_id) == "dependabot[bot]":
-        rebase_hint = ("comment `@dependabot rebase` on the PR so the bot updates its own branch; "
-                       "the sweep never pushes to it")
+        rebase_hint = rerun_hint = ("comment `@dependabot rebase` on the PR so the bot updates its own branch; "
+                                    "the sweep never pushes to it")
+    elif TRUSTED_BOTS.get(user_id) == "pre-commit-ci[bot]":
+        rerun_hint = ("comment `pre-commit.ci run` on the PR so pre-commit.ci checks its own update; "
+                      "the sweep never comments")
     if mergeable is None or mergeable_state in ("", "unknown"):
         pending("GitHub has not finished computing mergeability; retry shortly")
     elif mergeable is False or mergeable_state == "dirty":
@@ -437,6 +440,11 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
                 minutes = int((now - newest).total_seconds() // 60)
                 pending(f"head commit is {minutes} min old; waiting {int(settle.total_seconds() // 60)} min "
                         "for CI to register every check")
+
+    # GitHub's own Update branch merge at the head: two parents, committed by web-flow.
+    head = commits[-1] if commits else {}
+    head_is_update = (len(_list(head.get("parents"))) == 2
+                      and _int(_dict(head.get("committer")).get("id")) == WEB_FLOW_ID)
 
     # Check runs: complete list, every one bound to the head and finished, none failed.
     passed: list[str] = []
@@ -517,6 +525,11 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
 
     if ci_known and not passed and not unfinished:
         blocked("no check run or status finished with success for the head commit; unverified PRs are never merged")
+        # Nothing reported at all, as opposed to every check failing.
+        no_ci = not (failed or tolerated)
+        if no_ci:
+            hints.append("CI did not report even on GitHub's Update branch merge; check that a workflow or app "
+                         "covers this change" if head_is_update else rerun_hint)
     for required in require_checks:
         wanted = sanitize(required, 60)
         if ci_known and wanted not in passed and wanted not in failed and wanted not in unfinished:
@@ -539,8 +552,12 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
         # Labels the sweep offers to remove (step 3); never on a PR it must not touch.
         "strip_labels": strip_labels if verdict != REJECTED else [],
         # True when being behind the base is the only problem and the sweep may fix it.
-        "update_branch": bool(allow_branch_update and behind and verdict == BLOCKED
-                              and len(reasons[BLOCKED]) == 1 and not reasons[PENDING]),
+        # True when being behind the base, or no CI on the head, is all that stops the PR (besides
+        # branch protection) and the sweep may fix it: Update branch gives CI a new commit to run on,
+        # once, since a head that is already that merge commit is not updated again for missing CI.
+        "update_branch": bool(allow_branch_update and (behind or (no_ci and not head_is_update))
+                              and verdict == BLOCKED and not reasons[PENDING]
+                              and len(reasons[BLOCKED]) == int(behind) + int(no_ci) + int(protected)),
         # True when CI is green on the head, branch protection is the one thing in the way
         # and no approval sits on the head yet: the sweep approves it. A PR that merges as
         # it is gets no approval.
