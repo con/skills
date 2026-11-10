@@ -69,9 +69,9 @@ def build_file_lines_map(data):
 
     jscpd's per-format `statistics.formats.<fmt>.sources` field is a dict of
     per-file stats in some versions and a plain file count (int) in others
-    (observed with jscpd 5.3.x) -- guard against the latter so this degrades
-    to an empty map instead of crashing. Callers should fall back to
-    `count_file_lines()` for files missing from the returned map.
+    (observed with jscpd 5.3.x-5.4.x) -- guard against the latter so this
+    degrades to an empty map instead of crashing. `annotate_file_lines()`
+    falls back to `count_file_lines()` for files missing from the map.
     """
     file_lines = {}
     for _fmt_name, fmt_data in data.get("statistics", {}).get("formats", {}).items():
@@ -97,21 +97,42 @@ def count_file_lines(fpath, scan_path):
         return 0
 
 
-def clone_file_percent(dup, file_lines):
+def annotate_file_lines(data, scan_path):
+    """Record each clone file's total line count as `_total_lines`.
+
+    Counts come from the report's own statistics where jscpd provides them,
+    else from reading the file under scan_path (jscpd 5.x names files
+    relative to the path it scanned). With neither, the count stays None and
+    the report shows the clone's %file as unknown. Each report is resolved
+    against its own scan path, so same-named files in different projects
+    (e.g. two `setup.py`) do not share a count.
+    """
+    known = build_file_lines_map(data)
+    for dup in data.get("duplicates", []):
+        for key in ("firstFile", "secondFile"):
+            entry = dup.get(key, {})
+            name = entry.get("name")
+            if not name:
+                continue
+            total = known.get(name)
+            if not total and scan_path is not None:
+                total = count_file_lines(name, scan_path)
+            entry["_total_lines"] = total or None
+
+
+def clone_file_percent(dup):
     """Compute what % of the smaller file is covered by the clone.
 
-    Returns an int 0-100. Uses the smaller of the two files as denominator
+    Returns an int 0-100, or None when either file's length is unknown (see
+    `annotate_file_lines`). Uses the smaller of the two files as denominator
     so that "95%" means the clone is nearly the entire file.
     """
-    first_name = dup["firstFile"]["name"]
-    second_name = dup["secondFile"]["name"]
-    first_total = file_lines.get(first_name, 0)
-    second_total = file_lines.get(second_name, 0)
-    smaller = min(first_total, second_total) if first_total and second_total else 0
-    if smaller == 0:
-        return 0
+    first_total = dup["firstFile"].get("_total_lines")
+    second_total = dup["secondFile"].get("_total_lines")
+    if not first_total or not second_total:
+        return None
     clone_lines = dup.get("lines", 0)
-    return min(100, round(100 * clone_lines / smaller))
+    return min(100, round(100 * clone_lines / min(first_total, second_total)))
 
 
 def load_report(path):
@@ -324,7 +345,7 @@ DIFFICULTY_LABELS = {
 }
 
 
-def render_overview_table(all_dups, file_lines):
+def render_overview_table(all_dups):
     """Render a compact overview table of all clusters with mediation info."""
     headers = ["C", "Lines", "%file", "Difficulty", "Strategy", "Files"]
     rows = []
@@ -343,11 +364,11 @@ def render_overview_table(all_dups, file_lines):
         else:
             files_str = f"{first_short} / {second_short}"
         label = DIFFICULTY_LABELS.get(difficulty, difficulty)
-        pct = clone_file_percent(dup, file_lines)
+        pct = clone_file_percent(dup)
         rows.append([
             str(i),
             str(dup.get("lines", 0)),
-            f"{pct}%",
+            "—" if pct is None else f"{pct}%",
             label,
             strategy,
             files_str,
@@ -373,8 +394,7 @@ def render_overview_table(all_dups, file_lines):
     return "\n".join(lines)
 
 
-def render_cluster(idx, dup, prefix="", repo_url=None, branch=None,
-                    file_lines=None):
+def render_cluster(idx, dup, prefix="", repo_url=None, branch=None):
     """Render a single duplicate cluster as a <details> block with mediation."""
     fmt = dup.get("format", "")
     lang = format_language(fmt)
@@ -392,10 +412,10 @@ def render_cluster(idx, dup, prefix="", repo_url=None, branch=None,
 
     difficulty, strategy, rationale = classify_cluster(dup)
     diff_label = DIFFICULTY_LABELS.get(difficulty, difficulty)
-    pct = clone_file_percent(dup, file_lines or {})
+    pct = clone_file_percent(dup)
 
     label = f"{prefix}Cluster {idx}"
-    pct_str = f" {pct}% of file" if pct >= 50 else ""
+    pct_str = f" {pct}% of file" if pct is not None and pct >= 50 else ""
     # Summary line uses plain text (no links — they don't work inside <summary>)
     summary = (
         f"[{diff_label}] "
@@ -442,7 +462,7 @@ def render_cluster(idx, dup, prefix="", repo_url=None, branch=None,
 
 
 def render_report(projects, threshold, cross_project=None, jscpd_version=None,
-                   badge_path=None, repo_url=None, branch=None, file_lines=None):
+                   badge_path=None, repo_url=None, branch=None):
     """Render the full Markdown report."""
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     version_str = jscpd_version or "unknown"
@@ -506,7 +526,7 @@ def render_report(projects, threshold, cross_project=None, jscpd_version=None,
         return "\n".join(parts)
 
     # Overview table
-    parts.append(render_overview_table(all_dups, file_lines or {}))
+    parts.append(render_overview_table(all_dups))
     parts.append("")
 
     # Per-project cluster details
@@ -526,8 +546,7 @@ def render_report(projects, threshold, cross_project=None, jscpd_version=None,
 
         for dup in duplicates:
             parts.append(render_cluster(global_idx, dup,
-                                        repo_url=repo_url, branch=branch,
-                                        file_lines=file_lines))
+                                        repo_url=repo_url, branch=branch))
             global_idx += 1
 
     # Cross-project section
@@ -542,8 +561,7 @@ def render_report(projects, threshold, cross_project=None, jscpd_version=None,
             for i, dup in enumerate(cross_dups, 1):
                 parts.append(render_cluster(global_idx, dup,
                                             prefix="Cross-project ",
-                                            repo_url=repo_url, branch=branch,
-                                            file_lines=file_lines))
+                                            repo_url=repo_url, branch=branch))
                 global_idx += 1
 
     return "\n".join(parts)
@@ -595,43 +613,34 @@ def main():
     )
     parser.add_argument(
         "--scan-path",
-        default=".",
-        help="Path that was scanned (used for git auto-detection, default: .)",
+        action="append",
+        default=None,
+        help="Path a report scanned; give it once per report, in the same "
+             "order (file names in jscpd 5.x reports are relative to it). The "
+             "first is also used for git auto-detection (default: .)",
     )
     args = parser.parse_args()
 
     # Auto-detect repo URL and branch if not provided
+    scan_paths = args.scan_path or ["."]
     repo_url = args.repo_url
     branch = args.branch
     if not repo_url or not branch:
-        auto_url, auto_branch = detect_git_info(args.scan_path)
+        auto_url, auto_branch = detect_git_info(scan_paths[0])
         if not repo_url:
             repo_url = auto_url
         if not branch:
             branch = auto_branch
 
     projects = []
-    file_lines = {}
-    all_duplicates = []
-    for rpath in args.reports:
+    for i, rpath in enumerate(args.reports):
         data = load_report(rpath)
-        name = guess_project_name(rpath)
-        file_lines.update(build_file_lines_map(data))
-        dups = data.get("duplicates", [])
-        all_duplicates.extend(dups)
+        annotate_file_lines(data, scan_paths[i] if i < len(scan_paths) else None)
         projects.append({
-            "name": name,
+            "name": guess_project_name(rpath),
             "stats": data.get("statistics", {}).get("total", {}),
-            "duplicates": dups,
+            "duplicates": data.get("duplicates", []),
         })
-
-    # Fill in any files jscpd's JSON didn't give us a line count for (see
-    # build_file_lines_map) by reading them from disk instead.
-    for dup in all_duplicates:
-        for key in ("firstFile", "secondFile"):
-            fname = dup.get(key, {}).get("name")
-            if fname and fname not in file_lines:
-                file_lines[fname] = count_file_lines(fname, args.scan_path)
 
     cross_project_data = None
     if args.cross_project:
@@ -645,7 +654,6 @@ def main():
         badge_path=args.badge_path,
         repo_url=repo_url,
         branch=branch,
-        file_lines=file_lines,
     )
 
     if args.output:
