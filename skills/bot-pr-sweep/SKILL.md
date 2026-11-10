@@ -313,7 +313,7 @@ version check (`version-check`, `bump-version` and the like):
   links the check, and the PR merges on the run after a person bumps the
   version (a patch for a dependency-only change).
 - **Derive the version at release time.** With a release tool that reads the
-  bump from labels (intuit/auto, for example, which the `introduce-intuit-auto`
+  bump from labels (intuit/auto, for example, which the `setup-intuit-auto`
   skill sets up), let Dependabot apply a `patch` label through `labels:` in
   `dependabot.yml` and run the sweep with `--require-label patch`. An
   unlabeled PR waits for a person, and a major upgrade you relabel `minor` is
