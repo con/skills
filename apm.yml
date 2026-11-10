@@ -1,0 +1,6 @@
+name: con-skills
+version: "0.1.0"
+description: Reusable skills for software project maintenance and automation.
+type: skill
+includes:
+  - skills

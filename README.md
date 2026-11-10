@@ -1,75 +1,63 @@
 # CON Skills
 
-A collection of [Claude Code Agent Skills](https://agentskills.io/) for
-software project maintenance, triage, and automation.
+A collection of [Claude Code Agent Skills](https://agentskills.io/) for software project maintenance, triage, and automation.
 
 ## Included Skills
 
 | Skill | Description |
 |-------|-------------|
-| [github-project-status](github-project-status/) | Assess whether a GitHub project is healthy, in maintenance mode, stagnant, or abandoned. Checks commits, releases, issues, PRs, forks, and package registries to produce a structured status report. |
-| [introduce-codespell](introduce-codespell/) | Add [codespell](https://github.com/codespell-project/codespell) spell-checking to a project end-to-end: config, GitHub Actions workflow, pre-commit hook, exclusion tuning, ambiguous-typo review, and automated fixes via `datalad run`. |
-| [introduce-git-bug](introduce-git-bug/) | Set up [git-bug](https://github.com/git-bug/git-bug) distributed issue tracking: configure GitHub bridge, sync issues, push `refs/bugs/*`, and document the workflow in DEVELOPMENT.md / CLAUDE.md. |
-| [introduce-reuse-compliance](introduce-reuse-compliance/) | Introduce [REUSE](https://reuse.software/) licensing compliance to a project: `LICENSES/`, `REUSE.toml`, SPDX headers, and integration with tox / pre-commit / Makefile / GitHub Actions. Handles BIDS dataset data-vs-code separation, [DUO](https://github.com/EBISPOT/DUO) data-use ontology codes, and DEP-3 patch tagging for vendoring repos. |
-| [issue-triage](issue-triage/) | Triage open GitHub issues by cross-referencing the codebase and git history. Detects duplicates, drafts proposed comments, and serves results in a local web dashboard. Includes Python helper scripts for gathering and serving data. |
-| [pr-feedback-review](pr-feedback-review/) | Load a PR's review feedback (human + bot), classify each comment by type and actionability, and recommend what to address vs dismiss — with draft code changes and responses. Works from a local repo or a PR URL. |
-| [pr-review-update](pr-review-update/) | Scan an [improveit-dashboard](https://github.com/yarikoptic/improveit-dashboard) for PRs awaiting your response, assess confidence, auto-rebase codespell PRs, and produce copy-paste-ready push commands. |
-| [scan-projects](scan-projects/) | Walk subdirectories of git repos, collect metadata (language, license, commit dates, remote URL), and generate concise LLM-produced summaries into a `projects.tsv` file. Ships with helper scripts for batch updates. |
-| [setup-chromatic](setup-chromatic/) | Set up [Chromatic](https://www.chromatic.com) visual regression testing for a web app with two feeds: Storybook stories (component states) and Playwright snapshots (whole-page states, several viewports). Covers configs, two GitHub Actions workflows, two Chromatic projects, and the README section explaining them. |
-| [setup-duplicates-analysis](setup-duplicates-analysis/) | Make [jscpd](https://github.com/kucherenko/jscpd) code/text duplication checking part of a project's workflow: `.jscpd.json`, tox env / pixi task / Makefile target / npm script, CI wiring, then refactor duplicates and tighten the threshold until clean. A report-only mode (formerly `analyze-duplicates`) produces a Markdown report with collapsible `<details>` sections (suitable for GitHub/Gitea issues) and a mediation plan. |
-| [tinuous-analyzer](tinuous-analyzer/) | Analyze CI log collections gathered by [con/tinuous](https://github.com/con/tinuous/) to pinpoint when a test started failing, diff environment/dependency changes between passing and failing runs, and recommend investigation steps. |
+| [analyze-duplicates](skills/analyze-duplicates/) | Detect code and documentation duplication using jscpd, generate a Markdown report with collapsible `<details>` sections (suitable for GitHub/Gitea issues), and propose a mediation plan with refactoring strategies. |
+| [author-apm-skills](skills/author-apm-skills/) | Create and maintain portable skills for APM distribution. |
+| [bot-pr-sweep](skills/bot-pr-sweep/) | Sweep repositories for open `dependabot[bot]` and `pre-commit-ci[bot]` pull requests, verify authors by account ID, gate on complete and passing CI with a tested stdlib script, squash-merge the green ones guarded by the head SHA, assign the maintainer, and report the rest. |
+| [code-quality-report-conventions](skills/code-quality-report-conventions/) | Shared report conventions read by the `review-*` skills (report location, provenance stamp, evidence rules, security-sensitive findings, re-review, confidence/status labels). Not invoked directly; install alongside them. |
+| [github-project-status](skills/github-project-status/) | Assess whether a GitHub project is healthy, in maintenance mode, stagnant, or abandoned. Checks commits, releases, issues, PRs, forks, and package registries to produce a structured status report. |
+| [install-apm-skills](skills/install-apm-skills/) | Install and update pinned reusable skills with metadata-only consumer setup. |
+| [introduce-codespell](skills/introduce-codespell/) | Add [codespell](https://github.com/codespell-project/codespell) spell-checking to a project end-to-end: config, GitHub Actions workflow, pre-commit hook, exclusion tuning, ambiguous-typo review, and automated fixes via `datalad run`. |
+| [introduce-git-bug](skills/introduce-git-bug/) | Set up [git-bug](https://github.com/git-bug/git-bug) distributed issue tracking: configure GitHub bridge, sync issues, push `refs/bugs/*`, and document the workflow in DEVELOPMENT.md / CLAUDE.md. |
+| [introduce-reuse-compliance](skills/introduce-reuse-compliance/) | Introduce [REUSE](https://reuse.software/) licensing compliance to a project: `LICENSES/`, `REUSE.toml`, SPDX headers, and integration with tox / pre-commit / Makefile / GitHub Actions. Handles BIDS dataset data-vs-code separation, [DUO](https://github.com/EBISPOT/DUO) data-use ontology codes, and DEP-3 patch tagging for vendoring repos. |
+| [issue-triage](skills/issue-triage/) | Triage open GitHub issues by cross-referencing the codebase and git history. Detects duplicates, drafts proposed comments, and serves results in a local web dashboard. Includes Python helper scripts for gathering and serving data. |
+| [pr-feedback-review](skills/pr-feedback-review/) | Load a PR's review feedback (human + bot), classify each comment by type and actionability, and recommend what to address vs dismiss — with draft code changes and responses. Works from a local repo or a PR URL. |
+| [pr-review-update](skills/pr-review-update/) | Scan an [improveit-dashboard](https://github.com/yarikoptic/improveit-dashboard) for PRs awaiting your response, assess confidence, auto-rebase codespell PRs, and produce copy-paste-ready push commands. |
+| [review-human-prose](skills/review-human-prose/) | Revise prose that is difficult to follow or needs a requested clarity review; make actors, actions, and connections explicit while preserving meaning. |
+| [review-org-code-quality](skills/review-org-code-quality/) | Audit code health of an organization-wide ecosystem of similarly styled, interconnected data/ML/ETL pipelines: reference pattern, dependency graph, read-only per-repo 0–3 matrix, depth reviews of the critical repos via `review-repo-code-quality`, systemic findings, and a prioritized action plan. Writes a dated, version-stamped report to `docs/code-reviews/` in a location the user names. |
+| [review-repo-code-quality](skills/review-repo-code-quality/) | Functionality-preserving code-quality review of a single repository: dead code, duplication, consolidation, cleanup, and needs-verification items, each with location, proposed change, safety confidence, and a verification command. Writes a dated, version-stamped report to `docs/code-reviews/`. |
+| [scan-projects](skills/scan-projects/) | Walk subdirectories of git repos, collect metadata (language, license, commit dates, remote URL), and generate concise LLM-produced summaries into a `projects.tsv` file. Ships with helper scripts for batch updates. |
+| [setup-chromatic](skills/setup-chromatic/) | Set up [Chromatic](https://www.chromatic.com) visual regression testing for a web app with two feeds: Storybook stories (component states) and Playwright snapshots (whole-page states, several viewports). Covers configs, two GitHub Actions workflows, two Chromatic projects, and the README section explaining them. |
+| [setup-duplicates-analysis](skills/setup-duplicates-analysis/) | Make [jscpd](https://github.com/kucherenko/jscpd) code/text duplication checking part of a project's workflow: `.jscpd.json`, a pre-commit hook or tox env / pixi task / Makefile target / npm script, CI wiring, then refactor duplicates (using `analyze-duplicates` reports) and tighten the threshold until clean. |
+| [suggest-skill-fixes](skills/suggest-skill-fixes/) | Shared, optional procedure that other skills read at the end of a run: when the run showed the skill falling short, report suggested fixes to it, and in an attended run of a skill installed from `con/skills`, ask before preparing a pull request there. Not invoked directly; install alongside the skills that use it. |
+| [tinuous-analyzer](skills/tinuous-analyzer/) | Analyze CI log collections gathered by [con/tinuous](https://github.com/con/tinuous/) to pinpoint when a test started failing, diff environment/dependency changes between passing and failing runs, and recommend investigation steps. |
 
-## Installation
+## Getting started
 
-Copy or symlink the desired skill directories into `~/.claude/skills/`, or
-point your Claude Code configuration to this repository.
+Install [install-apm-skills](skills/install-apm-skills/SKILL.md) once at user scope so your agent can use it across projects.
+With APM installed:
 
-## Configuration
+```console
+apm install --global con/skills --skill install-apm-skills --target agent-skills
+```
 
-Some skills require user-specific configuration. Following the
-[Agent Skills specification](https://agentskills.io/specification),
-configuration is handled via documented variables in each skill's
-`SKILL.md` rather than environment variables or config files — the
-Claude agent reads these values and substitutes them at runtime.
+This installs the installer skill in `~/.agents/skills/`.
+Reload your agent if needed, then ask it:
 
-### pr-review-update
+> Use install-apm-skills to install tinuous-analyzer from con/skills into this project.
 
-This skill has a `## Configuration` section at the top of its `SKILL.md`
-with the following variables:
+Or install at project scope from the project directory: `apm install con/skills --skill tinuous-analyzer --target agent-skills`.
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `DASHBOARD_DIR` | `~/proj/improveit-dashboard` | Path to improveit-dashboard checkout |
-| `REPOS_DIR` | `~/proj/misc` | Directory where PR repos are cloned |
-| `GITHUB_USER` | `yarikoptic` | Your GitHub username |
-| `FORK_REMOTE` | `gh-yarikoptic` | Git remote name for your fork |
+The installer uses APM to select and install skills, record their commit and content hashes, ignore downloaded skill directories, and verify restoration.
+Projects track `apm.yml`, `apm.lock.yaml`, and setup instructions—not the installed skills themselves.
+It also supports other APM-compatible sources and user-level installations.
+For configuration options, see each skill’s `SKILL.md` (for example, [pr-review-update](skills/pr-review-update/SKILL.md#configuration) and [pr-feedback-review](skills/pr-feedback-review/SKILL.md#configuration)); supply values in your request rather than editing installed copies.
 
-Edit the defaults in `pr-review-update/SKILL.md` to match your setup.
+## Development
 
-### pr-feedback-review
-
-This skill has a `## Configuration` section at the top of its `SKILL.md`
-with the following variables:
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `SCAN_DIRS` | `~/proj` | Comma-separated parent directories to scan for git repos |
-| `GITHUB_USER` | `yarikoptic` | Your GitHub username |
-| `MAX_SCAN_DEPTH` | `3` | How deep to recurse when scanning for repos |
-
-Edit the defaults in `pr-feedback-review/SKILL.md` to match your setup.
-
-### Other skills
-
-The remaining skills use runtime discovery (e.g., `git remote -v`,
-`gh auth status`) and do not require pre-configuration.
+Skill sources live in `skills/`.
+See [author-apm-skills](skills/author-apm-skills/SKILL.md) for authoring and validation guidance.
+Run `tox -e validate,apm,security-static,security-deps` before submitting changes (environment requirements are in `tox.ini`).
+CI checks skill structure, package restoration, and security; passing checks do not guarantee safety.
 
 ## Repo-wide conventions
 
-See [`AGENTS.md`](AGENTS.md) (alias `CLAUDE.md`) for cross-cutting rules
-that apply to every skill in this collection — most notably the rule
-that any skill preparing a pull request must respect the upstream
-project's `PULL_REQUEST_TEMPLATE.md` and `CONTRIBUTING.md`.
+See [`AGENTS.md`](AGENTS.md) (alias `CLAUDE.md`) for cross-cutting rules that apply to every skill in this collection — most notably the rule that any skill preparing a pull request must respect the upstream project's `PULL_REQUEST_TEMPLATE.md` and `CONTRIBUTING.md`.
 
 ## License
 
