@@ -444,8 +444,8 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
     # Is the head itself GitHub's Update branch merge? The same test the commit loop applies.
     tip = commits[-1] if commits else {}
     tip_parents = [_str(_dict(parent).get("sha")) for parent in _list(tip.get("parents"))]
-    head_is_update = (len(commits) > 1 and len(tip_parents) == 2
-                      and not merge_commit_problems(tip, tip_parents, _str(commits[-2].get("sha")), True))
+    head_is_update = len(commits) > 1 and not merge_commit_problems(tip, tip_parents,
+                                                                    _str(commits[-2].get("sha")), True)
 
     # Check runs: complete list, every one bound to the head and finished, none failed.
     passed: list[str] = []

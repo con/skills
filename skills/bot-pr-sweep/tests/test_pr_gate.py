@@ -520,7 +520,7 @@ class CommitTests(unittest.TestCase):
                 self.assertTrue(any(text in reason for reason in decision["reasons"]), decision["reasons"])
 
     def test_update_merge_needs_a_previous_commit(self):
-        # Missing SHAs must not let an empty "previous" match empty parents.
+        # Missing SHAs must not let an empty "previous" match empty parent SHAs.
         merge = update_merge(parents=["", ""])
         decision = self.updated(merge, pr=pull(commits=1, head={"sha": MERGE_SHA, "ref": "x",
                                                                   "repo": {"full_name": REPO}}), commits=[merge])

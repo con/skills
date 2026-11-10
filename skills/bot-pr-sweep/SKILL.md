@@ -63,7 +63,8 @@ that name. The rules above are what the sweep follows.
   (repeatable, case-insensitive), `--strict` (refuse `skipped` and `neutral`
   conclusions, which are otherwise tolerated the way GitHub tolerates them for
   required checks), `--allow-branch-update` (let the sweep press GitHub's
-  "Update branch" on PRs whose only problem is being behind),
+  "Update branch" on PRs whose only problem is being behind or having no CI
+  result on the head; step 4),
   `--allow-approve` (let the sweep approve, in the name of the account running
   it, a PR whose CI is green on the head commit when branch protection is all
   that holds it back, so a required review does not block it; step 5),
@@ -265,13 +266,14 @@ bot's previous head, committed by `web-flow`, signature verified) before
 merging.
 
 When the update fails, record the outcome from GitHub's error text. If it
-says there are no new commits on the base branch (match loosely on `no new
-commits`), the branch was not behind and only CI was missing: record
-`--result update-skipped --detail "<error text>"`, and the report keeps the
-hint on how to make the bot run its own check, such as commenting
-`pre-commit.ci run`. Any other error, including an unrecognised 422 (one
-usually means the head moved), is `--result update-failed --detail "<error
-text>"`.
+says there are no new commits on the base branch (match `no new commits`
+loosely and case-insensitively), the branch was not behind and only CI was
+missing: record `--result update-skipped --detail "<error text>"`. The report
+keeps that PR under Blocked with the hint on how to make the bot run its own
+check, such as commenting `pre-commit.ci run`. Any other error, including an
+unrecognised 422 (one usually means the head moved), is `--result
+update-failed --detail "<error text>"`, which the report lists under Needs
+attention.
 
 The gate sets `"update_branch"` when being behind is all that stops the PR,
 or when no CI reported on the head at all: a bot's CI run can be dropped, and
@@ -283,11 +285,11 @@ did not report, the gate leaves the PR for a person, with a hint. A skipped
 update leaves the head as it was, so each run tries it again until CI
 reports or the base moves.
 
-Dependabot treats an updated
-branch as edited and stops rebasing it on its own; `@dependabot rebase` still
-works and replaces the merge commit, which is fine. Repositories that use
-this option usually also set Dependabot's `rebase-strategy: "disabled"` so it
-does not force-push over the refreshed branch between runs.
+Dependabot treats an updated branch as edited and stops rebasing it on its
+own; `@dependabot rebase` still works and replaces the merge commit, which is
+fine. Repositories that use this option usually also set Dependabot's
+`rebase-strategy: "disabled"` so it does not force-push over the refreshed
+branch between runs.
 
 ### 5. Approve (only with `--allow-approve`) and squash-merge the green PRs
 
