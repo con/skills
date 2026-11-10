@@ -60,7 +60,7 @@ MERGEABLE_OK = frozenset({"clean", "has_hooks"})
 STRIPPED_LABELS = frozenset({"major"})
 RESULTS = frozenset({
     "merged", "merge-failed", "assigned", "assign-failed", "dry-run", "repo-error",
-    "branch-updated", "update-failed", "label-removed", "label-failed",
+    "branch-updated", "update-failed", "update-skipped", "label-removed", "label-failed",
     "approved", "approve-failed", "approve-skipped",
 })
 # Review states that set a reviewer's standing. COMMENTED and PENDING do not,
@@ -441,10 +441,11 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
                 pending(f"head commit is {minutes} min old; waiting {int(settle.total_seconds() // 60)} min "
                         "for CI to register every check")
 
-    # GitHub's own Update branch merge at the head: two parents, committed by web-flow.
-    head = commits[-1] if commits else {}
-    head_is_update = (len(_list(head.get("parents"))) == 2
-                      and _int(_dict(head.get("committer")).get("id")) == WEB_FLOW_ID)
+    # Is the head itself GitHub's Update branch merge? The same test the commit loop applies.
+    tip = commits[-1] if commits else {}
+    tip_parents = [_str(_dict(parent).get("sha")) for parent in _list(tip.get("parents"))]
+    tip_previous = _str(commits[-2].get("sha")) if len(commits) > 1 else ""
+    head_is_update = len(tip_parents) == 2 and not merge_commit_problems(tip, tip_parents, tip_previous, True)
 
     # Check runs: complete list, every one bound to the head and finished, none failed.
     passed: list[str] = []
@@ -525,11 +526,13 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
 
     if ci_known and not passed and not unfinished:
         blocked("no check run or status finished with success for the head commit; unverified PRs are never merged")
-        # Nothing reported at all, as opposed to every check failing.
+        # Nothing reported at all, as opposed to every check failing or being skipped.
         no_ci = not (failed or tolerated)
-        if no_ci:
+        if no_ci and head_is_update:
             hints.append("CI did not report even on GitHub's Update branch merge; check that a workflow or app "
-                         "covers this change" if head_is_update else rerun_hint)
+                         "covers this change")
+        elif no_ci:
+            hints.append(rerun_hint)
     for required in require_checks:
         wanted = sanitize(required, 60)
         if ci_known and wanted not in passed and wanted not in failed and wanted not in unfinished:
@@ -551,10 +554,8 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
         "checks": {"passed": passed, "tolerated": tolerated, "failed": failed, "unfinished": unfinished},
         # Labels the sweep offers to remove (step 3); never on a PR it must not touch.
         "strip_labels": strip_labels if verdict != REJECTED else [],
-        # True when being behind the base is the only problem and the sweep may fix it.
-        # True when being behind the base, or no CI on the head, is all that stops the PR (besides
-        # branch protection) and the sweep may fix it: Update branch gives CI a new commit to run on,
-        # once, since a head that is already that merge commit is not updated again for missing CI.
+        # True when being behind, or no CI on a head that is not already an Update branch merge, is all
+        # that stops the PR besides branch protection (SKILL.md step 4).
         "update_branch": bool(allow_branch_update and (behind or (no_ci and not head_is_update))
                               and verdict == BLOCKED and not reasons[PENDING]
                               and len(reasons[BLOCKED]) == int(behind) + int(no_ci) + int(protected)),
@@ -650,6 +651,8 @@ def render_report(events: list, *, version: str, now: datetime, dry_run: bool = 
             notes.append("would merge (dry run)")
         if "branch-updated" in results:
             notes.append("branch updated from the base; the next run re-evaluates it")
+        if "update-skipped" in results:
+            notes.append(f"branch not updated: {sanitize(results['update-skipped'], 160)}")
         if "label-removed" in results:
             notes.append(f"label `{sanitize(results['label-removed'], 40)}` removed")
         for result, label in (("approve-failed", "approval failed"), ("merge-failed", "merge failed"),
@@ -659,7 +662,8 @@ def render_report(events: list, *, version: str, now: datetime, dry_run: bool = 
                 notes.append(f"{label}: {sanitize(results[result], 160)}")
         if "assigned" in results:
             notes.append(f"assigned to {_user_link(results['assigned'])}")
-        if verdict != MERGE:
+        # A hint about what a person could do is moot once the sweep updated the branch itself.
+        if verdict != MERGE and "branch-updated" not in results:
             notes.extend(decision.get("hints", []))
         failures = {"approve-failed", "merge-failed", "assign-failed", "update-failed", "label-failed"} & results.keys()
         if verdict == MERGE and "merged" in results:

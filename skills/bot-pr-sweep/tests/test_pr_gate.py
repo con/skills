@@ -705,7 +705,9 @@ class ApproveTests(unittest.TestCase):
 
 
 class NoCiTests(unittest.TestCase):
-    """A bot PR on whose head no CI reported at all: refresh it once, otherwise hint."""
+    """A bot PR on whose head no CI reported at all: refresh it once per head, otherwise hint."""
+
+    NO_CI = "no check run or status finished with success"
 
     def pre_commit(self, **overrides):
         fields = dict(pr=pull(user=user("pre-commit-ci[bot]", PRE_COMMIT_CI), mergeable_state="blocked"),
@@ -713,10 +715,21 @@ class NoCiTests(unittest.TestCase):
         fields.update(overrides)
         return evaluate(**fields)
 
+    def update_merge_head(self, **overrides):
+        fields = dict(pr=pull(mergeable_state="blocked", commits=2,
+                              head={"sha": MERGE_SHA, "repo": {"full_name": REPO}}),
+                      commits=[commit(), update_merge()], check_pages=[runs()], status=status(sha=MERGE_SHA),
+                      expected_head=MERGE_SHA)
+        fields.update(overrides)
+        return evaluate(**fields)
+
     def test_branch_update_gives_ci_a_new_commit(self):
-        decision = self.pre_commit(allow_branch_update=True)
-        self.assertEqual(decision["verdict"], "blocked")
-        self.assertTrue(decision["update_branch"])
+        for name, decision in (("pre-commit.ci", self.pre_commit(allow_branch_update=True)),
+                               ("Dependabot", evaluate(pr=pull(mergeable_state="blocked"), check_pages=[runs()],
+                                                       status=status(), allow_branch_update=True))):
+            with self.subTest(name):
+                self.assertEqual(decision["verdict"], "blocked")
+                self.assertTrue(decision["update_branch"])
         self.assertFalse(self.pre_commit()["update_branch"])
 
     def test_bots_get_their_own_rerun_hint(self):
@@ -724,31 +737,64 @@ class NoCiTests(unittest.TestCase):
         dependabot = evaluate(pr=pull(mergeable_state="blocked"), check_pages=[runs()], status=status())
         self.assertTrue(any("@dependabot rebase" in hint for hint in dependabot["hints"]))
 
-    def test_not_again_once_the_head_is_an_update_merge(self):
-        decision = evaluate(pr=pull(mergeable_state="blocked", commits=2, head={"sha": MERGE_SHA, "repo": {"full_name": REPO}}),
-                            commits=[commit(), update_merge()], check_pages=[runs()], status=status(sha=MERGE_SHA),
-                            expected_head=MERGE_SHA, allow_branch_update=True)
-        self.assertEqual(decision["verdict"], "blocked")
-        self.assertFalse(decision["update_branch"])
-        self.assertTrue(any("even on GitHub's Update branch merge" in hint for hint in decision["hints"]))
+    def test_once_per_head(self):
+        for allow in (True, False):
+            with self.subTest(allow_branch_update=allow):
+                decision = self.update_merge_head(allow_branch_update=allow)
+                self.assertEqual(decision["verdict"], "blocked")
+                self.assertFalse(decision["update_branch"])
+                self.assertTrue(any("even on GitHub's Update branch merge" in hint for hint in decision["hints"]))
 
-    def test_failed_checks_and_other_problems_are_not_refreshed(self):
+    def test_failed_checks_are_not_refreshed_and_get_no_rerun_hint(self):
+        decision = self.pre_commit(allow_branch_update=True, check_pages=[runs(run(conclusion="failure"))])
+        self.assertFalse(decision["update_branch"])
+        self.assertFalse(any("pre-commit.ci run" in hint for hint in decision["hints"]))
+
+    def test_skipped_only_checks_are_not_no_ci(self):
+        decision = self.pre_commit(allow_branch_update=True, check_pages=[runs(run(conclusion="skipped"))])
+        self.assertIn(self.NO_CI, " ".join(decision["reasons"]))
+        self.assertFalse(decision["update_branch"])
+
+    def test_other_problems_are_not_refreshed(self):
         cases = {
-            "every check failed": dict(check_pages=[runs(run(conclusion="failure"))]),
-            "a missing label too": dict(require_labels=("internal",)),
+            "a missing label": dict(require_labels=("internal",)),
+            "a missing required check": dict(require_checks=("lint",)),
         }
         for name, overrides in cases.items():
             with self.subTest(name):
-                decision = self.pre_commit(allow_branch_update=True, **overrides)
-                self.assertFalse(decision["update_branch"])
-                if name == "every check failed":
-                    self.assertFalse(any("pre-commit.ci run" in hint for hint in decision["hints"]))
+                self.assertFalse(self.pre_commit(allow_branch_update=True, **overrides)["update_branch"])
+
+    def test_no_approval_without_ci(self):
+        decision = self.pre_commit(allow_branch_update=True, allow_approve=True, reviews=[])
+        self.assertFalse(decision["approve"])
+        self.assertTrue(decision["update_branch"])
 
     def test_behind_and_without_ci(self):
         decision = self.pre_commit(pr=pull(user=user("pre-commit-ci[bot]", PRE_COMMIT_CI), mergeable_state="behind"),
                                    allow_branch_update=True)
+        reasons = " | ".join(decision["reasons"])
+        self.assertIn("branch is behind `main`", reasons)
+        self.assertIn(self.NO_CI, reasons)
         self.assertEqual(len(decision["reasons"]), 2)
         self.assertTrue(decision["update_branch"])
+
+    def test_report_after_an_update_and_after_a_skip(self):
+        updated = self.pre_commit(allow_branch_update=True)
+        skipped = self.pre_commit(pr=pull(number=8, user=user("pre-commit-ci[bot]", PRE_COMMIT_CI),
+                                          mergeable_state="blocked"), allow_branch_update=True)
+        text = gate.render_report([updated, skipped,
+                                   {"event": "outcome", "repo": REPO, "number": 7, "result": "branch-updated",
+                                    "detail": "main"},
+                                   {"event": "outcome", "repo": REPO, "number": 8, "result": "update-skipped",
+                                    "detail": "HTTP 422: There are no new commits on the base branch."}],
+                                  version="0.4.0", now=NOW)
+        updated_line = next(line for line in text.splitlines() if "/pull/7)" in line)
+        skipped_line = next(line for line in text.splitlines() if "/pull/8)" in line)
+        self.assertIn("branch updated from the base", updated_line)
+        self.assertNotIn("pre-commit.ci run", updated_line)
+        self.assertIn("branch not updated: HTTP 422", skipped_line)
+        self.assertIn("pre-commit.ci run", skipped_line)
+        self.assertIn("## Needs attention (0)", text)
 
 
 class ReportTests(unittest.TestCase):

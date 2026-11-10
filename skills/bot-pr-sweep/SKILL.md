@@ -200,7 +200,7 @@ verdict `merge`:
 |---|---|---|
 | `merge` | Trusted author, every commit by that same bot (or GitHub's "Update branch"), PR open and mergeable, complete check list with every check run completed and none failed, at least one success, every status `success`, head commit older than the settle time. | Assign, then squash-merge (steps 3 and 5). |
 | `pending` | Something is unfinished or not yet knowable: checks still running, mergeability not computed, head commit younger than the settle time, a truncated or malformed payload, payloads describing another commit, the head moved since listing. | Assign and report; the next run looks again. If a reason says a payload was incomplete, save that payload once more and evaluate the PR again before moving on. |
-| `blocked` | Needs a person: a failed check, no CI results at all, conflicts, behind the base, branch protection, draft, a missing or forbidden label, a `major` label, a commit not by the pull request's author, a head branch outside the repository. | Assign and report, with the failing check's link and any hint. A decision with `"strip_labels"` raises the step 3 question. With `--allow-branch-update`, a decision whose only problems are being behind or no CI on the head (besides branch protection) carries `"update_branch": true` and goes to step 4. With `--allow-approve`, `"approve": true` sends it to step 5, and a reviewer's requested changes also block. |
+| `blocked` | Needs a person: a failed check, no CI results at all, conflicts, behind the base, branch protection, draft, a missing or forbidden label, a `major` label, a commit not by the pull request's author, a head branch outside the repository. | Assign and report, with the failing check's link and any hint. A decision with `"strip_labels"` raises the step 3 question. With `--allow-branch-update`, a decision whose only problems are being behind or no CI on the head, with branch protection allowed alongside, carries `"update_branch": true` and goes to step 4. With `--allow-approve`, `"approve": true` sends it to step 5, and a reviewer's requested changes also block. |
 | `rejected` | The author is not a trusted bot by account ID. | Report only; never assign, merge or comment. |
 
 Exit status 1 is the normal result for every verdict other than `merge`, not
@@ -260,14 +260,17 @@ python3 SKILL_DIR/scripts/pr_gate.py outcome --repo OWNER/REPO --ledger WORK/led
 The gate sets `"update_branch"` when being behind is all that stops the PR,
 or when no CI reported on the head at all: a bot's CI run can be dropped, and
 a path-filtered workflow skips a config-only change, so the merge gives CI a
-new commit to run on. It does that once. When the head is already GitHub's
-Update branch merge and CI still did not report, the PR is left for a person,
-with a hint.
+new commit to run on. A head whose checks all failed or were all skipped does
+not count as having no CI. For missing CI this happens once per head: when the
+head is already GitHub's Update branch merge and CI still did not report, the
+gate leaves the PR for a person, with a hint.
 
 Record `--result update-failed --detail "<error text>"` when it fails (a 422
-means the head moved or the branch is not behind; for a PR without CI, the
-hint says how to make the bot run its own check, such as commenting
-`pre-commit.ci run`). Do this at most once
+usually means the head moved). When GitHub answers that the base has no new
+commits, the branch was not behind and only CI was missing, so record
+`--result update-skipped --detail "<error text>"` instead; the report keeps
+the hint on how to make the bot run its own check, such as commenting
+`pre-commit.ci run`. Do this at most once
 per PR per run, and do not merge the PR in the same run: GitHub adds one merge
 commit authored by the account running the sweep and committed and signed by
 GitHub, CI runs on the new head, and the next run's gate accepts exactly that
