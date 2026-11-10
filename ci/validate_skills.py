@@ -10,13 +10,16 @@ Checks performed
 Every SKILL.md:
   E001  Frontmatter present and valid YAML (between opening/closing ``---`` lines)
   E002  Required field ``description`` present and non-empty
-  W001  Recommended field ``name`` missing
+  E007  Frontmatter ``name`` must equal the containing directory name
+  E008  Root-level skills must move into the published ``skills/`` collection
   W002  Recommended field ``allowed-tools`` missing
   W003  File exceeds 600 lines (readability concern)
   E003  Hardcoded absolute path referencing a real user home dir
         (pattern ``/home/<word>/`` or ``/Users/<Word>/``; tilde paths are fine)
   E004  Hardcoded secret-like assignment outside a code-block fence
         (pattern ``KEY = "..."``, ``token = '...'``, etc.)
+  E009  ``SKILL_DIR/<path>`` must name a file bundled with the skill, and a
+        skill using it must define ``SKILL_DIR`` with the shared sentence
 
 Every *.py bundled alongside a SKILL.md:
   E005  Python syntax error (py_compile)
@@ -30,7 +33,7 @@ Usage:
     python3 ci/validate_skills.py [<skill-dir> ...]
 
     If no directories are given, scans every immediate subdirectory of the
-    repo root that contains a SKILL.md.
+    `skills/` directory that contains a SKILL.md.
 """
 
 from __future__ import annotations
@@ -41,6 +44,8 @@ import re
 import sys
 import tempfile
 from pathlib import Path
+
+from skill_common import find_skill_dirs
 
 try:
     import yaml
@@ -61,6 +66,10 @@ _ABS_HOME = re.compile(r'/(?:home/[a-z][a-zA-Z0-9_.-]+|Users/[A-Z][a-zA-Z0-9_.-]
 _SECRET_ASSIGN = re.compile(
     r'(?i)\b(?:api_key|secret|token|password|passwd|credential|auth_key)\s*=\s*["\'][^"\']{6,}["\']'
 )
+
+# Bundled-file references, resolved against the loaded skill's own directory
+_SKILL_DIR_REF = re.compile(r'\bSKILL_DIR/([\w./-]*\w)')
+SKILL_DIR_DEFINITION = '`SKILL_DIR` is the absolute path of the directory holding this SKILL.md'
 
 # subprocess(..., shell=True) where the first arg is not a plain string literal
 _SHELL_TRUE = re.compile(r'shell\s*=\s*True')
@@ -122,7 +131,7 @@ def check_skill_md(skill_md: Path, result: Result) -> None:
 
     # E001 — frontmatter
     fm, body = _parse_frontmatter(text)
-    if fm is None:
+    if not isinstance(fm, dict):
         result.error("E001", skill_md, "missing or unparseable YAML frontmatter")
         return  # remaining checks need the frontmatter
 
@@ -131,9 +140,9 @@ def check_skill_md(skill_md: Path, result: Result) -> None:
     if not desc or not str(desc).strip():
         result.error("E002", skill_md, "frontmatter missing required field 'description'")
 
-    # W001 — name
-    if not fm.get("name"):
-        result.warn("W001", skill_md, "frontmatter missing recommended field 'name'")
+    # E007 — published skill identity must match its directory
+    if fm.get("name") != skill_md.parent.name:
+        result.error("E007", skill_md, "frontmatter name must equal directory name")
 
     # W002 — allowed-tools
     if not fm.get("allowed-tools"):
@@ -152,6 +161,17 @@ def check_skill_md(skill_md: Path, result: Result) -> None:
     for i, line in enumerate(lines):
         if not _in_code_fence(lines, i) and _SECRET_ASSIGN.search(line):
             result.error("E004", skill_md, f"possible hardcoded secret: {line.strip()!r}", i + 1)
+
+    # E009 — SKILL_DIR references
+    refs = [(i, m.group(1)) for i, line in enumerate(lines, 1)
+            for m in _SKILL_DIR_REF.finditer(line)]
+    if refs and SKILL_DIR_DEFINITION not in text:
+        result.error("E009", skill_md, "uses SKILL_DIR without the shared definition sentence")
+    root = skill_md.parent.resolve()
+    for i, ref in refs:
+        target = (root / ref).resolve()
+        if not (target.is_file() and target.is_relative_to(root)):
+            result.error("E009", skill_md, f"SKILL_DIR/{ref} is not a file bundled with this skill", i)
 
 
 def check_python_file(py_path: Path, result: Result) -> None:
@@ -209,11 +229,6 @@ def check_python_file(py_path: Path, result: Result) -> None:
 # Main
 # ---------------------------------------------------------------------------
 
-def find_skill_dirs(repo_root: Path) -> list[Path]:
-    return sorted(
-        p.parent for p in repo_root.glob("*/SKILL.md")
-        if p.parent.name not in {"ci"}
-    )
 
 
 def validate_skill(skill_dir: Path) -> Result:
@@ -225,9 +240,17 @@ def validate_skill(skill_dir: Path) -> Result:
 
     check_skill_md(skill_md, result)
 
-    for py_path in sorted(skill_dir.glob("*.py")):
+    for py_path in sorted(skill_dir.rglob("*.py")):
         check_python_file(py_path, result)
 
+    return result
+
+
+def check_collection_layout(repo_root: Path) -> Result:
+    """Catch skills added using the layout from before the APM migration."""
+    result = Result()
+    for skill_md in sorted(repo_root.glob("*/SKILL.md")):
+        result.error("E008", skill_md, "move this skill into skills/ so packaging and scans include it")
     return result
 
 
@@ -238,6 +261,10 @@ def main(argv: list[str] | None = None) -> int:
     if args:
         skill_dirs = [Path(a).resolve() for a in args]
     else:
+        layout = check_collection_layout(repo_root)
+        if layout.errors:
+            print("\n".join(layout.errors))
+            return 1
         skill_dirs = find_skill_dirs(repo_root)
 
     if not skill_dirs:
