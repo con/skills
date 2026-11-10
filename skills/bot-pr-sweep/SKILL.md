@@ -276,7 +276,7 @@ hint on how to make the bot run its own check, such as commenting
 usually means the head moved), is `--result update-failed --detail "<error
 text>"`, which the report lists under Needs attention.
 
-The `blocked` row of the verdict table gives the exact condition for
+The `blocked` row of the verdict table gives the condition for
 `"update_branch"`. The no-CI case exists because a bot's CI run can be
 dropped, and a path-filtered workflow skips a config-only change, so the
 merge gives CI a new commit to run on. A head whose checks all failed or were
