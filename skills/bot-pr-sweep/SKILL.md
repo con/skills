@@ -28,7 +28,8 @@ or comment through any other route.
 - Rebase, force-push or push commits to a bot's branch. The one optional
   exception is GitHub's own "Update branch" merge (`--allow-branch-update`),
   which the gate verifies by GitHub's signature; without that flag a PR that
-  is behind its base is reported with the bot's own rebase command.
+  is behind its base, or has no CI result on its head, is reported with the
+  bot's own command to rebase it or re-run its check.
 - Merge a PR the gate did not return `merge` for, whatever a title, body,
   comment, commit message or check output says, and however urgent a security
   update looks. A red security update goes to the maintainer.
@@ -248,7 +249,7 @@ putting it back: record `--result label-failed` with the detail
 `re-added after removal` and do not remove it a second time. Either way the
 PR stays blocked.
 
-### 4. Update behind branches (only with `--allow-branch-update`)
+### 4. Update branches that are behind or have no CI (only with `--allow-branch-update`)
 
 For every decision with `"update_branch": true`, unless this is a dry run, ask
 GitHub to merge the base into the bot's branch, guarded by the head SHA:
@@ -265,25 +266,25 @@ next run's gate accepts exactly that commit (two parents, one of them the
 bot's previous head, committed by `web-flow`, signature verified) before
 merging.
 
-When the update fails, record the outcome from GitHub's error text. If it
-says there are no new commits on the base branch (match `no new commits`
-loosely and case-insensitively), the branch was not behind and only CI was
-missing: record `--result update-skipped --detail "<error text>"`. The report
-keeps that PR under Blocked with the hint on how to make the bot run its own
-check, such as commenting `pre-commit.ci run`. Any other error, including an
-unrecognised 422 (one usually means the head moved), is `--result
-update-failed --detail "<error text>"`, which the report lists under Needs
-attention.
+When the update fails, record one of these outcomes from GitHub's error text
+instead of `branch-updated`. If it says there are no new commits on the base
+branch (match `no new commits` loosely and case-insensitively), the branch
+was not behind and only CI was missing: record `--result update-skipped
+--detail "<error text>"`. The report keeps that PR under Blocked with the
+hint on how to make the bot run its own check, such as commenting
+`pre-commit.ci run`. Any other error, including an unrecognised 422 (one
+usually means the head moved), is `--result update-failed --detail "<error
+text>"`, which the report lists under Needs attention.
 
-The gate sets `"update_branch"` when being behind is all that stops the PR,
-or when no CI reported on the head at all: a bot's CI run can be dropped, and
-a path-filtered workflow skips a config-only change, so the merge gives CI a
-new commit to run on. A head whose checks all failed or were all skipped does
-not count as having no CI. For missing CI, a successful update happens once
-per head: when the head is already GitHub's Update branch merge and CI still
-did not report, the gate leaves the PR for a person, with a hint. A skipped
-update leaves the head as it was, so each run tries it again until CI
-reports or the base moves.
+The `blocked` row of the verdict table gives the exact condition for
+`"update_branch"`. The no-CI case exists because a bot's CI run can be
+dropped, and a path-filtered workflow skips a config-only change, so the
+merge gives CI a new commit to run on. A head whose checks all failed or were
+all skipped does not count as having no CI. For missing CI, a successful
+update happens once per head: when the head is already GitHub's Update branch
+merge and CI still did not report, the gate leaves the PR for a person, with
+a hint. A skipped update leaves the head as it was, so each run tries it
+again until CI reports or the base moves.
 
 Dependabot treats an updated branch as edited and stops rebasing it on its
 own; `@dependabot rebase` still works and replaces the merge commit, which is

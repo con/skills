@@ -798,23 +798,30 @@ class NoCiTests(unittest.TestCase):
         self.assertEqual(len(decision["reasons"]), 2)
         self.assertTrue(decision["update_branch"])
 
-    def test_report_after_an_update_and_after_a_skip(self):
-        updated = self.pre_commit(allow_branch_update=True)
-        skipped = self.pre_commit(pr=pull(number=8, user=user("pre-commit-ci[bot]", PRE_COMMIT_CI),
-                                          mergeable_state="blocked"), allow_branch_update=True)
-        text = gate.render_report([updated, skipped,
-                                   {"event": "outcome", "repo": REPO, "number": 7, "result": "branch-updated",
-                                    "detail": "main"},
-                                   {"event": "outcome", "repo": REPO, "number": 8, "result": "update-skipped",
-                                    "detail": "HTTP 422: There are no new commits on the base branch."}],
+    def test_report_after_an_update_a_skip_and_a_failure(self):
+        def no_ci_pr(number):
+            return self.pre_commit(pr=pull(number=number, user=user("pre-commit-ci[bot]", PRE_COMMIT_CI),
+                                           mergeable_state="blocked"), allow_branch_update=True)
+
+        def outcome(number, result, detail):
+            return {"event": "outcome", "repo": REPO, "number": number, "result": result, "detail": detail}
+
+        text = gate.render_report([no_ci_pr(7), no_ci_pr(8), no_ci_pr(9),
+                                   outcome(7, "branch-updated", "main"),
+                                   outcome(8, "update-skipped", "HTTP 422: There are no new commits on the base branch."),
+                                   outcome(9, "update-failed", "HTTP 422: expected head sha didn't match current head ref.")],
                                   version="test", now=NOW)
-        updated_line = next(line for line in text.splitlines() if "/pull/7)" in line)
-        skipped_line = next(line for line in text.splitlines() if "/pull/8)" in line)
-        self.assertIn("branch updated from the base", updated_line)
-        self.assertNotIn("pre-commit.ci run", updated_line)
-        self.assertIn("branch not updated: HTTP 422", skipped_line)
-        self.assertIn("pre-commit.ci run", skipped_line)
-        self.assertIn("## Needs attention (0)", text)
+        sections = {part.split("\n", 1)[0].split(" (")[0]: part for part in text.split("\n## ")[1:]}
+        line = {number: next(line for line in text.splitlines() if f"/pull/{number})" in line) for number in (7, 8, 9)}
+        self.assertIn(line[7], sections["Pending"])
+        self.assertIn("branch updated from the base", line[7])
+        self.assertNotIn("pre-commit.ci run", line[7])
+        self.assertIn(line[8], sections["Blocked"])
+        self.assertIn("branch not updated: HTTP 422", line[8])
+        self.assertIn("pre-commit.ci run", line[8])
+        self.assertIn(line[9], sections["Needs attention"])
+        self.assertIn("branch update failed", line[9])
+        self.assertIn("## Needs attention (1)", text)
 
 
 class ReportTests(unittest.TestCase):
