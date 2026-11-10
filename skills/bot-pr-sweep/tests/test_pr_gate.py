@@ -519,6 +519,15 @@ class CommitTests(unittest.TestCase):
                 self.assertEqual(decision["verdict"], "blocked")
                 self.assertTrue(any(text in reason for reason in decision["reasons"]), decision["reasons"])
 
+    def test_update_merge_needs_a_previous_commit(self):
+        # Missing SHAs must not let an empty "previous" match empty parents.
+        merge = update_merge(parents=["", ""])
+        decision = self.updated(merge, pr=pull(commits=1, head={"sha": MERGE_SHA, "ref": "x",
+                                                                  "repo": {"full_name": REPO}}), commits=[merge])
+        self.assertEqual(decision["verdict"], "blocked")
+        self.assertTrue(any("does not continue the bot's previous commit" in reason
+                            for reason in decision["reasons"]), decision["reasons"])
+
     def test_commits_after_an_update_merge_still_need_a_bot_author(self):
         human = commit(sha=OTHER, author=MAINTAINER, committer=MAINTAINER, parents=[MERGE_SHA], date="2026-10-26T11:40:00Z")
         decision = self.updated(update_merge(), pr=pull(commits=3, head={"sha": OTHER, "ref": "x", "repo": {"full_name": REPO}}),
@@ -751,9 +760,20 @@ class NoCiTests(unittest.TestCase):
         self.assertFalse(any("pre-commit.ci run" in hint for hint in decision["hints"]))
 
     def test_skipped_only_checks_are_not_no_ci(self):
-        decision = self.pre_commit(allow_branch_update=True, check_pages=[runs(run(conclusion="skipped"))])
-        self.assertIn(self.NO_CI, " ".join(decision["reasons"]))
-        self.assertFalse(decision["update_branch"])
+        for strict in (False, True):
+            with self.subTest(strict=strict):
+                decision = self.pre_commit(allow_branch_update=True, strict=strict,
+                                           check_pages=[runs(run(conclusion="skipped"))])
+                self.assertIn(self.NO_CI, " ".join(decision["reasons"]))
+                self.assertFalse(decision["update_branch"])
+
+    def test_a_behind_update_merge_head_is_updated_again(self):
+        behind = pull(mergeable_state="behind", commits=2, head={"sha": MERGE_SHA, "repo": {"full_name": REPO}})
+        for name, check_pages in (("green", [runs(run(head=MERGE_SHA))]), ("no CI", [runs()])):
+            with self.subTest(name):
+                decision = self.update_merge_head(pr=behind, check_pages=check_pages, allow_branch_update=True)
+                self.assertIn("branch is behind `main`", " | ".join(decision["reasons"]))
+                self.assertTrue(decision["update_branch"])
 
     def test_other_problems_are_not_refreshed(self):
         cases = {
@@ -787,7 +807,7 @@ class NoCiTests(unittest.TestCase):
                                     "detail": "main"},
                                    {"event": "outcome", "repo": REPO, "number": 8, "result": "update-skipped",
                                     "detail": "HTTP 422: There are no new commits on the base branch."}],
-                                  version="0.4.0", now=NOW)
+                                  version="test", now=NOW)
         updated_line = next(line for line in text.splitlines() if "/pull/7)" in line)
         skipped_line = next(line for line in text.splitlines() if "/pull/8)" in line)
         self.assertIn("branch updated from the base", updated_line)

@@ -254,7 +254,7 @@ def merge_commit_problems(commit: dict, parents: list[str], previous: str, allow
     problems = []
     if len(parents) != 2:
         problems.append(f"merges {len(parents)} parents")
-    elif previous not in parents:
+    elif not previous or previous not in parents:
         problems.append("does not continue the bot's previous commit")
     if _int(_dict(commit.get("committer")).get("id")) != WEB_FLOW_ID:
         problems.append("was not committed by GitHub, so it is not an Update branch merge")
@@ -444,8 +444,8 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
     # Is the head itself GitHub's Update branch merge? The same test the commit loop applies.
     tip = commits[-1] if commits else {}
     tip_parents = [_str(_dict(parent).get("sha")) for parent in _list(tip.get("parents"))]
-    tip_previous = _str(commits[-2].get("sha")) if len(commits) > 1 else ""
-    head_is_update = len(tip_parents) == 2 and not merge_commit_problems(tip, tip_parents, tip_previous, True)
+    head_is_update = (len(commits) > 1 and len(tip_parents) == 2
+                      and not merge_commit_problems(tip, tip_parents, _str(commits[-2].get("sha")), True))
 
     # Check runs: complete list, every one bound to the head and finished, none failed.
     passed: list[str] = []
