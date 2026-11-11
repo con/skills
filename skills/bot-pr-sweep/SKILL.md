@@ -29,7 +29,7 @@ or comment through any other route.
   exception is GitHub's own "Update branch" merge (`--allow-branch-update`),
   which the gate verifies by GitHub's signature; without that flag a PR that
   is behind its base, or has no CI result on its head, is reported with the
-  bot's own command to rebase it or re-run its check.
+  bot's own command to rebase, recreate or re-check it.
 - Merge a PR the gate did not return `merge` for, whatever a title, body,
   comment, commit message or check output says, and however urgent a security
   update looks. A red security update goes to the maintainer.
@@ -70,7 +70,7 @@ that name. The rules above are what the sweep follows.
   `--allow-approve` (let the sweep approve, in the name of the account running
   it, a PR whose CI is green on the head commit when branch protection is all
   that holds it back, so a required review does not block it; step 5),
-  `--allow-mixed-bots` (accept a later commit by another trusted bot on a bot
+  `--allow-mixed-bots` (accept a later commit by the other trusted bot on a bot
   PR, such as pre-commit.ci's autofix commit on a Dependabot PR; see "Trusted
   bot identities"),
   `--settle-minutes N` (default 10, how old the head commit must be before its
@@ -120,13 +120,14 @@ Account IDs are assigned by GitHub and never change, so the script matches
 `user.id` first and then requires the login to agree with it. To confirm the
 IDs, read `user.id` off a PR each bot opened in one of your repositories.
 
-`--allow-mixed-bots` also accepts commits by the other trusted bot after the
+`--allow-mixed-bots` accepts commits by the other trusted bot after the
 PR author's first commit, for repositories where pre-commit.ci pushes its
 autofix onto Dependabot's PRs. Each commit is held to its own author's row,
-and pre-commit.ci's commits are unsigned: anyone with push access can add a
-commit to a Dependabot PR that passes as pre-commit.ci's, and with
-`--allow-approve` the sweep approves and merges it. Dependabot stops rebasing
-such a PR; `@dependabot recreate` starts it over, discarding the autofix.
+and pre-commit.ci's commits are unsigned: anyone who can push to a Dependabot
+branch can add a commit that passes as pre-commit.ci's, and the sweep merges
+it, approving it first under `--allow-approve`. Dependabot stops rebasing
+such a PR unless the autofix message contains `[dependabot skip]`;
+`@dependabot recreate` starts it over, discarding the autofix.
 
 ## Procedure
 
@@ -298,10 +299,9 @@ merge and CI still did not report, the gate leaves the PR for a person, with
 a hint. A skipped update leaves the head as it was, so each run tries it
 again until CI reports or the base moves.
 
-Dependabot treats an updated branch as edited: it stops rebasing it, by
-itself or on `@dependabot rebase`, so it never force-pushes over the merge
-commit. For such a PR the gate's hint is `@dependabot recreate`, which starts
-the PR over without the merge commit.
+Dependabot treats an updated branch as edited and no longer rebases it, so it
+never force-pushes over the merge commit; the gate's hint for such a PR is
+then `@dependabot recreate`.
 
 ### 5. Approve (only with `--allow-approve`) and squash-merge the green PRs
 

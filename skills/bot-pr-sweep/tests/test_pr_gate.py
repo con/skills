@@ -112,6 +112,10 @@ class AuthorTests(unittest.TestCase):
     def test_trusted_id_with_other_login_is_rejected(self):
         decision = evaluate(pr=pull(user=user(login="dependabot-helper[bot]")))
         self.assertEqual(decision["verdict"], "rejected")
+        # Report-only: a PR that would otherwise draw Dependabot's rebase hint gets no advice.
+        behind = evaluate(pr=pull(user=user(login="dependabot-helper[bot]"), mergeable_state="behind"))
+        self.assertEqual(behind["verdict"], "rejected")
+        self.assertEqual(behind["hints"], [])
 
     def test_trusted_id_of_user_type_is_rejected(self):
         self.assertEqual(evaluate(pr=pull(user=user(kind="User")))["verdict"], "rejected")
@@ -607,10 +611,28 @@ class MixedBotTests(unittest.TestCase):
     def test_an_edited_dependabot_branch_gets_the_recreate_hint(self):
         behind = pull(commits=2, mergeable_state="behind", head={"sha": OTHER, "repo": {"full_name": REPO}})
         edited = self.autofixed(pr=behind, allow_mixed_bots=True)
-        self.assertTrue(any("`@dependabot recreate`" in hint for hint in edited["hints"]), edited["hints"])
-        self.assertFalse(any("`@dependabot rebase`" in hint for hint in edited["hints"]))
+        self.assertTrue(any("`@dependabot recreate` if Dependabot refuses" in hint for hint in edited["hints"]),
+                        edited["hints"])
         plain = evaluate(pr=pull(mergeable_state="behind"))
         self.assertTrue(any("`@dependabot rebase`" in hint for hint in plain["hints"]))
+        self.assertFalse(any("`@dependabot recreate`" in hint for hint in plain["hints"]))
+
+    def test_recreate_hint_covers_update_merges_no_ci_rebases_and_only_dependabot(self):
+        at = dict(check_pages=[runs()], status=status(sha=OTHER), expected_head=OTHER)
+        head = {"sha": OTHER, "repo": {"full_name": REPO}}
+        no_ci = evaluate(pr=pull(commits=2, head=head), commits=[commit(), autofix()], allow_mixed_bots=True, **at)
+        self.assertTrue(any("`@dependabot recreate`" in hint for hint in no_ci["hints"]), no_ci["hints"])
+        merged = evaluate(pr=pull(commits=2, mergeable=False, mergeable_state="dirty",
+                                  head={"sha": MERGE_SHA, "repo": {"full_name": REPO}}),
+                          commits=[commit(), update_merge()], check_pages=[runs(run(head=MERGE_SHA))],
+                          status=status(sha=MERGE_SHA), expected_head=MERGE_SHA, allow_branch_update=True)
+        self.assertTrue(any("`@dependabot recreate`" in hint for hint in merged["hints"]), merged["hints"])
+        # GitHub's "Update with rebase" keeps Dependabot as the author and changes only the committer.
+        rebased = evaluate(pr=pull(mergeable=False, mergeable_state="dirty"), commits=[commit(committer=MAINTAINER)])
+        self.assertTrue(any("`@dependabot recreate`" in hint for hint in rebased["hints"]), rebased["hints"])
+        theirs = evaluate(pr=pull(commits=2, head=head, user=user("pre-commit-ci[bot]", PRE_COMMIT_CI)),
+                          commits=[pre_commit_commit(), commit(sha=OTHER, parents=[HEAD])], allow_mixed_bots=True, **at)
+        self.assertFalse(any("@dependabot" in hint for hint in theirs["hints"]), theirs["hints"])
 
     def test_pre_commit_ci_autofix_on_a_dependabot_pr_merges(self):
         decision = self.autofixed(allow_mixed_bots=True)

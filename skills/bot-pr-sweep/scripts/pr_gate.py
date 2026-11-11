@@ -351,10 +351,9 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
     for label in strip_labels:
         blocked(f"carries the `{label}` label, which a label-driven release tool reads as a major "
                 "release of the application")
-        if not reasons[REJECTED]:  # a rejected PR is report-only; no advice to touch it
-            hints.append(f"`{label}` on a bot PR is usually Dependabot's own doing (a known bug) and interacts "
-                         "badly with intuit/auto: remove it unless a person put it there on purpose "
-                         "(SKILL.md step 3)")
+        hints.append(f"`{label}` on a bot PR is usually Dependabot's own doing (a known bug) and interacts "
+                     "badly with intuit/auto: remove it unless a person put it there on purpose "
+                     "(SKILL.md step 3)")
 
     # Reviews (only with --allow-approve): a person's requested changes stop the
     # sweep from approving or merging, and an approval already on the head
@@ -370,12 +369,14 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
     mergeable, mergeable_state = pr.get("mergeable"), sanitize(pr.get("mergeable_state"), 20)
     behind = protected = no_ci = False
     rebase_hint = rerun_hint = ""
-    # Dependabot rebases only a branch nobody else has pushed to (an autofix commit, an Update branch merge);
-    # on any other it refuses `@dependabot rebase`, and `@dependabot recreate` starts over without those commits.
-    edited = any(_int(_dict(_dict(c).get("author")).get("id")) != user_id for c in commits)
+    # Dependabot stops rebasing a branch someone else pushed to (an autofix commit, an Update branch merge, a
+    # rebase by another committer) unless that commit says `[dependabot skip]`; `@dependabot recreate` starts over.
+    edited = any(_int(_dict(_dict(c).get("author")).get("id")) != user_id
+                 or _int(_dict(_dict(c).get("committer")).get("id")) not in (user_id, WEB_FLOW_ID) for c in commits)
     if TRUSTED_BOTS.get(user_id) == "dependabot[bot]" and edited:
-        rebase_hint = rerun_hint = ("comment `@dependabot recreate` on the PR; Dependabot no longer rebases a branch "
-                                    "others pushed to, and recreating drops their commits; the sweep never comments")
+        rebase_hint = rerun_hint = ("comment `@dependabot rebase` on the PR, or `@dependabot recreate` if Dependabot "
+                                    "refuses because others pushed to its branch (recreating drops their commits); "
+                                    "the sweep never comments")
     elif TRUSTED_BOTS.get(user_id) == "dependabot[bot]":
         rebase_hint = rerun_hint = ("comment `@dependabot rebase` on the PR so the bot updates its own branch; "
                                     "the sweep never pushes to it")
@@ -435,7 +436,7 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
                     blocked(f"commit {short} has no GitHub-linked author account (REST commits JSON needed)")
                 elif author_id != user_id and not mixed:
                     blocked(f"commit {short} was authored by account {author_id}, not by the pull request's author")
-                    if other_bot and not reasons[REJECTED]:
+                    if other_bot:
                         hints.append(f"a later commit is by {TRUSTED_BOTS[author_id]}, the other trusted bot; if that "
                                      "is expected here, the maintainer can opt in with --allow-mixed-bots")
                 elif author_id in SIGNED_BOTS and not _signed(commit):
@@ -564,7 +565,8 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
         "head_sha": head_sha,
         "verdict": verdict,
         "reasons": reasons.get(verdict, []),
-        "hints": [hint for hint in dict.fromkeys(hints) if hint],
+        # A rejected PR is report-only: no advice to touch it.
+        "hints": [hint for hint in dict.fromkeys(hints) if hint] if verdict != REJECTED else [],
         "checks": {"passed": passed, "tolerated": tolerated, "failed": failed, "unfinished": unfinished},
         # Labels the sweep offers to remove (step 3); never on a PR it must not touch.
         "strip_labels": strip_labels if verdict != REJECTED else [],
