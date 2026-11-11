@@ -369,10 +369,12 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
     mergeable, mergeable_state = pr.get("mergeable"), sanitize(pr.get("mergeable_state"), 20)
     behind = protected = no_ci = False
     rebase_hint = rerun_hint = ""
+    commits = [_dict(c) for c in commits]
     # Dependabot stops rebasing a branch someone else pushed to (an autofix commit, an Update branch merge, a
-    # rebase by another committer) unless that commit says `[dependabot skip]`; `@dependabot recreate` starts over.
-    edited = any(_int(_dict(_dict(c).get("author")).get("id")) != user_id
-                 or _int(_dict(_dict(c).get("committer")).get("id")) not in (user_id, WEB_FLOW_ID) for c in commits)
+    # rebase by another committer) unless that commit says `[dependabot skip]`. The gate does not read commit
+    # messages, so the hint for such a branch offers `@dependabot rebase` first and `recreate` as the fallback.
+    edited = any(_int(_dict(c.get("author")).get("id")) != user_id
+                 or _int(_dict(c.get("committer")).get("id")) not in (user_id, WEB_FLOW_ID) for c in commits)
     if TRUSTED_BOTS.get(user_id) == "dependabot[bot]" and edited:
         rebase_hint = rerun_hint = ("comment `@dependabot rebase` on the PR, or `@dependabot recreate` if Dependabot "
                                     "refuses because others pushed to its branch (recreating drops their commits); "
@@ -406,7 +408,6 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
         blocked(f"unrecognized mergeable_state '{mergeable_state}'")
 
     # Commits: every one from a trusted bot, the list whole, merges only GitHub's own.
-    commits = [_dict(c) for c in commits]
     expected_commits = _int(pr.get("commits"))
     if not commits:
         pending("no commits returned for the pull request")

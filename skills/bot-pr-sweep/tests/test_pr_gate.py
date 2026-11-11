@@ -611,11 +611,13 @@ class MixedBotTests(unittest.TestCase):
     def test_an_edited_dependabot_branch_gets_the_recreate_hint(self):
         behind = pull(commits=2, mergeable_state="behind", head={"sha": OTHER, "repo": {"full_name": REPO}})
         edited = self.autofixed(pr=behind, allow_mixed_bots=True)
-        self.assertTrue(any("`@dependabot recreate` if Dependabot refuses" in hint for hint in edited["hints"]),
-                        edited["hints"])
-        plain = evaluate(pr=pull(mergeable_state="behind"))
-        self.assertTrue(any("`@dependabot rebase`" in hint for hint in plain["hints"]))
-        self.assertFalse(any("`@dependabot recreate`" in hint for hint in plain["hints"]))
+        self.assertTrue(any("`@dependabot rebase` on the PR, or `@dependabot recreate` if Dependabot refuses" in hint
+                            for hint in edited["hints"]), edited["hints"])
+        # Untouched, whether GitHub (web-flow) or Dependabot itself is the committer.
+        for plain in (evaluate(pr=pull(mergeable_state="behind")),
+                      evaluate(pr=pull(mergeable_state="behind"), commits=[commit(committer=DEPENDABOT)])):
+            self.assertTrue(any("`@dependabot rebase`" in hint for hint in plain["hints"]))
+            self.assertFalse(any("`@dependabot recreate`" in hint for hint in plain["hints"]))
 
     def test_recreate_hint_covers_update_merges_no_ci_rebases_and_only_dependabot(self):
         at = dict(check_pages=[runs()], status=status(sha=OTHER), expected_head=OTHER)
