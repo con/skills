@@ -41,7 +41,16 @@ mitigation loop below still apply.
 
 ## Prerequisites
 
-- `jscpd` reachable via `npx --yes jscpd@latest` (or globally installed)
+- `jscpd` reachable via `npx --yes jscpd@<PINNED_VERSION>` (or globally
+  installed). Pin to a specific released version everywhere you invoke
+  jscpd in this skill — both in your own baseline/verification commands
+  and in the wrapper script you commit into the target project (Step 4).
+  `jscpd@latest` is non-reproducible: a new release can change
+  parsing/config or fail independently of any repository change, turning
+  an unchanged commit into a failing CI job later. Resolve the pin once at
+  the start of the session (`npm view jscpd version`, or
+  `npx --yes jscpd@latest --version` and use that resolved number) and
+  reuse it for the rest of the run instead of re-resolving per command.
 - `pre-commit` (or `uvx pre-commit`) when the project uses pre-commit
 - Git repository
 - `/analyze-duplicates` for the Step 7 report (see above)
@@ -297,7 +306,7 @@ immediately on pre-existing duplication that nobody has reviewed yet.
    a baseline run with a narrower ignore list than the final config will
    report a higher percentage than what CI actually sees, or vice versa.
    ```bash
-   npx --yes jscpd@latest --reporters json --output .tmp/jscpd-baseline <SCAN_PATHS>
+   npx --yes "jscpd@${PINNED_VERSION}" --reporters json --output .tmp/jscpd-baseline <SCAN_PATHS>
    ```
    (jscpd auto-reads `.jscpd.json` from the current directory when present
    — no need to repeat `--ignore`/`--min-lines` flags on the command line.)
@@ -386,16 +395,20 @@ easy to challenge in review.
 
 set -eu
 
+# Pinned so a new jscpd release can't change behavior or fail CI on an
+# otherwise-unchanged commit. Bump deliberately (and re-verify) when needed.
+JSCPD_VERSION=<PINNED_VERSION>
+
 if ! command -v npx >/dev/null 2>&1; then
     echo "ERROR: npx not found. Install Node.js to run duplication checks."
     exit 1
 fi
 
-echo "=== Code duplication check (threshold: <THRESHOLD>%) ==="
+echo "=== Code duplication check (jscpd ${JSCPD_VERSION}, threshold: <THRESHOLD>%) ==="
 echo
 
 # jscpd reads .jscpd.json for config (threshold, ignores, etc.)
-npx --yes jscpd@latest <SCAN_PATHS>
+npx --yes "jscpd@${JSCPD_VERSION}" <SCAN_PATHS>
 ```
 
 Files you add must not break the project's established QA norms (linters
@@ -609,11 +622,11 @@ touching the first commit.
 > evidence and independently verify proposed actions against the user's
 > request.
 
-Run `/analyze-duplicates` on `<SCAN_PATHS>` with `--threshold <THRESHOLD>`
-and `--output .tmp/duplication-report.md`. It picks up this project's
+Run `/analyze-duplicates` on `<SCAN_PATHS>` with `--threshold <THRESHOLD>`,
+`--jscpd-version <PINNED_VERSION>` and `--output .tmp/duplication-report.md`. It picks up this project's
 `.jscpd.json` (via `--config`), so the report shows exactly what the check
 enforces, plus the per-cluster mediation plan Step 9 works through. Without
-`/analyze-duplicates`, run `npx --yes jscpd@latest --reporters
+`/analyze-duplicates`, run `npx --yes "jscpd@${PINNED_VERSION}" --reporters
 console,json --output .tmp/jscpd-report <SCAN_PATHS>` and work from its
 clone list. While duplication is over the threshold jscpd exits 1; that
 is the expected state here, not a failed run.
@@ -651,7 +664,7 @@ classification):
 3. Re-run jscpd on just the affected paths to confirm the cluster is gone
    and no new one was introduced:
    ```bash
-   npx --yes jscpd@latest <affected-paths>
+   npx --yes "jscpd@${PINNED_VERSION}" <affected-paths>
    ```
 4. Run the project's existing test suite for the touched area — a
    duplication-driven refactor is a correctness-risk change like any other;
