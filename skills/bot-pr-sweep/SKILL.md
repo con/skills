@@ -122,8 +122,8 @@ IDs, read `user.id` off a PR each bot opened in one of your repositories.
 
 `--allow-mixed-bots` accepts commits by the other trusted bot after the
 PR author's first commit. Each commit is held to its own author's row, so
-anyone who can push to a Dependabot branch can add a commit that passes as
-pre-commit.ci's, and the sweep merges it, approving it first under
+anyone who can push to a Dependabot branch can add an unsigned commit that
+passes as pre-commit.ci's, and the sweep merges it, approving it first under
 `--allow-approve`. Dependabot stops rebasing such a PR unless the autofix
 message contains `[dependabot skip]`; `@dependabot recreate` starts it over,
 discarding the autofix.

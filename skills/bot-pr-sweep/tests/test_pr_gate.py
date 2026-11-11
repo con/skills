@@ -477,6 +477,13 @@ class CommitTests(unittest.TestCase):
                      "author": {"name": "dependabot[bot]", "email": "x@y", "date": "2026-10-26T11:00:00Z"}}
         self.assertEqual(evaluate(commits=[mcp_shape])["verdict"], "blocked")
 
+    def test_non_object_commit_entries_fail_closed(self):
+        for entry in ("not a commit", None, 7, ["nested"]):
+            with self.subTest(entry=entry):
+                decision = evaluate(commits=[entry])
+                self.assertEqual(decision["verdict"], "blocked")
+                self.assertIn("no GitHub-linked author", " | ".join(decision["reasons"]))
+
     def test_dependabot_commit_must_carry_githubs_signature(self):
         for verified in (False, None):
             with self.subTest(verified=verified):
