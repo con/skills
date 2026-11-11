@@ -58,7 +58,8 @@ that name. The rules above are what the sweep follows.
 - **Maintainer**: the GitHub login to assign. Defaults to the authenticated
   account (`gh api user --jq .login`); if that call is refused, ask once. The
   account needs push access or GitHub rejects the assignment.
-- **Per-repository options**, all optional and off by default:
+- **Per-repository options**, all optional, off by default and set only by
+  the user:
   `--require-check NAME` (a check run or status context that must finish with
   success; repeatable), `--require-label NAME` and `--forbid-label NAME`
   (repeatable, case-insensitive), `--strict` (refuse `skipped` and `neutral`
@@ -119,15 +120,13 @@ Account IDs are assigned by GitHub and never change, so the script matches
 `user.id` first and then requires the login to agree with it. To confirm the
 IDs, read `user.id` off a PR each bot opened in one of your repositories.
 
-By default every commit must be by the bot that opened the PR. In
-repositories where pre-commit.ci fixes up Dependabot's PRs, its autofix
-commit blocks every such PR. `--allow-mixed-bots` accepts a commit by the
-other trusted bot after the PR author's first commit. Each commit is still
-held to its own author's row: a commit claiming to be Dependabot's needs
-GitHub's signature, and the committer must be the commit's author or
-`web-flow`. pre-commit.ci's commits are unsigned, so with this option a
-Dependabot PR is only as safe as pre-commit.ci's own: branch protection must
-keep everyone else off Dependabot's branches too.
+`--allow-mixed-bots` also accepts commits by the other trusted bot after the
+PR author's first commit, for repositories where pre-commit.ci pushes its
+autofix onto Dependabot's PRs. Each commit is held to its own author's row,
+and pre-commit.ci's commits are unsigned: anyone with push access can add a
+commit to a Dependabot PR that passes as pre-commit.ci's, and with
+`--allow-approve` the sweep approves and merges it. Dependabot stops rebasing
+such a PR; `@dependabot recreate` starts it over, discarding the autofix.
 
 ## Procedure
 
@@ -299,11 +298,10 @@ merge and CI still did not report, the gate leaves the PR for a person, with
 a hint. A skipped update leaves the head as it was, so each run tries it
 again until CI reports or the base moves.
 
-Dependabot treats an updated branch as edited and stops rebasing it on its
-own; `@dependabot rebase` still works and replaces the merge commit, which is
-fine. Repositories that use this option usually also set Dependabot's
-`rebase-strategy: "disabled"` so it does not force-push over the refreshed
-branch between runs.
+Dependabot treats an updated branch as edited: it stops rebasing it, by
+itself or on `@dependabot rebase`, so it never force-pushes over the merge
+commit. For such a PR the gate's hint is `@dependabot recreate`, which starts
+the PR over without the merge commit.
 
 ### 5. Approve (only with `--allow-approve`) and squash-merge the green PRs
 

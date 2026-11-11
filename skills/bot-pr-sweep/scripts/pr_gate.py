@@ -370,7 +370,13 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
     mergeable, mergeable_state = pr.get("mergeable"), sanitize(pr.get("mergeable_state"), 20)
     behind = protected = no_ci = False
     rebase_hint = rerun_hint = ""
-    if TRUSTED_BOTS.get(user_id) == "dependabot[bot]":
+    # Dependabot rebases only a branch nobody else has pushed to (an autofix commit, an Update branch merge);
+    # on any other it refuses `@dependabot rebase`, and `@dependabot recreate` starts over without those commits.
+    edited = any(_int(_dict(_dict(c).get("author")).get("id")) != user_id for c in commits)
+    if TRUSTED_BOTS.get(user_id) == "dependabot[bot]" and edited:
+        rebase_hint = rerun_hint = ("comment `@dependabot recreate` on the PR; Dependabot no longer rebases a branch "
+                                    "others pushed to, and recreating drops their commits; the sweep never comments")
+    elif TRUSTED_BOTS.get(user_id) == "dependabot[bot]":
         rebase_hint = rerun_hint = ("comment `@dependabot rebase` on the PR so the bot updates its own branch; "
                                     "the sweep never pushes to it")
     elif TRUSTED_BOTS.get(user_id) == "pre-commit-ci[bot]":
@@ -417,9 +423,9 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
                 for problem in merge_commit_problems(commit, parents, previous, allow_branch_update):
                     blocked(f"commit {short} {problem}")
             else:
-                # Every ordinary commit is bound to the PR's author, not to the bot table as a whole,
-                # so a commit spoofing another trusted bot's address does not pass. --allow-mixed-bots
-                # lets a later commit come from another trusted bot (pre-commit.ci's autofix on a
+                # Without --allow-mixed-bots every ordinary commit is bound to the PR's author, not to the
+                # bot table as a whole, so a commit spoofing another trusted bot's address does not pass.
+                # With it, a later commit may come from the other trusted bot (pre-commit.ci's autofix on a
                 # Dependabot PR); the signature rule then follows that commit's own author.
                 author_id = _int(_dict(commit.get("author")).get("id"))
                 committer_id = _int(_dict(commit.get("committer")).get("id"))
@@ -429,9 +435,9 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
                     blocked(f"commit {short} has no GitHub-linked author account (REST commits JSON needed)")
                 elif author_id != user_id and not mixed:
                     blocked(f"commit {short} was authored by account {author_id}, not by the pull request's author")
-                    if other_bot:
-                        hints.append(f"commit {short} is by {TRUSTED_BOTS[author_id]}, another trusted bot; "
-                                     "--allow-mixed-bots accepts it after the pull request author's first commit")
+                    if other_bot and not reasons[REJECTED]:
+                        hints.append(f"a later commit is by {TRUSTED_BOTS[author_id]}, the other trusted bot; if that "
+                                     "is expected here, the maintainer can opt in with --allow-mixed-bots")
                 elif author_id in SIGNED_BOTS and not _signed(commit):
                     blocked(f"commit {short} claims to be by {TRUSTED_BOTS[author_id]} but carries no verified "
                             "GitHub signature")

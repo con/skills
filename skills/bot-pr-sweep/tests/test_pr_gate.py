@@ -578,11 +578,39 @@ class MixedBotTests(unittest.TestCase):
         fields.update(overrides)
         return evaluate(**fields)
 
-    def test_off_by_default_with_a_hint(self):
-        decision = self.autofixed()
+    def test_off_by_default_with_one_hint_for_the_maintainer(self):
+        decision = self.autofixed(autofix(), autofix(sha="e" * 40, parents=[OTHER], date="2026-10-26T11:02:00Z"))
         self.assertEqual(decision["verdict"], "blocked")
         self.assertIn("authored by account 66853113, not by the pull request's author", " | ".join(decision["reasons"]))
-        self.assertTrue(any("--allow-mixed-bots" in hint for hint in decision["hints"]))
+        hints = [hint for hint in decision["hints"] if "--allow-mixed-bots" in hint]
+        self.assertEqual(len(hints), 1, decision["hints"])
+        self.assertIn("by pre-commit-ci[bot], the other trusted bot", hints[0])
+        self.assertIn("the maintainer can opt in", hints[0])
+
+    def test_no_hint_on_a_rejected_pr(self):
+        person = pull(commits=2, user=user("someone", MAINTAINER, "User"),
+                      head={"sha": OTHER, "repo": {"full_name": REPO}})
+        decision = self.autofixed(pr=person, commits=[commit(author=MAINTAINER, committer=MAINTAINER), autofix()])
+        self.assertEqual(decision["verdict"], "rejected")
+        self.assertFalse(any("--allow-mixed-bots" in hint for hint in decision["hints"]))
+
+    def test_with_githubs_update_branch_merge_in_either_order(self):
+        after = update_merge(parents=[OTHER, BASE])
+        before = update_merge()
+        for name, later in (("autofix, then Update branch", (autofix(), after)),
+                            ("Update branch, then autofix", (before, autofix(sha="e" * 40, parents=[MERGE_SHA],
+                                                                             date="2026-10-26T11:40:00Z")))):
+            with self.subTest(name):
+                decision = self.autofixed(*later, allow_mixed_bots=True, allow_branch_update=True)
+                self.assertEqual(decision["verdict"], "merge", decision["reasons"])
+
+    def test_an_edited_dependabot_branch_gets_the_recreate_hint(self):
+        behind = pull(commits=2, mergeable_state="behind", head={"sha": OTHER, "repo": {"full_name": REPO}})
+        edited = self.autofixed(pr=behind, allow_mixed_bots=True)
+        self.assertTrue(any("`@dependabot recreate`" in hint for hint in edited["hints"]), edited["hints"])
+        self.assertFalse(any("`@dependabot rebase`" in hint for hint in edited["hints"]))
+        plain = evaluate(pr=pull(mergeable_state="behind"))
+        self.assertTrue(any("`@dependabot rebase`" in hint for hint in plain["hints"]))
 
     def test_pre_commit_ci_autofix_on_a_dependabot_pr_merges(self):
         decision = self.autofixed(allow_mixed_bots=True)
@@ -623,6 +651,9 @@ class MixedBotTests(unittest.TestCase):
                 decision = evaluate(pr=pr, commits=[pre_commit_commit(), claimed], check_pages=[runs(run(head=OTHER))],
                                     status=status(sha=OTHER), expected_head=OTHER, allow_mixed_bots=True)
                 self.assertEqual(decision["verdict"], verdict, decision["reasons"])
+                if not verified:
+                    self.assertIn("claims to be by dependabot[bot] but carries no verified GitHub signature",
+                                  " | ".join(decision["reasons"]))
 
 
 class HelperTests(unittest.TestCase):
