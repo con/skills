@@ -559,6 +559,72 @@ class CommitTests(unittest.TestCase):
         self.assertEqual(evaluate(commits=[commit(date=None)])["verdict"], "pending")
 
 
+def autofix(**overrides):
+    """pre-commit.ci's autofix commit, pushed on top of the bot's own commit."""
+    fields = dict(sha=OTHER, parents=[HEAD], date="2026-10-26T11:01:00Z")
+    fields.update(overrides)
+    return pre_commit_commit(**fields)
+
+
+class MixedBotTests(unittest.TestCase):
+    """--allow-mixed-bots: a later commit by another trusted bot, as pre-commit.ci's autofix on a Dependabot PR."""
+
+    def autofixed(self, *later, **overrides):
+        later = later or (autofix(),)
+        head = later[-1]["sha"]
+        fields = dict(pr=pull(commits=1 + len(later), head={"sha": head, "repo": {"full_name": REPO}}),
+                      commits=[commit(), *later], check_pages=[runs(run(head=head))], status=status(sha=head),
+                      expected_head=head)
+        fields.update(overrides)
+        return evaluate(**fields)
+
+    def test_off_by_default_with_a_hint(self):
+        decision = self.autofixed()
+        self.assertEqual(decision["verdict"], "blocked")
+        self.assertIn("authored by account 66853113, not by the pull request's author", " | ".join(decision["reasons"]))
+        self.assertTrue(any("--allow-mixed-bots" in hint for hint in decision["hints"]))
+
+    def test_pre_commit_ci_autofix_on_a_dependabot_pr_merges(self):
+        decision = self.autofixed(allow_mixed_bots=True)
+        self.assertEqual(decision["verdict"], "merge", decision["reasons"])
+        self.assertEqual(decision["hints"], [])
+
+    def test_the_first_commit_must_be_the_authors(self):
+        decision = evaluate(commits=[pre_commit_commit()], allow_mixed_bots=True)
+        self.assertEqual(decision["verdict"], "blocked")
+        self.assertIn("not by the pull request's author", decision["reasons"][0])
+        self.assertFalse(any("--allow-mixed-bots" in hint for hint in decision["hints"]))
+
+    def test_people_and_other_bots_still_block(self):
+        for name, uid in (("a person", MAINTAINER), ("an untrusted bot", RENOVATE)):
+            with self.subTest(name):
+                decision = self.autofixed(commit(sha=OTHER, author=uid, committer=uid, parents=[HEAD], verified=None),
+                                          allow_mixed_bots=True)
+                self.assertEqual(decision["verdict"], "blocked")
+                self.assertIn(f"authored by account {uid}", " | ".join(decision["reasons"]))
+                self.assertFalse(any("--allow-mixed-bots" in hint for hint in decision["hints"]))
+
+    def test_a_later_commit_committed_by_someone_else_blocks(self):
+        # Its own author or GitHub, as for every commit; not even the bot that opened the PR.
+        for committer in (MAINTAINER, DEPENDABOT):
+            with self.subTest(committer=committer):
+                decision = self.autofixed(autofix(committer=committer), allow_mixed_bots=True)
+                self.assertEqual(decision["verdict"], "blocked")
+                self.assertIn(f"committed by account {committer}, neither the author nor GitHub",
+                              " | ".join(decision["reasons"]))
+
+    def test_the_signature_rule_follows_the_commit_author(self):
+        # On a pre-commit.ci PR, a later commit claiming to be Dependabot's still needs GitHub's signature.
+        pr = pull(user=user("pre-commit-ci[bot]", PRE_COMMIT_CI), commits=2,
+                  head={"sha": OTHER, "repo": {"full_name": REPO}})
+        for verified, verdict in ((False, "blocked"), (True, "merge")):
+            with self.subTest(verified=verified):
+                claimed = commit(sha=OTHER, parents=[HEAD], verified=verified)
+                decision = evaluate(pr=pr, commits=[pre_commit_commit(), claimed], check_pages=[runs(run(head=OTHER))],
+                                    status=status(sha=OTHER), expected_head=OTHER, allow_mixed_bots=True)
+                self.assertEqual(decision["verdict"], verdict, decision["reasons"])
+
+
 class HelperTests(unittest.TestCase):
     def test_sanitize(self):
         self.assertEqual(gate.sanitize("Bump `x`\n[evil](http://e)\x07 now"), "Bump 'x' [evil] (http://e) now")
@@ -1076,6 +1142,14 @@ class CliTests(unittest.TestCase):
         code, out, _ = self.main(*self.gate_args("--allow-branch-update"))
         self.assertEqual(code, 1)
         self.assertTrue(json.loads(out)["update_branch"])
+
+    def test_gate_mixed_bots_option(self):
+        payloads = {"pr": pull(commits=2, head={"sha": OTHER, "repo": {"full_name": REPO}}),
+                    "commits": [[commit(), autofix()]], "checks": [runs(run(head=OTHER))], "status": status(sha=OTHER)}
+        for name, payload in payloads.items():
+            (self.root / f"{name}.json").write_text(json.dumps(payload), encoding="utf-8")
+        self.assertEqual(self.main(*self.gate_args(**{"--head-sha": OTHER}))[0], 1)
+        self.assertEqual(self.main(*self.gate_args("--allow-mixed-bots", **{"--head-sha": OTHER}))[0], 0)
 
     def test_gate_approve_option(self):
         code, _, err = self.main(*self.gate_args("--allow-approve"))
