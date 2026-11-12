@@ -218,7 +218,7 @@ Write `.autorc` to the repo root (JSON format — auto reads it automatically).
     },
     {
       "name": "released",
-      "releaseType": "released",
+      "releaseType": "none",
       "description": "This PR has been released",
       "color": "84cc16"
     }
