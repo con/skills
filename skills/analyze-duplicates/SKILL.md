@@ -40,7 +40,7 @@ Optional flags (passed as part of the argument string):
 - `--output PATH` — where to write the report (default: `.jscpd-report.md` in first scanned path)
 - `--cross-project` — when multiple paths given, also run a combined scan to find cross-project duplicates
 - `--no-html` — skip generating the HTML report (default: generate it)
-- `--jscpd-version X.Y.Z` — jscpd release to use (default: resolve the current one once in Step 1)
+- `--jscpd-version X.Y.Z` — jscpd release to use (default: resolved once in Step 1)
 - `--badge` — also generate an SVG badge and embed it in the report (default: off)
 
 ## Execution Steps
@@ -57,23 +57,27 @@ output. If that directory is inside a git work tree and `.tmp` is not
 git-ignored there, warn the user rather than editing `.gitignore` — this
 skill only reports and does not modify the project.
 
-### Step 1: Ensure jscpd is Available
+### Step 1: Ensure jscpd is Available and Pick Its Version
 
-Check if jscpd is available:
+Check that jscpd is available and which release that is (with
+`--jscpd-version` skip this; the first scan shows whether that release can
+be fetched):
 
 ```bash
-command -v jscpd || npx --yes jscpd@latest --version
+jscpd --version 2>/dev/null || npx --yes jscpd@latest --version
 ```
-
-Then fix the version as `PINNED_VERSION` for the whole run: the
-`--jscpd-version` value if given (e.g. the pin of a project's own
-duplication check, so the report matches what its CI enforces), otherwise
-the number printed above. Use `npx --yes "jscpd@${PINNED_VERSION}"` for
-every jscpd invocation below rather than `jscpd@latest`, so all scans in a
-run use the same release.
 
 If neither works, report the error and stop:
 > jscpd not found. Install via `npm install -g jscpd` or ensure `npx` is available.
+
+`PINNED_VERSION` is the jscpd release for the whole run, a bare `X.Y.Z`:
+the `--jscpd-version` value if given (e.g. the pin of a project's own
+duplication check, so the report matches what its CI enforces), otherwise
+the version number printed above (jscpd 5.x prints `jscpd 5.4.3`, 4.x just
+`4.0.5`). It is a placeholder like `MIN_LINES`, not a shell variable: write
+the number itself into every command. Every jscpd invocation below is
+`npx --yes jscpd@PINNED_VERSION`, never `jscpd@latest`, so all scans in a
+run use the same release; tell the user which one.
 
 ### Step 2: Detect Project Context
 
@@ -88,7 +92,7 @@ For each scan path:
 For each scan path, run jscpd with JSON, HTML, and badge reporters:
 
 ```bash
-npx --yes "jscpd@${PINNED_VERSION}" \
+npx --yes jscpd@PINNED_VERSION \
     --min-lines MIN_LINES \
     --min-tokens MIN_TOKENS \
     --reporters "json,html" \
@@ -146,7 +150,7 @@ using the helper script:
 python3 SKILL_DIR/generate-report.py \
     --threshold THRESHOLD \
     --output REPORT_PATH \
-    --jscpd-version "$PINNED_VERSION" \
+    --jscpd-version PINNED_VERSION \
     --scan-path PATH1 [--scan-path PATH2 ...] \
     [--cross-project .tmp/jscpd-combined/jscpd-report.json] \
     .tmp/jscpd-PROJECT1/jscpd-report.json \

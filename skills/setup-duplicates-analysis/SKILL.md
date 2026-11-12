@@ -41,16 +41,12 @@ mitigation loop below still apply.
 
 ## Prerequisites
 
-- `jscpd` reachable via `npx --yes jscpd@<PINNED_VERSION>` (or globally
-  installed). Pin to a specific released version everywhere you invoke
-  jscpd in this skill — both in your own baseline/verification commands
-  and in the wrapper script you commit into the target project (Step 4).
-  `jscpd@latest` is non-reproducible: a new release can change
-  parsing/config or fail independently of any repository change, turning
-  an unchanged commit into a failing CI job later. Resolve the pin once at
-  the start of the session (`npm view jscpd version`, or
-  `npx --yes jscpd@latest --version` and use that resolved number) and
-  reuse it for the rest of the run instead of re-resolving per command.
+- `npx` (Node.js). Every jscpd command in this skill, and the hook or
+  wrapper script it commits (Step 4), uses one release, `<PINNED_VERSION>`,
+  never `jscpd@latest` (a new release could fail an unchanged commit): the
+  version the project already pins (Step 0.1), else the output of
+  `npm view jscpd version`, resolved once per run. Like `<SCAN_PATHS>` it
+  is a placeholder: write the number itself into each command.
 - `pre-commit` (or `uvx pre-commit`) when the project uses pre-commit
 - Git repository
 - `/analyze-duplicates` for the Step 7 report (see above)
@@ -107,6 +103,12 @@ grep -niE 'jscpd|duplicat' tox.ini Makefile noxfile.py pixi.toml pyproject.toml 
 # Helper scripts
 grep -rliE 'jscpd' tools/ scripts/ bin/ 2>/dev/null
 
+# The jscpd version already pinned, if any (wrapper, dependency, CI, hook rev)
+grep -rnE 'jscpd@|JSCPD_VERSION *[:?]?=|"jscpd": *"' tools/ scripts/ bin/ tox.ini Makefile \
+  noxfile.py pixi.toml pyproject.toml package.json .pre-commit-config.yaml \
+  .github/workflows .forgejo/workflows .gitlab-ci.y*ml 2>/dev/null
+grep -nA3 'kucherenko/jscpd' .pre-commit-config.yaml 2>/dev/null
+
 # CI wiring — check every CI system present, not just one
 grep -rliE 'jscpd|duplicat' .github/workflows/*.y*ml .forgejo/workflows/*.y*ml \
   .gitlab-ci.y*ml .circleci/config.yml .travis.yml .appveyor.yml 2>/dev/null
@@ -117,6 +119,16 @@ Projects sometimes run more than one CI system at once (e.g. GitHub Actions
 before a migration). List what's actually active — check which ones the
 project's badges/README reference, or which have run recently — rather
 than assuming only one applies.
+
+If the project already pins a jscpd version, that is `<PINNED_VERSION>` for
+this run (Prerequisites), so the report and re-checks match what its check
+enforces. It is always a bare `X.Y.Z`: a hook's `rev: v5.4.3` means `5.4.3`
+(for a frozen SHA, the tag in its comment), and a `package.json` range
+(`^5.4.0`) is not a pin, so take what the lockfile resolves (`npm ls jscpd`).
+A runner that uses `jscpd@latest` or a bare `npx jscpd`, or runners that
+pin different versions, make the setup *partially wired* (0.3) even when
+its check passes: pin them all to one version (the one CI runs; if none is
+pinned, `npm view jscpd version`) as part of Steps 1–6.
 
 Also record whether the project uses **pre-commit**, and what (if anything)
 already runs it in CI — Steps 4.0 and 5.0a depend on the answer:
@@ -154,8 +166,8 @@ If mirrored on multiple platforms, wire in each.
 | **Partially wired**      | Do only the missing parts of Steps 1–6, then continue     |
 | **Not present**          | Full Steps 1–6                                            |
 
-"Fully wired" means config + a pre-commit hook or build-tool target + a
-CI job (or pre-commit.ci) that actually runs it; a CI job that never
+"Fully wired" means config + a pre-commit hook or build-tool target that
+pins one jscpd version + a CI job (or pre-commit.ci) that actually runs it; a CI job that never
 invokes the check (see the masking-hazard audit below) counts as partially
 wired. For an already-clean setup, optionally offer an `/analyze-duplicates`
 report to show what is *near* the threshold.
@@ -182,7 +194,7 @@ grep -nE 'jscpd' tox.ini Makefile pixi.toml package.json tools/*.sh scripts/*.sh
   .pre-commit-config.yaml .github/workflows/*.y*ml .forgejo/workflows/*.y*ml 2>/dev/null
 ```
 
-Anything beyond a bare `npx jscpd <path>` (which reads `.jscpd.json`
+Anything beyond a bare `npx jscpd@<PINNED_VERSION> <path>` (which reads `.jscpd.json`
 automatically) is a candidate to migrate into the central config file. Fix
 this **before** running the analysis in Step 7, or the analysis will reflect
 the masking rather than the project's real state.
@@ -306,7 +318,7 @@ immediately on pre-existing duplication that nobody has reviewed yet.
    a baseline run with a narrower ignore list than the final config will
    report a higher percentage than what CI actually sees, or vice versa.
    ```bash
-   npx --yes "jscpd@${PINNED_VERSION}" --reporters json --output .tmp/jscpd-baseline <SCAN_PATHS>
+   npx --yes jscpd@<PINNED_VERSION> --reporters json --output .tmp/jscpd-baseline <SCAN_PATHS>
    ```
    (jscpd auto-reads `.jscpd.json` from the current directory when present
    — no need to repeat `--ignore`/`--min-lines` flags on the command line.)
@@ -349,7 +361,7 @@ script and build-tool target:
 
 ```yaml
 - repo: https://github.com/kucherenko/jscpd
-  rev: v<VERSION>        # latest tag; `pre-commit autoupdate` bumps it
+  rev: v<PINNED_VERSION> # `pre-commit autoupdate` bumps it
   hooks:
   - id: jscpd
     args: ["."]
@@ -366,8 +378,11 @@ script and build-tool target:
   Those wheels need glibc 2.34+ (or musl, macOS, Windows) and there is no
   sdist; where they can't install, use a `repo: local` hook with
   `language: node`, `entry: jscpd`, the same two overrides and
-  `additional_dependencies: ["jscpd@<VERSION>"]` — pre-commit provisions
+  `additional_dependencies: ["jscpd@<PINNED_VERSION>"]` — pre-commit provisions
   Node for it, but `pre-commit autoupdate` won't bump that pin.
+- Upstream tags start at `v4.3.0` and skip some npm releases. If
+  `git ls-remote --tags https://github.com/kucherenko/jscpd v<PINNED_VERSION>`
+  prints nothing, use that `repo: local` hook too.
 - Skip the wrapper script and build-tool target below — unless the
   project's convention gives every check its own target, in which case make
   it a thin `pre-commit run jscpd --all-files`.
@@ -623,10 +638,10 @@ touching the first commit.
 > request.
 
 Run `/analyze-duplicates` on `<SCAN_PATHS>` with `--threshold <THRESHOLD>`,
-`--jscpd-version <PINNED_VERSION>` and `--output .tmp/duplication-report.md`. It picks up this project's
-`.jscpd.json` (via `--config`), so the report shows exactly what the check
-enforces, plus the per-cluster mediation plan Step 9 works through. Without
-`/analyze-duplicates`, run `npx --yes "jscpd@${PINNED_VERSION}" --reporters
+`--jscpd-version <PINNED_VERSION>` and `--output .tmp/duplication-report.md`.
+It picks up this project's `.jscpd.json` (via `--config`), so with the same
+jscpd release the report shows exactly what the check enforces, plus the per-cluster mediation plan Step 9 works through. Without
+`/analyze-duplicates`, run `npx --yes jscpd@<PINNED_VERSION> --reporters
 console,json --output .tmp/jscpd-report <SCAN_PATHS>` and work from its
 clone list. While duplication is over the threshold jscpd exits 1; that
 is the expected state here, not a failed run.
@@ -664,7 +679,7 @@ classification):
 3. Re-run jscpd on just the affected paths to confirm the cluster is gone
    and no new one was introduced:
    ```bash
-   npx --yes "jscpd@${PINNED_VERSION}" <affected-paths>
+   npx --yes jscpd@<PINNED_VERSION> <affected-paths>
    ```
 4. Run the project's existing test suite for the touched area — a
    duplication-driven refactor is a correctness-risk change like any other;
