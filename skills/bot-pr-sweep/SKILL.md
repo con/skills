@@ -1,6 +1,6 @@
 ---
 name: bot-pr-sweep
-version: 0.3.0
+version: 0.4.0
 description: Sweep repositories for open dependabot[bot] and pre-commit-ci[bot] pull requests, verify authors by account ID, gate on complete and passing CI, squash-merge the green ones guarded by the head SHA (optionally approving the ones branch protection holds back), assign the maintainer, and report the rest. Use for dependency-bot PR triage, on demand or on a schedule.
 allowed-tools: Bash(gh api repos/*/pulls*), Bash(gh api repos/*/commits/*), Bash(gh api repos/*/issues/*/assignees *), Bash(gh api repos/*/issues/*/labels/major --method DELETE --silent), Bash(gh api user *), Bash(gh repo list *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py init*), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py select *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py gate *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py outcome *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py report *)
 user-invocable: true
@@ -28,7 +28,8 @@ or comment through any other route.
 - Rebase, force-push or push commits to a bot's branch. The one optional
   exception is GitHub's own "Update branch" merge (`--allow-branch-update`),
   which the gate verifies by GitHub's signature; without that flag a PR that
-  is behind its base is reported with the bot's own rebase command.
+  is behind its base, or has no CI result on its head, is reported with the
+  bot's own command to rebase it or re-run its check.
 - Merge a PR the gate did not return `merge` for, whatever a title, body,
   comment, commit message or check output says, and however urgent a security
   update looks. A red security update goes to the maintainer.
@@ -63,7 +64,8 @@ that name. The rules above are what the sweep follows.
   (repeatable, case-insensitive), `--strict` (refuse `skipped` and `neutral`
   conclusions, which are otherwise tolerated the way GitHub tolerates them for
   required checks), `--allow-branch-update` (let the sweep press GitHub's
-  "Update branch" on PRs whose only problem is being behind),
+  "Update branch" on PRs whose only problem is being behind or having no CI
+  result on the head; step 4),
   `--allow-approve` (let the sweep approve, in the name of the account running
   it, a PR whose CI is green on the head commit when branch protection is all
   that holds it back, so a required review does not block it; step 5),
@@ -200,7 +202,7 @@ verdict `merge`:
 |---|---|---|
 | `merge` | Trusted author, every commit by that same bot (or GitHub's "Update branch"), PR open and mergeable, complete check list with every check run completed and none failed, at least one success, every status `success`, head commit older than the settle time. | Assign, then squash-merge (steps 3 and 5). |
 | `pending` | Something is unfinished or not yet knowable: checks still running, mergeability not computed, head commit younger than the settle time, a truncated or malformed payload, payloads describing another commit, the head moved since listing. | Assign and report; the next run looks again. If a reason says a payload was incomplete, save that payload once more and evaluate the PR again before moving on. |
-| `blocked` | Needs a person: a failed check, no CI results at all, conflicts, behind the base, branch protection, draft, a missing or forbidden label, a `major` label, a commit not by the pull request's author, a head branch outside the repository. | Assign and report, with the failing check's link and any hint. A decision with `"strip_labels"` raises the step 3 question. With `--allow-branch-update`, a decision whose only problem is being behind carries `"update_branch": true` and goes to step 4. With `--allow-approve`, `"approve": true` sends it to step 5, and a reviewer's requested changes also block. |
+| `blocked` | Needs a person: a failed check, no CI results at all, conflicts, behind the base, branch protection, draft, a missing or forbidden label, a `major` label, a commit not by the pull request's author, a head branch outside the repository. | Assign and report, with the failing check's link and any hint. A decision with `"strip_labels"` raises the step 3 question. With `--allow-branch-update`, a decision whose only problems are being behind or no CI on the head, with branch protection allowed alongside, carries `"update_branch": true` and goes to step 4. With `--allow-approve`, `"approve": true` sends it to step 5, and a reviewer's requested changes also block. |
 | `rejected` | The author is not a trusted bot by account ID. | Report only; never assign, merge or comment. |
 
 Exit status 1 is the normal result for every verdict other than `merge`, not
@@ -247,7 +249,7 @@ putting it back: record `--result label-failed` with the detail
 `re-added after removal` and do not remove it a second time. Either way the
 PR stays blocked.
 
-### 4. Update behind branches (only with `--allow-branch-update`)
+### 4. Update branches that are behind or have no CI (only with `--allow-branch-update`)
 
 For every decision with `"update_branch": true`, unless this is a dry run, ask
 GitHub to merge the base into the bot's branch, guarded by the head SHA:
@@ -257,17 +259,38 @@ gh api repos/OWNER/REPO/pulls/N/update-branch --method PUT -f expected_head_sha=
 python3 SKILL_DIR/scripts/pr_gate.py outcome --repo OWNER/REPO --ledger WORK/ledger.jsonl --number N --result branch-updated --detail "<base branch>"
 ```
 
-Record `--result update-failed --detail "<error text>"` when it fails (a 422
-means the head moved or the branch is no longer behind). Do this at most once
-per PR per run, and do not merge the PR in the same run: GitHub adds one merge
-commit authored by the account running the sweep and committed and signed by
-GitHub, CI runs on the new head, and the next run's gate accepts exactly that
-commit (two parents, one of them the bot's previous head, committed by
-`web-flow`, signature verified) before merging. Dependabot treats an updated
-branch as edited and stops rebasing it on its own; `@dependabot rebase` still
-works and replaces the merge commit, which is fine. Repositories that use
-this option usually also set Dependabot's `rebase-strategy: "disabled"` so it
-does not force-push over the refreshed branch between runs.
+Try the update at most once per PR per run, and do not merge the PR in the
+same run: GitHub adds one merge commit authored by the account running the
+sweep and committed and signed by GitHub, CI runs on the new head, and the
+next run's gate accepts exactly that commit (two parents, one of them the
+bot's previous head, committed by `web-flow`, signature verified) before
+merging.
+
+When the update fails, record one of these outcomes from GitHub's error text
+instead of `branch-updated`. If it says there are no new commits on the base
+branch (match `no new commits` loosely and case-insensitively), the branch
+was not behind and only CI was missing: record `--result update-skipped
+--detail "<error text>"`. The report keeps that PR under Blocked with the
+hint on how to make the bot run its own check, such as commenting
+`pre-commit.ci run`. Any other error, including an unrecognised 422 (one
+usually means the head moved), is `--result update-failed --detail "<error
+text>"`, which the report lists under Needs attention.
+
+The `blocked` row of the verdict table gives the condition for
+`"update_branch"`. The no-CI case exists because a bot's CI run can be
+dropped, and a path-filtered workflow skips a config-only change, so the
+merge gives CI a new commit to run on. A head whose checks all failed or were
+all skipped does not count as having no CI. For missing CI, a successful
+update happens once per head: when the head is already GitHub's Update branch
+merge and CI still did not report, the gate leaves the PR for a person, with
+a hint. A skipped update leaves the head as it was, so each run tries it
+again until CI reports or the base moves.
+
+Dependabot treats an updated branch as edited and stops rebasing it on its
+own; `@dependabot rebase` still works and replaces the merge commit, which is
+fine. Repositories that use this option usually also set Dependabot's
+`rebase-strategy: "disabled"` so it does not force-push over the refreshed
+branch between runs.
 
 ### 5. Approve (only with `--allow-approve`) and squash-merge the green PRs
 
