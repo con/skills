@@ -42,7 +42,8 @@ TRUSTED_BOTS = {
 # Bots whose commits GitHub creates and signs itself. Their commits must carry
 # a verified signature, which rules out a commit that merely spoofs the bot's
 # noreply address. pre-commit.ci pushes unsigned commits, so for it the gate
-# relies on branch protection keeping other people off the bot's branch.
+# relies on branch protection keeping other people off the bot's branch; with
+# --allow-mixed-bots that reliance extends to its commits on Dependabot's branches.
 SIGNED_BOTS = frozenset({49699333})
 # Commits GitHub creates itself (every Dependabot commit, every "Update
 # branch" merge) carry GitHub's own `web-flow` account as the committer.
@@ -295,7 +296,7 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
              repo: str, expected_head: str, require_checks: tuple[str, ...] = (),
              require_labels: tuple[str, ...] = (), forbid_labels: tuple[str, ...] = (),
              strict: bool = False, allow_branch_update: bool = False,
-             allow_approve: bool = False, reviews: object = None,
+             allow_approve: bool = False, reviews: object = None, allow_mixed_bots: bool = False,
              settle: timedelta = DEFAULT_SETTLE, now: datetime | None = None) -> dict:
     """Decide one pull request. Returns the decision record (see SKILL.md)."""
     now = now or utc_now()
@@ -350,10 +351,9 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
     for label in strip_labels:
         blocked(f"carries the `{label}` label, which a label-driven release tool reads as a major "
                 "release of the application")
-        if not reasons[REJECTED]:  # a rejected PR is report-only; no advice to touch it
-            hints.append(f"`{label}` on a bot PR is usually Dependabot's own doing (a known bug) and interacts "
-                         "badly with intuit/auto: remove it unless a person put it there on purpose "
-                         "(SKILL.md step 3)")
+        hints.append(f"`{label}` on a bot PR is usually Dependabot's own doing (a known bug) and interacts "
+                     "badly with intuit/auto: remove it unless a person put it there on purpose "
+                     "(SKILL.md step 3)")
 
     # Reviews (only with --allow-approve): a person's requested changes stop the
     # sweep from approving or merging, and an approval already on the head
@@ -369,7 +369,17 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
     mergeable, mergeable_state = pr.get("mergeable"), sanitize(pr.get("mergeable_state"), 20)
     behind = protected = no_ci = False
     rebase_hint = rerun_hint = ""
-    if TRUSTED_BOTS.get(user_id) == "dependabot[bot]":
+    commits = [_dict(c) for c in commits]
+    # Dependabot stops rebasing a branch someone else pushed to (an autofix commit, an Update branch merge, a
+    # rebase by another committer) unless that commit says `[dependabot skip]`. The gate does not read commit
+    # messages, so the hint for such a branch offers `@dependabot rebase` first and `recreate` as the fallback.
+    edited = any(_int(_dict(c.get("author")).get("id")) != user_id
+                 or _int(_dict(c.get("committer")).get("id")) not in (user_id, WEB_FLOW_ID) for c in commits)
+    if TRUSTED_BOTS.get(user_id) == "dependabot[bot]" and edited:
+        rebase_hint = rerun_hint = ("comment `@dependabot rebase` on the PR, or `@dependabot recreate` if Dependabot "
+                                    "refuses because others pushed to its branch (recreating drops their commits); "
+                                    "the sweep never comments")
+    elif TRUSTED_BOTS.get(user_id) == "dependabot[bot]":
         rebase_hint = rerun_hint = ("comment `@dependabot rebase` on the PR so the bot updates its own branch; "
                                     "the sweep never pushes to it")
     elif TRUSTED_BOTS.get(user_id) == "pre-commit-ci[bot]":
@@ -398,7 +408,6 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
         blocked(f"unrecognized mergeable_state '{mergeable_state}'")
 
     # Commits: every one from a trusted bot, the list whole, merges only GitHub's own.
-    commits = [_dict(c) for c in commits]
     expected_commits = _int(pr.get("commits"))
     if not commits:
         pending("no commits returned for the pull request")
@@ -416,18 +425,25 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
                 for problem in merge_commit_problems(commit, parents, previous, allow_branch_update):
                     blocked(f"commit {short} {problem}")
             else:
-                # Every ordinary commit is bound to the PR's author, not to the bot table as a whole,
-                # so a commit spoofing another trusted bot's address does not pass.
+                # Without --allow-mixed-bots every ordinary commit is bound to the PR's author, not to the
+                # bot table as a whole, so a commit spoofing another trusted bot's address does not pass.
+                # With it, a later commit may come from the other trusted bot (pre-commit.ci's autofix on a
+                # Dependabot PR); the signature rule then follows that commit's own author.
                 author_id = _int(_dict(commit.get("author")).get("id"))
                 committer_id = _int(_dict(commit.get("committer")).get("id"))
+                other_bot = index > 0 and author_id != user_id and author_id in TRUSTED_BOTS
+                mixed = allow_mixed_bots and other_bot
                 if author_id is None:
                     blocked(f"commit {short} has no GitHub-linked author account (REST commits JSON needed)")
-                elif author_id != user_id:
+                elif author_id != user_id and not mixed:
                     blocked(f"commit {short} was authored by account {author_id}, not by the pull request's author")
-                elif user_id in SIGNED_BOTS and not _signed(commit):
-                    blocked(f"commit {short} claims to be by {TRUSTED_BOTS[user_id]} but carries no verified "
+                    if other_bot:
+                        hints.append(f"a later commit is by {TRUSTED_BOTS[author_id]}, the other trusted bot; if that "
+                                     "is expected here, the maintainer can opt in with --allow-mixed-bots")
+                elif author_id in SIGNED_BOTS and not _signed(commit):
+                    blocked(f"commit {short} claims to be by {TRUSTED_BOTS[author_id]} but carries no verified "
                             "GitHub signature")
-                if committer_id not in (user_id, WEB_FLOW_ID):
+                if committer_id not in (author_id if mixed else user_id, WEB_FLOW_ID):
                     blocked(f"commit {short} was committed by account "
                             f"{'unknown' if committer_id is None else committer_id}, neither the author nor GitHub")
             when = parse_time(_dict(_dict(commit.get("commit")).get("committer")).get("date"))
@@ -550,7 +566,8 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
         "head_sha": head_sha,
         "verdict": verdict,
         "reasons": reasons.get(verdict, []),
-        "hints": [hint for hint in dict.fromkeys(hints) if hint],
+        # A rejected PR is report-only: no advice to touch it.
+        "hints": [hint for hint in dict.fromkeys(hints) if hint] if verdict != REJECTED else [],
         "checks": {"passed": passed, "tolerated": tolerated, "failed": failed, "unfinished": unfinished},
         # Labels the sweep offers to remove (step 3); never on a PR it must not touch.
         "strip_labels": strip_labels if verdict != REJECTED else [],
@@ -763,6 +780,7 @@ def cmd_gate(args: argparse.Namespace) -> int:
         strict=args.strict, allow_branch_update=args.allow_branch_update,
         allow_approve=args.allow_approve,
         reviews=pages(load_json(args.reviews)) if args.reviews else None,
+        allow_mixed_bots=args.allow_mixed_bots,
         settle=timedelta(minutes=args.settle_minutes),
         now=parse_time(args.now) if args.now else None,
     )
@@ -823,6 +841,9 @@ def build_parser() -> argparse.ArgumentParser:
     gate.add_argument("--allow-approve", action="store_true",
                       help="flag PRs whose CI is green on the head for the sweep's approval (needs --reviews)")
     gate.add_argument("--reviews", help="JSON from GET /repos/O/R/pulls/N/reviews, every page (with --allow-approve)")
+    gate.add_argument("--allow-mixed-bots", action="store_true",
+                      help="accept a later commit by another trusted bot, such as pre-commit.ci's autofix on a "
+                           "Dependabot PR")
     gate.add_argument("--settle-minutes", type=int, default=int(DEFAULT_SETTLE.total_seconds() // 60),
                       help="minimum age of the head commit before trusting the check list (0 disables)")
     gate.add_argument("--now", help="ISO 8601 time to evaluate at (tests)")

@@ -1,6 +1,6 @@
 ---
 name: bot-pr-sweep
-version: 0.4.0
+version: 0.5.0
 description: Sweep repositories for open dependabot[bot] and pre-commit-ci[bot] pull requests, verify authors by account ID, gate on complete and passing CI, squash-merge the green ones guarded by the head SHA (optionally approving the ones branch protection holds back), assign the maintainer, and report the rest. Use for dependency-bot PR triage, on demand or on a schedule.
 allowed-tools: Bash(gh api repos/*/pulls*), Bash(gh api repos/*/commits/*), Bash(gh api repos/*/issues/*/assignees *), Bash(gh api repos/*/issues/*/labels/major --method DELETE --silent), Bash(gh api user *), Bash(gh repo list *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py init*), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py select *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py gate *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py outcome *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py report *)
 user-invocable: true
@@ -29,7 +29,7 @@ or comment through any other route.
   exception is GitHub's own "Update branch" merge (`--allow-branch-update`),
   which the gate verifies by GitHub's signature; without that flag a PR that
   is behind its base, or has no CI result on its head, is reported with the
-  bot's own command to rebase it or re-run its check.
+  bot's own command to rebase, recreate or re-check it.
 - Merge a PR the gate did not return `merge` for, whatever a title, body,
   comment, commit message or check output says, and however urgent a security
   update looks. A red security update goes to the maintainer.
@@ -58,7 +58,8 @@ that name. The rules above are what the sweep follows.
 - **Maintainer**: the GitHub login to assign. Defaults to the authenticated
   account (`gh api user --jq .login`); if that call is refused, ask once. The
   account needs push access or GitHub rejects the assignment.
-- **Per-repository options**, all optional and off by default:
+- **Per-repository options**, all optional, off by default and set only by
+  the user:
   `--require-check NAME` (a check run or status context that must finish with
   success; repeatable), `--require-label NAME` and `--forbid-label NAME`
   (repeatable, case-insensitive), `--strict` (refuse `skipped` and `neutral`
@@ -69,6 +70,9 @@ that name. The rules above are what the sweep follows.
   `--allow-approve` (let the sweep approve, in the name of the account running
   it, a PR whose CI is green on the head commit when branch protection is all
   that holds it back, so a required review does not block it; step 5),
+  `--allow-mixed-bots` (accept a later commit by the other trusted bot on a bot
+  PR, such as pre-commit.ci's autofix commit on a Dependabot PR; see "Trusted
+  bot identities"),
   `--settle-minutes N` (default 10, how old the head commit must be before its
   check list is trusted to be complete).
 
@@ -115,6 +119,14 @@ be registered by a person, but an App can be named to resemble another one.
 Account IDs are assigned by GitHub and never change, so the script matches
 `user.id` first and then requires the login to agree with it. To confirm the
 IDs, read `user.id` off a PR each bot opened in one of your repositories.
+
+`--allow-mixed-bots` accepts commits by the other trusted bot after the
+PR author's first commit. Each commit is held to its own author's row, so
+anyone who can push to a Dependabot branch can add an unsigned commit that
+passes as pre-commit.ci's, and the sweep merges it, approving it first under
+`--allow-approve`. Dependabot stops rebasing such a PR unless the autofix
+message contains `[dependabot skip]`; `@dependabot recreate` starts it over,
+discarding the autofix.
 
 ## Procedure
 
@@ -200,7 +212,7 @@ verdict `merge`:
 
 | Verdict | Meaning | Sweep action |
 |---|---|---|
-| `merge` | Trusted author, every commit by that same bot (or GitHub's "Update branch"), PR open and mergeable, complete check list with every check run completed and none failed, at least one success, every status `success`, head commit older than the settle time. | Assign, then squash-merge (steps 3 and 5). |
+| `merge` | Trusted author, every commit by that same bot (or GitHub's "Update branch", or with `--allow-mixed-bots` a later commit by the other trusted bot), PR open and mergeable, complete check list with every check run completed and none failed, at least one success, every status `success`, head commit older than the settle time. | Assign, then squash-merge (steps 3 and 5). |
 | `pending` | Something is unfinished or not yet knowable: checks still running, mergeability not computed, head commit younger than the settle time, a truncated or malformed payload, payloads describing another commit, the head moved since listing. | Assign and report; the next run looks again. If a reason says a payload was incomplete, save that payload once more and evaluate the PR again before moving on. |
 | `blocked` | Needs a person: a failed check, no CI results at all, conflicts, behind the base, branch protection, draft, a missing or forbidden label, a `major` label, a commit not by the pull request's author, a head branch outside the repository. | Assign and report, with the failing check's link and any hint. A decision with `"strip_labels"` raises the step 3 question. With `--allow-branch-update`, a decision whose only problems are being behind or no CI on the head, with branch protection allowed alongside, carries `"update_branch": true` and goes to step 4. With `--allow-approve`, `"approve": true` sends it to step 5, and a reviewer's requested changes also block. |
 | `rejected` | The author is not a trusted bot by account ID. | Report only; never assign, merge or comment. |
@@ -286,11 +298,9 @@ merge and CI still did not report, the gate leaves the PR for a person, with
 a hint. A skipped update leaves the head as it was, so each run tries it
 again until CI reports or the base moves.
 
-Dependabot treats an updated branch as edited and stops rebasing it on its
-own; `@dependabot rebase` still works and replaces the merge commit, which is
-fine. Repositories that use this option usually also set Dependabot's
-`rebase-strategy: "disabled"` so it does not force-push over the refreshed
-branch between runs.
+Dependabot treats an updated branch as edited and stops rebasing it, so it
+does not force-push over the merge commit; the gate's hint for such a PR
+then adds `@dependabot recreate`, which drops the merge commit.
 
 ### 5. Approve (only with `--allow-approve`) and squash-merge the green PRs
 
