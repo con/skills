@@ -11,8 +11,10 @@ Subcommands
 init                      create the run's working directory and print its path
 select    PULLS.json      pick the open PRs opened by a trusted bot, matched on
                           the numeric account ID (``user.id``), never the login
-gate      decide ``merge`` / ``pending`` / ``blocked`` / ``rejected`` for one PR
-outcome   record what the sweep then did (merged, failed, dry run, repo error)
+gate      decide ``merge`` / ``pending`` / ``blocked`` / ``rejected`` for one PR,
+          and with ``--allow-approve`` whether the sweep approves it
+outcome   record what the sweep then did (approved, merged, failed, dry run,
+          repo error)
 report    render the Markdown report from the ledger the commands above write
 
 Exit status: ``gate`` exits 0 only for the verdict ``merge``, 1 for any other
@@ -40,7 +42,8 @@ TRUSTED_BOTS = {
 # Bots whose commits GitHub creates and signs itself. Their commits must carry
 # a verified signature, which rules out a commit that merely spoofs the bot's
 # noreply address. pre-commit.ci pushes unsigned commits, so for it the gate
-# relies on branch protection keeping other people off the bot's branch.
+# relies on branch protection keeping other people off the bot's branch; with
+# --allow-mixed-bots that reliance extends to its commits on Dependabot's branches.
 SIGNED_BOTS = frozenset({49699333})
 # Commits GitHub creates itself (every Dependabot commit, every "Update
 # branch" merge) carry GitHub's own `web-flow` account as the committer.
@@ -58,8 +61,14 @@ MERGEABLE_OK = frozenset({"clean", "has_hooks"})
 STRIPPED_LABELS = frozenset({"major"})
 RESULTS = frozenset({
     "merged", "merge-failed", "assigned", "assign-failed", "dry-run", "repo-error",
-    "branch-updated", "update-failed", "label-removed", "label-failed",
+    "branch-updated", "update-failed", "update-skipped", "label-removed", "label-failed",
+    "approved", "approve-failed", "approve-skipped",
 })
+# Review states that set a reviewer's standing. COMMENTED and PENDING do not,
+# and a DISMISSED review is skipped, so the reviewer's previous decisive review
+# stands again: a request for changes followed by a dismissed approval still
+# blocks, so the gate never approves over a request that is still live.
+DECISIVE_REVIEWS = frozenset({"APPROVED", "CHANGES_REQUESTED"})
 DEFAULT_SETTLE = timedelta(minutes=10)
 
 MERGE, PENDING, BLOCKED, REJECTED = "merge", "pending", "blocked", "rejected"
@@ -67,6 +76,7 @@ MERGE, PENDING, BLOCKED, REJECTED = "merge", "pending", "blocked", "rejected"
 _URL = re.compile(r"https://[A-Za-z0-9._~:/?#@!$&'*+,;=%-]+")
 _REPO = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
 _SHA = re.compile(r"[0-9a-f]{40}")
+_LOGIN = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?")
 _VERSION = re.compile(r"^version:\s*([0-9]+\.[0-9]+\.[0-9]+)\s*$", re.MULTILINE)
 
 
@@ -95,9 +105,15 @@ def _str(value: object) -> str:
 
 
 def sanitize(value: object, limit: int = 100) -> str:
-    """Make contributor-controlled text safe to print inside backticks."""
+    """Make contributor-controlled text safe to print inside backticks or as plain Markdown.
+
+    No control characters, no backticks, no `<` (raw HTML such as `<a href=...>`
+    or an `<https://...>` autolink would render), and no `](`, which an inline
+    link or image needs, so `[label](https://elsewhere)` cannot pass for a link
+    the report built. A bare URL can still be autolinked, but then it shows itself.
+    """
     text = "".join(ch if ch.isprintable() else " " for ch in _str(value))
-    text = " ".join(text.replace("`", "'").split())
+    text = " ".join(text.replace("`", "'").replace("<", "‹").split()).replace("](", "] (")
     return text if len(text) <= limit else text[: limit - 1] + "…"
 
 
@@ -239,7 +255,7 @@ def merge_commit_problems(commit: dict, parents: list[str], previous: str, allow
     problems = []
     if len(parents) != 2:
         problems.append(f"merges {len(parents)} parents")
-    elif previous not in parents:
+    elif not previous or previous not in parents:
         problems.append("does not continue the bot's previous commit")
     if _int(_dict(commit.get("committer")).get("id")) != WEB_FLOW_ID:
         problems.append("was not committed by GitHub, so it is not an Update branch merge")
@@ -248,10 +264,39 @@ def merge_commit_problems(commit: dict, parents: list[str], previous: str, allow
     return problems
 
 
+def read_reviews(reviews: object, *, repo: str, number: int, head_sha: str) -> tuple[str, list[str], bool]:
+    """Each reviewer's latest decisive review: (problem, who requests changes, head approved).
+
+    The payload is GET /repos/O/R/pulls/N/reviews, every page, oldest first as
+    GitHub returns it. Every review must point at this pull request, so a
+    payload saved for another PR or repository, or an error object, is a
+    problem rather than "no reviews". Each review by a deleted account
+    (``user: null``) stands on its own, so one ghost's approval cannot cancel
+    another's requested changes.
+    """
+    if not isinstance(reviews, list) or not all(isinstance(review, dict) for review in reviews):
+        return "reviews payload is not a list of GitHub reviews; fetch it again", [], False
+    suffix = f"/repos/{repo}/pulls/{number}".lower()
+    latest: dict[tuple, dict] = {}
+    for index, review in enumerate(reviews):
+        if not _str(review.get("pull_request_url")).lower().endswith(suffix):
+            return "reviews payload does not describe this pull request's reviews; fetch it again", [], False
+        if _str(review.get("state")) not in DECISIVE_REVIEWS:
+            continue
+        reviewer = _int(_dict(review.get("user")).get("id"))
+        latest[("user", reviewer) if reviewer is not None else ("review", index)] = review
+    changes = [sanitize(_dict(review.get("user")).get("login"), 40) or "a deleted account"
+               for review in latest.values() if review.get("state") == "CHANGES_REQUESTED"]
+    approved = any(review.get("state") == "APPROVED" and review.get("commit_id") == head_sha
+                   for review in latest.values())
+    return "", changes, approved
+
+
 def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
              repo: str, expected_head: str, require_checks: tuple[str, ...] = (),
              require_labels: tuple[str, ...] = (), forbid_labels: tuple[str, ...] = (),
              strict: bool = False, allow_branch_update: bool = False,
+             allow_approve: bool = False, reviews: object = None, allow_mixed_bots: bool = False,
              settle: timedelta = DEFAULT_SETTLE, now: datetime | None = None) -> dict:
     """Decide one pull request. Returns the decision record (see SKILL.md)."""
     now = now or utc_now()
@@ -306,17 +351,40 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
     for label in strip_labels:
         blocked(f"carries the `{label}` label, which a label-driven release tool reads as a major "
                 "release of the application")
-        if not reasons[REJECTED]:  # a rejected PR is report-only; no advice to touch it
-            hints.append(f"`{label}` on a bot PR is usually Dependabot's own doing (a known bug) and interacts "
-                         "badly with intuit/auto: remove it unless a person put it there on purpose "
-                         "(SKILL.md step 3)")
+        hints.append(f"`{label}` on a bot PR is usually Dependabot's own doing (a known bug) and interacts "
+                     "badly with intuit/auto: remove it unless a person put it there on purpose "
+                     "(SKILL.md step 3)")
+
+    # Reviews (only with --allow-approve): a person's requested changes stop the
+    # sweep from approving or merging, and an approval already on the head
+    # commit is not given twice.
+    approved_at_head = False
+    if allow_approve:
+        problem, changes, approved_at_head = read_reviews(reviews, repo=repo, number=number, head_sha=head_sha)
+        if problem:
+            pending(problem)
+        for reviewer in changes:
+            blocked(f"{reviewer} requested changes; the sweep never approves or merges over a person's review")
 
     mergeable, mergeable_state = pr.get("mergeable"), sanitize(pr.get("mergeable_state"), 20)
-    behind = False
-    rebase_hint = ""
-    if TRUSTED_BOTS.get(user_id) == "dependabot[bot]":
-        rebase_hint = ("comment `@dependabot rebase` on the PR so the bot updates its own branch; "
-                       "the sweep never pushes to it")
+    behind = protected = no_ci = False
+    rebase_hint = rerun_hint = ""
+    commits = [_dict(c) for c in commits]
+    # Dependabot stops rebasing a branch someone else pushed to (an autofix commit, an Update branch merge, a
+    # rebase by another committer) unless that commit says `[dependabot skip]`. The gate does not read commit
+    # messages, so the hint for such a branch offers `@dependabot rebase` first and `recreate` as the fallback.
+    edited = any(_int(_dict(c.get("author")).get("id")) != user_id
+                 or _int(_dict(c.get("committer")).get("id")) not in (user_id, WEB_FLOW_ID) for c in commits)
+    if TRUSTED_BOTS.get(user_id) == "dependabot[bot]" and edited:
+        rebase_hint = rerun_hint = ("comment `@dependabot rebase` on the PR, or `@dependabot recreate` if Dependabot "
+                                    "refuses because others pushed to its branch (recreating drops their commits); "
+                                    "the sweep never comments")
+    elif TRUSTED_BOTS.get(user_id) == "dependabot[bot]":
+        rebase_hint = rerun_hint = ("comment `@dependabot rebase` on the PR so the bot updates its own branch; "
+                                    "the sweep never pushes to it")
+    elif TRUSTED_BOTS.get(user_id) == "pre-commit-ci[bot]":
+        rerun_hint = ("comment `pre-commit.ci run` on the PR so pre-commit.ci checks its own update; "
+                      "the sweep never comments")
     if mergeable is None or mergeable_state in ("", "unknown"):
         pending("GitHub has not finished computing mergeability; retry shortly")
     elif mergeable is False or mergeable_state == "dirty":
@@ -326,7 +394,13 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
         behind = True
         blocked(f"branch is behind `{base_ref}` and the branch protection requires an up-to-date branch")
         hints.append("" if allow_branch_update else rebase_hint)
+    elif mergeable_state == "blocked" and approved_at_head:
+        protected = True
+        blocked("branch protection still blocks although the head commit is approved; it needs something "
+                "this approval cannot give (a required check that has not reported, more approvals, a code "
+                "owner, or approval of the latest push by someone other than its pusher)")
     elif mergeable_state == "blocked":
+        protected = True
         blocked("branch protection is not satisfied (reviews, required checks or merge queue)")
     elif mergeable_state == "unstable":
         blocked("GitHub reports failing status checks (mergeable_state is unstable)")
@@ -334,7 +408,6 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
         blocked(f"unrecognized mergeable_state '{mergeable_state}'")
 
     # Commits: every one from a trusted bot, the list whole, merges only GitHub's own.
-    commits = [_dict(c) for c in commits]
     expected_commits = _int(pr.get("commits"))
     if not commits:
         pending("no commits returned for the pull request")
@@ -352,18 +425,25 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
                 for problem in merge_commit_problems(commit, parents, previous, allow_branch_update):
                     blocked(f"commit {short} {problem}")
             else:
-                # Every ordinary commit is bound to the PR's author, not to the bot table as a whole,
-                # so a commit spoofing another trusted bot's address does not pass.
+                # Without --allow-mixed-bots every ordinary commit is bound to the PR's author, not to the
+                # bot table as a whole, so a commit spoofing another trusted bot's address does not pass.
+                # With it, a later commit may come from the other trusted bot (pre-commit.ci's autofix on a
+                # Dependabot PR); the signature rule then follows that commit's own author.
                 author_id = _int(_dict(commit.get("author")).get("id"))
                 committer_id = _int(_dict(commit.get("committer")).get("id"))
+                other_bot = index > 0 and author_id != user_id and author_id in TRUSTED_BOTS
+                mixed = allow_mixed_bots and other_bot
                 if author_id is None:
                     blocked(f"commit {short} has no GitHub-linked author account (REST commits JSON needed)")
-                elif author_id != user_id:
+                elif author_id != user_id and not mixed:
                     blocked(f"commit {short} was authored by account {author_id}, not by the pull request's author")
-                elif user_id in SIGNED_BOTS and not _signed(commit):
-                    blocked(f"commit {short} claims to be by {TRUSTED_BOTS[user_id]} but carries no verified "
+                    if other_bot:
+                        hints.append(f"a later commit is by {TRUSTED_BOTS[author_id]}, the other trusted bot; if that "
+                                     "is expected here, the maintainer can opt in with --allow-mixed-bots")
+                elif author_id in SIGNED_BOTS and not _signed(commit):
+                    blocked(f"commit {short} claims to be by {TRUSTED_BOTS[author_id]} but carries no verified "
                             "GitHub signature")
-                if committer_id not in (user_id, WEB_FLOW_ID):
+                if committer_id not in (author_id if mixed else user_id, WEB_FLOW_ID):
                     blocked(f"commit {short} was committed by account "
                             f"{'unknown' if committer_id is None else committer_id}, neither the author nor GitHub")
             when = parse_time(_dict(_dict(commit.get("commit")).get("committer")).get("date"))
@@ -376,6 +456,12 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
                 minutes = int((now - newest).total_seconds() // 60)
                 pending(f"head commit is {minutes} min old; waiting {int(settle.total_seconds() // 60)} min "
                         "for CI to register every check")
+
+    # Is the head itself GitHub's Update branch merge? The same test the commit loop applies.
+    tip = commits[-1] if commits else {}
+    tip_parents = [_str(_dict(parent).get("sha")) for parent in _list(tip.get("parents"))]
+    head_is_update = len(commits) > 1 and not merge_commit_problems(tip, tip_parents,
+                                                                    _str(commits[-2].get("sha")), True)
 
     # Check runs: complete list, every one bound to the head and finished, none failed.
     passed: list[str] = []
@@ -456,6 +542,13 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
 
     if ci_known and not passed and not unfinished:
         blocked("no check run or status finished with success for the head commit; unverified PRs are never merged")
+        # Nothing reported at all, as opposed to every check failing or being skipped.
+        no_ci = not (failed or tolerated)
+        if no_ci and head_is_update:
+            hints.append("CI did not report even on GitHub's Update branch merge; check that a workflow or app "
+                         "covers this change")
+        elif no_ci:
+            hints.append(rerun_hint)
     for required in require_checks:
         wanted = sanitize(required, 60)
         if ci_known and wanted not in passed and wanted not in failed and wanted not in unfinished:
@@ -473,13 +566,21 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
         "head_sha": head_sha,
         "verdict": verdict,
         "reasons": reasons.get(verdict, []),
-        "hints": [hint for hint in dict.fromkeys(hints) if hint],
+        # A rejected PR is report-only: no advice to touch it.
+        "hints": [hint for hint in dict.fromkeys(hints) if hint] if verdict != REJECTED else [],
         "checks": {"passed": passed, "tolerated": tolerated, "failed": failed, "unfinished": unfinished},
         # Labels the sweep offers to remove (step 3); never on a PR it must not touch.
         "strip_labels": strip_labels if verdict != REJECTED else [],
-        # True when being behind the base is the only problem and the sweep may fix it.
-        "update_branch": bool(allow_branch_update and behind and verdict == BLOCKED
-                              and len(reasons[BLOCKED]) == 1 and not reasons[PENDING]),
+        # True when being behind, or no CI on a head that is not already an Update branch merge, is all
+        # that stops the PR besides branch protection (SKILL.md step 4).
+        "update_branch": bool(allow_branch_update and (behind or (no_ci and not head_is_update))
+                              and verdict == BLOCKED and not reasons[PENDING]
+                              and len(reasons[BLOCKED]) == int(behind) + int(no_ci) + int(protected)),
+        # True when CI is green on the head, branch protection is the one thing in the way
+        # and no approval sits on the head yet: the sweep approves it. A PR that merges as
+        # it is gets no approval.
+        "approve": bool(allow_approve and protected and not approved_at_head and verdict == BLOCKED
+                        and not reasons[PENDING] and len(reasons[BLOCKED]) == 1),
         "evaluated_at": iso(now),
     }
 
@@ -488,9 +589,45 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
 # report
 # --------------------------------------------------------------------------
 
+# The report links each repository, pull request, commit and account it names
+# when the value has the shape GitHub gives it. Anything else is printed as
+# sanitized plain text, so ledger content cannot dress itself up as a link.
+def _repo_link(repo: object, path: str = "", label: str = "") -> str:
+    """Link LABEL (default: the repository name) to github.com/REPO/PATH, or give plain text.
+
+    LABEL goes into the link as it is, so callers build it from validated parts.
+    """
+    name = _str(repo)
+    owner, _, short = name.partition("/")
+    if _REPO.fullmatch(name) and not owner.startswith(".") and short not in (".", ".."):
+        return f"[{label or name}](https://github.com/{name}{path})"
+    return sanitize(label or name, 120) or "unknown"
+
+
+def _pull_link(repo: object, number: object) -> str:
+    name, pull = _str(repo), _int(number)
+    if pull is None:
+        return sanitize(f"{name}#{number}", 120)
+    return _repo_link(name, f"/pull/{pull}", f"{name}#{pull}")
+
+
+def _commit_link(repo: object, sha: object) -> str:
+    text = _str(sha)
+    short = f"`{sanitize(text, 40)[:7]}`"
+    if not _SHA.fullmatch(text):
+        return short
+    link = _repo_link(repo, f"/commit/{text}", short)
+    return link if link.startswith("[") else short
+
+
+def _user_link(login: object) -> str:
+    text = _str(login)
+    return f"[{text}](https://github.com/{text})" if _LOGIN.fullmatch(text) else sanitize(text, 40)
+
+
 def _pr_line(decision: dict, notes: list[str]) -> str:
     title = f" `{decision['title']}`" if decision.get("title") else ""
-    return f"- [{decision['repo']}#{decision['number']}]({decision['url']}){title} — " + "; ".join(notes)
+    return f"- {_pull_link(decision.get('repo'), decision.get('number'))}{title} — " + "; ".join(notes)
 
 
 def render_report(events: list, *, version: str, now: datetime, dry_run: bool = False,
@@ -517,23 +654,35 @@ def render_report(events: list, *, version: str, now: datetime, dry_run: bool = 
         results = outcomes.get(key, {})
         verdict = decision.get("verdict")
         notes = [] if verdict == MERGE else list(decision.get("reasons", []))[:4]
+        repo = decision.get("repo")
+        if "approved" in results:
+            notes.append("approved by the sweep" + (f" at {_commit_link(repo, results['approved'])}"
+                                                     if results["approved"] else ""))
+        elif dry_run and decision.get("approve"):
+            notes.append("would approve (dry run)")
+        if "approve-skipped" in results:
+            notes.append(f"not approved: {sanitize(results['approve-skipped'], 160)}")
         if "merged" in results:
-            notes.append("squash-merged" + (f" as `{sanitize(results['merged'], 40)[:7]}`" if results["merged"] else ""))
+            notes.append("squash-merged" + (f" as {_commit_link(repo, results['merged'])}" if results["merged"] else ""))
         if "dry-run" in results:
             notes.append("would merge (dry run)")
         if "branch-updated" in results:
             notes.append("branch updated from the base; the next run re-evaluates it")
+        if "update-skipped" in results:
+            notes.append(f"branch not updated: {sanitize(results['update-skipped'], 160)}")
         if "label-removed" in results:
             notes.append(f"label `{sanitize(results['label-removed'], 40)}` removed")
-        for result, label in (("merge-failed", "merge failed"), ("assign-failed", "assignment failed"),
-                              ("update-failed", "branch update failed"), ("label-failed", "label removal failed")):
+        for result, label in (("approve-failed", "approval failed"), ("merge-failed", "merge failed"),
+                              ("assign-failed", "assignment failed"), ("update-failed", "branch update failed"),
+                              ("label-failed", "label removal failed")):
             if result in results:
                 notes.append(f"{label}: {sanitize(results[result], 160)}")
         if "assigned" in results:
-            notes.append(f"assigned to {sanitize(results['assigned'], 40)}")
-        if verdict != MERGE:
+            notes.append(f"assigned to {_user_link(results['assigned'])}")
+        # A hint about what a person could do is moot once the sweep updated the branch itself.
+        if verdict != MERGE and "branch-updated" not in results:
             notes.extend(decision.get("hints", []))
-        failures = {"merge-failed", "assign-failed", "update-failed", "label-failed"} & results.keys()
+        failures = {"approve-failed", "merge-failed", "assign-failed", "update-failed", "label-failed"} & results.keys()
         if verdict == MERGE and "merged" in results:
             bucket = "Merged"
         elif verdict == REJECTED or failures:
@@ -547,34 +696,41 @@ def render_report(events: list, *, version: str, now: datetime, dry_run: bool = 
         if key not in decisions:
             recorded = ", ".join(f"`{sanitize(result, 20)}`" for result in sorted(results))
             buckets["Needs attention"].append(
-                f"- {key[0]}#{key[1]}: {recorded} recorded without a gate decision; check the ledger")
+                f"- {_pull_link(key[0], key[1])}: {recorded} recorded without a gate decision; check the ledger")
     for selection in selections:
         for entry in _list(selection.get("suspicious")):
             entry = _dict(entry)
             number = entry.get("number")
             buckets["Needs attention"].append(
-                f"- [{selection.get('repo')}#{number}](https://github.com/{selection.get('repo')}/pull/{number})"
-                f" — {sanitize(entry.get('reason'), 200)}; not touched")
+                f"- {_pull_link(selection.get('repo'), number)} — {sanitize(entry.get('reason'), 200)}; not touched")
     for error in repo_errors:
-        buckets["Needs attention"].append(f"- {error.get('repo')}: {sanitize(error.get('detail'), 200)}")
+        buckets["Needs attention"].append(f"- {_repo_link(error.get('repo'))}: {sanitize(error.get('detail'), 200)}")
 
     lines = [
         "# Bot PR sweep",
         "",
         f"- Generated {iso(now)} by the bot-pr-sweep skill, version {version}",
-        f"- Mode: {'dry run (nothing merged or assigned)' if dry_run else 'live'}",
+        f"- Mode: {'dry run (nothing approved, merged or assigned)' if dry_run else 'live'}",
         *([f"- Schedule: `{sanitize(schedule, 80)}`"] if schedule else []),
         f"- Repositories swept: {len(selections)}; trusted-bot PRs evaluated: {len(decisions)}",
     ]
     for heading, entries in buckets.items():
         lines += ["", f"## {heading} ({len(entries)})", ""]
         lines += entries or ["- none"]
+    # Repositories with open PRs get a line each; the rest are counted in one line.
     lines += ["", "## Repositories", ""]
-    for selection in sorted(selections, key=lambda item: str(item.get("repo"))):
-        lines.append(f"- {selection.get('repo')}: {selection.get('open_prs')} open PRs, "
+    shown = [selection for selection in sorted(selections, key=lambda item: str(item.get("repo")))
+             if _int(selection.get("open_prs")) != 0 or _list(selection.get("bot_prs"))
+             or _list(selection.get("suspicious"))]
+    for selection in shown:
+        lines.append(f"- {_repo_link(selection.get('repo'), '/pulls')}: {selection.get('open_prs')} open PRs, "
                      f"{len(_list(selection.get('bot_prs')))} from trusted bots, "
                      f"{len(_list(selection.get('suspicious')))} suspicious, "
                      f"{selection.get('other_bots')} from other bots")
+    empty = len(selections) - len(shown)
+    if empty:
+        lines.append(f"- {empty} {'more ' if shown else ''}{'repository' if empty == 1 else 'repositories'} "
+                     "with no open PRs")
     if not selections:
         lines.append("- none recorded")
     return "\n".join(lines) + "\n"
@@ -611,6 +767,9 @@ def cmd_select(args: argparse.Namespace) -> int:
 
 
 def cmd_gate(args: argparse.Namespace) -> int:
+    if bool(args.allow_approve) != bool(args.reviews):
+        raise GateInputError("--allow-approve and --reviews go together: the gate reads the PR's reviews only "
+                             "to avoid approving twice or over a person's requested changes")
     decision = evaluate(
         load_json(args.pr), pages(load_json(args.commits)), pages(load_json(args.check_runs)),
         load_json(args.status),
@@ -619,6 +778,9 @@ def cmd_gate(args: argparse.Namespace) -> int:
         require_labels=tuple(args.require_label or ()),
         forbid_labels=tuple(args.forbid_label or ()),
         strict=args.strict, allow_branch_update=args.allow_branch_update,
+        allow_approve=args.allow_approve,
+        reviews=pages(load_json(args.reviews)) if args.reviews else None,
+        allow_mixed_bots=args.allow_mixed_bots,
         settle=timedelta(minutes=args.settle_minutes),
         now=parse_time(args.now) if args.now else None,
     )
@@ -676,6 +838,12 @@ def build_parser() -> argparse.ArgumentParser:
                       help="refuse skipped and neutral conclusions (by default they are tolerated, as GitHub does)")
     gate.add_argument("--allow-branch-update", action="store_true",
                       help="accept GitHub's own Update branch merge commit and flag behind PRs for it")
+    gate.add_argument("--allow-approve", action="store_true",
+                      help="flag PRs whose CI is green on the head for the sweep's approval (needs --reviews)")
+    gate.add_argument("--reviews", help="JSON from GET /repos/O/R/pulls/N/reviews, every page (with --allow-approve)")
+    gate.add_argument("--allow-mixed-bots", action="store_true",
+                      help="accept a later commit by another trusted bot, such as pre-commit.ci's autofix on a "
+                           "Dependabot PR")
     gate.add_argument("--settle-minutes", type=int, default=int(DEFAULT_SETTLE.total_seconds() // 60),
                       help="minimum age of the head commit before trusting the check list (0 disables)")
     gate.add_argument("--now", help="ISO 8601 time to evaluate at (tests)")
