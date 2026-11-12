@@ -104,7 +104,7 @@ grep -niE 'jscpd|duplicat' tox.ini Makefile noxfile.py pixi.toml pyproject.toml 
 grep -rliE 'jscpd' tools/ scripts/ bin/ 2>/dev/null
 
 # The jscpd version already pinned, if any (wrapper, dependency, CI, hook rev)
-grep -rnE 'jscpd@|JSCPD_VERSION *[:?]?=|"jscpd": *"' tools/ scripts/ bin/ tox.ini Makefile \
+grep -rnE 'jscpd(@|==|": *")|JSCPD_VERSION' tools/ scripts/ bin/ tox.ini Makefile \
   noxfile.py pixi.toml pyproject.toml package.json .pre-commit-config.yaml \
   .github/workflows .forgejo/workflows .gitlab-ci.y*ml 2>/dev/null
 grep -nA3 'kucherenko/jscpd' .pre-commit-config.yaml 2>/dev/null
@@ -124,9 +124,11 @@ If the project already pins a jscpd version, that is `<PINNED_VERSION>` for
 this run (Prerequisites), so the report and re-checks match what its check
 enforces. It is always a bare `X.Y.Z`: a hook's `rev: v5.4.3` means `5.4.3`
 (for a frozen SHA, the tag in its comment), and a `package.json` range
-(`^5.4.0`) is not a pin, so take what the lockfile resolves (`npm ls jscpd`).
-A runner that uses `jscpd@latest` or a bare `npx jscpd`, or runners that
-pin different versions, make the setup *partially wired* (0.3) even when
+(`^5.4.0`) is not a pin, so take what the lockfile resolves
+(`npm ls jscpd --package-lock-only`). A runner that uses `jscpd@latest`,
+or a bare `npx jscpd` that does not get jscpd from the lockfile (jscpd in
+`package-lock.json` and `npm ci` run first), or runners that pin different
+versions, make the setup *partially wired* (0.3) even when
 its check passes: pin them all to one version (the one CI runs; if none is
 pinned, `npm view jscpd version`) as part of Steps 1–6.
 
@@ -374,15 +376,15 @@ script and build-tool target:
   untracked files that git doesn't ignore, so numbers can differ slightly.)
 - **No `--ignore`/`--threshold` args**: hooks run from the repo root, where
   jscpd reads `.jscpd.json` (the masking-hazard rule of Step 0.3).
-- Since v5.3.0 the hook installs jscpd's PyPI wheel, so it needs no Node.
+- Since v5.2.1 the hook installs jscpd's PyPI wheel, so it needs no Node.
   Those wheels need glibc 2.34+ (or musl, macOS, Windows) and there is no
   sdist; where they can't install, use a `repo: local` hook with
   `language: node`, `entry: jscpd`, the same two overrides and
   `additional_dependencies: ["jscpd@<PINNED_VERSION>"]` — pre-commit provisions
   Node for it, but `pre-commit autoupdate` won't bump that pin.
-- Upstream tags start at `v4.3.0` and skip some npm releases. If
-  `git ls-remote --tags https://github.com/kucherenko/jscpd v<PINNED_VERSION>`
-  prints nothing, use that `repo: local` hook too.
+- Older tags' hook cannot run (`Executable jscpd not found`) and some
+  releases have no tag: for a `<PINNED_VERSION>` below 5.2.1 use that
+  `repo: local` hook too.
 - Skip the wrapper script and build-tool target below — unless the
   project's convention gives every check its own target, in which case make
   it a thin `pre-commit run jscpd --all-files`.

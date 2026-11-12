@@ -73,8 +73,8 @@ If neither works, report the error and stop:
 `PINNED_VERSION` is the jscpd release for the whole run, a bare `X.Y.Z`:
 the `--jscpd-version` value if given (e.g. the pin of a project's own
 duplication check, so the report matches what its CI enforces), otherwise
-the version number printed above (jscpd 5.x prints `jscpd 5.4.3`, 4.x just
-`4.0.5`). It is a placeholder like `MIN_LINES`, not a shell variable: write
+the version number printed above (some releases prefix it with a name).
+It is a placeholder like `MIN_LINES`, not a shell variable: write
 the number itself into every command. Every jscpd invocation below is
 `npx --yes jscpd@PINNED_VERSION`, never `jscpd@latest`, so all scans in a
 run use the same release; tell the user which one.
