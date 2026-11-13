@@ -414,8 +414,9 @@ Say where options do not combine: under the rule that the latest push must
 be approved by someone other than its pusher (see Inputs), a branch the
 sweep updates cannot then merge on the sweep's own approval. Ask once
 whether to turn those options on. For the PRs the user says yes to, evaluate
-them again with the option (step 2), carry on through steps 3 to 5, and
-produce this step's report again, since the one already shown is stale.
+them again with the option (step 2), carry on through steps 3 to 5 without
+asking again what the user already answered, and produce this step's report
+again, without offering options a second time.
 Never turn an option on without that answer or one in the invocation.
 
 ### 7. Agree a cadence

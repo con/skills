@@ -294,13 +294,13 @@ def read_reviews(reviews: object, *, repo: str, number: int, head_sha: str) -> t
     return "", changes, approved
 
 
-def paged_items(pages: list, key: str) -> tuple[list | None, int | None]:
+def paged_items(payload: list, key: str) -> tuple[list | None, int | None]:
     """Items of a paged GitHub list payload and its one total_count; None items when the shape is wrong."""
-    pages = list(pages)
-    if not pages or not all(isinstance(page, dict) and key in page for page in pages):
+    payload = list(payload)
+    if not payload or not all(isinstance(page, dict) and key in page for page in payload):
         return None, None
-    totals = {_int(page.get("total_count")) for page in pages}
-    return [item for page in pages for item in _list(page.get(key))], (totals.pop() if len(totals) == 1 else None)
+    totals = {_int(page.get("total_count")) for page in payload}
+    return [item for page in payload for item in _list(page.get(key))], (totals.pop() if len(totals) == 1 else None)
 
 
 def superseded_check_runs(runs: list, workflow_pages: list, head_sha: str) -> tuple[set[int], str]:
@@ -343,7 +343,9 @@ def superseded_check_runs(runs: list, workflow_pages: list, head_sha: str) -> tu
         # A skipped or neutral re-run (say, a job whose `if:` skips label events) proves nothing.
         if _str(check.get("conclusion")) not in TOLERATED_CONCLUSIONS and run_id > newest.get(key, (-1, -1))[0]:
             newest[key] = (run_id, suite)
-    return {run_id for key, run_id, suite in placed if key in newest and suite != newest[key][1]}, ""
+    # Only older runs drop out: a skipped re-run after the newest counted run still counts (and --strict refuses it).
+    return {run_id for key, run_id, suite in placed
+            if key in newest and suite != newest[key][1] and run_id < newest[key][0]}, ""
 
 
 def evaluate(pr: object, commits: list, check_pages: list, status: object, *,

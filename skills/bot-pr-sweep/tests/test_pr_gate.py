@@ -336,9 +336,16 @@ class SupersededRunTests(unittest.TestCase):
                                                                 workflow_run(12, workflow=6)))
                 self.assertEqual(decision["verdict"], "blocked")
                 self.assertEqual(decision["checks"]["failed"], ["label-check"])
-                # The skipped re-run is what drops out: the failure is the newest result that counts.
-                self.assertEqual(decision["checks"]["superseded"], ["label-check"])
-                self.assertEqual(decision["checks"]["tolerated"], [])
+                # Neither drops out: the failure is the newest run that counts, and the later re-run still counts.
+                self.assertEqual(decision["checks"]["superseded"], [])
+                self.assertEqual(decision["checks"]["tolerated"], ["label-check"])
+        # An optional file never makes the gate more permissive: --strict still refuses a later skipped re-run.
+        for flows in (None, workflow_runs(workflow_run(10), workflow_run(11))):
+            with self.subTest(strict_with_file=flows is not None):
+                strict = evaluate(check_pages=[runs(job(1, 10), job(2, 11, conclusion="skipped"))],
+                                  workflow_runs=flows, strict=True)
+                self.assertEqual(strict["verdict"], "blocked")
+                self.assertEqual(strict["checks"]["superseded"], [])
         only_skipped = evaluate(check_pages=[runs(job(1, 10, conclusion="skipped"), job(2, 11, conclusion="skipped"),
                                                   job(3, 12, name="tests"))],
                                 workflow_runs=workflow_runs(workflow_run(10), workflow_run(11), workflow_run(12, workflow=6)))
