@@ -1,8 +1,8 @@
 ---
 name: bot-pr-sweep
-version: 0.5.0
+version: 0.6.0
 description: Sweep repositories for open dependabot[bot] and pre-commit-ci[bot] pull requests, verify authors by account ID, gate on complete and passing CI, squash-merge the green ones guarded by the head SHA (optionally approving the ones branch protection holds back), assign the maintainer, and report the rest. Use for dependency-bot PR triage, on demand or on a schedule.
-allowed-tools: Bash(gh api repos/*/pulls*), Bash(gh api repos/*/commits/*), Bash(gh api repos/*/issues/*/assignees *), Bash(gh api repos/*/issues/*/labels/major --method DELETE --silent), Bash(gh api user *), Bash(gh repo list *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py init*), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py select *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py gate *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py outcome *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py report *)
+allowed-tools: Bash(gh api repos/*/pulls*), Bash(gh api repos/*/commits/*), Bash(gh api repos/*/actions/runs *), Bash(gh api repos/*/issues/*/assignees *), Bash(gh api repos/*/issues/*/labels/major --method DELETE --silent), Bash(gh api user *), Bash(gh repo list *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py init*), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py select *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py gate *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py outcome *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py report *)
 user-invocable: true
 ---
 
@@ -133,8 +133,11 @@ discarding the autofix.
 Run steps 1 to 5 for each repository, sharing one ledger file
 (`WORK/ledger.jsonl`) for the whole run; then ask the step 3 question about
 `major` labels once, if it arose, then the step 5 approval questions, if
-`--approve-mode ask` left any, and produce the report in step 6. An attended
-run, dry or live, ends with step 7.
+`--approve-mode ask` left any, and produce the report in step 6. A live,
+attended run then offers the options that would clear Blocked PRs (end of
+step 6) and, if the user turns any on, goes back through steps 2 to 5 for
+those PRs and produces the report again. An attended run, dry or live, ends
+with step 7.
 
 ### 0. Prepare
 
@@ -196,8 +199,19 @@ gh api repos/OWNER/REPO/pulls/N > WORK/OWNER-REPO-N-pr.json
 gh api repos/OWNER/REPO/pulls/N/commits --method GET -F per_page=100 --paginate --slurp > WORK/OWNER-REPO-N-commits.json
 gh api repos/OWNER/REPO/commits/SHA/check-runs --method GET -F per_page=100 --paginate --slurp > WORK/OWNER-REPO-N-checks.json
 gh api repos/OWNER/REPO/commits/SHA/status --method GET -F per_page=100 > WORK/OWNER-REPO-N-status.json
-python3 SKILL_DIR/scripts/pr_gate.py gate --repo OWNER/REPO --ledger WORK/ledger.jsonl --head-sha SHA --pr WORK/OWNER-REPO-N-pr.json --commits WORK/OWNER-REPO-N-commits.json --check-runs WORK/OWNER-REPO-N-checks.json --status WORK/OWNER-REPO-N-status.json
+gh api repos/OWNER/REPO/actions/runs --method GET -f head_sha=SHA -F per_page=100 --paginate --slurp > WORK/OWNER-REPO-N-workflow-runs.json
+python3 SKILL_DIR/scripts/pr_gate.py gate --repo OWNER/REPO --ledger WORK/ledger.jsonl --head-sha SHA --pr WORK/OWNER-REPO-N-pr.json --commits WORK/OWNER-REPO-N-commits.json --check-runs WORK/OWNER-REPO-N-checks.json --status WORK/OWNER-REPO-N-status.json --workflow-runs WORK/OWNER-REPO-N-workflow-runs.json
 ```
+
+The workflow runs let the gate judge each check by its latest run, as
+GitHub does. A workflow that runs again on the same commit, such as a
+`pull_request` workflow re-triggered when someone fixes a label, leaves its
+earlier runs in the check list; the gate drops those that a later run of the
+same workflow, event and job replaced, and lists them under
+`checks.superseded`. A skipped or neutral run replaces nothing. Pass the
+saved file even when that request gets a 403 (no Actions read access): `gh`
+still saves the error body, and the gate then counts every run and says so
+in a hint.
 
 Append the repository's options from the Inputs section. With
 `--allow-approve`, also save the PR's reviews and pass them to the gate:
@@ -212,7 +226,7 @@ verdict `merge`:
 
 | Verdict | Meaning | Sweep action |
 |---|---|---|
-| `merge` | Trusted author, every commit by that same bot (or GitHub's "Update branch", or with `--allow-mixed-bots` a later commit by the other trusted bot), PR open and mergeable, complete check list with every check run completed and none failed, at least one success, every status `success`, head commit older than the settle time. | Assign, then squash-merge (steps 3 and 5). |
+| `merge` | Trusted author, every commit by that same bot (or GitHub's "Update branch", or with `--allow-mixed-bots` a later commit by the other trusted bot), PR open and mergeable, complete check list with the latest run of every check completed and none failed, at least one success, every status `success`, head commit older than the settle time. | Assign, then squash-merge (steps 3 and 5). |
 | `pending` | Something is unfinished or not yet knowable: checks still running, mergeability not computed, head commit younger than the settle time, a truncated or malformed payload, payloads describing another commit, the head moved since listing. | Assign and report; the next run looks again. If a reason says a payload was incomplete, save that payload once more and evaluate the PR again before moving on. |
 | `blocked` | Needs a person: a failed check, no CI results at all, conflicts, behind the base, branch protection, draft, a missing or forbidden label, a `major` label, a commit not by the pull request's author, a head branch outside the repository. | Assign and report, with the failing check's link and any hint. A decision with `"strip_labels"` raises the step 3 question. With `--allow-branch-update`, a decision whose only problems are being behind or no CI on the head, with branch protection allowed alongside, carries `"update_branch": true` and goes to step 4. With `--allow-approve`, `"approve": true` sends it to step 5, and a reviewer's requested changes also block. |
 | `rejected` | The author is not a trusted bot by account ID. | Report only; never assign, merge or comment. |
@@ -380,7 +394,31 @@ it names when the value has the shape GitHub gives it, and its Repositories
 section lists the repositories with open PRs and counts the rest in one line.
 If the user asked for the report in a file, redirect the
 command's output there. Add `--schedule "<cadence>"` when the invocation
-states one, so the report says when the next sweep comes.
+states one, so the report says when the next sweep comes. Show the report as
+rendered Markdown, not inside a code block, so its links work.
+
+In a live, attended run, then point out each Blocked PR that an option still
+off for its repository would clear, naming the PR and the option. Skip this
+in a dry run.
+
+- `--allow-approve`: the decision's one reason is `branch protection is not
+  satisfied (reviews, required checks or merge queue)`. The other protection
+  reason, that protection still blocks although the head is approved, is
+  one an approval cannot clear.
+- `--allow-branch-update`: besides branch protection, the decision's only
+  reasons are being behind, or no CI at all (every `checks` list empty) on a
+  head that is not already GitHub's Update branch merge.
+- `--allow-mixed-bots`: its hint says a later commit is by the other trusted
+  bot.
+
+Say where options do not combine: under the rule that the latest push must
+be approved by someone other than its pusher (see Inputs), a branch the
+sweep updates cannot then merge on the sweep's own approval. Ask once
+whether to turn those options on. For the PRs the user says yes to, evaluate
+them again with the option (step 2), carry on through steps 3 to 5 without
+asking again what the user already answered, and produce this step's report
+again, without offering options a second time.
+Never turn an option on without that answer or one in the invocation.
 
 ### 7. Agree a cadence
 
@@ -396,11 +434,16 @@ cadence and confirm it with the user:
 
 Confirm in one question: the cadence, the repository list, the maintainer,
 each repository's options, the standing `major` answer and, with
-`--allow-approve`, the approval mode. An unattended run cannot ask, so a
-`major` PR stays blocked without the standing answer and, with
-`--allow-approve`, nothing is approved under `--approve-mode ask`. Then give
-the user the full invocation to schedule, with those answers written in so
-the run is self-contained:
+`--allow-approve`, the approval mode. Name each option and say what it would
+do, rather than asking whether the user wants "any options": unattended,
+`--allow-approve --approve-mode auto`, `--allow-branch-update` and
+`--allow-mixed-bots` are what let a run get past branch protection, a branch
+behind its base and pre-commit.ci's autofix commits without a person, and
+`--require-label` fits a repository that releases from labels. An unattended
+run cannot ask, so a `major` PR stays blocked without the standing answer
+and, with `--allow-approve`, nothing is approved under `--approve-mode ask`.
+Then give the user the full invocation to schedule, with those answers
+written in so the run is self-contained:
 
 ```text
 Run the bot-pr-sweep skill on acme/widgets and acme/gadgets, maintainer jdoe,
