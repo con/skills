@@ -208,10 +208,10 @@ GitHub does. A workflow that runs again on the same commit, such as a
 `pull_request` workflow re-triggered when someone fixes a label, leaves its
 earlier runs in the check list; the gate drops those that a later run of the
 same workflow, event and job replaced, and lists them under
-`checks.superseded`. A skipped or neutral run replaces nothing. Without that
-file, or with an incomplete or unusable one (a token without Actions read
-access gets a 403), every run counts, a stale failure blocks, and the
-decision's hints say why.
+`checks.superseded`. A skipped or neutral run replaces nothing. Pass the
+saved file even when that fetch gets a 403 (no Actions read access): `gh`
+still saves the error body, and the gate then counts every run and says so
+in a hint.
 
 Append the repository's options from the Inputs section. With
 `--allow-approve`, also save the PR's reviews and pass them to the gate:
@@ -405,8 +405,9 @@ in a dry run.
   satisfied (reviews, required checks or merge queue)`. The other protection
   reason, that protection still blocks although the head is approved, is
   one an approval cannot clear.
-- `--allow-branch-update`: being behind, or no CI on the head, is all that
-  stops it besides branch protection.
+- `--allow-branch-update`: besides branch protection, the decision's only
+  reasons are being behind, or no CI at all (every `checks` list empty) on a
+  head that is not already GitHub's Update branch merge.
 - `--allow-mixed-bots`: its hint says a later commit is by the other trusted
   bot.
 
