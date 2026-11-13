@@ -209,7 +209,7 @@ GitHub does. A workflow that runs again on the same commit, such as a
 earlier runs in the check list; the gate drops those that a later run of the
 same workflow, event and job replaced, and lists them under
 `checks.superseded`. A skipped or neutral run replaces nothing. Pass the
-saved file even when that fetch gets a 403 (no Actions read access): `gh`
+saved file even when that request gets a 403 (no Actions read access): `gh`
 still saves the error body, and the gate then counts every run and says so
 in a hint.
 
