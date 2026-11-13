@@ -48,6 +48,8 @@ SIGNED_BOTS = frozenset({49699333})
 # Commits GitHub creates itself (every Dependabot commit, every "Update
 # branch" merge) carry GitHub's own `web-flow` account as the committer.
 WEB_FLOW_ID = 19864447
+# The GitHub App that reports workflow jobs as check runs.
+GITHUB_ACTIONS_APP_ID = 15368
 
 PASSING_CONCLUSIONS = frozenset({"success"})
 # GitHub counts these as passing for required checks; --strict refuses them.
@@ -292,11 +294,54 @@ def read_reviews(reviews: object, *, repo: str, number: int, head_sha: str) -> t
     return "", changes, approved
 
 
+def superseded_check_runs(runs: list, workflow_pages: list, head_sha: str) -> tuple[set[int], str]:
+    """Check runs that a later run of the same workflow job replaced on this commit: (ids, problem).
+
+    A workflow that runs again on the same commit (a ``pull_request`` workflow
+    re-triggered by a label change, say) leaves its earlier runs in the
+    check-run list, and GitHub judges the pull request on the newest one. Only
+    GitHub Actions runs whose check suite the workflow-run payload ties to a
+    workflow are compared, keyed by workflow, event and job name, so two
+    workflows that name a job alike stay apart. A run is replaced only by a
+    newer run in another check suite, that is, another workflow run; same-named
+    jobs inside one workflow run all count. Anything the payload cannot place
+    is judged as it is, and an unusable payload replaces nothing.
+    """
+    pages = list(workflow_pages)
+    if not pages or not all(isinstance(page, dict) and "workflow_runs" in page for page in pages):
+        return set(), "workflow-run payload is not a GitHub workflow-runs object; fetch it again"
+    entries = [_dict(entry) for page in pages for entry in _list(page.get("workflow_runs"))]
+    totals = {_int(page.get("total_count")) for page in pages}
+    total = totals.pop() if len(totals) == 1 else None
+    if total is None or total != len(entries):
+        return set(), (f"workflow-run list incomplete ({len(entries)} of {total}); fetch every page, "
+                       "or earlier runs of a re-run workflow still count")
+    suites: dict[int, tuple[int, str]] = {}
+    for entry in entries:
+        suite, workflow = _int(entry.get("check_suite_id")), _int(entry.get("workflow_id"))
+        if suite is not None and workflow is not None and _str(entry.get("head_sha")) == head_sha:
+            suites[suite] = (workflow, _str(entry.get("event")))
+    placed: list[tuple[tuple, int, int]] = []
+    newest: dict[tuple, tuple[int, int]] = {}
+    for check in runs:
+        check = _dict(check)
+        run_id, suite = _int(check.get("id")), _int(_dict(check.get("check_suite")).get("id"))
+        if (run_id is None or suite not in suites or _str(check.get("head_sha")) != head_sha
+                or _int(_dict(check.get("app")).get("id")) != GITHUB_ACTIONS_APP_ID):
+            continue
+        key = (*suites[suite], _str(check.get("name")))
+        placed.append((key, run_id, suite))
+        if run_id > newest.get(key, (-1, -1))[0]:
+            newest[key] = (run_id, suite)
+    return {run_id for key, run_id, suite in placed if suite != newest[key][1]}, ""
+
+
 def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
              repo: str, expected_head: str, require_checks: tuple[str, ...] = (),
              require_labels: tuple[str, ...] = (), forbid_labels: tuple[str, ...] = (),
              strict: bool = False, allow_branch_update: bool = False,
              allow_approve: bool = False, reviews: object = None, allow_mixed_bots: bool = False,
+             workflow_runs: list | None = None,
              settle: timedelta = DEFAULT_SETTLE, now: datetime | None = None) -> dict:
     """Decide one pull request. Returns the decision record (see SKILL.md)."""
     now = now or utc_now()
@@ -468,6 +513,7 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
     tolerated: list[str] = []
     failed: list[str] = []
     unfinished: list[str] = []
+    superseded: list[str] = []
     runs: list = []
     check_pages = list(check_pages)
     checks_valid = bool(check_pages) and all(isinstance(page, dict) and "check_runs" in page for page in check_pages)
@@ -483,6 +529,14 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
             pending("check-run payload has no consistent total_count; the list cannot be confirmed complete")
         elif len(runs) != total:
             pending(f"check list incomplete: {len(runs)} of {total} check runs; fetch every page")
+        # A workflow re-run on this commit replaces its earlier runs, as GitHub judges them.
+        if workflow_runs is not None:
+            replaced, problem = superseded_check_runs(runs, workflow_runs, head_sha)
+            if problem:
+                pending(problem)
+            superseded = [sanitize(_dict(run).get("name"), 60) or "unnamed check"
+                          for run in runs if _int(_dict(run).get("id")) in replaced]
+            runs = [run for run in runs if _int(_dict(run).get("id")) not in replaced]
     for run in runs:
         run = _dict(run)
         name = sanitize(run.get("name"), 60) or "unnamed check"
@@ -568,7 +622,8 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
         "reasons": reasons.get(verdict, []),
         # A rejected PR is report-only: no advice to touch it.
         "hints": [hint for hint in dict.fromkeys(hints) if hint] if verdict != REJECTED else [],
-        "checks": {"passed": passed, "tolerated": tolerated, "failed": failed, "unfinished": unfinished},
+        "checks": {"passed": passed, "tolerated": tolerated, "failed": failed, "unfinished": unfinished,
+                   "superseded": superseded},
         # Labels the sweep offers to remove (step 3); never on a PR it must not touch.
         "strip_labels": strip_labels if verdict != REJECTED else [],
         # True when being behind, or no CI on a head that is not already an Update branch merge, is all
@@ -781,6 +836,7 @@ def cmd_gate(args: argparse.Namespace) -> int:
         allow_approve=args.allow_approve,
         reviews=pages(load_json(args.reviews)) if args.reviews else None,
         allow_mixed_bots=args.allow_mixed_bots,
+        workflow_runs=pages(load_json(args.workflow_runs)) if args.workflow_runs else None,
         settle=timedelta(minutes=args.settle_minutes),
         now=parse_time(args.now) if args.now else None,
     )
@@ -828,6 +884,9 @@ def build_parser() -> argparse.ArgumentParser:
     gate.add_argument("--commits", required=True, help="JSON from GET /repos/O/R/pulls/N/commits, every page")
     gate.add_argument("--check-runs", required=True, help="JSON from GET /repos/O/R/commits/SHA/check-runs, every page")
     gate.add_argument("--status", required=True, help="JSON from GET /repos/O/R/commits/SHA/status")
+    gate.add_argument("--workflow-runs",
+                      help="JSON from GET /repos/O/R/actions/runs?head_sha=SHA, every page; lets a later run of "
+                           "a workflow on the head replace its earlier runs, as GitHub judges them")
     gate.add_argument("--head-sha", required=True, type=commit_sha,
                       help="head SHA seen when listing; the PR must still be there")
     gate.add_argument("--require-check", action="append", metavar="NAME",

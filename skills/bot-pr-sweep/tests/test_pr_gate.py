@@ -286,6 +286,91 @@ class CheckRunTests(unittest.TestCase):
         self.assertEqual(evaluate(check_pages=check_pages)["verdict"], "blocked")
 
 
+ACTIONS = 15368  # the GitHub Actions app
+
+
+def job(run_id, suite, name="label-check", conclusion="success", app=ACTIONS, head=HEAD, status="completed"):
+    """A check run as GitHub Actions reports it: its id, app and check suite."""
+    entry = run(name=name, conclusion=conclusion, head=head, status=status,
+                url=f"https://github.com/acme/widgets/actions/runs/{suite}/job/{run_id}")
+    entry.update({"id": run_id, "app": {"id": app, "slug": "github-actions"}, "check_suite": {"id": suite}})
+    return entry
+
+
+def workflow_run(suite, workflow=5, event="pull_request", head=HEAD):
+    return {"id": suite * 10, "workflow_id": workflow, "event": event, "check_suite_id": suite, "head_sha": head}
+
+
+def workflow_runs(*items, total=None):
+    return [{"total_count": len(items) if total is None else total, "workflow_runs": list(items)}]
+
+
+class SupersededRunTests(unittest.TestCase):
+    """A workflow run again on the same commit (say, on a label change) replaces its earlier runs."""
+
+    def test_later_run_of_a_workflow_replaces_its_earlier_failure(self):
+        checks = [runs(job(1, 10, conclusion="failure"), job(2, 11), job(3, 12, name="tests"))]
+        flows = workflow_runs(workflow_run(10), workflow_run(11), workflow_run(12, workflow=6))
+        decision = evaluate(check_pages=checks, workflow_runs=flows)
+        self.assertEqual(decision["verdict"], "merge")
+        self.assertEqual(decision["checks"]["superseded"], ["label-check"])
+        self.assertEqual(decision["checks"]["failed"], [])
+        self.assertEqual(decision["checks"]["passed"], ["label-check", "tests"])
+        # Without the workflow runs every run counts, as before.
+        self.assertEqual(evaluate(check_pages=checks)["verdict"], "blocked")
+        self.assertEqual(evaluate(check_pages=checks)["checks"]["superseded"], [])
+
+    def test_later_failure_replaces_an_earlier_success(self):
+        decision = evaluate(check_pages=[runs(job(1, 10), job(2, 11, conclusion="failure"))],
+                            workflow_runs=workflow_runs(workflow_run(10), workflow_run(11)))
+        self.assertEqual(decision["verdict"], "blocked")
+        self.assertEqual(decision["checks"]["failed"], ["label-check"])
+
+    def test_later_unfinished_run_is_pending(self):
+        decision = evaluate(check_pages=[runs(job(1, 10, conclusion="failure"), job(2, 11, status="in_progress",
+                                                                                   conclusion=None))],
+                            workflow_runs=workflow_runs(workflow_run(10), workflow_run(11)))
+        self.assertEqual(decision["verdict"], "pending")
+        self.assertEqual(decision["checks"]["unfinished"], ["label-check"])
+
+    def test_same_job_name_in_another_workflow_or_event_still_counts(self):
+        checks = [runs(job(1, 10, conclusion="failure"), job(2, 11))]
+        for other in (workflow_run(11, workflow=6), workflow_run(11, event="push")):
+            with self.subTest(other=other):
+                decision = evaluate(check_pages=checks, workflow_runs=workflow_runs(workflow_run(10), other))
+                self.assertEqual(decision["verdict"], "blocked")
+                self.assertEqual(decision["checks"]["superseded"], [])
+
+    def test_same_job_name_twice_in_one_workflow_run_both_count(self):
+        decision = evaluate(check_pages=[runs(job(1, 10, conclusion="failure"), job(2, 10))],
+                            workflow_runs=workflow_runs(workflow_run(10)))
+        self.assertEqual(decision["verdict"], "blocked")
+
+    def test_runs_the_payload_cannot_place_still_count(self):
+        cases = {
+            "unknown suite": [job(1, 99, conclusion="failure"), job(2, 11)],
+            "other app": [job(1, 10, conclusion="failure", app=57789), job(2, 11)],
+            "no id": [{**job(1, 10, conclusion="failure"), "id": None}, job(2, 11)],
+        }
+        flows = workflow_runs(workflow_run(10), workflow_run(11))
+        for label, items in cases.items():
+            with self.subTest(label):
+                self.assertEqual(evaluate(check_pages=[runs(*items)], workflow_runs=flows)["verdict"], "blocked")
+        foreign = workflow_runs(workflow_run(10, head=OTHER), workflow_run(11))
+        self.assertEqual(evaluate(check_pages=[runs(job(1, 10, conclusion="failure"), job(2, 11))],
+                                  workflow_runs=foreign)["verdict"], "blocked")
+
+    def test_unusable_workflow_runs_replace_nothing(self):
+        checks = [runs(job(1, 10, conclusion="failure"), job(2, 11))]
+        for label, flows in {"truncated": workflow_runs(workflow_run(10), workflow_run(11), total=3),
+                             "not a payload": [{"message": "Not Found"}], "empty": []}.items():
+            with self.subTest(label):
+                decision = evaluate(check_pages=checks, workflow_runs=flows)
+                self.assertEqual(decision["verdict"], "blocked")
+                self.assertEqual(decision["checks"]["superseded"], [])
+                self.assertEqual(decision["checks"]["failed"], ["label-check"])
+
+
 class StatusTests(unittest.TestCase):
     def test_statuses_alone_count_as_ci(self):
         decision = evaluate(check_pages=[runs()], status=status(context()))
@@ -1212,6 +1297,17 @@ class CliTests(unittest.TestCase):
             (self.root / f"{name}.json").write_text(json.dumps(payload), encoding="utf-8")
         self.assertEqual(self.main(*self.gate_args(**{"--head-sha": OTHER}))[0], 1)
         self.assertEqual(self.main(*self.gate_args("--allow-mixed-bots", **{"--head-sha": OTHER}))[0], 0)
+
+    def test_gate_workflow_runs_option(self):
+        (self.root / "checks.json").write_text(
+            json.dumps([runs(job(1, 10, conclusion="failure")), runs(job(2, 11))]).replace(
+                '"total_count": 1', '"total_count": 2'), encoding="utf-8")
+        (self.root / "flows.json").write_text(json.dumps([workflow_runs(workflow_run(10), workflow_run(11))[0]]),
+                                              encoding="utf-8")
+        self.assertEqual(self.main(*self.gate_args())[0], 1)
+        code, out, _ = self.main(*self.gate_args(**{"--workflow-runs": self.path("flows")}))
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(out)["checks"]["superseded"], ["label-check"])
 
     def test_gate_approve_option(self):
         code, _, err = self.main(*self.gate_args("--allow-approve"))
