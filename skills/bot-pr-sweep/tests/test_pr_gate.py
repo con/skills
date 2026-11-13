@@ -326,6 +326,32 @@ class SupersededRunTests(unittest.TestCase):
         self.assertEqual(decision["verdict"], "blocked")
         self.assertEqual(decision["checks"]["failed"], ["label-check"])
 
+    def test_skipped_or_neutral_rerun_does_not_hide_a_failure(self):
+        # A `labeled` re-run whose job an `if:` skips must not replace the failure before it.
+        for conclusion in sorted(gate.TOLERATED_CONCLUSIONS):
+            with self.subTest(conclusion):
+                decision = evaluate(check_pages=[runs(job(1, 10, conclusion="failure"), job(2, 11, conclusion=conclusion),
+                                                      job(3, 12, name="tests"))],
+                                    workflow_runs=workflow_runs(workflow_run(10), workflow_run(11),
+                                                                workflow_run(12, workflow=6)))
+                self.assertEqual(decision["verdict"], "blocked")
+                self.assertEqual(decision["checks"]["failed"], ["label-check"])
+                # The skipped re-run is what drops out: the failure is the newest result that counts.
+                self.assertEqual(decision["checks"]["superseded"], ["label-check"])
+                self.assertEqual(decision["checks"]["tolerated"], [])
+        only_skipped = evaluate(check_pages=[runs(job(1, 10, conclusion="skipped"), job(2, 11, conclusion="skipped"),
+                                                  job(3, 12, name="tests"))],
+                                workflow_runs=workflow_runs(workflow_run(10), workflow_run(11), workflow_run(12, workflow=6)))
+        self.assertEqual(only_skipped["verdict"], "merge")
+        self.assertEqual(only_skipped["checks"]["superseded"], [])
+
+    def test_each_superseded_check_is_listed_once(self):
+        stale = [job(run_id, 10 + run_id, conclusion="failure") for run_id in range(1, 6)]
+        decision = evaluate(check_pages=[runs(*stale, job(6, 16))],
+                            workflow_runs=workflow_runs(*(workflow_run(10 + n) for n in range(1, 7))))
+        self.assertEqual(decision["verdict"], "merge")
+        self.assertEqual(decision["checks"]["superseded"], ["label-check"])
+
     def test_later_unfinished_run_is_pending(self):
         decision = evaluate(check_pages=[runs(job(1, 10, conclusion="failure"), job(2, 11, status="in_progress",
                                                                                    conclusion=None))],
@@ -361,14 +387,23 @@ class SupersededRunTests(unittest.TestCase):
                                   workflow_runs=foreign)["verdict"], "blocked")
 
     def test_unusable_workflow_runs_replace_nothing(self):
+        unusable = {"truncated": workflow_runs(workflow_run(10), workflow_run(11), total=3),
+                    "no Actions access": [{"message": "Resource not accessible by integration"}], "empty": []}
         checks = [runs(job(1, 10, conclusion="failure"), job(2, 11))]
-        for label, flows in {"truncated": workflow_runs(workflow_run(10), workflow_run(11), total=3),
-                             "not a payload": [{"message": "Not Found"}], "empty": []}.items():
+        for label, flows in unusable.items():
             with self.subTest(label):
                 decision = evaluate(check_pages=checks, workflow_runs=flows)
                 self.assertEqual(decision["verdict"], "blocked")
                 self.assertEqual(decision["checks"]["superseded"], [])
                 self.assertEqual(decision["checks"]["failed"], ["label-check"])
+                self.assertTrue(any("every check run counts" in hint for hint in decision["hints"]))
+        # The file is optional, so a bad one never holds a green PR (a token without actions:read gets a 403).
+        green = [runs(job(1, 10), job(2, 11))]
+        for label, flows in unusable.items():
+            with self.subTest(f"green, {label}"):
+                decision = evaluate(check_pages=green, workflow_runs=flows)
+                self.assertEqual(decision["verdict"], "merge")
+                self.assertTrue(any("every check run counts" in hint for hint in decision["hints"]))
 
 
 class StatusTests(unittest.TestCase):
@@ -1299,10 +1334,9 @@ class CliTests(unittest.TestCase):
         self.assertEqual(self.main(*self.gate_args("--allow-mixed-bots", **{"--head-sha": OTHER}))[0], 0)
 
     def test_gate_workflow_runs_option(self):
-        (self.root / "checks.json").write_text(
-            json.dumps([runs(job(1, 10, conclusion="failure")), runs(job(2, 11))]).replace(
-                '"total_count": 1', '"total_count": 2'), encoding="utf-8")
-        (self.root / "flows.json").write_text(json.dumps([workflow_runs(workflow_run(10), workflow_run(11))[0]]),
+        pages = [runs(job(1, 10, conclusion="failure"), total=2), runs(job(2, 11), total=2)]
+        (self.root / "checks.json").write_text(json.dumps(pages), encoding="utf-8")
+        (self.root / "flows.json").write_text(json.dumps(workflow_runs(workflow_run(10), workflow_run(11))),
                                               encoding="utf-8")
         self.assertEqual(self.main(*self.gate_args())[0], 1)
         code, out, _ = self.main(*self.gate_args(**{"--workflow-runs": self.path("flows")}))

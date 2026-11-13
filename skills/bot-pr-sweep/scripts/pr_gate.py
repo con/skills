@@ -294,6 +294,15 @@ def read_reviews(reviews: object, *, repo: str, number: int, head_sha: str) -> t
     return "", changes, approved
 
 
+def paged_items(pages: list, key: str) -> tuple[list | None, int | None]:
+    """Items of a paged GitHub list payload and its one total_count; None items when the shape is wrong."""
+    pages = list(pages)
+    if not pages or not all(isinstance(page, dict) and key in page for page in pages):
+        return None, None
+    totals = {_int(page.get("total_count")) for page in pages}
+    return [item for page in pages for item in _list(page.get(key))], (totals.pop() if len(totals) == 1 else None)
+
+
 def superseded_check_runs(runs: list, workflow_pages: list, head_sha: str) -> tuple[set[int], str]:
     """Check runs that a later run of the same workflow job replaced on this commit: (ids, problem).
 
@@ -304,18 +313,18 @@ def superseded_check_runs(runs: list, workflow_pages: list, head_sha: str) -> tu
     workflow are compared, keyed by workflow, event and job name, so two
     workflows that name a job alike stay apart. A run is replaced only by a
     newer run in another check suite, that is, another workflow run; same-named
-    jobs inside one workflow run all count. Anything the payload cannot place
-    is judged as it is, and an unusable payload replaces nothing.
+    jobs inside one workflow run all count. A skipped or neutral run replaces
+    nothing, since a re-run whose job an ``if:`` skipped proves nothing about
+    the failure before it. Anything the payload cannot place is judged as it
+    is, and an unusable payload replaces nothing.
     """
-    pages = list(workflow_pages)
-    if not pages or not all(isinstance(page, dict) and "workflow_runs" in page for page in pages):
-        return set(), "workflow-run payload is not a GitHub workflow-runs object; fetch it again"
-    entries = [_dict(entry) for page in pages for entry in _list(page.get("workflow_runs"))]
-    totals = {_int(page.get("total_count")) for page in pages}
-    total = totals.pop() if len(totals) == 1 else None
+    items, total = paged_items(workflow_pages, "workflow_runs")
+    if items is None:
+        return set(), "workflow-run payload is not a GitHub workflow-runs object; every check run counts"
+    entries = [_dict(entry) for entry in items]
     if total is None or total != len(entries):
-        return set(), (f"workflow-run list incomplete ({len(entries)} of {total}); fetch every page, "
-                       "or earlier runs of a re-run workflow still count")
+        return set(), (f"workflow-run list incomplete ({len(entries)} of {total}); "
+                       "every check run counts, so earlier runs of a re-run workflow still do")
     suites: dict[int, tuple[int, str]] = {}
     for entry in entries:
         suite, workflow = _int(entry.get("check_suite_id")), _int(entry.get("workflow_id"))
@@ -331,9 +340,10 @@ def superseded_check_runs(runs: list, workflow_pages: list, head_sha: str) -> tu
             continue
         key = (*suites[suite], _str(check.get("name")))
         placed.append((key, run_id, suite))
-        if run_id > newest.get(key, (-1, -1))[0]:
+        # A skipped or neutral re-run (say, a job whose `if:` skips label events) proves nothing.
+        if _str(check.get("conclusion")) not in TOLERATED_CONCLUSIONS and run_id > newest.get(key, (-1, -1))[0]:
             newest[key] = (run_id, suite)
-    return {run_id for key, run_id, suite in placed if suite != newest[key][1]}, ""
+    return {run_id for key, run_id, suite in placed if key in newest and suite != newest[key][1]}, ""
 
 
 def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
@@ -515,16 +525,13 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
     unfinished: list[str] = []
     superseded: list[str] = []
     runs: list = []
-    check_pages = list(check_pages)
-    checks_valid = bool(check_pages) and all(isinstance(page, dict) and "check_runs" in page for page in check_pages)
+    items, total = paged_items(check_pages, "check_runs")
+    checks_valid = items is not None
     ci_known = checks_valid  # false whenever a payload does not describe this head commit
     if not checks_valid:
         pending("check-run payload is not a GitHub check-runs object; fetch it again")
     else:
-        totals = {_int(page.get("total_count")) for page in check_pages}
-        total = totals.pop() if len(totals) == 1 else None
-        for page in check_pages:
-            runs.extend(_list(page.get("check_runs")))
+        runs = list(items)
         if total is None:
             pending("check-run payload has no consistent total_count; the list cannot be confirmed complete")
         elif len(runs) != total:
@@ -532,10 +539,11 @@ def evaluate(pr: object, commits: list, check_pages: list, status: object, *,
         # A workflow re-run on this commit replaces its earlier runs, as GitHub judges them.
         if workflow_runs is not None:
             replaced, problem = superseded_check_runs(runs, workflow_runs, head_sha)
+            # Optional input: replacing nothing is already fail-closed, so a bad file is a hint, not a hold.
             if problem:
-                pending(problem)
-            superseded = [sanitize(_dict(run).get("name"), 60) or "unnamed check"
-                          for run in runs if _int(_dict(run).get("id")) in replaced]
+                hints.append(problem)
+            superseded = list(dict.fromkeys(sanitize(_dict(run).get("name"), 60) or "unnamed check"
+                                            for run in runs if _int(_dict(run).get("id")) in replaced))
             runs = [run for run in runs if _int(_dict(run).get("id")) not in replaced]
     for run in runs:
         run = _dict(run)

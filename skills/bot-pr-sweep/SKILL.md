@@ -133,8 +133,11 @@ discarding the autofix.
 Run steps 1 to 5 for each repository, sharing one ledger file
 (`WORK/ledger.jsonl`) for the whole run; then ask the step 3 question about
 `major` labels once, if it arose, then the step 5 approval questions, if
-`--approve-mode ask` left any, and produce the report in step 6. An attended
-run, dry or live, ends with step 7.
+`--approve-mode ask` left any, and produce the report in step 6. A live,
+attended run then offers the options that would clear Blocked PRs (end of
+step 6) and, if the user turns any on, goes back through steps 2 to 5 for
+those PRs and produces the report again. An attended run, dry or live, ends
+with step 7.
 
 ### 0. Prepare
 
@@ -205,8 +208,10 @@ GitHub does. A workflow that runs again on the same commit, such as a
 `pull_request` workflow re-triggered when someone fixes a label, leaves its
 earlier runs in the check list; the gate drops those that a later run of the
 same workflow, event and job replaced, and lists them under
-`checks.superseded`. Without that file, or with an incomplete one, every run
-counts, and a stale failure blocks.
+`checks.superseded`. A skipped or neutral run replaces nothing. Without that
+file, or with an incomplete or unusable one (a token without Actions read
+access gets a 403), every run counts, a stale failure blocks, and the
+decision's hints say why.
 
 Append the repository's options from the Inputs section. With
 `--allow-approve`, also save the PR's reviews and pass them to the gate:
@@ -392,18 +397,26 @@ command's output there. Add `--schedule "<cadence>"` when the invocation
 states one, so the report says when the next sweep comes. Show the report as
 rendered Markdown, not inside a code block, so its links work.
 
-In an attended run, then point out each Blocked PR that an option still off
-for its repository would clear, naming the PR and the option:
+In a live, attended run, then point out each Blocked PR that an option still
+off for its repository would clear, naming the PR and the option. Skip this
+in a dry run.
 
-- `--allow-approve`: branch protection is the decision's one reason;
+- `--allow-approve`: the decision's one reason is `branch protection is not
+  satisfied (reviews, required checks or merge queue)`. The other protection
+  reason, that protection still blocks although the head is approved, is
+  one an approval cannot clear.
 - `--allow-branch-update`: being behind, or no CI on the head, is all that
-  stops it besides branch protection;
+  stops it besides branch protection.
 - `--allow-mixed-bots`: its hint says a later commit is by the other trusted
   bot.
 
-Ask once whether to turn those options on. For the PRs the user says yes to,
-evaluate them again with the option (step 2) and carry on from step 4. Never
-turn an option on without that answer or one in the invocation.
+Say where options do not combine: under the rule that the latest push must
+be approved by someone other than its pusher (see Inputs), a branch the
+sweep updates cannot then merge on the sweep's own approval. Ask once
+whether to turn those options on. For the PRs the user says yes to, evaluate
+them again with the option (step 2), carry on through steps 3 to 5, and
+produce this step's report again, since the one already shown is stale.
+Never turn an option on without that answer or one in the invocation.
 
 ### 7. Agree a cadence
 
@@ -424,11 +437,11 @@ do, rather than asking whether the user wants "any options": unattended,
 `--allow-approve --approve-mode auto`, `--allow-branch-update` and
 `--allow-mixed-bots` are what let a run get past branch protection, a branch
 behind its base and pre-commit.ci's autofix commits without a person, and
-`--require-label` fits a repository that releases from labels. An unattended run cannot ask, so a
-`major` PR stays blocked without the standing answer and, with
-`--allow-approve`, nothing is approved under `--approve-mode ask`. Then give
-the user the full invocation to schedule, with those answers written in so
-the run is self-contained:
+`--require-label` fits a repository that releases from labels. An unattended
+run cannot ask, so a `major` PR stays blocked without the standing answer
+and, with `--allow-approve`, nothing is approved under `--approve-mode ask`.
+Then give the user the full invocation to schedule, with those answers
+written in so the run is self-contained:
 
 ```text
 Run the bot-pr-sweep skill on acme/widgets and acme/gadgets, maintainer jdoe,
