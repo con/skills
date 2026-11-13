@@ -286,6 +286,133 @@ class CheckRunTests(unittest.TestCase):
         self.assertEqual(evaluate(check_pages=check_pages)["verdict"], "blocked")
 
 
+ACTIONS = 15368  # the GitHub Actions app
+
+
+def job(run_id, suite, name="label-check", conclusion="success", app=ACTIONS, head=HEAD, status="completed"):
+    """A check run as GitHub Actions reports it: its id, app and check suite."""
+    entry = run(name=name, conclusion=conclusion, head=head, status=status,
+                url=f"https://github.com/acme/widgets/actions/runs/{suite}/job/{run_id}")
+    entry.update({"id": run_id, "app": {"id": app, "slug": "github-actions"}, "check_suite": {"id": suite}})
+    return entry
+
+
+def workflow_run(suite, workflow=5, event="pull_request", head=HEAD):
+    return {"id": suite * 10, "workflow_id": workflow, "event": event, "check_suite_id": suite, "head_sha": head}
+
+
+def workflow_runs(*items, total=None):
+    return [{"total_count": len(items) if total is None else total, "workflow_runs": list(items)}]
+
+
+class SupersededRunTests(unittest.TestCase):
+    """A workflow run again on the same commit (say, on a label change) replaces its earlier runs."""
+
+    def test_later_run_of_a_workflow_replaces_its_earlier_failure(self):
+        checks = [runs(job(1, 10, conclusion="failure"), job(2, 11), job(3, 12, name="tests"))]
+        flows = workflow_runs(workflow_run(10), workflow_run(11), workflow_run(12, workflow=6))
+        decision = evaluate(check_pages=checks, workflow_runs=flows)
+        self.assertEqual(decision["verdict"], "merge")
+        self.assertEqual(decision["checks"]["superseded"], ["label-check"])
+        self.assertEqual(decision["checks"]["failed"], [])
+        self.assertEqual(decision["checks"]["passed"], ["label-check", "tests"])
+        # Without the workflow runs every run counts, as before.
+        self.assertEqual(evaluate(check_pages=checks)["verdict"], "blocked")
+        self.assertEqual(evaluate(check_pages=checks)["checks"]["superseded"], [])
+
+    def test_later_failure_replaces_an_earlier_success(self):
+        decision = evaluate(check_pages=[runs(job(1, 10), job(2, 11, conclusion="failure"))],
+                            workflow_runs=workflow_runs(workflow_run(10), workflow_run(11)))
+        self.assertEqual(decision["verdict"], "blocked")
+        self.assertEqual(decision["checks"]["failed"], ["label-check"])
+
+    def test_skipped_or_neutral_rerun_does_not_hide_a_failure(self):
+        # A `labeled` re-run whose job an `if:` skips must not replace the failure before it.
+        for conclusion in sorted(gate.TOLERATED_CONCLUSIONS):
+            with self.subTest(conclusion):
+                decision = evaluate(check_pages=[runs(job(1, 10, conclusion="failure"), job(2, 11, conclusion=conclusion),
+                                                      job(3, 12, name="tests"))],
+                                    workflow_runs=workflow_runs(workflow_run(10), workflow_run(11),
+                                                                workflow_run(12, workflow=6)))
+                self.assertEqual(decision["verdict"], "blocked")
+                self.assertEqual(decision["checks"]["failed"], ["label-check"])
+                # Neither drops out: the failure is the newest run that counts, and the later re-run still counts.
+                self.assertEqual(decision["checks"]["superseded"], [])
+                self.assertEqual(decision["checks"]["tolerated"], ["label-check"])
+        # An optional file never makes the gate more permissive: --strict still refuses a later skipped re-run.
+        for flows in (None, workflow_runs(workflow_run(10), workflow_run(11))):
+            with self.subTest(strict_with_file=flows is not None):
+                strict = evaluate(check_pages=[runs(job(1, 10), job(2, 11, conclusion="skipped"))],
+                                  workflow_runs=flows, strict=True)
+                self.assertEqual(strict["verdict"], "blocked")
+                self.assertEqual(strict["checks"]["superseded"], [])
+        only_skipped = evaluate(check_pages=[runs(job(1, 10, conclusion="skipped"), job(2, 11, conclusion="skipped"),
+                                                  job(3, 12, name="tests"))],
+                                workflow_runs=workflow_runs(workflow_run(10), workflow_run(11), workflow_run(12, workflow=6)))
+        self.assertEqual(only_skipped["verdict"], "merge")
+        self.assertEqual(only_skipped["checks"]["superseded"], [])
+
+    def test_each_superseded_check_is_listed_once(self):
+        stale = [job(run_id, 10 + run_id, conclusion="failure") for run_id in range(1, 6)]
+        decision = evaluate(check_pages=[runs(*stale, job(6, 16))],
+                            workflow_runs=workflow_runs(*(workflow_run(10 + n) for n in range(1, 7))))
+        self.assertEqual(decision["verdict"], "merge")
+        self.assertEqual(decision["checks"]["superseded"], ["label-check"])
+
+    def test_later_unfinished_run_is_pending(self):
+        decision = evaluate(check_pages=[runs(job(1, 10, conclusion="failure"), job(2, 11, status="in_progress",
+                                                                                   conclusion=None))],
+                            workflow_runs=workflow_runs(workflow_run(10), workflow_run(11)))
+        self.assertEqual(decision["verdict"], "pending")
+        self.assertEqual(decision["checks"]["unfinished"], ["label-check"])
+
+    def test_same_job_name_in_another_workflow_or_event_still_counts(self):
+        checks = [runs(job(1, 10, conclusion="failure"), job(2, 11))]
+        for other in (workflow_run(11, workflow=6), workflow_run(11, event="push")):
+            with self.subTest(other=other):
+                decision = evaluate(check_pages=checks, workflow_runs=workflow_runs(workflow_run(10), other))
+                self.assertEqual(decision["verdict"], "blocked")
+                self.assertEqual(decision["checks"]["superseded"], [])
+
+    def test_same_job_name_twice_in_one_workflow_run_both_count(self):
+        decision = evaluate(check_pages=[runs(job(1, 10, conclusion="failure"), job(2, 10))],
+                            workflow_runs=workflow_runs(workflow_run(10)))
+        self.assertEqual(decision["verdict"], "blocked")
+
+    def test_runs_the_payload_cannot_place_still_count(self):
+        cases = {
+            "unknown suite": [job(1, 99, conclusion="failure"), job(2, 11)],
+            "other app": [job(1, 10, conclusion="failure", app=57789), job(2, 11)],
+            "no id": [{**job(1, 10, conclusion="failure"), "id": None}, job(2, 11)],
+        }
+        flows = workflow_runs(workflow_run(10), workflow_run(11))
+        for label, items in cases.items():
+            with self.subTest(label):
+                self.assertEqual(evaluate(check_pages=[runs(*items)], workflow_runs=flows)["verdict"], "blocked")
+        foreign = workflow_runs(workflow_run(10, head=OTHER), workflow_run(11))
+        self.assertEqual(evaluate(check_pages=[runs(job(1, 10, conclusion="failure"), job(2, 11))],
+                                  workflow_runs=foreign)["verdict"], "blocked")
+
+    def test_unusable_workflow_runs_replace_nothing(self):
+        unusable = {"truncated": workflow_runs(workflow_run(10), workflow_run(11), total=3),
+                    "no Actions access": [{"message": "Resource not accessible by integration"}], "empty": []}
+        checks = [runs(job(1, 10, conclusion="failure"), job(2, 11))]
+        for label, flows in unusable.items():
+            with self.subTest(label):
+                decision = evaluate(check_pages=checks, workflow_runs=flows)
+                self.assertEqual(decision["verdict"], "blocked")
+                self.assertEqual(decision["checks"]["superseded"], [])
+                self.assertEqual(decision["checks"]["failed"], ["label-check"])
+                self.assertTrue(any("every check run counts" in hint for hint in decision["hints"]))
+        # The file is optional, so a bad one never holds a green PR (a token without actions:read gets a 403).
+        green = [runs(job(1, 10), job(2, 11))]
+        for label, flows in unusable.items():
+            with self.subTest(f"green, {label}"):
+                decision = evaluate(check_pages=green, workflow_runs=flows)
+                self.assertEqual(decision["verdict"], "merge")
+                self.assertTrue(any("every check run counts" in hint for hint in decision["hints"]))
+
+
 class StatusTests(unittest.TestCase):
     def test_statuses_alone_count_as_ci(self):
         decision = evaluate(check_pages=[runs()], status=status(context()))
@@ -1212,6 +1339,16 @@ class CliTests(unittest.TestCase):
             (self.root / f"{name}.json").write_text(json.dumps(payload), encoding="utf-8")
         self.assertEqual(self.main(*self.gate_args(**{"--head-sha": OTHER}))[0], 1)
         self.assertEqual(self.main(*self.gate_args("--allow-mixed-bots", **{"--head-sha": OTHER}))[0], 0)
+
+    def test_gate_workflow_runs_option(self):
+        pages = [runs(job(1, 10, conclusion="failure"), total=2), runs(job(2, 11), total=2)]
+        (self.root / "checks.json").write_text(json.dumps(pages), encoding="utf-8")
+        (self.root / "flows.json").write_text(json.dumps(workflow_runs(workflow_run(10), workflow_run(11))),
+                                              encoding="utf-8")
+        self.assertEqual(self.main(*self.gate_args())[0], 1)
+        code, out, _ = self.main(*self.gate_args(**{"--workflow-runs": self.path("flows")}))
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(out)["checks"]["superseded"], ["label-check"])
 
     def test_gate_approve_option(self):
         code, _, err = self.main(*self.gate_args("--allow-approve"))
