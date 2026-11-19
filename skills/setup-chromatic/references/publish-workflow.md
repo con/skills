@@ -14,8 +14,12 @@ The two build workflows capture and build with no token; `chromatic-publish.yml`
 It holds the tokens while handling a commit that may come from a fork, so these are the properties to keep when editing it, each already in the template:
 
 - `persist-credentials: false` on the checkout of the default branch, so the job's token is not left in that checkout's `.git/config`.
-- Nothing from the built commit executes: the Chromatic CLI is installed in the default-branch checkout with `npm ci --ignore-scripts`, the built commit is fetched by hash into a separate directory, and the CLI is run inside that directory (so it reads the commit's git history) through the default branch's `node_modules/.bin/chromatic`; the Storybook comes from the artifact. No `npm`, `npx` or workspace script runs against the commit.
-- Because the CLI runs inside the commit's directory, it would read a `chromatic.config.json` there; `--config-file` points it at an explicit empty file written outside it (`$RUNNER_TEMP`) instead.
+- Nothing from the built commit executes: the Chromatic CLI is installed in the default-branch checkout with `npm ci --ignore-scripts`, and the Storybook comes from the artifact.
+- The built commit is fetched by hash into a separate directory and never checked out: `git update-ref --no-deref HEAD` points `HEAD` at it, and a stub `package.json` is the only file on disk.
+  The CLI runs inside that directory (it needs the commit's git history, not its files) through the default branch's `node_modules/.bin/chromatic`.
+  Run inside a checkout, it loads the Storybook config the commit's `build-storybook` script names and starts the package manager it detects there, which honours repository-local configuration: chromatic 18.9.4 ran a script a `.yarnrc` named, with the token in its environment, before it had even authenticated.
+- `--config-file` points the CLI at an explicit empty file written outside that directory (`$RUNNER_TEMP`), so it looks for no `chromatic.config.json` there.
+- The token is chosen by the secret's name (`secrets[... && 'CHROMATIC_PLAYWRIGHT_PROJECT_TOKEN' || 'CHROMATIC_STORYBOOK_PROJECT_TOKEN']`), so a missing secret stays empty and the CLI stops; choosing between the two secrets' values would fall through to the Storybook token and upload the Playwright archive into that project's baseline.
 - The head SHA, branch and repository from the triggering run reach the shell only through `env:`, never inline in `run:`.
 - `--auto-accept-changes` is added only when `workflow_run.event == 'push'` (no pull request, from a fork or not), `workflow_run.head_branch` is the default branch (`github.event.repository.default_branch` rather than a literal `main`, so no other branch becomes the baseline), and `workflow_run.head_repository.full_name == github.repository` as a second guard.
 - `--exit-zero-on-changes`: changes are reviewed in Chromatic, from its status check, not by failing this run.
@@ -28,8 +32,5 @@ It holds the tokens while handling a commit that may come from a fork, so these 
 - The job names stay `Run Chromatic (Storybook)` and `Run Chromatic (Playwright)` where branch protection requires them; the upload's result reaches the commit as Chromatic's own status checks, once per project.
 - The publish workflow first runs once it is on the default branch: on the pull request that adds it, only the two build workflows run, and the first upload comes from the merge.
 - The Chromatic CLI is the `chromatic` devDependency, so its version moves with the lockfile (Dependabot's npm updates), not with an action tag.
-- TurboSnap (`onlyChanged`) is not used: it needs Storybook's build stats beside the prebuilt Storybook and the CLI's own git analysis of the commit, and usage-page does without it.
-
-A repository that never takes contributions from forks keeps the same three files; the publish workflow's guards cost it nothing, and it still gets the automatic baseline on merges.
-
-In the README section, say that a fork's pull request is built without a token and uploaded by `chromatic-publish.yml`, so its Chromatic checks appear once the build workflow has finished, and that the default branch's builds are accepted on their own.
+- TurboSnap (`onlyChanged`) is not used: it would mean trusting a stats file from the artifact and reading the commit's tree in the job that holds the tokens, and usage-page does without it.
+  The cost is that every push snapshots every story in every mode of the Storybook project, which counts against the account's snapshot quota.

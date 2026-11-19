@@ -59,8 +59,8 @@ Neither keeps pixels in this repository: Chromatic renders both in its own brows
 
 1. Create two Chromatic projects for this repository: one for Storybook, then **Add project**, pick the same repository again, and name the second one for Playwright.
 2. Add each project's token as a repository secret: `CHROMATIC_STORYBOOK_PROJECT_TOKEN` and `CHROMATIC_PLAYWRIGHT_PROJECT_TOKEN`.
-3. Push. `chromatic-storybook.yml` and `chromatic-playwright.yml` under `.github/workflows/` build on every push without a token, and `chromatic-publish.yml` uploads each build from the default branch, which holds the tokens; the first build of each project is its baseline, accepted by hand in Chromatic.
-   After that, the default branch's builds are accepted on their own, since their changes were reviewed on their pull requests.
+3. Push. `chromatic-storybook.yml` and `chromatic-playwright.yml` under `.github/workflows/` build on every push without a token, and `chromatic-publish.yml` uploads each build from the default branch, which holds the tokens.
+   The first upload comes from the merge that adds these files, and the default branch's builds are accepted on their own, since their changes were reviewed on their pull requests: the first build of each project is its baseline, so look it over in Chromatic once.
 
 ### Day to day
 
