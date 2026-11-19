@@ -80,9 +80,11 @@ jobs:
       - name: Publish to Chromatic
         working-directory: commit
         env:
-          # Chosen by the secret's name, so a missing secret stays empty and the CLI stops, rather
-          # than falling through to the other project's token and uploading into its baseline.
-          CHROMATIC_PROJECT_TOKEN: ${{ secrets[github.event.workflow_run.name == 'Chromatic (Playwright)' && 'CHROMATIC_PLAYWRIGHT_PROJECT_TOKEN' || 'CHROMATIC_STORYBOOK_PROJECT_TOKEN'] }}
+          # Each token behind its own condition, so a missing secret stays empty and the CLI stops,
+          # rather than falling through to the other project's token and uploading into its
+          # baseline. Static references only: a computed `secrets[...]` name makes GitHub send
+          # every repository and organization secret to the runner.
+          CHROMATIC_PROJECT_TOKEN: ${{ github.event.workflow_run.name == 'Chromatic (Playwright)' && secrets.CHROMATIC_PLAYWRIGHT_PROJECT_TOKEN || github.event.workflow_run.name != 'Chromatic (Playwright)' && secrets.CHROMATIC_STORYBOOK_PROJECT_TOKEN || '' }}
           # What the Chromatic action reports for a pull request; set by hand since this runs on
           # `workflow_run`, not on the push or pull request itself.
           CHROMATIC_SHA: ${{ github.event.workflow_run.head_sha }}
