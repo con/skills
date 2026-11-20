@@ -35,11 +35,9 @@ class ApmManifestTests(unittest.TestCase):
 
     def test_invalid_manifests(self):
         for manifest in (None, 'scalar', ': not yaml: [',
-                         'name: other\nversion: "0.1.0"\ndescription: Example.\n',
-                         'name: example\nversion: 1.0\ndescription: Example.\n',
-                         'name: example\nversion: "v1.0.0"\ndescription: Example.\n',
-                         'name: example\ndescription: Example.\n',
-                         ):
+                         'name: other\nversion: "0.1.0"\n',
+                         'name: example\nversion: 1.0\n',
+                         'name: example\nversion: "v1.0.0"\n',
+                         'name: example\n'):
             with self.subTest(manifest=manifest):
                 self.assertIn('E010', self.check('', manifest))
-

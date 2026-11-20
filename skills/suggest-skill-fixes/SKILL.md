@@ -82,7 +82,7 @@ Suggested by: con/skills `suggest-skill-fixes` v{version} for `{calling skill}` 
 
 - **Versions.** Read `version` from the `apm.yml` beside this file and
   beside the calling skill's `SKILL.md`; do not guess either from memory.
-  A calling skill without an `apm.yml` is `unversioned`.
+  A skill without an `apm.yml` is `unversioned`.
 - **`{skill source}`.** Take it as `code-quality-report-conventions` §1
   does (`../code-quality-report-conventions/report-conventions.md`). If that
   skill is not installed, use `git -C {skill dir} rev-parse --short HEAD`,

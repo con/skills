@@ -202,7 +202,6 @@ def check_apm_manifest(skill_dir: Path, result: Result) -> None:
     version = data.get("version")
     if not (isinstance(version, str) and _SEMVER.fullmatch(version)):
         result.error("E010", manifest, f"version must be a MAJOR.MINOR.PATCH string, got {version!r}")
-        version = None
 
     fm, _ = _parse_frontmatter((skill_dir / "SKILL.md").read_text(encoding="utf-8"))
     if isinstance(fm, dict) and "version" in fm:

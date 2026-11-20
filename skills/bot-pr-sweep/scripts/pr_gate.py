@@ -79,7 +79,7 @@ _URL = re.compile(r"https://[A-Za-z0-9._~:/?#@!$&'*+,;=%-]+")
 _REPO = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
 _SHA = re.compile(r"[0-9a-f]{40}")
 _LOGIN = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?")
-_VERSION = re.compile(r"^version:\s*([\"']?)([0-9]+\.[0-9]+\.[0-9]+)\1\s*$", re.MULTILINE)
+_VERSION = re.compile(r"^version:\s*([\"']?)([0-9]+\.[0-9]+\.[0-9]+)\1\s*(?:#.*)?$", re.MULTILINE)
 
 
 class GateInputError(Exception):

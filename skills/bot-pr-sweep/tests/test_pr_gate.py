@@ -846,7 +846,8 @@ class HelperTests(unittest.TestCase):
             self.assertEqual(gate.skill_version(Path(directory)), "unknown")
             (Path(directory) / "SKILL.md").write_text("---\nname: x\nversion: 9.9.9\n---\nbody\n", encoding="utf-8")
             self.assertEqual(gate.skill_version(Path(directory)), "unknown")
-            for text in ('name: x\nversion: "1.2.3"\n', "name: x\nversion: '1.2.3'\n", "name: x\nversion: 1.2.3\n"):
+            for text in ('name: x\nversion: "1.2.3"\n', "name: x\nversion: '1.2.3'\n", "name: x\nversion: 1.2.3\n",
+                         'name: x\nversion: "1.2.3"  # comment\n'):
                 (Path(directory) / "apm.yml").write_text(text, encoding="utf-8")
                 self.assertEqual(gate.skill_version(Path(directory)), "1.2.3")
             (Path(directory) / "apm.yml").write_text('name: x\nversion: "1.2.3\n', encoding="utf-8")
