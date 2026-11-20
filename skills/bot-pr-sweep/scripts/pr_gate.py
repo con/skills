@@ -79,7 +79,7 @@ _URL = re.compile(r"https://[A-Za-z0-9._~:/?#@!$&'*+,;=%-]+")
 _REPO = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
 _SHA = re.compile(r"[0-9a-f]{40}")
 _LOGIN = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?")
-_VERSION = re.compile(r"^version:\s*([0-9]+\.[0-9]+\.[0-9]+)\s*$", re.MULTILINE)
+_VERSION = re.compile(r"^version:\s*([\"']?)([0-9]+\.[0-9]+\.[0-9]+)\1\s*$", re.MULTILINE)
 
 
 class GateInputError(Exception):
@@ -153,13 +153,13 @@ def pages(document: object) -> list:
 
 
 def skill_version(skill_dir: Path) -> str:
-    """The `version:` from this skill's SKILL.md frontmatter, for the report stamp."""
+    """The `version` from the apm.yml beside this skill's SKILL.md, for the report stamp."""
     try:
-        text = (skill_dir / "SKILL.md").read_text(encoding="utf-8")
+        text = (skill_dir / "apm.yml").read_text(encoding="utf-8")
     except OSError:
         return "unknown"
-    match = _VERSION.search(text.split("\n---", 2)[0] if text.startswith("---") else "")
-    return match.group(1) if match else "unknown"
+    match = _VERSION.search(text)
+    return match.group(2) if match else "unknown"
 
 
 def repo_name(value: str) -> str:

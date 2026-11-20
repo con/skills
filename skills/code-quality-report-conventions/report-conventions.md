@@ -23,9 +23,11 @@ Fill the fields like this:
 - **`{repo}@{short SHA}`** — `git rev-parse --short HEAD` in each
   repository reviewed, so cited line numbers stay meaningful. If the
   working tree is dirty, say so (`@abc1234+dirty`).
-- **`{skill name}` / `{skill version}`** — the `name:` and `version:`
-  fields of the running skill's own `SKILL.md` frontmatter. Read the file
-  you were loaded from; do not guess the version from memory.
+- **`{skill name}` / `{skill version}`** — the `name:` field of the
+  running skill's own `SKILL.md` frontmatter and the `version` in the
+  `apm.yml` beside it. Read the files next to the one you were loaded from;
+  do not guess the version from memory. Without an `apm.yml`, write
+  `unversioned`.
 - **`{skill source}`** — where that copy of the skill came from. If the
   skill directory sits inside a git checkout, cite
   `git -C {skill dir} rev-parse --short HEAD`. If instead the consumer
@@ -34,8 +36,8 @@ Fill the fields like this:
   `con/skills@{SHA}` (an entry without `virtual_path` that lists the skill
   under `skills:` also counts). Otherwise write
   `source commit unknown`.
-- **`{conventions version}`** — the `version:` of
-  `code-quality-report-conventions/SKILL.md`, so the report shows which
+- **`{conventions version}`** — the `version` in
+  `code-quality-report-conventions/apm.yml`, so the report shows which
   layout and evidence rules it followed even when the calling skill did
   not change.
 - **`using …`** (optional) — a skill this run delegated to or followed,
@@ -46,7 +48,7 @@ Fill the fields like this:
   anything. Its suggestions still stay out of the report.
 - **`Previous review`** — see §4.
 
-`version:` is bumped by whoever changes a skill's procedure or report
+A skill's `apm.yml` `version` is bumped by whoever changes a skill's procedure or report
 layout, in the same commit (see `AGENTS.md`, "Skill versions", in the
 `con/skills` repository); it is not changed for wording fixes. If the stamp and the behaviour you observe
 disagree, trust the source commit.

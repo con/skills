@@ -1,4 +1,4 @@
-"""Each skill's apm.yml is a valid package manifest and agrees with its frontmatter."""
+"""Each skill's apm.yml is a valid package manifest and the only place its version lives."""
 from pathlib import Path
 import sys
 import tempfile
@@ -24,14 +24,14 @@ class ApmManifestTests(unittest.TestCase):
             check_apm_manifest(skill, result)
             return codes(result)
 
-    def test_valid_manifest_with_and_without_frontmatter_version(self):
-        manifest = 'name: example\nversion: "0.2.0"\n'
-        self.assertEqual(self.check('', manifest), [])
-        self.assertEqual(self.check('version: 0.2.0\n', manifest), [])
+    def test_valid_manifest(self):
+        self.assertEqual(self.check('', 'name: example\nversion: "0.2.0"\n'), [])
 
-    def test_frontmatter_and_manifest_versions_must_agree(self):
+    def test_frontmatter_must_not_carry_a_version(self):
         manifest = 'name: example\nversion: "0.2.0"\n'
-        self.assertEqual(self.check('version: 0.3.0\n', manifest), ['E011'])
+        for frontmatter in ('version: 0.2.0\n', 'version: 0.3.0\n', 'version:\n'):
+            with self.subTest(frontmatter=frontmatter):
+                self.assertEqual(self.check(frontmatter, manifest), ['E011'])
 
     def test_invalid_manifests(self):
         for manifest in (None, 'scalar', ': not yaml: [',
@@ -41,5 +41,5 @@ class ApmManifestTests(unittest.TestCase):
                          'name: example\ndescription: Example.\n',
                          ):
             with self.subTest(manifest=manifest):
-                self.assertIn('E010', self.check('version: 0.1.0\n', manifest))
+                self.assertIn('E010', self.check('', manifest))
 

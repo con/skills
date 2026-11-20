@@ -24,9 +24,8 @@ Every SKILL.md:
 Every skill's ``apm.yml`` (its APM package manifest, beside SKILL.md):
   E010  Present, a YAML mapping whose ``name`` equals the directory name,
         and ``version`` is a ``MAJOR.MINOR.PATCH`` string
-  E011  A ``version:`` in SKILL.md frontmatter (kept by skills that stamp
-        their output with it) must equal the ``apm.yml`` version, which is
-        the one APM records in consumers' locks
+  E011  SKILL.md frontmatter has no ``version:``; the skill's version lives
+        only in its ``apm.yml``, the one APM records in consumers' locks
 
 Every *.py bundled alongside a SKILL.md:
   E005  Python syntax error (py_compile)
@@ -185,7 +184,7 @@ def check_skill_md(skill_md: Path, result: Result) -> None:
 
 
 def check_apm_manifest(skill_dir: Path, result: Result) -> None:
-    """E010/E011: the skill's own APM manifest, and agreement with its frontmatter."""
+    """E010/E011: the skill's own APM manifest is the only place its version lives."""
     manifest = skill_dir / "apm.yml"
     if not manifest.is_file():
         result.error("E010", manifest, "missing; every skill is its own APM package (see AGENTS.md)")
@@ -206,10 +205,9 @@ def check_apm_manifest(skill_dir: Path, result: Result) -> None:
         version = None
 
     fm, _ = _parse_frontmatter((skill_dir / "SKILL.md").read_text(encoding="utf-8"))
-    if version and isinstance(fm, dict) and "version" in fm and fm["version"] != version:
+    if isinstance(fm, dict) and "version" in fm:
         result.error("E011", skill_dir / "SKILL.md",
-                     f"frontmatter version {fm['version']!r} differs from apm.yml version {version!r}; "
-                     "bump both together")
+                     "frontmatter must not carry version:; the version lives only in apm.yml")
 
 
 def check_python_file(py_path: Path, result: Result) -> None:

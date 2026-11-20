@@ -152,12 +152,12 @@ pull request is still open. The per-skill `apm.yml` versions start with the
 pull request that introduced them; changes made in that pull request did not
 bump them.
 
+`apm.yml` is the only place a skill's version lives: a `SKILL.md`
+frontmatter carries no `version:` (`ci/validate_skills.py` fails with E011).
 A skill whose output records which version of the skill produced it (e.g.
-`bot-pr-sweep`, `suggest-skill-fixes`, the `review-*` skills) also keeps
-`version:` in its `SKILL.md` frontmatter, where the skill reads it at run
-time, written unquoted (`version: 0.2.0`; the stamping scripts do not match a
-quoted value). It must equal the `apm.yml` version; `ci/validate_skills.py` fails
-(E011) when they differ, so bump both together.
+`bot-pr-sweep`, `suggest-skill-fixes`, the `review-*` skills) reads the
+version at run time from the `apm.yml` beside its `SKILL.md`, which APM
+deploys with it.
 
 ## APM distribution
 
