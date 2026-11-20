@@ -128,9 +128,10 @@ def main() -> None:
         if args.source:
             # Exercise the same public CLI route documented for consumers.
             repository, commit = args.source.split('#')
-            for name in selection:
-                run('apm', 'install', f'{repository}/skills/{name}#{commit}',
-                    '--target', 'agent-skills', '--no-policy', cwd=consumer)
+            # One call: separate calls leave `target: legacy` deployments in
+            # the lock, which a later frozen restore rewrites.
+            run('apm', 'install', *[f'{repository}/skills/{name}#{commit}' for name in selection],
+                '--target', 'agent-skills', '--no-policy', cwd=consumer)
         else:
             (consumer / 'apm.yml').write_text(yaml.safe_dump({
                 'name': 'con-skills-consumer', 'version': '0.0.0',

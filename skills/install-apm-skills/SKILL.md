@@ -37,6 +37,7 @@ apm install PACKAGE/SKILL_PATH#SHA --target agent-skills
 ```
 
 In `apm.yml` this is `{git: PACKAGE, path: SKILL_PATH, ref: SHA}`; install each skill as its own dependency.
+Name several skills in one `apm install` call (or list them in `apm.yml` and run `apm install`); with APM 0.31, adding them in separate calls leaves lock entries that the next `apm install --frozen` rewrites.
 Instead of a SHA, `ref:` may name a per-skill release tag (`SKILL--vVERSION`) or a caret/tilde semver range resolved against those tags, when the user prefers updates within a range; avoid open ranges such as `>=`, which can match repository-wide tags.
 The lock then records the resolved tag and commit; verify that commit as above.
 
