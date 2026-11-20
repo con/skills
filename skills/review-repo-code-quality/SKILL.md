@@ -1,6 +1,5 @@
 ---
 name: review-repo-code-quality
-version: 0.2.0
 description: Functionality-preserving code-quality review of a single repository — dead code, duplication, consolidation, cleanup, and items needing verification — written as a dated Markdown report with per-finding location, proposed change, safety confidence, and a verification command. Use when asked to review, audit, or assess the code quality or health of one codebase. For an organization of related repositories use review-org-code-quality instead.
 allowed-tools: Bash, Read, Write, Glob, Grep, AskUserQuestion, Agent, Skill
 user-invocable: true

@@ -137,19 +137,44 @@ Keep operational instructions self-contained in each skill; this convention prov
 
 ### Skill versions
 
-A skill whose output records which version of the skill produced it declares
-`version: MAJOR.MINOR.PATCH` in its `SKILL.md` frontmatter — the field APM
-reads. Whoever changes its procedure, report layout, or scoring bumps it in
-the same commit: MINOR for a changed or added step or section, PATCH for a
+Every skill is its own APM package: `skills/<name>/apm.yml` declares only its
+`name` (the directory name) and `version: "MAJOR.MINOR.PATCH"`. That
+`version` is the one APM reads and records for a consumer, in
+`apm.lock.yaml` and `apm deps list`; APM does not
+read a `SKILL.md` frontmatter `version:` (as of `apm-cli` 0.31 it takes only
+`name` and `description` from there). Whoever changes a skill's procedure,
+report layout, scoring, or bundled files bumps its `apm.yml` version in the
+same commit: MINOR for a changed or added step or section, PATCH for a
 clarification that changes nothing a run does, MAJOR when earlier reports can
-no longer be compared with new ones. Typo and pure wording fixes do not bump.
-The version is a label; consumers pin the `con/skills` commit. Counting
-starts at the first merge: a skill stays at its initial version (e.g.
-`0.1.0`) while its introducing pull request is still open.
+no longer be compared with new ones or a consumer must change how it uses the
+skill. Typo and pure wording fixes do not bump. Counting starts at the first
+merge: a skill stays at its initial version (`0.1.0`) while its introducing
+pull request is still open. The per-skill `apm.yml` versions start with the
+pull request that introduced them; changes made in that pull request did not
+bump them.
+
+`apm.yml` is the only place a skill's version lives: a `SKILL.md`
+frontmatter carries no `version:` (`ci/validate_skills.py` fails with E011).
+A skill whose output records which version of the skill produced it (e.g.
+`bot-pr-sweep`, `suggest-skill-fixes`, the `review-*` skills) reads the
+version at run time from the `apm.yml` beside its `SKILL.md`, which APM
+deploys with it.
 
 ## APM distribution
 
-Track canonical skills in `skills/<name>/`; `apm.yml` publishes that collection.
+Track canonical skills in `skills/<name>/`; each directory, with its own
+`apm.yml`, is one APM package. The repository is a monorepo of independent
+skills, not a package: there is no repository-root `apm.yml`, and nobody
+should install `con/skills` as a whole.
+Consumers depend on a skill as a subdirectory of this repository, e.g.
+`apm install con/skills/skills/<name>#<full-SHA>` or, in `apm.yml`,
+`{git: con/skills, path: skills/<name>, ref: <full-SHA>}`; the lock records
+that skill's version from its `apm.yml` at that commit, so releasing needs no
+tags. Move a pin by editing the SHA, not with `apm update`, and do not use a
+semver `ref:`: this repository publishes no per-skill tags, and both would
+land on the old repository-wide tag `0.20261015.0`. A consumer
+still on the repository-root form (`git: con/skills` with `skills: [...]`)
+replaces it with one subdirectory dependency per skill on its next pin move.
 Use `author-apm-skills` for APM authoring and maintenance, and
 `install-apm-skills` for metadata-only consumer setup. Keep generated copies
 out of consumer Git history. Run `tox -e validate,apm,security-static,security-deps`.
