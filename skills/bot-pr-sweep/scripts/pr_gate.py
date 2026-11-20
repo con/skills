@@ -927,7 +927,7 @@ def build_parser() -> argparse.ArgumentParser:
     report.add_argument("--ledger", required=True)
     report.add_argument("--skill-dir", help="directory holding SKILL.md (default: this skill)")
     report.add_argument("--dry-run", action="store_true", help="label the run as a dry run")
-    report.add_argument("--schedule", help="the agreed cadence to state in the report, e.g. 'daily at 06:00 UTC'")
+    report.add_argument("--schedule", help="the cadence of the schedule this run came from, e.g. 'daily at 06:00 UTC'")
     report.add_argument("--now", help="ISO 8601 time to stamp (tests)")
     return parser
 
