@@ -1,4 +1,2 @@
 name: bisect-and-patch-git-annex
 version: "0.1.0"
-description: Bisect git-annex regressions using tinuous CI logs, create reproducers, generate fix patches, and submit Red/Green PRs to datalad/git-annex.
-type: skill

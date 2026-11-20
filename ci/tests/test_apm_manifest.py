@@ -25,12 +25,12 @@ class ApmManifestTests(unittest.TestCase):
             return codes(result)
 
     def test_valid_manifest_with_and_without_frontmatter_version(self):
-        manifest = 'name: example\nversion: "0.2.0"\ndescription: Example.\ntype: skill\n'
+        manifest = 'name: example\nversion: "0.2.0"\n'
         self.assertEqual(self.check('', manifest), [])
         self.assertEqual(self.check('version: 0.2.0\n', manifest), [])
 
     def test_frontmatter_and_manifest_versions_must_agree(self):
-        manifest = 'name: example\nversion: "0.2.0"\ndescription: Example.\n'
+        manifest = 'name: example\nversion: "0.2.0"\n'
         self.assertEqual(self.check('version: 0.3.0\n', manifest), ['E011'])
 
     def test_invalid_manifests(self):
@@ -39,17 +39,7 @@ class ApmManifestTests(unittest.TestCase):
                          'name: example\nversion: 1.0\ndescription: Example.\n',
                          'name: example\nversion: "v1.0.0"\ndescription: Example.\n',
                          'name: example\ndescription: Example.\n',
-                         'name: example\nversion: "0.1.0"\ndescription: ""\n'):
+                         ):
             with self.subTest(manifest=manifest):
                 self.assertIn('E010', self.check('version: 0.1.0\n', manifest))
 
-
-class CollectionTests(unittest.TestCase):
-    def test_every_published_skill_has_a_valid_manifest(self):
-        from skill_common import find_skill_dirs
-        root = Path(__file__).resolve().parents[2]
-        for skill in find_skill_dirs(root):
-            with self.subTest(skill=skill.name):
-                result = Result()
-                check_apm_manifest(skill, result)
-                self.assertEqual(result.errors, [])

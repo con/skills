@@ -29,8 +29,10 @@ Fill the fields like this:
 - **`{skill source}`** — where that copy of the skill came from. If the
   skill directory sits inside a git checkout, cite
   `git -C {skill dir} rev-parse --short HEAD`. If instead the consumer
-  repository carries an `apm.lock.yaml` with a `con/skills` entry, cite
-  its `resolved_commit` as `con/skills@{SHA}`. Otherwise write
+  repository carries an `apm.lock.yaml` with a `con/skills` entry whose
+  `virtual_path` is `skills/{skill name}`, cite its `resolved_commit` as
+  `con/skills@{SHA}` (an entry without `virtual_path` that lists the skill
+  under `skills:` also counts). Otherwise write
   `source commit unknown`.
 - **`{conventions version}`** — the `version:` of
   `code-quality-report-conventions/SKILL.md`, so the report shows which

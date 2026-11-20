@@ -137,9 +137,8 @@ Keep operational instructions self-contained in each skill; this convention prov
 
 ### Skill versions
 
-Every skill is its own APM package: `skills/<name>/apm.yml` declares its
-`name` (the directory name), `version: "MAJOR.MINOR.PATCH"`, a one-line
-`description` and `type: skill`. That `version` is the one APM reads and
+Every skill is its own APM package: `skills/<name>/apm.yml` declares only its
+`name` (the directory name) and `version: "MAJOR.MINOR.PATCH"`. That `version` is the one APM reads and
 records for a consumer, in `apm.lock.yaml` and `apm deps list`; APM does not
 read a `SKILL.md` frontmatter `version:` (as of `apm-cli` 0.31 it takes only
 `name` and `description` from there). Whoever changes a skill's procedure,
@@ -149,12 +148,15 @@ clarification that changes nothing a run does, MAJOR when earlier reports can
 no longer be compared with new ones or a consumer must change how it uses the
 skill. Typo and pure wording fixes do not bump. Counting starts at the first
 merge: a skill stays at its initial version (`0.1.0`) while its introducing
-pull request is still open.
+pull request is still open. The per-skill `apm.yml` versions start with the
+pull request that introduced them; changes made in that pull request did not
+bump them.
 
 A skill whose output records which version of the skill produced it (e.g.
 `bot-pr-sweep`, `suggest-skill-fixes`, the `review-*` skills) also keeps
 `version:` in its `SKILL.md` frontmatter, where the skill reads it at run
-time. It must equal the `apm.yml` version; `ci/validate_skills.py` fails
+time, written unquoted (`version: 0.2.0`; the stamping scripts do not match a
+quoted value). It must equal the `apm.yml` version; `ci/validate_skills.py` fails
 (E011) when they differ, so bump both together.
 
 ## APM distribution
@@ -165,8 +167,9 @@ Consumers depend on a skill as a subdirectory of this repository, e.g.
 `apm install con/skills/skills/<name>#<full-SHA>` or, in `apm.yml`,
 `{git: con/skills, path: skills/<name>, ref: <full-SHA>}`; the lock records
 that skill's version from its `apm.yml` at that commit, so releasing needs no
-tags. (A semver `ref:` such as `^0.1.0` would need `<name>--v<version>` tags,
-which this repository does not publish.) The older
+tags. Move a pin by editing the SHA, not with `apm update`, and do not use a
+semver `ref:`: this repository publishes no per-skill tags, and both would
+land on the old repository-wide tag `0.20261015.0`. The older
 repository-root form (`git: con/skills` with `skills: [...]`) still installs
 from Git, but its lock entry carries no skill version.
 Use `author-apm-skills` for APM authoring and maintenance, and

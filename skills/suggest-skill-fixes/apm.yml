@@ -1,4 +1,2 @@
 name: suggest-skill-fixes
 version: "0.1.0"
-description: Shared procedure a skill follows at the end of a run that showed the skill itself falling short (a result the user corrects by hand every time, a setup it cannot read, an input whose shape has changed).
-type: skill

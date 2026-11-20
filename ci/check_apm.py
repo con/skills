@@ -75,13 +75,6 @@ def check_local_versions(lock: object, versions: dict[str, str]) -> None:
             raise RuntimeError(f'lock records {name} as {locked.get(name)!r}, apm.yml says {version!r}')
 
 
-def ignore_deployed(consumer: Path, selection: list[str]) -> None:
-    ignore = consumer / '.gitignore'
-    existing = ignore.read_text() if ignore.exists() else ''
-    ignore.write_text(existing.rstrip('\n') + '\n/apm_modules/\n' + ''.join(
-        f'/.agents/skills/{name}/\n' for name in selection))
-
-
 def check_deployed(consumer: Path, package: Path, selection: list[str]) -> dict[str, bytes]:
     installed = snapshot(consumer / '.agents/skills')
     actual_names = {p.parts[0] for p in map(Path, installed)}
@@ -140,7 +133,10 @@ def main() -> None:
                                          for name in selection]},
             }))
             run('apm', 'install', '--no-policy', cwd=consumer)
-        ignore_deployed(consumer, selection)
+        ignore = consumer / '.gitignore'
+        existing = ignore.read_text() if ignore.exists() else ''
+        ignore.write_text(existing.rstrip('\n') + '\n/apm_modules/\n' + ''.join(
+            f'/.agents/skills/{name}/\n' for name in selection))
         metadata = {name: (consumer / name).read_bytes()
                     for name in ('apm.yml', 'apm.lock.yaml', '.gitignore')}
         installed = check_deployed(consumer, package, selection)

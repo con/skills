@@ -1,4 +1,2 @@
 name: setup-chromatic
 version: "0.1.0"
-description: Set up Chromatic visual regression testing for a one- or multi-page web app, with Storybook stories for component and page states, Playwright snapshots of whole pages at several viewports, the two GitHub workflows and a README section.
-type: skill

@@ -1,4 +1,2 @@
 name: review-human-prose
 version: "0.1.0"
-description: Revise prose that is difficult to follow in documentation, READMEs, reports, and chat.
-type: skill

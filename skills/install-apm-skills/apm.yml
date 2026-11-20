@@ -1,4 +1,2 @@
 name: install-apm-skills
 version: "0.1.0"
-description: Install, update, or migrate skills from any APM-compatible source at project or user scope.
-type: skill

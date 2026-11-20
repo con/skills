@@ -1,4 +1,2 @@
 name: review-repo-code-quality
 version: "0.2.0"
-description: Functionality-preserving code-quality review of a single repository — dead code, duplication, consolidation, cleanup, and items needing verification — written as a dated Markdown report with per-finding location, proposed change, safety confidence, and a verification command.
-type: skill

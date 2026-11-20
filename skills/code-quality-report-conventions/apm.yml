@@ -1,4 +1,2 @@
 name: code-quality-report-conventions
-version: "0.2.0"
-description: Shared report conventions for the review skills (review-repo-code-quality, review-org-code-quality) — where a dated review report goes, the provenance stamp recording which skill version produced it, evidence rules, handling of security-sensitive findings, re-review of a prior report, and confidence/status labels.
-type: skill
+version: "0.2.1"

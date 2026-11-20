@@ -1,4 +1,2 @@
 name: setup-git-bug
 version: "0.1.0"
-description: Set up git-bug distributed issue tracking in a git project.
-type: skill

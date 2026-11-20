@@ -23,8 +23,7 @@ Every SKILL.md:
 
 Every skill's ``apm.yml`` (its APM package manifest, beside SKILL.md):
   E010  Present, a YAML mapping whose ``name`` equals the directory name,
-        ``version`` is a ``MAJOR.MINOR.PATCH`` string, and
-        ``description`` is non-empty
+        and ``version`` is a ``MAJOR.MINOR.PATCH`` string
   E011  A ``version:`` in SKILL.md frontmatter (kept by skills that stamp
         their output with it) must equal the ``apm.yml`` version, which is
         the one APM records in consumers' locks
@@ -205,12 +204,9 @@ def check_apm_manifest(skill_dir: Path, result: Result) -> None:
     if not (isinstance(version, str) and _SEMVER.fullmatch(version)):
         result.error("E010", manifest, f"version must be a MAJOR.MINOR.PATCH string, got {version!r}")
         version = None
-    description = data.get("description")
-    if not (isinstance(description, str) and description.strip()):
-        result.error("E010", manifest, "description must be non-empty")
 
     fm, _ = _parse_frontmatter((skill_dir / "SKILL.md").read_text(encoding="utf-8"))
-    if version and isinstance(fm, dict) and "version" in fm and str(fm["version"]) != version:
+    if version and isinstance(fm, dict) and "version" in fm and fm["version"] != version:
         result.error("E011", skill_dir / "SKILL.md",
                      f"frontmatter version {fm['version']!r} differs from apm.yml version {version!r}; "
                      "bump both together")

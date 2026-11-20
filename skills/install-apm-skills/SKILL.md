@@ -37,6 +37,7 @@ apm install PACKAGE/SKILL_PATH#SHA --target agent-skills
 ```
 
 In `apm.yml` this is `{git: PACKAGE, path: SKILL_PATH, ref: SHA}`; install each skill as its own dependency.
+To move such a pin, edit the SHA and run `apm install`; `apm update` and semver refs can resolve to an older repository-wide tag (in `con/skills`, `0.20261015.0`, where most skills do not exist).
 Name several skills in one `apm install` call (or list them in `apm.yml` and run `apm install`); with APM 0.31, adding them in separate calls leaves lock entries that the next `apm install --frozen` rewrites.
 
 For a collection whose skills have no `apm.yml` of their own, select skills from the repository root:
