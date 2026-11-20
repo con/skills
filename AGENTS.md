@@ -137,19 +137,47 @@ Keep operational instructions self-contained in each skill; this convention prov
 
 ### Skill versions
 
-A skill whose output records which version of the skill produced it declares
-`version: MAJOR.MINOR.PATCH` in its `SKILL.md` frontmatter — the field APM
-reads. Whoever changes its procedure, report layout, or scoring bumps it in
-the same commit: MINOR for a changed or added step or section, PATCH for a
+Every skill is its own APM package: `skills/<name>/apm.yml` declares its
+`name` (the directory name), `version: "MAJOR.MINOR.PATCH"`, a one-line
+`description` and `type: skill`. That `version` is the one APM reads and
+records for a consumer, in `apm.lock.yaml` and `apm deps list`; APM does not
+read a `SKILL.md` frontmatter `version:` (as of `apm-cli` 0.31 it takes only
+`name` and `description` from there). Whoever changes a skill's procedure,
+report layout, scoring, or bundled files bumps its `apm.yml` version in the
+same commit: MINOR for a changed or added step or section, PATCH for a
 clarification that changes nothing a run does, MAJOR when earlier reports can
-no longer be compared with new ones. Typo and pure wording fixes do not bump.
-The version is a label; consumers pin the `con/skills` commit. Counting
-starts at the first merge: a skill stays at its initial version (e.g.
-`0.1.0`) while its introducing pull request is still open.
+no longer be compared with new ones or a consumer must change how it uses the
+skill. Typo and pure wording fixes do not bump. Counting starts at the first
+merge: a skill stays at its initial version (`0.1.0`) while its introducing
+pull request is still open.
+
+A skill whose output records which version of the skill produced it (e.g.
+`bot-pr-sweep`, `suggest-skill-fixes`, the `review-*` skills) also keeps
+`version:` in its `SKILL.md` frontmatter, where the skill reads it at run
+time. It must equal the `apm.yml` version; `ci/validate_skills.py` fails
+(E011) when they differ, so bump both together.
+
+### Release tags
+
+After a pull request that changes skill versions merges into `master`, a
+maintainer tags the merge commit `<name>--v<version>` for each changed skill
+and pushes those tags; `python3 ci/skill_tags.py` lists the tags that do not
+exist yet. APM resolves a semver range on a skill (`ref: ^0.2.0` on the
+`skills/<name>` subdirectory) against exactly these tags. Never move or
+delete a release tag, and do not create `v<version>` or bare `<version>`
+tags: APM matches those for every skill in the repository. (The existing bare
+tag `0.20261015.0` already satisfies open ranges such as `>=0.1.0` for any
+skill, so consumers use caret or tilde ranges, a release tag, or a commit.)
 
 ## APM distribution
 
-Track canonical skills in `skills/<name>/`; `apm.yml` publishes that collection.
+Track canonical skills in `skills/<name>/`; each directory, with its own
+`apm.yml`, is one APM package. There is no repository-root `apm.yml`.
+Consumers depend on a skill as a subdirectory of this repository, e.g.
+`apm install con/skills/skills/<name>#<full-SHA>` or, in `apm.yml`,
+`{git: con/skills, path: skills/<name>, ref: <SHA, tag or range>}`. The older
+repository-root form (`git: con/skills` with `skills: [...]`) still installs
+from Git, but its lock entry carries no skill version.
 Use `author-apm-skills` for APM authoring and maintenance, and
 `install-apm-skills` for metadata-only consumer setup. Keep generated copies
 out of consumer Git history. Run `tox -e validate,apm,security-static,security-deps`.

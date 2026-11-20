@@ -34,7 +34,7 @@ Install [install-apm-skills](skills/install-apm-skills/SKILL.md) once at user sc
 With APM installed:
 
 ```console
-apm install --global con/skills --skill install-apm-skills --target agent-skills
+apm install --global con/skills/skills/install-apm-skills --target agent-skills
 ```
 
 This installs the installer skill in `~/.agents/skills/`.
@@ -42,7 +42,11 @@ Reload your agent if needed, then ask it:
 
 > Use install-apm-skills to install tinuous-analyzer from con/skills into this project.
 
-Or install at project scope from the project directory: `apm install con/skills --skill tinuous-analyzer --target agent-skills`.
+Or install at project scope from the project directory, pinning a reviewed commit: `apm install con/skills/skills/tinuous-analyzer#<full-commit-SHA> --target agent-skills`.
+
+Each skill is its own APM package (`skills/<name>/apm.yml` carries its version), so `apm.lock.yaml` and `apm deps list` show which version of each skill a project has.
+Released skill versions are tagged `<name>--v<version>`; a dependency can name such a tag or a semver range resolved against them (`con/skills/skills/tinuous-analyzer#^0.1.0`).
+The older form `apm install con/skills#<SHA> --skill <name>` still works, but records no skill version.
 
 The installer uses APM to select and install skills, record their commit and content hashes, ignore downloaded skill directories, and verify restoration.
 Projects track `apm.yml`, `apm.lock.yaml`, and setup instructions—not the installed skills themselves.
@@ -51,7 +55,8 @@ For configuration options, see each skill’s `SKILL.md` (for example, [pr-revie
 
 ## Development
 
-Skill sources live in `skills/`.
+Skill sources live in `skills/<name>/`, each with its own `apm.yml`.
+Versioning and release tags are described in [`AGENTS.md`](AGENTS.md#skill-versions).
 See [author-apm-skills](skills/author-apm-skills/SKILL.md) for authoring and validation guidance.
 Run `tox -e validate,apm,security-static,security-deps` before submitting changes (environment requirements are in `tox.ini`).
 CI checks skill structure, package restoration, and security; passing checks do not guarantee safety.

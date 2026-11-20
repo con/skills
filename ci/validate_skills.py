@@ -21,6 +21,14 @@ Every SKILL.md:
   E009  ``SKILL_DIR/<path>`` must name a file bundled with the skill, and a
         skill using it must define ``SKILL_DIR`` with the shared sentence
 
+Every skill's ``apm.yml`` (its APM package manifest, beside SKILL.md):
+  E010  Present, a YAML mapping whose ``name`` equals the directory name,
+        ``version`` is a ``MAJOR.MINOR.PATCH`` string, and
+        ``description`` is non-empty
+  E011  A ``version:`` in SKILL.md frontmatter (kept by skills that stamp
+        their output with it) must equal the ``apm.yml`` version, which is
+        the one APM records in consumers' locks
+
 Every *.py bundled alongside a SKILL.md:
   E005  Python syntax error (py_compile)
   E006  subprocess call with shell=True and a non-literal first argument
@@ -70,6 +78,9 @@ _SECRET_ASSIGN = re.compile(
 # Bundled-file references, resolved against the loaded skill's own directory
 _SKILL_DIR_REF = re.compile(r'\bSKILL_DIR/([\w./-]*\w)')
 SKILL_DIR_DEFINITION = '`SKILL_DIR` is the absolute path of the directory holding this SKILL.md'
+
+# A skill's package version, as APM's per-package tags `<name>--v<version>` need it
+_SEMVER = re.compile(r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)')
 
 # subprocess(..., shell=True) where the first arg is not a plain string literal
 _SHELL_TRUE = re.compile(r'shell\s*=\s*True')
@@ -174,6 +185,37 @@ def check_skill_md(skill_md: Path, result: Result) -> None:
             result.error("E009", skill_md, f"SKILL_DIR/{ref} is not a file bundled with this skill", i)
 
 
+def check_apm_manifest(skill_dir: Path, result: Result) -> None:
+    """E010/E011: the skill's own APM manifest, and agreement with its frontmatter."""
+    manifest = skill_dir / "apm.yml"
+    if not manifest.is_file():
+        result.error("E010", manifest, "missing; every skill is its own APM package (see AGENTS.md)")
+        return
+    try:
+        data = yaml.safe_load(manifest.read_text(encoding="utf-8"))
+    except yaml.YAMLError as exc:
+        result.error("E010", manifest, f"invalid YAML: {exc}")
+        return
+    if not isinstance(data, dict):
+        result.error("E010", manifest, "must be a YAML mapping")
+        return
+    if data.get("name") != skill_dir.name:
+        result.error("E010", manifest, "name must equal the skill directory name")
+    version = data.get("version")
+    if not (isinstance(version, str) and _SEMVER.fullmatch(version)):
+        result.error("E010", manifest, f"version must be a MAJOR.MINOR.PATCH string, got {version!r}")
+        version = None
+    description = data.get("description")
+    if not (isinstance(description, str) and description.strip()):
+        result.error("E010", manifest, "description must be non-empty")
+
+    fm, _ = _parse_frontmatter((skill_dir / "SKILL.md").read_text(encoding="utf-8"))
+    if version and isinstance(fm, dict) and "version" in fm and str(fm["version"]) != version:
+        result.error("E011", skill_dir / "SKILL.md",
+                     f"frontmatter version {fm['version']!r} differs from apm.yml version {version!r}; "
+                     "bump both together")
+
+
 def check_python_file(py_path: Path, result: Result) -> None:
     # E005 — syntax
     try:
@@ -239,6 +281,7 @@ def validate_skill(skill_dir: Path) -> Result:
         return result
 
     check_skill_md(skill_md, result)
+    check_apm_manifest(skill_dir, result)
 
     for py_path in sorted(skill_dir.rglob("*.py")):
         check_python_file(py_path, result)

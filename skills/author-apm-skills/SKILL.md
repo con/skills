@@ -18,12 +18,17 @@ Do not develop reusable skills inside an application repository and then commit 
 - Find existing skills before adding another.
   Keep the trigger specific to the workflow; generic skill creation does not imply APM distribution.
 - Preserve existing source layout when APM can publish it.
-  In `con/skills`, each `skills/<name>/` directory is canonical and the root `apm.yml` publishes `skills/`.
-  Add a new skill directory there.
+  In `con/skills`, each `skills/<name>/` directory is canonical and is its own APM package: an `apm.yml` beside `SKILL.md` declares `name` (the directory name), `version: "MAJOR.MINOR.PATCH"`, a one-line `description`, and `type: skill`.
+  There is no root `apm.yml`; consumers depend on `skills/<name>` as a subdirectory, so their lock records that skill's version.
+  Add a new skill directory there, with its `apm.yml` at `0.1.0`.
   In a new package, `.apm/skills/<name>/` is also a valid canonical layout.
   Track source in either layout; do not maintain duplicate editable trees.
 
 ## Author a portable skill
+
+Version the skill package in its `apm.yml`; APM records that version for consumers and does not read a `SKILL.md` frontmatter `version:`.
+Bump it in the same change as any change to the skill's procedure, output, or bundled files, following the repository's rules (in `con/skills`, AGENTS.md "Skill versions").
+A skill that stamps its output with its own version may also keep `version:` in its frontmatter; keep the two equal (`con/skills` CI enforces this).
 
 Create `SKILL.md` with `name` and a discriminating `description`.
 Include only workflow-specific guidance; put substantial conditional detail in linked references.
@@ -46,7 +51,7 @@ In `con/skills`, run:
 tox -e validate,apm,security-static,security-deps
 ```
 
-The package check must install into a disposable consumer, verify all selected skills and bundled resources, restore a fresh disposable consumer from the same manifest/lock with `apm install --frozen`, and run `apm audit --ci`.
+The package check must install each skill as its own package into a disposable consumer, verify all selected skills, bundled resources, and the versions recorded in the lock, restore a fresh disposable consumer from the same manifest/lock with `apm install --frozen`, and run `apm audit --ci`.
 Confirm installed content is ignored and setup metadata stays unchanged.
 A local-path test checks packaging; before adoption, also test the published Git repository at the exact commit consumers will pin.
 
@@ -64,6 +69,9 @@ Inspect the actual diff and report test outcomes, including failures.
 Follow repository commit and PR conventions; open a PR only when authorized.
 Keep source content changes in the dedicated repository.
 Do not claim a branch is available from `con/skills` until it exists there; an unmerged fork is a separately identified source.
+
+After a version change merges, release it by tagging the merge commit `<name>--v<version>` (in `con/skills`, `python3 ci/skill_tags.py` lists missing tags); APM resolves semver ranges on a skill's subdirectory against those tags.
+Tag only the canonical repository's default branch, with the maintainers' authorization; never move a release tag.
 
 After publication, downstream adoption changes the requested APM source/ref and generated lock.
 Use the consumer's pinned APM environment, explicit target and skill selection, ignored deployment paths, setup task, AGENTS.md note, and fresh-checkout validation.
