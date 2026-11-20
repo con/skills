@@ -1,0 +1,4 @@
+name: pr-review-update
+version: "0.1.0"
+description: Review dashboard PRs needing your response and generate high-confidence update proposals for PRs where maintainers are waiting
+type: skill

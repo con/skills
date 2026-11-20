@@ -1,0 +1,4 @@
+name: skill-security-review
+version: "0.1.0"
+description: Security audit of a Claude Code skill directory.
+type: skill

@@ -1,0 +1,4 @@
+name: review-org-code-quality
+version: "0.2.0"
+description: Audit code health across an organization-wide ecosystem of similarly styled, interconnected data/ML/ETL pipelines or repositories.
+type: skill

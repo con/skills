@@ -1,0 +1,4 @@
+name: author-apm-skills
+version: "0.1.0"
+description: Create, update, package, and validate reusable skills specifically for distribution through APM, including maintenance in con/skills or another dedicated skill repository.
+type: skill

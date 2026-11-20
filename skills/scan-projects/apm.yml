@@ -1,0 +1,4 @@
+name: scan-projects
+version: "0.1.0"
+description: Scan subdirectories and files to create/update projects.tsv with metadata and LLM-generated summaries
+type: skill

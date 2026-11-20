@@ -1,0 +1,4 @@
+name: credit-contributions
+version: "0.1.0"
+description: Annotate a paper or work with CRediT (Contributor Roles Taxonomy) author contributions and render the LaTeX byline.
+type: skill

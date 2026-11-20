@@ -1,0 +1,4 @@
+name: tinuous-analyzer
+version: "0.1.0"
+description: Analyze con/tinuous CI log collections to identify test regressions, compare successful vs failing runs, and provide investigation recommendations.
+type: skill

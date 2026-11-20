@@ -1,0 +1,4 @@
+name: pr-feedback-review
+version: "0.1.0"
+description: Load a PR's review feedback (human + bot) and CI status, classify each comment, and recommend what to address vs dismiss with draft responses.
+type: skill

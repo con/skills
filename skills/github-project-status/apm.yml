@@ -1,0 +1,4 @@
+name: github-project-status
+version: "0.1.0"
+description: Check the health and maintenance status of a GitHub project.
+type: skill

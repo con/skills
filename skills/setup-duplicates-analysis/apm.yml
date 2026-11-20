@@ -1,0 +1,4 @@
+name: setup-duplicates-analysis
+version: "0.1.0"
+description: Set up code/text duplication analysis (jscpd) as a permanent part of a project's development workflow — a pre-commit hook, tox env, pixi task, Makefile target, or npm script, wired into whatever CI the project uses.
+type: skill

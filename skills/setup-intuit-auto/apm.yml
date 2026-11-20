@@ -1,0 +1,4 @@
+name: setup-intuit-auto
+version: "0.1.0"
+description: Set up automated releases using intuit/auto in a project.
+type: skill

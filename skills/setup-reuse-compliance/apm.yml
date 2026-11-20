@@ -1,0 +1,4 @@
+name: setup-reuse-compliance
+version: "0.1.0"
+description: Set up REUSE specification compliance (LICENSES/ directory, REUSE.toml, SPDX headers) in a software project or BIDS dataset, then validate it.
+type: skill
