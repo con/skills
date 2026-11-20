@@ -39,7 +39,7 @@ npm run test:chromatic     # the page snapshots, in Chromium (nothing is uploade
 ## Visual snapshots
 
 Every push is rendered on [Chromatic](https://www.chromatic.com) and compared against the last accepted baseline, twice: once per story, once per page state.
-The two feeds answer different questions, which is why there are two projects, two workflows and two badges.
+The two feeds answer different questions, which is why there are two projects, two build workflows and two badges.
 
 ### Stories versus Playwright snapshots
 
@@ -59,12 +59,14 @@ Neither keeps pixels in this repository: Chromatic renders both in its own brows
 
 1. Create two Chromatic projects for this repository: one for Storybook, then **Add project**, pick the same repository again, and name the second one for Playwright.
 2. Add each project's token as a repository secret: `CHROMATIC_STORYBOOK_PROJECT_TOKEN` and `CHROMATIC_PLAYWRIGHT_PROJECT_TOKEN`.
-3. Push. `chromatic-storybook.yml` and `chromatic-playwright.yml` under `.github/workflows/` run on every push; the first build of each project is its baseline, accepted by hand in Chromatic.
+3. Push. `chromatic-storybook.yml` and `chromatic-playwright.yml` under `.github/workflows/` build on every push without a token, and `chromatic-publish.yml` uploads each build from the default branch, which holds the tokens.
+   The first upload comes from the merge that adds these files; that first build of each project is its baseline, so look it over in Chromatic once.
+   After that, the default branch's builds are accepted on their own, since their changes were reviewed on their pull requests.
 
 ### Day to day
 
 1. `npm run storybook` to look at the stories; `npm run test:chromatic` to run the page captures locally. Nothing is uploaded from a local run.
-2. Push a branch. Each workflow uploads its captures, and Chromatic posts one status check per project.
+2. Push a branch, or open a pull request from a fork. Each build workflow captures its feed, `chromatic-publish.yml` uploads it, and Chromatic posts one status check per project once the upload is done.
 3. Open the check and review each diff: accept what was intended, otherwise fix and push again. Chromatic diffs a branch against that branch's own last build, so merge `main` in first when the branch is behind, or `main`'s changes show up as yours.
 4. A new component state gets a story; a new page state gets a `forEachViewport` test in `tests/chromatic/`, plus a way to reach it deterministically<!-- several pages only; drop the rest of this sentence in a one-page app -->; a new page gets a story file under `stories/pages/`, a line in `configs/pages.ts`, and a `tests/chromatic/<page>.chromatic.test.ts` when it has states of its own.
 
