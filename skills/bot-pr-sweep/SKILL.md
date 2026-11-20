@@ -145,9 +145,9 @@ Run steps 1 to 5 for each repository, sharing one ledger file
 attended run then offers the options that would clear Blocked PRs (end of
 step 6) and, if the user turns any on, goes back through steps 2 to 5 for
 those PRs and produces the report again. An attended run, dry or live, ends
-with step 7. A run is unattended when a schedule started it or there is no
-user to ask; a cadence stated by a user who is present is a request for
-step 7, not a schedule.
+with step 7. A run is unattended, and has no user to ask, when a schedule
+started it or no one is present; a cadence stated by a user who is present
+is a request for step 7, not a schedule.
 
 Ask each question this procedure calls for (the repository list, `major`
 labels, approvals, options, the schedule) through the host's interactive
@@ -459,22 +459,21 @@ cadence and confirm it with the user:
   the cadence is also the delay between updating a branch and merging it.
 
 State the whole proposal, then confirm it in one question (schedule it,
-change something, or no schedule): the cadence, where the schedule runs, the
-repository list, the maintainer, each repository's options, the standing
-`major` answer and, with `--allow-approve`, the approval mode. Name each
-option and say what it would do, rather than asking whether the user wants
-"any options": unattended, `--allow-approve --approve-mode auto`,
-`--allow-branch-update` and `--allow-mixed-bots` are what let a run get past
-branch protection, a branch behind its base and pre-commit.ci's autofix
-commits without a person, and `--require-label` fits a repository that
-releases from labels. An unattended run cannot ask, so a `major` PR stays
-blocked without the standing answer and, with `--allow-approve`, nothing is
-approved under `--approve-mode ask`.
+change something, or no schedule): the cadence, where the schedule runs,
+whether the runs are live or dry, the repository list, the maintainer, each
+repository's options, the standing `major` answer and, with
+`--allow-approve`, the approval mode. Name each option and say what it would
+do, rather than asking whether the user wants "any options": unattended,
+`--allow-approve --approve-mode auto`, `--allow-branch-update` and
+`--allow-mixed-bots` are what let a run get past branch protection, a branch
+behind its base and pre-commit.ci's autofix commits without a person, and
+`--require-label` fits a repository that releases from labels.
 
 Before asking, name the listed repositories the proposed place could not
 reach or write to (step 0: a web session reaches only its attached
 repositories and writes only where the App is installed), and propose
-another place when one would.
+another place when one would. Name a scheduled task that already exists for
+this sweep too; the question is then whether to change that one.
 
 Write the invocation with the answers in, so the run is self-contained:
 
@@ -484,18 +483,14 @@ with --require-label patch on acme/widgets; remove `major` labels. Report
 with --schedule "daily at 06:00 UTC".
 ```
 
-To approve unattended, add `--allow-approve --approve-mode auto` to the
-invocation.
-
 Then put it on the schedule. When the host can create a scheduled task that
 outlasts this session (Claude Code's scheduled tasks), where the run has this
-skill and reaches the repositories, create it with the invocation as its
-prompt once the user has chosen to schedule it, unless a task for this sweep
-already exists (name that one and say it was left unchanged), and tell the
-user its name and next run. Otherwise give the user the invocation and end by
-saying plainly that nothing runs until they add it to a scheduled task, a
-cron entry or a workflow of their own. If the user declines a schedule, say so in one line
-and stop.
+skill and reaches the repositories, create it, or change the existing one,
+with the invocation as its prompt once the user has chosen to schedule it,
+and tell the user its name and next run. Otherwise give the user the
+invocation and end by saying plainly that nothing runs until they add it to
+a scheduled task, a cron entry or a workflow of their own. If the user
+declines a schedule, say so in one line and stop.
 
 ## Version bumps for applications that deploy on merge
 
