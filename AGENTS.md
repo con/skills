@@ -139,7 +139,8 @@ Keep operational instructions self-contained in each skill; this convention prov
 
 Every skill is its own APM package: `skills/<name>/apm.yml` declares only its
 `name` (the directory name) and `version: "MAJOR.MINOR.PATCH"`. That
-`version` is the one APM reads and records for a consumer, in `apm.lock.yaml` and `apm deps list`; APM does not
+`version` is the one APM reads and records for a consumer, in
+`apm.lock.yaml` and `apm deps list`; APM does not
 read a `SKILL.md` frontmatter `version:` (as of `apm-cli` 0.31 it takes only
 `name` and `description` from there). Whoever changes a skill's procedure,
 report layout, scoring, or bundled files bumps its `apm.yml` version in the
