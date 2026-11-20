@@ -157,25 +157,16 @@ A skill whose output records which version of the skill produced it (e.g.
 time. It must equal the `apm.yml` version; `ci/validate_skills.py` fails
 (E011) when they differ, so bump both together.
 
-### Release tags
-
-After a pull request that changes skill versions merges into `master`, a
-maintainer tags the merge commit `<name>--v<version>` for each changed skill
-and pushes those tags; `python3 ci/skill_tags.py` lists the tags that do not
-exist yet. APM resolves a semver range on a skill (`ref: ^0.2.0` on the
-`skills/<name>` subdirectory) against exactly these tags. Never move or
-delete a release tag, and do not create `v<version>` or bare `<version>`
-tags: APM matches those for every skill in the repository. (The existing bare
-tag `0.20261015.0` already satisfies open ranges such as `>=0.1.0` for any
-skill, so consumers use caret or tilde ranges, a release tag, or a commit.)
-
 ## APM distribution
 
 Track canonical skills in `skills/<name>/`; each directory, with its own
 `apm.yml`, is one APM package. There is no repository-root `apm.yml`.
 Consumers depend on a skill as a subdirectory of this repository, e.g.
 `apm install con/skills/skills/<name>#<full-SHA>` or, in `apm.yml`,
-`{git: con/skills, path: skills/<name>, ref: <SHA, tag or range>}`. The older
+`{git: con/skills, path: skills/<name>, ref: <full-SHA>}`; the lock records
+that skill's version from its `apm.yml` at that commit, so releasing needs no
+tags. (A semver `ref:` such as `^0.1.0` would need `<name>--v<version>` tags,
+which this repository does not publish.) The older
 repository-root form (`git: con/skills` with `skills: [...]`) still installs
 from Git, but its lock entry carries no skill version.
 Use `author-apm-skills` for APM authoring and maintenance, and

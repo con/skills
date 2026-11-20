@@ -18,7 +18,7 @@ dependencies:
   apm:
     - git: con/skills
       path: skills/setup-chromatic
-      ref: 0123456789abcdef0123456789abcdef01234567  # full SHA, a setup-chromatic--vX.Y.Z tag, or ^X.Y.Z
+      ref: 0123456789abcdef0123456789abcdef01234567  # full commit SHA
 ```
 
 `apm deps list` then shows the skill under its own name and version, and a pull request moving the pin shows which skill changed.

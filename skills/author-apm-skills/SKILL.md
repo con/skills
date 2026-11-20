@@ -70,8 +70,7 @@ Follow repository commit and PR conventions; open a PR only when authorized.
 Keep source content changes in the dedicated repository.
 Do not claim a branch is available from `con/skills` until it exists there; an unmerged fork is a separately identified source.
 
-After a version change merges, release it by tagging the merge commit `<name>--v<version>` (in `con/skills`, `python3 ci/skill_tags.py` lists missing tags); APM resolves semver ranges on a skill's subdirectory against those tags.
-Tag only the canonical repository's default branch, with the maintainers' authorization; never move a release tag.
+A merged version bump is the release: consumers pin a commit, and APM reads the skill's `apm.yml` there. No tag is needed.
 
 After publication, downstream adoption changes the requested APM source/ref and generated lock.
 Use the consumer's pinned APM environment, explicit target and skill selection, ignored deployment paths, setup task, AGENTS.md note, and fresh-checkout validation.

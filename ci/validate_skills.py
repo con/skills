@@ -79,7 +79,7 @@ _SECRET_ASSIGN = re.compile(
 _SKILL_DIR_REF = re.compile(r'\bSKILL_DIR/([\w./-]*\w)')
 SKILL_DIR_DEFINITION = '`SKILL_DIR` is the absolute path of the directory holding this SKILL.md'
 
-# A skill's package version, as APM's per-package tags `<name>--v<version>` need it
+# A skill's package version: MAJOR.MINOR.PATCH
 _SEMVER = re.compile(r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)')
 
 # subprocess(..., shell=True) where the first arg is not a plain string literal
