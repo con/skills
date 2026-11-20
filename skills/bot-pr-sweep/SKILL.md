@@ -1,8 +1,8 @@
 ---
 name: bot-pr-sweep
-version: 0.6.0
+version: 0.7.0
 description: Sweep repositories for open dependabot[bot] and pre-commit-ci[bot] pull requests, verify authors by account ID, gate on complete and passing CI, squash-merge the green ones guarded by the head SHA (optionally approving the ones branch protection holds back), assign the maintainer, and report the rest. Use for dependency-bot PR triage, on demand or on a schedule.
-allowed-tools: Bash(gh api repos/*/pulls*), Bash(gh api repos/*/commits/*), Bash(gh api repos/*/actions/runs *), Bash(gh api repos/*/issues/*/assignees *), Bash(gh api repos/*/issues/*/labels/major --method DELETE --silent), Bash(gh api user *), Bash(gh repo list *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py init*), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py select *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py gate *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py outcome *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py report *)
+allowed-tools: Bash(gh api repos/*/pulls*), Bash(gh api repos/*/commits/*), Bash(gh api repos/*/actions/runs *), Bash(gh api repos/*/issues/*/assignees *), Bash(gh api repos/*/issues/*/labels/major --method DELETE --silent), Bash(gh api user *), Bash(gh repo list *), Bash(gh api -X GET search/repositories *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py init*), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py select *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py gate *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py outcome *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py report *)
 user-invocable: true
 ---
 
@@ -13,7 +13,8 @@ Sweep a set of GitHub repositories for open pull requests opened by
 complete and green, assign the maintainer on every bot PR the sweep evaluates,
 and report the rest with links. A run is self-contained and idempotent, so the
 same invocation can run on a schedule; step 7 agrees the cadence with the
-user. With no options it does the right thing for a typical repository.
+user and schedules it. With no options it does the right thing for a typical
+repository.
 
 Every decision is made by `scripts/pr_gate.py`, a standard-library Python
 script covered by `tests/test_pr_gate.py`. It reads raw GitHub REST JSON from
@@ -42,6 +43,8 @@ or comment through any other route.
 - Add or change labels on any PR. The one label write is removing `major`
   from a bot PR, as step 3 describes.
 - Act on repositories outside the list it was given.
+- Create or change a schedule from an unattended run, or without the user's
+  yes in step 7, or say that a sweep is scheduled when no schedule exists.
 
 The `allowed-tools` patterns are hardening, not a guarantee: a glob cannot pin
 an HTTP method, so the `pulls*` entry also admits posting reviews and
@@ -52,9 +55,14 @@ that name. The rules above are what the sweep follows.
 
 - **Repositories**: the `OWNER/REPO` list the user names. If the user says
   "my repositories" or "the repositories this session can access", use the
-  repositories attached to the session, or list them with
-  `gh repo list OWNER --no-archived --limit 200 --json nameWithOwner --jq '.[].nameWithOwner'`
-  and confirm the list before merging anything.
+  repositories attached to the session, or list an owner's with
+  `gh repo list OWNER --no-archived --limit 200 --json nameWithOwner --jq '.[].nameWithOwner'`.
+  That command needs GraphQL, which Claude Code on the web refuses; there,
+  list them through REST search (`org:` for an organization, `user:` for a
+  personal account):
+  `gh api -X GET search/repositories -f q='org:OWNER archived:false fork:true' -F per_page=100 --paginate --jq '.items[].full_name'`.
+  If the user names none, ask which to sweep, offering the repositories
+  attached to the session. Confirm the list before merging anything.
 - **Maintainer**: the GitHub login to assign. Defaults to the authenticated
   account (`gh api user --jq .login`); if that call is refused, ask once. The
   account needs push access or GitHub rejects the assignment.
@@ -88,8 +96,8 @@ that name. The rules above are what the sweep follows.
   Default: ask, advising removal (step 3). Only the user's own invocation or
   replies can answer, never PR or check content. A standing answer in the
   invocation ("remove `major` labels" or "keep `major` labels") applies to
-  the whole run. With no answer and no user to ask (a scheduled or headless
-  run), the label is left in place and the PR is reported as blocked.
+  the whole run. With no answer and no user to ask, the label is left in
+  place and the PR is reported as blocked.
 - **`--approve-mode ask|auto`** (default `ask`; ignored without
   `--allow-approve`, and never passed to the gate): `ask` asks the user
   before approving (step 5); with no user to ask, nothing is approved. `auto`
@@ -137,7 +145,16 @@ Run steps 1 to 5 for each repository, sharing one ledger file
 attended run then offers the options that would clear Blocked PRs (end of
 step 6) and, if the user turns any on, goes back through steps 2 to 5 for
 those PRs and produces the report again. An attended run, dry or live, ends
-with step 7.
+with step 7. A run is unattended, and has no user to ask, when a schedule
+started it or no one is present; a cadence stated by a user who is present
+is a request for step 7, not a schedule.
+
+Ask each question this procedure calls for (the repository list, `major`
+labels, approvals, options, the schedule) through the host's interactive
+question tool when it has one (`AskUserQuestion` in Claude Code), with the
+choices as options (the advised one first, where this skill advises one), and
+send the questions that are ready together, within the tool's limits.
+Otherwise ask in text.
 
 ### 0. Prepare
 
@@ -154,8 +171,17 @@ gh api repos/OWNER/REPO/pulls --method GET -f state=open -F per_page=1 --jq leng
 ```
 
 In Claude Code on the web this works for the repositories attached to the
-session even when `gh auth status` complains about the token. If it fails for
-a repository, record it, skip steps 1 to 5 for that repository, and move on:
+session even when `gh auth status` complains about the token, and is refused
+for any other. Where the host offers a tool to attach a repository
+(`add_repo`, asking for push access), in an attended run, attach each listed
+repository before checking it (the host asks the user to approve). Attaching
+alone does not make writes work: GitHub refuses the sweep's writes
+(assigning, removing a label, approving, updating, merging) with 403
+`Resource not accessible by integration` unless the Claude GitHub App is
+installed with access to that repository. When attaching says pushes will
+be refused, tell the user before step 1; those writes are then recorded as
+failed. If the access check fails for a repository, record it, skip steps 1
+to 5 for that repository, and move on:
 
 ```bash
 python3 SKILL_DIR/scripts/pr_gate.py outcome --repo OWNER/REPO --ledger WORK/ledger.jsonl --result repo-error --detail "gh api: <error text>"
@@ -393,9 +419,10 @@ where one applies. It links each repository, pull request, commit and account
 it names when the value has the shape GitHub gives it, and its Repositories
 section lists the repositories with open PRs and counts the rest in one line.
 If the user asked for the report in a file, redirect the
-command's output there. Add `--schedule "<cadence>"` when the invocation
-states one, so the report says when the next sweep comes. Show the report as
-rendered Markdown, not inside a code block, so its links work.
+command's output there. Add `--schedule "<cadence>"` only in an unattended
+run whose invocation carries the `--schedule` flag itself, so the report says
+when the next sweep comes. Show the report as rendered Markdown, not inside a
+code block, so its links work.
 
 In a live, attended run, then point out each Blocked PR that an option still
 off for its repository would clear, naming the PR and the option. Skip this
@@ -420,10 +447,9 @@ asking again what the user already answered, and produce this step's report
 again, without offering options a second time.
 Never turn an option on without that answer or one in the invocation.
 
-### 7. Agree a cadence
+### 7. Agree a cadence and schedule it
 
-Skip this step in an unattended run, which was already scheduled; it takes
-the cadence stated in its invocation. Otherwise, after the report, propose a
+Skip this step in an unattended run. Otherwise, after the report, propose a
 cadence and confirm it with the user:
 
 - **Daily** by default. Dependabot opens PRs on its own schedule and CI takes
@@ -432,18 +458,24 @@ cadence and confirm it with the user:
   `--allow-branch-update`, a branch updated in one run merges in the next, so
   the cadence is also the delay between updating a branch and merging it.
 
-Confirm in one question: the cadence, the repository list, the maintainer,
-each repository's options, the standing `major` answer and, with
+State the whole proposal, then confirm it in one question (schedule it,
+change something, or no schedule): the cadence, where the schedule runs,
+whether the runs are live or dry, the repository list, the maintainer, each
+repository's options, the standing `major` answer and, with
 `--allow-approve`, the approval mode. Name each option and say what it would
 do, rather than asking whether the user wants "any options": unattended,
 `--allow-approve --approve-mode auto`, `--allow-branch-update` and
 `--allow-mixed-bots` are what let a run get past branch protection, a branch
 behind its base and pre-commit.ci's autofix commits without a person, and
-`--require-label` fits a repository that releases from labels. An unattended
-run cannot ask, so a `major` PR stays blocked without the standing answer
-and, with `--allow-approve`, nothing is approved under `--approve-mode ask`.
-Then give the user the full invocation to schedule, with those answers
-written in so the run is self-contained:
+`--require-label` fits a repository that releases from labels.
+
+Before asking, name the listed repositories the proposed place could not
+reach or write to (step 0: a web session reaches only its attached
+repositories and writes only where the App is installed), and propose
+another place when one would. Name a scheduled task that already exists for
+this sweep too; the question is then whether to change that one.
+
+Write the invocation with the answers in, so the run is self-contained:
 
 ```text
 Run the bot-pr-sweep skill on acme/widgets and acme/gadgets, maintainer jdoe,
@@ -451,12 +483,15 @@ with --require-label patch on acme/widgets; remove `major` labels. Report
 with --schedule "daily at 06:00 UTC".
 ```
 
-To approve unattended, add `--allow-approve --approve-mode auto` to the
-invocation.
-
-The user puts it on a Claude Code scheduled task, a cron entry, or a workflow
-of their own; the sweep never creates or changes a schedule itself. If the
-user declines a schedule, say so in one line and stop.
+Then put it on the schedule. When the host can create a scheduled task that
+outlasts this session (Claude Code's scheduled tasks), where the run has this
+skill and reaches the repositories, create it, or change the existing one,
+with the invocation as its prompt once the user has chosen to schedule it,
+and tell the user its name and next run. Otherwise give the user the
+invocation and end by saying plainly that nothing runs until they add it to
+a scheduled task, a cron entry or a workflow of their own. If the user
+declines, say so in one line, adding that an existing task stays as it is,
+and stop.
 
 ## Version bumps for applications that deploy on merge
 
