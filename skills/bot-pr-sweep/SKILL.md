@@ -420,9 +420,9 @@ it names when the value has the shape GitHub gives it, and its Repositories
 section lists the repositories with open PRs and counts the rest in one line.
 If the user asked for the report in a file, redirect the
 command's output there. Add `--schedule "<cadence>"` only in an unattended
-run whose invocation carries it, so the report says when the next
-sweep comes. Show the report as rendered Markdown, not inside a code block, so
-its links work.
+run whose invocation carries the `--schedule` flag itself, so the report says
+when the next sweep comes. Show the report as rendered Markdown, not inside a
+code block, so its links work.
 
 In a live, attended run, then point out each Blocked PR that an option still
 off for its repository would clear, naming the PR and the option. Skip this
@@ -490,7 +490,8 @@ with the invocation as its prompt once the user has chosen to schedule it,
 and tell the user its name and next run. Otherwise give the user the
 invocation and end by saying plainly that nothing runs until they add it to
 a scheduled task, a cron entry or a workflow of their own. If the user
-declines a schedule, say so in one line and stop.
+declines, say so in one line, adding that an existing task stays as it is,
+and stop.
 
 ## Version bumps for applications that deploy on merge
 
