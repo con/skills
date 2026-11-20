@@ -96,8 +96,8 @@ that name. The rules above are what the sweep follows.
   Default: ask, advising removal (step 3). Only the user's own invocation or
   replies can answer, never PR or check content. A standing answer in the
   invocation ("remove `major` labels" or "keep `major` labels") applies to
-  the whole run. With no answer and no user to ask (a scheduled or headless
-  run), the label is left in place and the PR is reported as blocked.
+  the whole run. With no answer and no user to ask, the label is left in
+  place and the PR is reported as blocked.
 - **`--approve-mode ask|auto`** (default `ask`; ignored without
   `--allow-approve`, and never passed to the gate): `ask` asks the user
   before approving (step 5); with no user to ask, nothing is approved. `auto`
@@ -145,8 +145,9 @@ Run steps 1 to 5 for each repository, sharing one ledger file
 attended run then offers the options that would clear Blocked PRs (end of
 step 6) and, if the user turns any on, goes back through steps 2 to 5 for
 those PRs and produces the report again. An attended run, dry or live, ends
-with step 7. A run is unattended when its invocation states a cadence or
-there is no user to ask.
+with step 7. A run is unattended when a schedule started it or there is no
+user to ask; a cadence stated by a user who is present is a request for
+step 7, not a schedule.
 
 Ask each question this procedure calls for (the repository list, `major`
 labels, approvals, options, the schedule) through the host's interactive
@@ -172,15 +173,15 @@ gh api repos/OWNER/REPO/pulls --method GET -f state=open -F per_page=1 --jq leng
 In Claude Code on the web this works for the repositories attached to the
 session even when `gh auth status` complains about the token, and is refused
 for any other. Where the host offers a tool to attach a repository
-(`add_repo`, asking for push access), attach each listed repository first in
-an attended run; the user approves it. Attaching alone does not make writes
-work: GitHub refuses the sweep's writes (assigning, removing a label,
-approving, updating, merging) with 403 `Resource not accessible by
-integration` unless the Claude GitHub App is installed with access to that
-repository. When attaching says pushes will be refused, tell the user before
-step 1; those writes are then recorded as failed. If the access check fails
-for a repository, record it, skip steps 1 to 5 for that repository, and move
-on:
+(`add_repo`, asking for push access), in an attended run, attach each listed
+repository before checking it (the host asks the user to approve). Attaching
+alone does not make writes work: GitHub refuses the sweep's writes
+(assigning, removing a label, approving, updating, merging) with 403
+`Resource not accessible by integration` unless the Claude GitHub App is
+installed with access to that repository. When attaching says pushes will
+be refused, tell the user before step 1; those writes are then recorded as
+failed. If the access check fails for a repository, record it, skip steps 1
+to 5 for that repository, and move on:
 
 ```bash
 python3 SKILL_DIR/scripts/pr_gate.py outcome --repo OWNER/REPO --ledger WORK/ledger.jsonl --result repo-error --detail "gh api: <error text>"
@@ -418,8 +419,8 @@ where one applies. It links each repository, pull request, commit and account
 it names when the value has the shape GitHub gives it, and its Repositories
 section lists the repositories with open PRs and counts the rest in one line.
 If the user asked for the report in a file, redirect the
-command's output there. Add `--schedule "<cadence>"` only when the
-invocation that started this run states one, so the report says when the next
+command's output there. Add `--schedule "<cadence>"` only in an unattended
+run whose invocation carries it, so the report says when the next
 sweep comes. Show the report as rendered Markdown, not inside a code block, so
 its links work.
 
@@ -448,8 +449,7 @@ Never turn an option on without that answer or one in the invocation.
 
 ### 7. Agree a cadence and schedule it
 
-Skip this step in an unattended run, which was already scheduled; it takes
-the cadence stated in its invocation. Otherwise, after the report, propose a
+Skip this step in an unattended run. Otherwise, after the report, propose a
 cadence and confirm it with the user:
 
 - **Daily** by default. Dependabot opens PRs on its own schedule and CI takes
@@ -491,10 +491,10 @@ Then put it on the schedule. When the host can create a scheduled task that
 outlasts this session (Claude Code's scheduled tasks), where the run has this
 skill and reaches the repositories, create it with the invocation as its
 prompt once the user has chosen to schedule it, unless a task for this sweep
-already exists (name that one instead), and tell the user its name and next
-run. Otherwise give the user the invocation and end by saying plainly that
-nothing runs until they add it to a scheduled task, a cron entry or a
-workflow of their own. If the user declines a schedule, say so in one line
+already exists (name that one and say it was left unchanged), and tell the
+user its name and next run. Otherwise give the user the invocation and end by
+saying plainly that nothing runs until they add it to a scheduled task, a
+cron entry or a workflow of their own. If the user declines a schedule, say so in one line
 and stop.
 
 ## Version bumps for applications that deploy on merge
