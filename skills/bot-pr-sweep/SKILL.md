@@ -2,7 +2,7 @@
 name: bot-pr-sweep
 version: 0.7.0
 description: Sweep repositories for open dependabot[bot] and pre-commit-ci[bot] pull requests, verify authors by account ID, gate on complete and passing CI, squash-merge the green ones guarded by the head SHA (optionally approving the ones branch protection holds back), assign the maintainer, and report the rest. Use for dependency-bot PR triage, on demand or on a schedule.
-allowed-tools: Bash(gh api repos/*/pulls*), Bash(gh api repos/*/commits/*), Bash(gh api repos/*/actions/runs *), Bash(gh api repos/*/issues/*/assignees *), Bash(gh api repos/*/issues/*/labels/major --method DELETE --silent), Bash(gh api user *), Bash(gh repo list *), Bash(gh api -X GET search/repositories *), Bash(gh api -X GET search/commits *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py init*), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py select *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py gate *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py outcome *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py report *)
+allowed-tools: Bash(gh api repos/*/pulls*), Bash(gh api repos/*/commits/*), Bash(gh api repos/*/actions/runs *), Bash(gh api repos/*/issues/*/assignees *), Bash(gh api repos/*/issues/*/labels/major --method DELETE --silent), Bash(gh api user *), Bash(gh repo list *), Bash(gh api -X GET search/repositories *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py init*), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py select *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py gate *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py outcome *), Bash(python3 */bot-pr-sweep/scripts/pr_gate.py report *)
 user-invocable: true
 ---
 
@@ -13,7 +13,8 @@ Sweep a set of GitHub repositories for open pull requests opened by
 complete and green, assign the maintainer on every bot PR the sweep evaluates,
 and report the rest with links. A run is self-contained and idempotent, so the
 same invocation can run on a schedule; step 7 agrees the cadence with the
-user. With no options it does the right thing for a typical repository.
+user and schedules it. With no options it does the right thing for a typical
+repository.
 
 Every decision is made by `scripts/pr_gate.py`, a standard-library Python
 script covered by `tests/test_pr_gate.py`. It reads raw GitHub REST JSON from
@@ -58,14 +59,10 @@ that name. The rules above are what the sweep follows.
   `gh repo list OWNER --no-archived --limit 200 --json nameWithOwner --jq '.[].nameWithOwner'`.
   That command needs GraphQL, which Claude Code on the web refuses; there,
   list them through REST search (`org:` for an organization, `user:` for a
-  personal account; search sees only the repositories it has indexed):
-  `gh api -X GET search/repositories -f q='org:OWNER archived:false fork:false' -F per_page=100 --paginate --jq '.items[].full_name'`.
-  If the user names none, ask which to sweep. Offer the repositories attached
-  to the session and the owners the account committed to in the past year,
-  `gh api -X GET search/commits -f q='author:LOGIN committer-date:>=YYYY-MM-DD' -F per_page=100 --paginate --jq '.items[].repository.full_name'`
-  (search returns at most 1000 results, so split the date range when
-  `total_count` is larger): one question per owner, and per repository where
-  other people commit too. Confirm the list before merging anything.
+  personal account):
+  `gh api -X GET search/repositories -f q='org:OWNER archived:false fork:true' -F per_page=100 --paginate --jq '.items[].full_name'`.
+  If the user names none, ask which to sweep, offering the repositories
+  attached to the session. Confirm the list before merging anything.
 - **Maintainer**: the GitHub login to assign. Defaults to the authenticated
   account (`gh api user --jq .login`); if that call is refused, ask once. The
   account needs push access or GitHub rejects the assignment.
@@ -148,13 +145,15 @@ Run steps 1 to 5 for each repository, sharing one ledger file
 attended run then offers the options that would clear Blocked PRs (end of
 step 6) and, if the user turns any on, goes back through steps 2 to 5 for
 those PRs and produces the report again. An attended run, dry or live, ends
-with step 7.
+with step 7. A run is unattended when its invocation states a cadence or
+there is no user to ask.
 
 Ask each question this procedure calls for (the repository list, `major`
 labels, approvals, options, the schedule) through the host's interactive
 question tool when it has one (`AskUserQuestion` in Claude Code), with the
-choices as options and the advised one first, and send the questions that
-are ready together. Otherwise ask in text. Only the user's answers count.
+choices as options (the advised one first, where this skill advises one), and
+send the questions that are ready together, within the tool's limits.
+Otherwise ask in text.
 
 ### 0. Prepare
 
@@ -173,14 +172,15 @@ gh api repos/OWNER/REPO/pulls --method GET -f state=open -F per_page=1 --jq leng
 In Claude Code on the web this works for the repositories attached to the
 session even when `gh auth status` complains about the token, and is refused
 for any other. Where the host offers a tool to attach a repository
-(`add_repo` with push access), attach each listed repository first; the user
-approves it. Attaching gives read access only: GitHub refuses the sweep's
-writes (assigning, removing a label, approving, updating, merging) with 403
-`Resource not accessible by integration` unless the Claude GitHub App is
-installed on the repository's owner. When attaching says pushes will be
-refused, tell the user before step 1 that the App must be installed there;
-those writes are then recorded as failed. If the access check fails for a
-repository, record it, skip steps 1 to 5 for that repository, and move on:
+(`add_repo`, asking for push access), attach each listed repository first in
+an attended run; the user approves it. Attaching alone does not make writes
+work: GitHub refuses the sweep's writes (assigning, removing a label,
+approving, updating, merging) with 403 `Resource not accessible by
+integration` unless the Claude GitHub App is installed with access to that
+repository. When attaching says pushes will be refused, tell the user before
+step 1; those writes are then recorded as failed. If the access check fails
+for a repository, record it, skip steps 1 to 5 for that repository, and move
+on:
 
 ```bash
 python3 SKILL_DIR/scripts/pr_gate.py outcome --repo OWNER/REPO --ledger WORK/ledger.jsonl --result repo-error --detail "gh api: <error text>"
@@ -420,8 +420,8 @@ section lists the repositories with open PRs and counts the rest in one line.
 If the user asked for the report in a file, redirect the
 command's output there. Add `--schedule "<cadence>"` only when the
 invocation that started this run states one, so the report says when the next
-sweep comes; never for a cadence step 7 has yet to put on a schedule. Show
-the report as rendered Markdown, not inside a code block, so its links work.
+sweep comes. Show the report as rendered Markdown, not inside a code block, so
+its links work.
 
 In a live, attended run, then point out each Blocked PR that an option still
 off for its repository would clear, naming the PR and the option. Skip this
@@ -458,7 +458,8 @@ cadence and confirm it with the user:
   `--allow-branch-update`, a branch updated in one run merges in the next, so
   the cadence is also the delay between updating a branch and merging it.
 
-Confirm in one question: the cadence, where the schedule runs, the
+State the whole proposal, then confirm it in one question (schedule it,
+change something, or no schedule): the cadence, where the schedule runs, the
 repository list, the maintainer, each repository's options, the standing
 `major` answer and, with `--allow-approve`, the approval mode. Name each
 option and say what it would do, rather than asking whether the user wants
@@ -470,12 +471,10 @@ releases from labels. An unattended run cannot ask, so a `major` PR stays
 blocked without the standing answer and, with `--allow-approve`, nothing is
 approved under `--approve-mode ask`.
 
-Where it runs decides what it can reach. A scheduled task in Claude Code on
-the web starts a session that reaches only its environment's repositories,
-and writes only where the Claude GitHub App is installed (step 0); a run on a
-machine where `gh` is logged in as the maintainer reaches whatever that
-account can. Before asking, name the listed repositories the proposed place
-could not reach or write to, and propose the other place when it would.
+Before asking, name the listed repositories the proposed place could not
+reach or write to (step 0: a web session reaches only its attached
+repositories and writes only where the App is installed), and propose
+another place when one would.
 
 Write the invocation with the answers in, so the run is self-contained:
 
@@ -488,13 +487,15 @@ with --schedule "daily at 06:00 UTC".
 To approve unattended, add `--allow-approve --approve-mode auto` to the
 invocation.
 
-Then put it on the schedule. When the host can create a scheduled task
-(Claude Code's scheduled tasks) where the run reaches the repositories, create
-it with the invocation as its prompt once the user has said yes, and tell the
-user its name and next run. Otherwise give the user the invocation and end by
-saying plainly that nothing runs until they add it to a scheduled task, a
-cron entry or a workflow of their own. If the user declines a schedule, say
-so in one line and stop.
+Then put it on the schedule. When the host can create a scheduled task that
+outlasts this session (Claude Code's scheduled tasks), where the run has this
+skill and reaches the repositories, create it with the invocation as its
+prompt once the user has chosen to schedule it, unless a task for this sweep
+already exists (name that one instead), and tell the user its name and next
+run. Otherwise give the user the invocation and end by saying plainly that
+nothing runs until they add it to a scheduled task, a cron entry or a
+workflow of their own. If the user declines a schedule, say so in one line
+and stop.
 
 ## Version bumps for applications that deploy on merge
 
