@@ -138,8 +138,11 @@ Keep operational instructions self-contained in each skill; this convention prov
 ### Skill versions
 
 A skill whose output records which version of the skill produced it declares
-`version: MAJOR.MINOR.PATCH` in its `SKILL.md` frontmatter — the field APM
-reads. Whoever changes its procedure, report layout, or scoring bumps it in
+`version: MAJOR.MINOR.PATCH` in its `SKILL.md` frontmatter, where the skill
+itself reads it to stamp its output. APM does not read it: as of `apm-cli`
+0.31 a `SKILL.md` frontmatter supplies only `name` and `description`, and the
+version APM records for an install is the package's, from `apm.yml`.
+Whoever changes its procedure, report layout, or scoring bumps it in
 the same commit: MINOR for a changed or added step or section, PATCH for a
 clarification that changes nothing a run does, MAJOR when earlier reports can
 no longer be compared with new ones. Typo and pure wording fixes do not bump.
