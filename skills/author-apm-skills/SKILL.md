@@ -19,7 +19,7 @@ Do not develop reusable skills inside an application repository and then commit 
   Keep the trigger specific to the workflow; generic skill creation does not imply APM distribution.
 - Preserve existing source layout when APM can publish it.
   In `con/skills`, each `skills/<name>/` directory is canonical and is its own APM package: an `apm.yml` beside `SKILL.md` declares `name` (the directory name) and `version: "MAJOR.MINOR.PATCH"`.
-  There is no root `apm.yml`; consumers depend on `skills/<name>` as a subdirectory, so their lock records that skill's version.
+  The repository is a monorepo, not a package: there is no root `apm.yml`, and consumers depend on `skills/<name>` as a subdirectory, so their lock records that skill's version.
   Add a new skill directory there, with its `apm.yml` at `0.1.0`.
   In a new package, `.apm/skills/<name>/` is also a valid canonical layout.
   Track source in either layout; do not maintain duplicate editable trees.

@@ -162,16 +162,18 @@ quoted value). It must equal the `apm.yml` version; `ci/validate_skills.py` fail
 ## APM distribution
 
 Track canonical skills in `skills/<name>/`; each directory, with its own
-`apm.yml`, is one APM package. There is no repository-root `apm.yml`.
+`apm.yml`, is one APM package. The repository is a monorepo of independent
+skills, not a package: there is no repository-root `apm.yml`, and nobody
+should install `con/skills` as a whole.
 Consumers depend on a skill as a subdirectory of this repository, e.g.
 `apm install con/skills/skills/<name>#<full-SHA>` or, in `apm.yml`,
 `{git: con/skills, path: skills/<name>, ref: <full-SHA>}`; the lock records
 that skill's version from its `apm.yml` at that commit, so releasing needs no
 tags. Move a pin by editing the SHA, not with `apm update`, and do not use a
 semver `ref:`: this repository publishes no per-skill tags, and both would
-land on the old repository-wide tag `0.20261015.0`. The older
-repository-root form (`git: con/skills` with `skills: [...]`) still installs
-from Git, but its lock entry carries no skill version.
+land on the old repository-wide tag `0.20261015.0`. A consumer
+still on the repository-root form (`git: con/skills` with `skills: [...]`)
+replaces it with one subdirectory dependency per skill on its next pin move.
 Use `author-apm-skills` for APM authoring and maintenance, and
 `install-apm-skills` for metadata-only consumer setup. Keep generated copies
 out of consumer Git history. Run `tox -e validate,apm,security-static,security-deps`.

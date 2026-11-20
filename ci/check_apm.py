@@ -7,9 +7,7 @@ lock records that skill's own version.  This check installs each skill that
 way into a disposable consumer, verifies the deployed files and the versions
 in the lock, restores a fresh consumer from the manifest and lock with
 ``apm install --frozen``, audits it, and confirms the audit catches tampering.
-With ``--source`` it also installs from the repository root with ``--skill``
-selection, the older form that existing consumers use, which keeps working
-for Git sources without a root ``apm.yml``.
+The repository root is not a package: nobody installs con/skills as a whole.
 """
 from __future__ import annotations
 
@@ -166,18 +164,6 @@ def main() -> None:
         audit = subprocess.run(['apm', 'audit', '--ci', '--no-policy'], cwd=fresh)
         if audit.returncode == 0:
             raise RuntimeError('audit accepted tampered skill content')
-
-        if args.source:
-            # The repository-root form with --skill selection, which existing
-            # consumers use.  Only Git sources accept a root without apm.yml;
-            # APM rejects such a root as a local path, so local CI skips this.
-            root_consumer = base / 'root-consumer'
-            root_consumer.mkdir()
-            run('git', 'init', '--quiet', cwd=root_consumer)
-            run('apm', 'install', args.source, '--target', 'agent-skills',
-                *[arg for name in selection for arg in ('--skill', name)],
-                '--no-policy', cwd=root_consumer)
-            check_deployed(root_consumer, package, selection)
     print('Per-skill packages, versions in the lock, and metadata-only restoration verified.')
 
 
