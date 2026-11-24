@@ -9,3 +9,5 @@ dependencies:
     - path: ../code-quality-report-conventions
     - path: ../review-repo-code-quality
     - path: ../analyze-duplicates
+    - path: ../scan-projects
+    - path: ../github-project-status

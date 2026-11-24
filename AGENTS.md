@@ -163,11 +163,11 @@ deploys with it.
 
 ### Skill manifest metadata
 
-Each `apm.yml` also carries, in this order after `version`
-(`ci/validate_skills.py` E010 checks them):
+Each `apm.yml` also carries, after `version` (`ci/validate_skills.py` E010
+checks the fields, not their order):
 
 - `description`: one line of at most 100 characters for people, shown by
-  `apm view`, `apm search` and `apm deps list`. It is not the `SKILL.md`
+  `apm view` and `apm deps info`. It is not the `SKILL.md`
   `description`, which tells an agent when to use the skill; APM never merges
   or falls back between the two, so do not copy one into the other.
 - `author`: the people who contributed significantly to this skill, comma
@@ -179,17 +179,16 @@ Each `apm.yml` also carries, in this order after `version`
   it into a consumer's `AGENTS.md`.
 - `dependencies` (only when needed): sibling skills this skill's procedure
   runs or requires, as `apm: [{path: ../<skill>}]`. APM installs them with
-  the skill, from the same repository and commit, so a consumer needs no
-  separate selection for them. Leave out skills a procedure follows only
-  "if installed", such as `suggest-skill-fixes`, so installing them stays the
-  consumer's choice.
+  the skill, so a consumer needs no separate selection for them. Declare a
+  sibling the procedure names as its normal path even if it has a fallback;
+  leave out one that is optional by design, such as `suggest-skill-fixes`,
+  so installing it stays the consumer's choice.
 
 Keep these fields out of the `SKILL.md` frontmatter (E011 fails on
 `version:`, `author:` or `license:` there, also under `metadata:`); only
 `name` appears in both, because APM and the agent runtimes each require it.
 Changing this metadata alone (a description, an added author) does not bump
-the version. Adding or removing a dependency is a PATCH bump, since it
-changes what a consumer installs.
+the version; adding or removing a dependency is a PATCH bump.
 
 ## APM distribution
 

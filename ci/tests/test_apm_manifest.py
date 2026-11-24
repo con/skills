@@ -69,10 +69,8 @@ class ApmManifestTests(unittest.TestCase):
                      'dependencies:\n  apm:\n    - path: ../empty\n',
                      'dependencies:\n  apm:\n    - path: ../missing\n',
                      'dependencies:\n  apm:\n    - path: ../other/sub\n',
-                     'dependencies:\n  apm:\n    - path: other\n'):
+                     'dependencies:\n  apm:\n    - path: other\n',
+                     'dependencies:\n  apm:\n    - path: ../other\n    - path: ../other\n'):
             with self.subTest(deps=deps):
                 self.assertEqual(self.check('', VALID + deps), ['E010'])
 
-
-if __name__ == '__main__':
-    unittest.main()

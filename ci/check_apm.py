@@ -5,7 +5,8 @@ Every skill is its own APM package (``skills/<name>/apm.yml``), so consumers
 depend on ``skills/<name>`` as a subdirectory of this repository and their
 lock records that skill's own version.  This check installs each skill that
 way into a disposable consumer, verifies the deployed files (a skill's
-``path: ../<sibling>`` dependencies included) and the versions in the lock, restores a fresh consumer from the manifest and lock with
+``path: ../<sibling>`` dependencies included) and the versions in the lock,
+restores a fresh consumer from the manifest and lock with
 ``apm install --frozen``, audits it, and confirms the audit catches tampering.
 The repository root is not a package: nobody installs con/skills as a whole.
 """

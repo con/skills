@@ -211,7 +211,7 @@ def check_apm_manifest(skill_dir: Path, result: Result) -> None:
     fm, _ = _parse_frontmatter((skill_dir / "SKILL.md").read_text(encoding="utf-8"))
     fm = fm if isinstance(fm, dict) else {}
 
-    # apm.yml description is the human one-liner (apm view/search/deps list);
+    # apm.yml description is the human one-liner (apm view, apm deps info);
     # the SKILL.md one tells the agent when to trigger. APM never merges them.
     description = data.get("description")
     if not (isinstance(description, str) and description.strip()):
@@ -241,15 +241,19 @@ def check_manifest_dependencies(skill_dir: Path, deps: object, manifest: Path, r
     """E010: dependencies may only name sibling skills, as same-repo relative paths.
 
     APM resolves ``path: ../<sibling>`` in a Git-installed skill to the same
-    repository and commit, so a skill and its dependencies always match.
+    repository and commit, so the dependency is installed with the skill.
     """
     if deps is None:
         return
     if not (isinstance(deps, dict) and set(deps) == {"apm"} and isinstance(deps["apm"], list)):
         result.error("E010", manifest, "dependencies must be a mapping with only an apm: list")
         return
+    seen: set[str] = set()
     for entry in deps["apm"]:
         path = entry.get("path") if isinstance(entry, dict) and set(entry) == {"path"} else None
+        if isinstance(path, str) and path in seen:
+            result.error("E010", manifest, f"dependency {path!r} is listed twice")
+        seen.add(str(path))
         sibling = skill_dir.parent / str(path)[3:] if isinstance(path, str) and path.startswith("../") else None
         if (sibling is None or "/" in str(path)[3:] or sibling == skill_dir
                 or not (sibling / "SKILL.md").is_file()):

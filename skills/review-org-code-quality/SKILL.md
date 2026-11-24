@@ -19,8 +19,8 @@ root cause.
 This skill is the breadth pass; `review-repo-code-quality` is the depth
 pass. It expects the shared `code-quality-report-conventions` skill installed
 alongside, and `review-repo-code-quality` when Phase 4's depth reviews are
-wanted (APM installs both with this skill, as dependencies in its
-`apm.yml`; in a `con/skills` checkout they are sibling directories). Two things are delegated rather than repeated here:
+wanted (APM installs both as dependencies; in a `con/skills` checkout they
+are sibling directories). Two things are delegated rather than repeated here:
 
 - **Depth reviews (Phase 4)** run `review-repo-code-quality` *in full*, one
   report per repository, on the few repositories the graph and matrix

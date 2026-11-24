@@ -29,9 +29,7 @@ Do not develop reusable skills inside an application repository and then commit 
 Version the skill package in its `apm.yml`; APM records that version for consumers and does not read a `SKILL.md` frontmatter `version:`.
 Bump it in the same change as any change to the skill's procedure, output, or bundled files, following the repository's rules (in `con/skills`, AGENTS.md "Skill versions").
 Keep `version:` out of the `SKILL.md` frontmatter; a skill that stamps its output with its own version reads it from the `apm.yml` beside its `SKILL.md` (APM deploys both).
-Keep package metadata (`author`, `license`) in `apm.yml` only too.
-Its `description` is a short summary for people (`apm view`, `apm search`); APM does not fall back to the `SKILL.md` one, and neither should repeat the other.
-When the procedure runs or requires another skill from the same repository, declare it in `apm.yml` as `dependencies: {apm: [{path: ../<skill>}]}`; APM installs it from the same commit.
+Keep the other `apm.yml` metadata out of the frontmatter too (in `con/skills`, AGENTS.md "Skill manifest metadata").
 
 Create `SKILL.md` with `name` and a discriminating `description`.
 Include only workflow-specific guidance; put substantial conditional detail in linked references.

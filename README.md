@@ -45,7 +45,7 @@ Reload your agent if needed, then ask it:
 Or install at project scope from the project directory, pinning a reviewed commit: `apm install con/skills/skills/tinuous-analyzer#<full-commit-SHA> --target agent-skills`.
 
 Each skill is its own APM package (`skills/<name>/apm.yml` carries its version), so `apm.lock.yaml` and `apm deps list` show which version of each skill a project has.
-A skill that needs another one from this collection declares it as a dependency, and APM installs both from the same commit.
+A skill that needs another one from this collection declares it as a dependency, and APM installs it with the skill.
 Install individual skills only; `con/skills` is a monorepo of independent skills, not a package to install as a whole.
 
 The installer uses APM to select and install skills, record their commit and content hashes, ignore downloaded skill directories, and verify restoration.
