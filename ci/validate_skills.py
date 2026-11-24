@@ -26,6 +26,12 @@ Every *.py bundled alongside a SKILL.md:
   E006  subprocess call with shell=True and a non-literal first argument
         (potential shell injection)
 
+The Claude Code plugin marketplace (``.claude-plugin/marketplace.json``),
+checked when no skill directories are given:
+  E012  Unique plugin names; each plugin lists skills as ``./skills/<name>``
+        of published skills; every published skill is in exactly one plugin;
+        ``dependencies`` name plugins of this marketplace
+
 Exit codes: 0 = all clear, 1 = one or more errors, 2 = usage/internal error.
 Warnings never affect the exit code.
 
@@ -39,6 +45,7 @@ Usage:
 from __future__ import annotations
 
 import ast
+import json
 import py_compile
 import re
 import sys
@@ -254,6 +261,49 @@ def check_collection_layout(repo_root: Path) -> Result:
     return result
 
 
+MARKETPLACE = Path(".claude-plugin") / "marketplace.json"
+
+
+def check_marketplace(repo_root: Path) -> Result:
+    """Every published skill belongs to exactly one Claude Code plugin."""
+    result = Result()
+    path = repo_root / MARKETPLACE
+    if not path.exists():
+        return result
+    try:
+        plugins = json.loads(path.read_text(encoding="utf-8"))["plugins"]
+        names = [plugin["name"] for plugin in plugins]
+    except (ValueError, KeyError, TypeError) as exc:
+        result.error("E012", path, f"cannot read the plugin names: {exc!r}")
+        return result
+
+    owners: dict[str, list[str]] = {d.name: [] for d in find_skill_dirs(repo_root)}
+    for name in sorted({n for n in names if names.count(n) > 1}):
+        result.error("E012", path, f"plugin name {name!r} is used more than once")
+    for plugin in plugins:
+        name = plugin["name"]
+        if not all(isinstance(plugin.get(key, []), list) for key in ("skills", "dependencies")):
+            result.error("E012", path, f"plugin {name!r}: give 'skills' and 'dependencies' as lists")
+            continue
+        for dependency in plugin.get("dependencies", []):
+            if isinstance(dependency, str) and "@" not in dependency and dependency not in names:
+                result.error("E012", path, f"plugin {name!r} depends on {dependency!r}, "
+                             "which is not a plugin of this marketplace")
+        for entry in plugin.get("skills", []):
+            skill = entry.removeprefix("./skills/") if isinstance(entry, str) else ""
+            if skill == entry or skill not in owners:
+                result.error("E012", path, f"plugin {name!r} lists {entry!r}; "
+                             "list published skills as ./skills/<name>")
+                continue
+            owners[skill].append(name)
+    for skill, plugin_names in owners.items():
+        if len(plugin_names) != 1:
+            where = ", ".join(repr(n) for n in plugin_names) or "none"
+            result.error("E012", path, f"skill {skill!r} is in {len(plugin_names)} plugins "
+                         f"({where}); put it in exactly one")
+    return result
+
+
 def main(argv: list[str] | None = None) -> int:
     args = sys.argv[1:] if argv is None else argv
 
@@ -266,6 +316,10 @@ def main(argv: list[str] | None = None) -> int:
             print("\n".join(layout.errors))
             return 1
         skill_dirs = find_skill_dirs(repo_root)
+        marketplace = check_marketplace(repo_root)
+        if marketplace.errors:
+            print("\n".join(marketplace.errors))
+            return 1
 
     if not skill_dirs:
         sys.stderr.write("warning: no skill directories found\n")

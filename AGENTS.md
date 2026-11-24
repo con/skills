@@ -153,3 +153,18 @@ Track canonical skills in `skills/<name>/`; `apm.yml` publishes that collection.
 Use `author-apm-skills` for APM authoring and maintenance, and
 `install-apm-skills` for metadata-only consumer setup. Keep generated copies
 out of consumer Git history. Run `tox -e validate,apm,security-static,security-deps`.
+
+## Claude Code plugin marketplace
+
+`.claude-plugin/marketplace.json` also publishes the skills as Claude Code
+plugins (marketplace `con-skills`). Every skill in `skills/` belongs to
+exactly one plugin, listed there as `./skills/<name>`
+(`ci/validate_skills.py` fails with E012 otherwise): add a new skill to the
+plugin whose topic fits, or start a plugin for it, and update the plugin
+table in `README.md`. A plugin whose skills invoke a skill from another
+plugin lists that plugin under `dependencies`, as `code-quality` and
+`project-setup` do with `common`. Each plugin's `source` is the repository
+root, so an installed plugin holds the whole repository and relative paths
+into sibling skills (`../<skill>/...`) still resolve. Plugins declare no
+`version`: Claude Code versions them by commit, so every merge is a new
+plugin version without a bump.
