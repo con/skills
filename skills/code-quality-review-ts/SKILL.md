@@ -104,12 +104,18 @@ list the sources. A solution-style root `tsconfig.json` (`"files": []`
 with `references`) compiles nothing, so `tsc --noEmit` on it exits 0
 having checked no file. Run each command with `-p` on every referenced
 configuration instead. A configuration that itself has `references`
-fails under `-p` (TS6305) until the projects it references are built, so
-first run `tsc -b --verbose` in the throwaway checkout: it checks every
-project in reference order and writes their outputs and `.tsbuildinfo`
-files. Do not use `tsc -b --noEmit` there (it fails with TS6310 and
-checks none of the referencing projects), and note that `tsc -b` rejects
-`--noUnusedLocals` and `--noUnusedParameters`. For madge, build its
+fails under `-p` (TS6305, or TS2307 where it imports the other package
+through types that point at build output) until the projects it
+references are built, so first run `tsc -b --verbose` in the throwaway
+checkout: it checks every project in reference order and writes their
+outputs and `.tsbuildinfo` files, but it writes nothing for a referenced
+project with errors under `noEmitOnError`, and before TypeScript 5.6 it
+skips every project that references one with errors; list the projects
+left unchecked in Method & limits. Do not use `tsc -b --noEmit` there (it
+fails with TS6310 and checks none of the referencing projects;
+TypeScript 5.5 and earlier reject `--noEmit` with `-b` altogether). `tsc
+-b` also rejects `--noUnusedLocals` and `--noUnusedParameters`, so the
+dead-code sweep always runs per configuration with `-p`. For madge, build its
 scratch tsconfig (see its row) from the configuration that holds
 `paths`, rather than passing that configuration itself.
 
@@ -270,9 +276,10 @@ token there)
   ignores `--immutable` and rewrites an out-of-date lock),
   `bun install --frozen-lockfile`.
 - **Baseline and after each group** (consent): the project's own scripts —
-  `lint`, `typecheck` (else `tsc -b` in the throwaway checkout, or `tsc --noEmit -p`
-  on each referenced configuration once the projects it references are
-  built), `test` (vitest, jest, playwright), and
+  `lint`, `typecheck` (else `tsc --noEmit -p <tsconfig>`; for a solution with
+  `references`, `tsc -b --verbose` in the throwaway checkout as under
+  Tools, never plain `tsc -b` elsewhere, which without `outDir` or
+  `noEmit` writes `.js` files next to the sources, tests included), `test` (vitest, jest, playwright), and
   `build`, since bundling catches broken imports a type check can miss.
 - **Static, after any edit**: the static oxlint or biome command above on
   the changed files.

@@ -171,10 +171,11 @@ pass gocyclo `-ignore`.
 - hand-written `contains`, `min`, `max`, and sorting helpers that `slices`
   and the built-ins replace (1.21 or later), and map-key helpers that
   `slices.Sorted(maps.Keys(m))` or `slices.Collect(maps.Keys(m))` replace
-  (1.23 or later). `CL` only where no float operand can be NaN, the
-  original sort was not stable, and no caller can tell an empty result
-  from nil: the built-in `min` and `max` return NaN when any operand is
-  NaN, `slices.Sort` and `slices.SortFunc` are not stable
+  (1.23 or later). `CL` only where no float operand can be NaN or
+  negative zero, the original sort was not stable, and no caller can tell
+  an empty result from nil: the built-in `min` and `max` return NaN when
+  any operand is NaN and order -0 below 0, which a hand-written comparison
+  does not, `slices.Sort` and `slices.SortFunc` are not stable
   (`slices.SortStableFunc` replaces a stable sort), and `slices.Collect`
   and `slices.Sorted` return nil for an empty map where a helper built
   with `make` returned an empty slice (`encoding/json` then writes `null`,
