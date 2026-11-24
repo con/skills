@@ -53,8 +53,7 @@ with 9.8, 4.20 with 9.10, 4.21 with 9.12, 4.22 with 9.14). `GHC2021` needs
 GHC 9.2 and `GHC2024` 9.10; `-Wx-partial` exists from 9.8; the strict
 `readFile'`, `getContents'`, and `hGetContents'` need base 4.15; the
 Prelude exports `foldl'` from base 4.20. `common` stanzas need
-`cabal-version: 2.2`, leaving out `default-language` 3.4, and
-`build-type: Hooks` 3.14.
+`cabal-version: 2.2`, and `build-type: Hooks` 3.14.
 
 ## Tools
 
@@ -78,7 +77,7 @@ clean (Stack writes `.stack-work/` there).
 | Dead code within a module or component | GHC warnings | consent | `cabal build all --enable-tests --enable-benchmarks --builddir=<scratch>/dist-w --ghc-options='-Wall -Wunused-packages -Wredundant-constraints -Wmissing-export-lists -Wpartial-fields'` (add `-Wincomplete-record-selectors` on GHC 9.10 and 9.12), for `-Wunused-top-binds`, `-Wunused-imports`, and `-Wunused-packages`, into a fresh directory each time: cabal-install 3.14 counts a change of warning flags alone as no change, and a rebuild into a used directory said `Up to date` and printed no warning |
 | Dead code across modules | `weeder` | consent | after a build with `--ghc-options=-fwrite-ide-info`, `weeder --config <weeder.toml> --hie-directory <scratch>/dist` (below); exit status 228 means weeds were found, and weeder 2.11 also reports each configured root that matches nothing (`no declaration matches roots entry "^Paths_"` in a package without one, `"^Main\\.main$"` for a library alone): drop those roots |
 | Partial functions, anti-patterns | `stan` | consent | `stan --hiedir=<scratch>/dist -s --hide-solution` from the checkout; it reads the package's `.cabal` file there, and `.stan.toml` unless given `--no-default` |
-| Packaging | `cabal check` | static on the copy | `cabal check` in the package's directory in the `review-repo-code-quality` Step 1 copy: it reads the `.cabal` file and the files that names, ignores `cabal.project`, and runs nothing |
+| Packaging | `cabal check` | static on a copy | `cabal check` in the package's directory in a copy of all the package's tracked files, made with the `review-repo-code-quality` Step 1 recipe into `<scratch>/pkg-copy` instead of `<scratch>/copy`, with `<scope>` the package's directory: the review's scope may leave out files the `.cabal` file names (without the `test/golden/` an `extra-source-files` pattern named, cabal-install 3.14.2.0 warned `[glob-missing-dir]`). It reads the `.cabal` file and the files that names, ignores `cabal.project`, and runs nothing; where only `package.yaml` is tracked, it stops with `No cabal file found`: say so in Method & limits |
 | Module graph | `graphmod` | static with `--no-cabal` | `graphmod --no-cabal -q <files>` from the scratch directory prints DOT (`--no-cluster` drops the directory clusters); without `--no-cabal` it reads the first `.cabal` file in the working directory |
 | Module graph | `import` lines, read as text | static | the grep below; `exposed-modules` tells public modules from internal ones |
 | Complexity | none dedicated | static | lizard has no Haskell reader (1.26.1): module length (`wc -l`), long definitions and deep nesting by reading |
@@ -88,7 +87,7 @@ The hint file and the import search:
 
 ```yaml
 # <scratch>/hlint.yaml: hlint's built-in hints apply as well; these
-# restrictions report every use of the partial and lazy functions
+# restrictions report every use of these names, partial or not (Not findings)
 - functions:
   - {name: [head, tail, init, last, fromJust, read, "!!", foldl, foldr1, foldl1, maximum, minimum, toEnum], within: []}
 ```
@@ -121,12 +120,14 @@ weeder needs a configuration file: the project's `weeder.toml`, or yours:
 ```toml
 # <scratch>/weeder.toml
 roots = ["^Main\\.main$", "^Paths_"]
-root-modules = ["^Pkg\\.Api$"]  # each exposed module of a library
+root-modules = ["^Pkg\\.Api$"]  # each exposed module of a library others can use
 type-class-roots = true         # false also lists instances with no use seen
 ```
 
-Its default roots are only `Main.main` and its own `Paths_weeder`; with
-the settings above a planted sample showed only its dead code. HIE files
+Its defaults (weeder 2.11.0) root only `Main.main` and the `Paths_`
+modules, and no exposed module (`root-modules = []`), so a library's
+exports show up as weeds; with the settings above a planted sample showed
+only its dead code. HIE files
 are specific to the GHC that wrote them (weeder exits 2 on a mismatch):
 build weeder and stan with that GHC (a fetch: ask first, as Step 1 says).
 
@@ -164,11 +165,12 @@ build weeder and stan with that GHC (a fetch: ask first, as Step 1 says).
 
 **Modules and structure**
 
-- **Missing export lists** (`ARC`; `-Wmissing-export-lists`): every helper
-  is exported, and from a library's `exposed-modules` becomes API. Adding
-  the list is `NV` in a library, `CL` elsewhere, and lets
-  `-Wunused-top-binds` report what nothing uses. Test-only internals belong
-  in an `Internal` module or a private sublibrary (`visibility: private`).
+- **Missing export lists** (`-Wmissing-export-lists`; `NV` in a library
+  other packages can depend on, where the list removes names from its API,
+  `CL` elsewhere): every helper is exported, and from a library's
+  `exposed-modules` becomes API. Adding the list lets `-Wunused-top-binds`
+  report what nothing uses. Test-only internals belong in an `Internal`
+  module or a private sublibrary (`visibility: private`).
 - **Import cycles** (`ARC`): GHC compiles one only through an `.hs-boot`
   file and a `{-# SOURCE #-}` import; name it and the move that removes it.
 - **Orphan instances** (`ARC`; `-Worphans`, in `-Wall`): defined with
@@ -250,7 +252,10 @@ live sources each item names rather than trusting its examples)
   the newest were 9.14.1 and 9.12.4, and GHCup recommended 9.10.3. Cabal
   ignores `tested-with`: report entries CI does not build, CI that builds
   no maintained series, and the newest release missing.
-- **Language edition.** `Haskell2010`, or none (GHC then uses `GHC2021`),
+- **Language edition.** `Haskell2010`, or no `default-language`, which
+  Cabal builds as `Haskell98` (cabal-install 3.14.2.0 passed `-XHaskell98`,
+  and `cabal check` reports the omission as an error Hackage rejects; GHC
+  9.2 to 9.14 on its own, as for a `runghc` script, uses `GHC2021`),
   against `GHC2024`, which GHC's user's guide recommends for new code; it
   needs GHC 9.10 across the tested range and adds `DataKinds`, `GADTs`,
   `LambdaCase`, `MonoLocalBinds`, and four more to `GHC2021`.
@@ -280,8 +285,17 @@ live sources each item names rather than trusting its examples)
 
 ## Not findings
 
-- Exports of a library's `exposed-modules`: callers live in other packages;
-  weeder lists them unless `root-modules` covers them. Removing one is `NV`.
+- Exports of a library other packages can depend on (one on Hackage, or
+  one another repository uses): callers live in other packages; weeder
+  lists them unless `root-modules` covers them. Removing one is `NV`. In a
+  private sublibrary (`visibility: private`) or a library only this
+  project uses, an export no component imports is dead (`DC`): leave its
+  modules out of `root-modules`.
+- Hint-file hits on total namesakes: the restrictions match names, not
+  types, so they flag `Data.List.NonEmpty`'s `head`, `tail`, `init`, and
+  `last` (hlint 3.10 flagged `NE.head` and `NE.tail`) and `maximum`,
+  `minimum`, `foldr1`, or `foldl1` applied to a `NonEmpty`; check the type
+  before calling a hit partial.
 - Instances used through their class (`show`, aeson's generic encoding,
   `OverloadedStrings` literals): weeder with `type-class-roots = false`
   reports them, rooting only `IsString` and `IsList` instances by default.

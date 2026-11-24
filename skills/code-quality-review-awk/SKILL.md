@@ -91,7 +91,7 @@ xargs -0 -r -t -n 1 env -u POSIXLY_CORRECT -u GAWK_PERSIST_FILE AWKPATH=<dirs> \
 | Portability to POSIX awk and the one-true-awk | `gawk --posix --lint`, `gawk --traditional --lint`, parse only | static | the lint command with `--posix` or `--traditional` added: each stops at the first syntax it rejects (both reject `\|&`, arrays of arrays, `@include`, and `switch`; `--posix` also `**` and `func`), and once parsing completes, gawk's built-ins appear as `called but never defined`. Both take `BEGINFILE` and gawk's variables as ordinary names, and before 5.4 `--posix` refuses `length(array)` only when it runs; from 5.4.0, `--traditional` takes a regex `RS` and no longer changes what `system()` returns, as in the one-true-awk |
 | Portability to mawk | `mawk -W dump` | static | `xargs -0 -r -t -n 1 mawk -W dump -f < <scratch>/awk.list > /dev/null` compiles each program, prints a listing, and exits without running it; it rejects `@include`, arrays of arrays, `**`, and `func`, and reports calls to functions mawk lacks (`function gensub never defined`). Like gawk's two modes, it takes `BEGINFILE` and gawk's variables as ordinary names |
 | Portability to BusyBox awk and the one-true-awk | the implementation itself | consent | neither has a parse-only mode, and both report an undefined function only when the call runs: run the test inputs under them (Verification) |
-| Embedded programs | `shfmt --to-json`, `jq` | static from the scratch directory (shfmt reads `.editorconfig` from the working directory up, even for standard input) | the extraction below (bash), then the rows above on the copies. It takes the program operand, or `-e` text, of `awk`, `gawk`, `mawk`, `nawk`, `original-awk`, a path ending in one, or `$AWK`, also after `command`, `env`, `xargs`, `busybox`, and the like, and after options such as `-F'\t'`, when it is one single-quoted word; it skips programs in double quotes, built from several quoted pieces (`'it'\''s'`), or fed through a heredoc: read those by hand. Copy Makefile recipes (`$$` turned back into `$`, `$(AWK)` written as `awk`), workflow `run:` steps (each `${{ … }}` replaced by a placeholder), Dockerfile `RUN` lines, and `package.json` scripts into a scratch `.sh` file first |
+| Embedded programs | `shfmt --to-json`, `jq` | static from the scratch directory (shfmt reads `.editorconfig` from the working directory up, even for standard input) | the extraction below (bash), then the rows above on the copies. It takes the program operand, or `-e` text, of `awk`, `gawk`, `mawk`, `nawk`, `original-awk`, a path ending in one, or `$AWK`, also after `command`, `env`, `xargs`, `find … -exec`, `busybox`, and the like, and after options such as `-F'\t'`, when it is one single-quoted word; it skips programs in double quotes, built from several quoted pieces (`'it'\''s'`), after a long option whose value is the next word (`--field-separator :`, `--assign x=1`), or fed through a heredoc: read those by hand. Copy Makefile recipes (`$$` turned back into `$`, `$(AWK)` written as `awk`), workflow `run:` steps (each `${{ … }}` replaced by a placeholder), Dockerfile `RUN` lines, and `package.json` scripts into a scratch `.sh` file first |
 | Duplication | jscpd's `awk` format | static | the `analyze-duplicates` run reads only `*.awk` files as awk, and at its minimums (50 tokens, 6 lines; jscpd's own are 50 and 5) it missed every copy of a five-line function (jscpd 5.4.3); add an awk-only run from the scratch directory, `xargs -0 -r -t <jscpd> --min-tokens 20 --min-lines 3 --formats-exts 'awk:awk,gawk' --formats-names 'awk:<names of the scripts without an extension>' --reporters console < <scratch>/awk.list` (one run, as `-t` shows), which found them all, read neither the project's `.jscpd.json` nor its `.gitignore`, and wrote nothing; one-liners need the search below |
 | Import graph | `grep` | static | the include search below: `@include`, `@nsinclude`, `@load`, and `@namespace` lines, and the `-f` and `-i` files in each caller's command |
 | Dead code | the lint row on each composition, then `grep` | static | a function a program never calls is a candidate until the definition search finds no caller anywhere (see Not findings); write-only globals from the globals row; rules after an unconditional `next` |
@@ -106,7 +106,7 @@ program list plus the copies, padded so lint line numbers match):
 ```sh
 shfmt --to-json < <script> | jq -j '.. | objects | select(.Type? == "CallExpr") | .Args as $a
   | first(range($a | length) as $k | select($k == 0 or ($a[0].Parts[0].Value // "" | IN("command",
-      "env", "exec", "busybox", "xargs", "nice", "nohup", "sudo", "time", "timeout")))
+      "env", "exec", "find", "busybox", "xargs", "nice", "nohup", "sudo", "time", "timeout")))
     | select($a[$k].Parts[0] | if .Type == "DblQuoted" then .Parts[0] else . end
       | .Value // .Param.Value // "" | test("(^|/)([gmn]?awk|original-awk)$|^AWK$")) | $k) as $k
   | first(range($k + 1; $a | length) as $i | select($a[$i].Parts[0].Value // "" | test("^-.") | not)
@@ -121,11 +121,11 @@ grep -nE '^[[:space:]]*func(tion)?[[:space:]]+[A-Za-z_][A-Za-z0-9_:]*[[:space:]]
 grep -nE '^[[:space:]]*@(include|nsinclude|load|namespace)[[:space:]]' <files>
 git -C <checkout> grep -nE '(awk|AWK)\)?[^|;&]*[[:space:]](-f|-i|--file|--include)[[:space:]=]?[^[:space:]-]' -- <scope>
 # gawk-only variables and two-way pipes
-grep -nwE 'IGNORECASE|FPAT|FIELDWIDTHS|PROCINFO|RT|BINMODE|ERRNO|ARGIND|LINT|TEXTDOMAIN|SYMTAB|FUNCTAB|PREC|ROUNDMODE|\|&' <files>
+grep -nE '\b(IGNORECASE|FPAT|FIELDWIDTHS|PROCINFO|RT|BINMODE|ERRNO|ARGIND|LINT|TEXTDOMAIN|SYMTAB|FUNCTAB|PREC|ROUNDMODE)\b|\|&' <files>
 # closed sets: three or more == "..." joined by ||, or != "..." joined by &&
 grep -nE -e '(==[[:space:]]*"[^"]*"[[:space:]]*\|\|[^|]*){2,}==[[:space:]]*"' -e '(!=[[:space:]]*"[^"]*"[[:space:]]*&&[^&]*){2,}!=[[:space:]]*"' <files>
 # commands run from the program, getline, and printf formats that are not literals
-grep -nE '\bsystem[[:space:]]*\(|\bgetline\b|\bprintf?\b[^#]*[^|]\|[^|]|\bprintf[[:space:]]*\(?[[:space:]]*[^"([:space:]]' <files>
+grep -nE '\bsystem[[:space:]]*\(|\bgetline\b|\bprintf?\b([^"#|]|"([^"\\]|\\.)*")*\|[^|]|\bprintf[[:space:]]*\(?[[:space:]]*[^"([:space:]]' <files>
 grep -nE '[*+?}]\?' <files>   # regexes that POSIX.1-2024 shortest-match operators reinterpret
 # one-line programs repeated across scripts, Makefiles, and workflows ($$ read as $)
 git -C <checkout> grep -IhoiE "\b[gmn]?awk\b([[:space:]]+-[Fv][[:space:]]*'[^']*'|[^'|;&])*'[^']+'" -- <scope> |
@@ -178,8 +178,9 @@ unless a version is named.
   ```
 
   Pitfalls, each observed: without its third argument `split()` splits on
-  `FS`; `1.0 == 1` is true but `1.0` is not `in` an array keyed `1`
-  (`($1 + 0) in S` matches it, and sends non-numeric values to `0`);
+  `FS`; a field holding `1.0` equals `1` but is not `in` an array keyed `1`
+  (the constant `1.0` is: it converts to `"1"`); `($1 + 0) in S` matches
+  it, and sends non-numeric values to `0`;
   under `IGNORECASE` (gawk, BusyBox), `==` ignores case and `in` does not
   (use `$3 ~ /^(red|green|blue)$/` there); `S[$3]` used as a test adds
   `$3` to the array; and `for (k in S)` has no defined order.
@@ -219,7 +220,7 @@ unless a version is named.
   multi-character `RS` is a regex in all four, but only its first
   character counts under `gawk --posix` (and `--traditional` before 5.4).
 
-**Input, output, and commands** (`NV`: each fix changes behavior)
+**Input, output, and commands** (`NV` unless marked: these fixes change behavior)
 
 - **Values spliced into the program** by the shell (`awk "/$pat/"`): a `/`
   in the value is a syntax error in all four, and a crafted one ran
@@ -290,8 +291,12 @@ live sources each item names)
   first file can be empty: then the second file's lines all go to that
   block, observed), `$1 = $1` (rebuilds `$0`), a lone pattern or `1` as a
   rule, `{ keys[$1] }`, `split("", a)` (empties an array), `x + 0`,
-  `x ""`, `exit` in `BEGIN` (`END` still runs, observed), and extra
-  parameters as locals (`function f(a,    i, tmp)`).
+  `x ""`, `exit` in `BEGIN` (`END` still runs, observed), extra parameters
+  as locals (`function f(a,    i, tmp)`), and counters and accumulators
+  that start unassigned (`n++`, `sum += $2`, `count[$1]++`, a separator
+  assigned after its first use), which the run-time lint reports as
+  `reference to uninitialized variable` or `element`: only a name that
+  neither the program nor its callers (`-v`, operands) assign is a finding.
 - Variables set from outside (`-v`, `name=value` operands, `ENVIRON`), and
   special variables assigned for their effect (`FS`, `OFS`, `ORS`, `RS`,
   `SUBSEP`, `CONVFMT`, `OFMT`; in gawk `IGNORECASE`, `FPAT`,
