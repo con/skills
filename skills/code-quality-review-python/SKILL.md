@@ -87,8 +87,14 @@ and also `exclude` / `extend-exclude`, `line-length`, thresholds
 `lint.flake8-bugbear.extend-immutable-calls` and
 `lint.pyupgrade.keep-runtime-typing`. Read them from the project's
 configuration and drop or re-judge the affected hits, or pass the values
-back with `--config 'KEY = VALUE'`, which reads nothing from the
-repository.
+back with `--config 'KEY = VALUE'` (full keys, such as
+`lint.pylint.max-args`), which reads nothing from the repository. Ruff
+resolves the patterns in `exclude`, `extend-exclude`, and
+`per-file-ignores` against the working directory, here the scratch
+directory: prefix each relative pattern with the checkout's absolute
+path (`--config 'extend-exclude = ["<checkout>/src/app/_vendor"]'`), and
+when `<paths>` lists files rather than directories, add
+`--force-exclude`, or the excludes do not apply at all.
 
 ## Checks
 
