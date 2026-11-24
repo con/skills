@@ -1,16 +1,25 @@
 name: Chromatic (Playwright)
 
-on: push
+# Runs the snapshot tests and builds a Storybook from their archives without the project token, and
+# hands it on as an artifact; `chromatic-publish.yml` uploads it to Chromatic from the default
+# branch, which holds the token. Building without it is what lets a pull request from a fork get
+# snapshots, since GitHub gives a fork's runs no secrets.
+
+on:
+  push:
+  pull_request:
 
 permissions:
   contents: read
 
 jobs:
   chromatic-playwright:
+    # Named for the required check it satisfies; Chromatic's own statuses on the commit report the
+    # result of the upload.
     name: Run Chromatic (Playwright)
-    # Dependabot-triggered runs cannot read Actions secrets, so the Chromatic project token is
-    # unavailable; skip instead of failing.
-    if: github.actor != 'dependabot[bot]'
+    # A branch of this repository is already built on push, so only a fork's pull request is built
+    # as one.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     # Pinned rather than ubuntu-latest: a runner image bump (system fonts, antialiasing,
     # rasterizer) shifts screenshot pixels on its own, with no code change to explain it.
     runs-on: ubuntu-24.04
@@ -18,7 +27,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
         with:
-          # The whole history: Chromatic picks the baseline from it.
+          # The commit Chromatic reports on, rather than the merge commit a pull request would
+          # otherwise check out.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          # The whole history, for the behind-main report below.
           fetch-depth: 0
 
       - name: Report the runner image
@@ -65,12 +77,15 @@ jobs:
           # alone does not re-snapshot the page.
           CHROMATIC_STATIC_VERSION: "true"
 
-      - name: Run Chromatic
-        # An exact release tag, so a new release of the action cannot move a snapshot on its own;
-        # Dependabot proposes the bumps. Pick the newest tag when writing this file.
-        uses: chromaui/action@v18.10.2
+      - name: Build archive Storybook
+        # Turns the archives under test-results/ into a Storybook. Called through its path rather
+        # than `npm exec`, which would take `--output-dir` as one of its own options.
+        run: ./node_modules/.bin/build-archive-storybook --output-dir=storybook-static
+
+      - name: Upload archive Storybook
+        # The name `chromatic-publish.yml` downloads; kept a day, long enough for it to run.
+        uses: actions/upload-artifact@v7
         with:
-          projectToken: ${{ secrets.CHROMATIC_PLAYWRIGHT_PROJECT_TOKEN }}
-          # Builds a Storybook from the archives under test-results/ and uploads that. No
-          # onlyChanged here: TurboSnap cannot apply to a black-box archive of the running app.
-          playwright: true
+          name: chromatic-build
+          path: storybook-static/
+          retention-days: 1
