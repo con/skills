@@ -132,10 +132,12 @@ _INLINE_CODE = re.compile(
     r"\\.|<[A-Za-z][A-Za-z0-9+.-]+:[^\s<>]*>|(?:https?://|www\.)[^\s<]*|"
     r"(?<!`)(`+)(?!`).*?(?<!`)\1(?!`)"
 )
-# A GitHub @-mention outside code. Only an ASCII letter or digit before
-# it, as in an e-mail address, rules it out: GitHub looks for mentions
-# in the rendered text, where `_@octocat_` is emphasis around a bare
-# @octocat, and a letter such as an accented one may not count.
+# A GitHub @-mention outside code, as a best effort: this is a second
+# layer behind the reviewers' rule to mention nobody, not a Markdown
+# parser. Only an ASCII letter or digit before it, as in an e-mail
+# address, rules it out: GitHub looks for mentions in the rendered text,
+# where `_@octocat_` is emphasis around a bare @octocat, and a letter
+# such as an accented one may not count.
 _MENTION = re.compile(
     r"(?<![A-Za-z0-9])@[A-Za-z0-9][A-Za-z0-9-]{0,38}(?:/[A-Za-z0-9_.-]+)?"
 )
@@ -433,8 +435,10 @@ def _text(
             " with a later one and turn code into text; close the code span,"
             " or write a literal backtick as \\`"
         )
-    # An entity such as &#64; renders as @.
-    mention = _MENTION.search(html.unescape(prose))
+    # Both forms: an entity such as &#64; renders as @, while text that
+    # Python decodes and Markdown does not (an escaped &) must not hide
+    # what stands before an @.
+    mention = _MENTION.search(prose) or _MENTION.search(html.unescape(prose))
     if mention:
         errors.append(
             f"{where}: {mention.group(0)!r} would notify that account; put"
@@ -754,7 +758,7 @@ def _indent(text: str, width: int) -> str:
     pad = " " * width
     return "\n".join(
         pad + line if line.strip() else ""
-        for line in text.strip("\n").splitlines()
+        for line in _LINE_END.split(text.strip("\n"))
     )
 
 
@@ -857,16 +861,14 @@ def _counts(findings: list[dict]) -> dict[str, int]:
 def _method(data: dict, short: str) -> str:
     reviewers = data["reviewers"]
     angles = "; ".join(f"{r['id']} ({r['focus']})" for r in reviewers)
-    rounds = (
-        f"{data['rounds']} round{'s' if data['rounds'] != 1 else ''} in all"
-    )
-    used_lead = any(LEAD in f["confirmed_by"] for f in data["findings"])
     if data["rounds"] == 1:
         return (
             f"{len(reviewers)} reviewers read the change at `{short}`"
             f" independently, each from one angle: {angles}. None of them"
             " found anything, so there was nothing to cross-check."
         )
+    rounds = f"{data['rounds']} rounds in all"
+    used_lead = any(LEAD in f["confirmed_by"] for f in data["findings"])
     agreement = (
         "Each finding above was confirmed by at least two of them, or by one"
         " of them and the agent that coordinated the review, after checking it"

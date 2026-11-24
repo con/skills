@@ -71,7 +71,7 @@ what they leave open under `not_checked`.
 
 | Tier | Use it for | Not for |
 |---|---|---|
-| `blocking` | Merging as is would do harm: wrong results or lost data on a realistic input, a security exposure, a broken build, CI run or release, a breaking change that skips the deprecation steps below where the project promises compatibility, or a breach of a rule the project marks as mandatory. | Anything else, however much better another design would be. |
+| `blocking` | Merging as is would do harm: wrong results or lost data on a realistic input, a security exposure, a broken build, CI run or release, a change that breaks the project's compatibility promise (Deprecation, below), or a breach of a rule the project marks as mandatory. | Anything else, however much better another design would be. |
 | `should-fix` | A real defect with a narrow trigger, new behaviour without a test, documentation that the change makes false, a maintainability problem the next change will trip over. The author should fix it or say why not. | Matters of taste. |
 | `optional` | An improvement the author may reasonably decline: a simplification, a clearer name, another test case, a refactor. | Defects. |
 | `nit` | Trivial: a typo, wording, formatting the project's tools do not enforce. At most five; fold the rest into one. | Anything a linter in the project already checks. |

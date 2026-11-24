@@ -8,7 +8,6 @@ PR_ITERATIVE_REVIEW_REGENERATE=1 python3 -m unittest discover -s tests
 and read the diff before committing.
 """
 
-import copy
 import io
 import json
 import os
@@ -232,6 +231,12 @@ class CheckFindingsTests(unittest.TestCase):
                 lambda d: d.update(reviewers=d["reviewers"][:1]),
                 "reviewers: must list 2 to 6",
             ),
+            (
+                lambda d: d.update(
+                    reviewers=[{"id": f"r{i}", "focus": "x"} for i in range(7)]
+                ),
+                "reviewers: must list 2 to 6",
+            ),
             (lambda d: d["reviewers"][0].update(id="lead"), "reviewers[0].id"),
             (
                 lambda d: d["reviewers"][1].update(id="correctness"),
@@ -341,6 +346,8 @@ class CheckFindingsTests(unittest.TestCase):
             "caf" + chr(0xE9) + "@octocat",
             "Fine.\x0c~~~\x0c@octocat",
             "&#64;octocat, &#x40;octocat and &commat;octocat",
+            "\\&#65;@octocat",
+            "a&#1;@octocat",
         ):
             with self.subTest(body=body):
                 self.assertRejects(
@@ -415,6 +422,11 @@ class CheckFindingsTests(unittest.TestCase):
             lambda d: d.update(summary="Fine.\n\n```text\nno end"),
             "summary: a code fence is opened but never closed",
         )
+        # A lone carriage return ends a line in Markdown.
+        self.assertRejects(
+            lambda d: d.update(summary="Fine.\r```"),
+            "summary: a code fence is opened but never closed",
+        )
 
     def test_images_are_refused(self):
         self.assertRejects(
@@ -476,6 +488,24 @@ class CheckFindingsTests(unittest.TestCase):
 
 
 class RenderTests(unittest.TestCase):
+    def test_form_feeds_stay_inside_a_code_span(self):
+        # Splitting on them would move the name out of the span.
+        data = example()
+        body = "`a\x0c\x0c@octocat\x0c\x0cb`"
+        data["findings"].append(finding(body=body))
+        self.assertEqual(rr.check_findings(data), [])
+        self.assertIn(body, render(data)[0])
+
+    def test_a_one_line_range_is_one_line(self):
+        data = example()
+        data["findings"] = [
+            finding(path="src/widgets/cli.py", start_line=10, line=10)
+        ]
+        review_md, payload, _ = render(data)
+        self.assertNotIn("start_line", payload["comments"][0])
+        self.assertIn("`src/widgets/cli.py:10`", review_md)
+        self.assertNotIn("10-10", review_md)
+
     def test_a_range_across_two_hunks_goes_to_the_body(self):
         diff = (
             "diff --git a/x.py b/x.py\n--- a/x.py\n+++ b/x.py\n@@ -1,2 +1,2"
