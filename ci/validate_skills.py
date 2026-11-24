@@ -28,9 +28,10 @@ Every *.py bundled alongside a SKILL.md:
 
 The Claude Code plugin marketplace (``.claude-plugin/marketplace.json``),
 checked when no skill directories are given:
-  E012  Unique plugin names; each plugin lists skills as ``./skills/<name>``
-        of published skills; every published skill is in exactly one plugin;
-        ``dependencies`` name plugins of this marketplace
+  E012  The file exists; plugin names are unique strings; each plugin lists
+        skills as ``./skills/<name>`` of published skills; every published
+        skill is in exactly one plugin; ``dependencies`` name other plugins
+        of this marketplace
 
 Exit codes: 0 = all clear, 1 = one or more errors, 2 = usage/internal error.
 Warnings never affect the exit code.
@@ -268,13 +269,14 @@ def check_marketplace(repo_root: Path) -> Result:
     """Every published skill belongs to exactly one Claude Code plugin."""
     result = Result()
     path = repo_root / MARKETPLACE
-    if not path.exists():
-        return result
     try:
         plugins = json.loads(path.read_text(encoding="utf-8"))["plugins"]
         names = [plugin["name"] for plugin in plugins]
-    except (ValueError, KeyError, TypeError) as exc:
+    except (OSError, ValueError, KeyError, TypeError) as exc:
         result.error("E012", path, f"cannot read the plugin names: {exc!r}")
+        return result
+    if not all(isinstance(name, str) for name in names):
+        result.error("E012", path, "give every plugin a string name")
         return result
 
     owners: dict[str, list[str]] = {d.name: [] for d in find_skill_dirs(repo_root)}
@@ -286,9 +288,10 @@ def check_marketplace(repo_root: Path) -> Result:
             result.error("E012", path, f"plugin {name!r}: give 'skills' and 'dependencies' as lists")
             continue
         for dependency in plugin.get("dependencies", []):
-            if isinstance(dependency, str) and "@" not in dependency and dependency not in names:
+            if isinstance(dependency, str) and "@" not in dependency and (
+                    dependency == name or dependency not in names):
                 result.error("E012", path, f"plugin {name!r} depends on {dependency!r}, "
-                             "which is not a plugin of this marketplace")
+                             "which is not another plugin of this marketplace")
         for entry in plugin.get("skills", []):
             skill = entry.removeprefix("./skills/") if isinstance(entry, str) else ""
             if skill == entry or skill not in owners:

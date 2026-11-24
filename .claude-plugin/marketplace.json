@@ -9,10 +9,9 @@
   },
   "plugins": [
     {
-      "name": "common",
+      "name": "con-common",
       "description": "Skills the other con-skills plugins build on: a jscpd duplication report for code and documentation (analyze-duplicates), and the closing step that suggests fixes to a skill after a run that showed it falling short (suggest-skill-fixes).",
       "source": "./",
-      "strict": false,
       "skills": [
         "./skills/analyze-duplicates",
         "./skills/suggest-skill-fixes"
@@ -24,10 +23,9 @@
       "repository": "https://github.com/con/skills"
     },
     {
-      "name": "code-quality",
+      "name": "con-code-quality",
       "description": "Functionality-preserving code-quality reviews of one repository or of an organization of related repositories, with shared report conventions and the project inventory and status checks the organization review uses.",
       "source": "./",
-      "strict": false,
       "skills": [
         "./skills/review-repo-code-quality",
         "./skills/review-org-code-quality",
@@ -35,7 +33,7 @@
         "./skills/scan-projects",
         "./skills/github-project-status"
       ],
-      "dependencies": ["common"],
+      "dependencies": ["con-common"],
       "license": "MIT",
       "keywords": ["code-review", "code-quality", "refactoring"],
       "category": "development",
@@ -43,10 +41,9 @@
       "repository": "https://github.com/con/skills"
     },
     {
-      "name": "project-setup",
+      "name": "con-project-setup",
       "description": "Set up project tooling end to end: Chromatic visual regression tests, codespell, jscpd duplication checks, git-bug issue tracking, intuit/auto releases, and REUSE licensing compliance.",
       "source": "./",
-      "strict": false,
       "skills": [
         "./skills/setup-chromatic",
         "./skills/setup-codespell",
@@ -55,7 +52,7 @@
         "./skills/setup-intuit-auto",
         "./skills/setup-reuse-compliance"
       ],
-      "dependencies": ["common"],
+      "dependencies": ["con-common"],
       "license": "MIT",
       "keywords": ["ci", "chromatic", "codespell", "jscpd", "git-bug", "releases", "reuse", "licensing"],
       "category": "development",
@@ -63,10 +60,9 @@
       "repository": "https://github.com/con/skills"
     },
     {
-      "name": "maintenance",
+      "name": "con-maintenance",
       "description": "Keep projects moving: merge green dependabot and pre-commit.ci pull requests, review pull request feedback, update pull requests a dashboard says are waiting on you, triage issues, write scriv changelog fragments, and analyze con/tinuous CI logs to find and bisect regressions (including git-annex).",
       "source": "./",
-      "strict": false,
       "skills": [
         "./skills/bot-pr-sweep",
         "./skills/pr-feedback-review",
@@ -83,10 +79,9 @@
       "repository": "https://github.com/con/skills"
     },
     {
-      "name": "skill-authoring",
+      "name": "con-skill-authoring",
       "description": "Write, install, and security-review portable agent skills distributed through APM.",
       "source": "./",
-      "strict": false,
       "skills": [
         "./skills/author-apm-skills",
         "./skills/install-apm-skills",
@@ -99,10 +94,9 @@
       "repository": "https://github.com/con/skills"
     },
     {
-      "name": "writing",
+      "name": "con-writing",
       "description": "Writing aids: CRediT author contributions and bylines for papers, and clarity revisions of prose that is hard to follow.",
       "source": "./",
-      "strict": false,
       "skills": [
         "./skills/credit-contributions",
         "./skills/review-human-prose"

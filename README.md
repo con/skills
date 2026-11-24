@@ -58,36 +58,37 @@ For configuration options, see each skill’s `SKILL.md` (for example, [pr-revie
 This repository is also a Claude Code [plugin marketplace](https://code.claude.com/docs/en/discover-plugins), `con-skills` ([`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json)).
 Each plugin installs a group of the skills above:
 
-| Plugin | Skills |
-|--------|--------|
-| `common` | analyze-duplicates, suggest-skill-fixes |
-| `code-quality` | review-repo-code-quality, review-org-code-quality, code-quality-report-conventions, scan-projects, github-project-status |
-| `project-setup` | setup-chromatic, setup-codespell, setup-duplicates-analysis, setup-git-bug, setup-intuit-auto, setup-reuse-compliance |
-| `maintenance` | bot-pr-sweep, pr-feedback-review, pr-review-update, issue-triage, make-scriv-changelog, tinuous-analyzer, bisect-and-patch-git-annex |
-| `skill-authoring` | author-apm-skills, install-apm-skills, skill-security-review |
-| `writing` | credit-contributions, review-human-prose |
+| Plugin | For |
+|--------|-----|
+| `con-common` | Skills the other plugins build on |
+| `con-code-quality` | Code-quality reviews of a repository or an organization |
+| `con-project-setup` | Setting up project tooling |
+| `con-maintenance` | Pull requests, issues, changelogs and CI regressions |
+| `con-skill-authoring` | Writing, installing and security-reviewing skills |
+| `con-writing` | Papers and prose |
 
-`code-quality` and `project-setup` use skills from `common`, which is installed with them.
+[`marketplace.json`](.claude-plugin/marketplace.json) lists each plugin's skills.
+`con-code-quality` and `con-project-setup` use skills from `con-common`, which is installed with them.
 In a Claude Code 2.1.275 or later session, install the plugins you want in one step:
 
 ```text
-/plugin install common --marketplace con/skills
-/plugin install code-quality --marketplace con/skills
-/plugin install project-setup --marketplace con/skills
-/plugin install maintenance --marketplace con/skills
-/plugin install skill-authoring --marketplace con/skills
-/plugin install writing --marketplace con/skills
+/plugin install con-common --marketplace con/skills
+/plugin install con-code-quality --marketplace con/skills
+/plugin install con-project-setup --marketplace con/skills
+/plugin install con-maintenance --marketplace con/skills
+/plugin install con-skill-authoring --marketplace con/skills
+/plugin install con-writing --marketplace con/skills
 ```
 
-In older versions, add the marketplace first (`/plugin marketplace add con/skills`), then install by name (`/plugin install code-quality@con-skills`).
-A plugin's skills are named after it, for example `/code-quality:review-repo-code-quality`.
+In older versions, add the marketplace first (`/plugin marketplace add con/skills`), then install by name (`/plugin install con-code-quality@con-skills`).
+A plugin's skills are named after it, for example `/con-code-quality:review-repo-code-quality`.
 
 The plugins declare no version, so every commit to `master` is a new version.
-Auto-update is off for third-party marketplaces: turn it on for `con-skills` in `/plugin` (Marketplaces tab), or update a plugin with `claude plugin update code-quality@con-skills`.
+Auto-update is off for third-party marketplaces: turn it on for `con-skills` in `/plugin` (Marketplaces tab), or update a plugin with `claude plugin update con-code-quality@con-skills`.
 A plugin install records nothing in your project; use APM (above) when a project should pin the skills it uses.
 
 In Claude Code on the web, neither plugins installed on your computer nor marketplaces declared in a repository's settings are added to a session.
-Add the marketplace or its plugins to your claude.ai account at [claude.ai/customize/plugins](https://claude.ai/customize/plugins), including `common` with `code-quality` or `project-setup`, and start a new session.
+Add the marketplace or its plugins to your claude.ai account at [claude.ai/customize/plugins](https://claude.ai/customize/plugins), including `con-common` with `con-code-quality` or `con-project-setup`, and start a new session.
 
 ## Development
 
