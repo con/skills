@@ -1,6 +1,6 @@
 ---
 name: code-quality-review-rust
-description: Rust guide for review-repo-code-quality and review-org-code-quality — where a crate or Cargo workspace states its rules, its review tools and which need execution consent (anything that compiles runs build scripts and procedural macros, and any cargo command started in the checkout reads its .cargo/config.toml), Rust checks such as a set of values matched as strings that becomes one enum, panics and error types in library code, and feature combinations, currency (editions, rust-version, lazy_static, archived actions-rs actions, RustSec advisories), false positives, and verification commands. Not invoked directly. Use when a review skill tells you to read it, or when asked what those reviews check for Rust.
+description: Rust guide for review-repo-code-quality and review-org-code-quality — where a crate or Cargo workspace states its rules, its review tools and which need execution consent, Rust checks such as a set of values matched as strings that becomes one enum, panics and error types in library code, and feature combinations, currency (editions, rust-version, lazy_static, archived actions-rs actions, RustSec advisories), false positives, and verification commands. Not invoked directly. Use when a review skill tells you to read it, or when asked what those reviews check for Rust.
 allowed-tools: Read
 user-invocable: false
 ---
@@ -61,26 +61,25 @@ overrides it, with a warning when the two differ.
 Anything that compiles — `cargo check`, `build`, `clippy`, `test`,
 `cargo-udeps`, `cargo-hack`, `cargo-semver-checks` — runs the build
 scripts and procedural macros of the workspace and its dependencies
-(`cargo-modules` runs the build scripts), and any `cargo` command
-started in the checkout reads its `.cargo/config.toml`, whose
-`build.rustc-wrapper`, runners, and `[alias]` entries name programs to
-run (an alias named `fmt` replaces `cargo fmt`). In testing, even
+(`cargo-modules` runs the build scripts), and any `cargo` command started
+in the checkout reads its `.cargo/config.toml`, whose
+`build.rustc-wrapper`, runners, and `[alias]` entries name programs to run
+(an alias named `fmt` replaces `cargo fmt`). In testing, even
 `cargo metadata` ran a configured `rustc-wrapper`, downloaded every
 dependency, and wrote a missing `Cargo.lock` (`--no-deps` did none of
-these). The rustup proxies take the toolchain from a
-`rust-toolchain.toml` in the working directory or a parent, downloading
-a `channel` that is not installed and running the binaries a `path`
-names. So all of these need consent: run them in the throwaway checkout
-with `RUSTUP_AUTO_INSTALL=0` (rustup 1.28.1 or later; ask before
-installing a missing toolchain), with `CARGO_TARGET_DIR=<scratch>/target`
-(builds otherwise write `target/` into the checkout), and with
-`--locked` where the command takes it (`cargo fmt`, cargo-modules 0.28.0,
-and cargo-semver-checks 0.51.0 reject it), which fails where no
-`Cargo.lock` is committed: run
-`cargo generate-lockfile` there first, and say so in Method & limits.
-Run the static tools from the scratch directory, where the proxies find
-no toolchain file of the checkout, on `<files>`: the scope's tracked
-`*.rs` files as absolute paths (`review-repo-code-quality` Step 1), and
+these). The rustup proxies take the toolchain from a `rust-toolchain.toml`
+in the working directory or a parent, downloading a `channel` that is not
+installed and running the binaries a `path` names. So all of these need
+consent: run them in the throwaway checkout with `RUSTUP_AUTO_INSTALL=0`
+(rustup 1.28.1 or later; ask before installing a missing toolchain), with
+`CARGO_TARGET_DIR=<scratch>/target` (builds otherwise write `target/` into
+the checkout), and with `--locked` where the command takes it
+(`cargo fmt`, cargo-modules 0.28.0, and cargo-semver-checks 0.51.0 reject
+it), which fails where no `Cargo.lock` is committed: run
+`cargo generate-lockfile` there first, and say so in Method & limits. Run
+the static tools from the scratch directory, where the proxies find no
+toolchain file of the checkout, on `<files>`: the scope's tracked `*.rs`
+files as absolute paths (`review-repo-code-quality` Step 1), and
 `<manifests>`, its `Cargo.toml` files likewise.
 
 | Sweep | Tool | Mark | Command |
@@ -89,16 +88,15 @@ no toolchain file of the checkout, on `<files>`: the scope's tracked
 | Complexity | `lizard` | static | `lizard -l rust -w <files>` (warns above 15 CCN; `-C` sets it); in lizard 1.26.1 every `?`, every boolean operator, and every `match` arm after the first adds one, so a function with many `?` or a flat `match` over an enum scores high without being hard to read |
 | Dead code: items | rustc's `dead_code` and `unused_*` lints | consent | `cargo check --workspace --all-targets --all-features --locked --message-format short`, then once per feature set CI builds (`--no-default-features`, …) |
 | Dead code: what `#[allow]` hides | rustc's `--force-warn` | consent | the clippy command below with `--force-warn dead_code` after `--`: an `#[allow(dead_code)]` with no warning under it is stale |
-| Dead code: dependencies | `cargo-machete`, on the copy | static | see below; it checks `[dependencies]` only, not the dev-, build-, or target-specific dependency tables |
+| Dead code: dependencies | `cargo-machete`, on the copy | static | see below; cargo-machete 0.10.1 checks `[dependencies]` only, not the dev-, build-, or target-specific dependency tables |
 | Dead code: dependencies | Cargo's own lints (Cargo 1.100 or later) | consent | the `cargo check` above warns `cargo::unused_dependencies` (for `[dependencies]` and `[build-dependencies]`, never `[dev-dependencies]`), `unused_workspace_dependencies`, and `missing_lints_inheritance` in each package whose `rust-version` is unset or 1.79 or later (the Cargo book's Lints chapter; in testing, silent at 1.78) |
 | Dead code: dependencies | `cargo-udeps` | consent: needs a nightly toolchain | `cargo +nightly udeps --workspace --all-targets --locked`; it also checks `[dev-dependencies]`, and reports crates used only in doc tests as unused (its README) |
-| Duplication | `jscpd` (the `analyze-duplicates` skill) | static on the copy | as `review-repo-code-quality` Step 2 runs it, on its Step 1 copy; it reads `.rs` files as its `rust` format. Clippy's `match_same_arms` (pedantic) and `if_same_then_else` report identical branches (consent) |
 | Idiom drift | `cargo clippy`, the project's configuration plus lints | consent | `cargo clippy --workspace --all-targets --all-features --locked --message-format short -- -W clippy::pedantic -W clippy::cargo -W clippy::unwrap_used -W clippy::expect_used -W clippy::panic -W clippy::indexing_slicing -W clippy::wildcard_enum_match_arm -W clippy::undocumented_unsafe_blocks -W clippy::allow_attributes_without_reason -W unreachable_pub` |
 | Module graph | `cargo-modules` | consent: loads the workspace through `cargo metadata` and runs build scripts | `cargo modules structure -p <crate> --lib` prints the tree; `cargo modules dependencies -p <crate> --lib --no-externs --no-sysroot --no-fns --no-types --no-traits` prints `use` edges as DOT, but none for a path written out in code (`crate::a::f()`), and its `--acyclic` fails on false cycles inside macro output such as `lazy_static!` |
 | Module graph | `mod` and `use` lines, read as text | static | the searches below |
 | Crate graph, duplicate versions | `cargo tree` | consent | `cargo tree --workspace --duplicates --locked`; `-i <crate>` shows what pulls a crate in; both cover only the host platform unless given `--target all` |
 | Crate graph, duplicate versions | the manifests and `Cargo.lock`, read as text | static | the greps below |
-| Vulnerabilities, unmaintained crates | `cargo-audit` | static from the scratch directory | `cargo audit --file <checkout>/Cargo.lock --db <scratch>/advisory-db` (exit status 2 where no `Cargo.lock` is committed); run from the checkout it would apply the ignore list in `.cargo/audit.toml`; it fetches the RustSec database from GitHub (record its last commit date, `git -C <scratch>/advisory-db log -1 --format=%cd`, in Method & limits) and the crates.io index (`--no-yanked` skips the yanked-crate check); its findings are security-sensitive (conventions §2) |
+| Vulnerabilities, unmaintained crates | `cargo-audit` | static from the scratch directory | `cargo audit --file <checkout>/Cargo.lock --db <scratch>/advisory-db` (exit status 2 where no `Cargo.lock` is committed); run from the checkout it would apply the ignore list in `.cargo/audit.toml`; it fetches the RustSec database from GitHub (record its last commit date, `git -C <scratch>/advisory-db log -1 --format=%cd`, in Method & limits) and the crates.io index (`--no-yanked` skips the yanked-crate check); in an org review, share one `--db` directory and pass `--no-fetch` after the first run; its findings are security-sensitive (conventions §2) |
 | Advisories, licenses, bans | `cargo-deny`, the project's `deny.toml` | consent: runs `cargo metadata` | `cargo deny --locked check` (cargo-deny 0.22.0 takes the flag before the subcommand and rejects `check --locked`) |
 | Feature combinations | `cargo-hack` | consent | `cargo hack check --workspace --each-feature --locked`, or `--feature-powerset` (`--depth 2` bounds it); not `--no-dev-deps`, which rewrites `Cargo.toml` while it runs |
 | Tests | `cargo test` | consent | see Verification |
@@ -109,7 +107,7 @@ cargo-machete and the searches (their `|` would split the table's cells):
 # cargo-machete always applies `ignored` and `renamed` from [package.metadata.cargo-machete] and
 # [workspace.metadata.cargo-machete]: rename them in the review-repo-code-quality Step 1 copy, and
 # run it there, never with --fix or --with-metadata
-find <scratch>/copy -name Cargo.toml -print0 | xargs -0 -r sed -i 's/cargo-machete/cargo-machete-off/g'
+find <scratch>/copy -name Cargo.toml -type f -print0 | xargs -0 -r sed -i.bak 's/cargo-machete/cargo-machete-off/g'
 cargo-machete --no-ignore <scratch>/copy
 # mod declarations; whole use declarations (rustfmt splits long ones); paths written in code
 grep -nE '^[[:space:]]*(pub(\([^)]*\))?[[:space:]]+)?mod[[:space:]]+[A-Za-z_][A-Za-z0-9_]*' <files>
@@ -127,7 +125,8 @@ Without `--no-ignore`, cargo-machete skips each crate whose directory
 `.gitignore` or `.ignore` lists (in testing, that and an `ignored` list
 hid three unused dependencies); on the copy, check the crates `renamed`
 lists by hand. rustfmt also checks the modules a file declares
-(`mod name;`), so a diff can appear twice; `#[rustfmt::skip]` applies.
+(`mod name;`), tracked or not, so a diff can appear twice;
+`#[rustfmt::skip]` applies.
 
 ## Checks
 
@@ -232,8 +231,9 @@ lists by hand. rustfmt also checks the modules a file declares
   its lint stops firing;
 - an item only tests use, outside `#[cfg(test)]`: move it in;
 - copies of a function per type that generics or a `macro_rules!` can
-  merge (`CON`), and test functions that differ only in their data
-  (`DUP`): one test over a table of cases;
+  merge (`CON`), identical branches (`clippy::match_same_arms`,
+  pedantic, and `if_same_then_else`), and test functions that differ
+  only in their data (`DUP`): one test over a table of cases;
 - `String`, `Vec<T>`, or `&Vec<T>` parameters where `&str` or `&[T]`
   would do (`clippy::ptr_arg`, `needless_pass_by_value`) — an API change
   in a library (`NV`).
@@ -243,11 +243,11 @@ live sources each item names)
 
 - **Rust releases.** A stable release ships every six weeks, and only
   the newest gets fixes (https://www.rust-lang.org/policies/security;
-  https://github.com/rust-lang/rust/blob/main/RELEASES.md lists 1.100.0
-  on 2026-11-12, checked 2026-11-24). Report CI that never builds the
-  newest stable, a `rust-version` no CI job builds (`NV`: the claim or
-  the matrix has to change), and a `rust-toolchain.toml` far behind.
-  Raising `rust-version` is `NV`; list what it would unlock.
+  https://github.com/rust-lang/rust/blob/main/RELEASES.md). Report CI
+  that never builds the newest stable, a `rust-version` no CI job builds
+  (`NV`: the claim or the matrix has to change), and a
+  `rust-toolchain.toml` far behind. Raising `rust-version` is `NV`; list
+  what it would unlock.
 - **Editions.** The 2024 edition (Rust 1.85, 2025-02-20) implies
   `resolver = "3"`, which prefers dependency versions that support
   `rust-version`. For a crate on an older edition, list what
@@ -268,8 +268,8 @@ live sources each item names)
 - **CI.** The `actions-rs` actions (`toolchain`, `cargo`,
   `clippy-check`, `audit-check`) were archived on 2023-10-13 and declare
   the `node12` runtime: `rustup` and `cargo` commands in `run:` steps
-  replace them (GitHub's ubuntu-24.04 image of 2026-11-16 ships rustup
-  1.29.3 and Rust 1.100.0, https://github.com/actions/runner-images).
+  replace them (GitHub's runner images ship rustup,
+  https://github.com/actions/runner-images).
 - **Advisories.** The RustSec database (https://rustsec.org/advisories/)
   records vulnerable, unmaintained, and unsound crates; the static
   `cargo audit` reports vulnerabilities as errors, and the rest, with

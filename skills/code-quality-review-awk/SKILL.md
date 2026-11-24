@@ -1,6 +1,6 @@
 ---
 name: code-quality-review-awk
-description: AWK guide for review-repo-code-quality and review-org-code-quality — the POSIX awk and gawk programs it covers (including programs embedded in shell scripts, Makefiles, and CI steps) and their portability to mawk, BusyBox awk, and the one-true-awk, its review tools and which need execution consent (gawk's parse-only lint is static, running a program is not), awk checks such as a lookup array for a closed set of values, gawk features under a POSIX shebang, string and numeric comparison, and commands built from data, currency (gawk 5.4, POSIX.1-2024), false positives, and verification commands. Not invoked directly. Use when a review skill tells you to read it, or when asked what those reviews check for AWK.
+description: AWK guide for review-repo-code-quality and review-org-code-quality — the POSIX awk and gawk programs it covers (including programs embedded in shell scripts, Makefiles, and CI steps) and their portability to mawk, BusyBox awk, and the one-true-awk, its review tools and which need execution consent, awk checks such as a lookup array for a closed set of values, gawk features under a POSIX shebang, string and numeric comparison, and commands built from data, currency (gawk 5.4, POSIX.1-2024), false positives, and verification commands. Not invoked directly. Use when a review skill tells you to read it, or when asked what those reviews check for AWK.
 allowed-tools: Read
 user-invocable: false
 ---
@@ -76,7 +76,8 @@ with a `/` into the scratch directory (`ln -s <checkout>/lib <scratch>`).
 # every tracked regular file in <scope> (review-repo-code-quality Step 1) named *.awk or *.gawk or with an awk shebang (a symlink to /dev/zero hangs gawk)
 git -C <checkout> ls-files -z --format='%(objectmode) <checkout>/%(path)' -- <scope> |
   gawk 'BEGIN { RS = ORS = "\0" } sub(/^100(644|755) /, "")' |
-  xargs -0 -r env -u POSIXLY_CORRECT -u GAWK_PERSIST_FILE LC_ALL=C gawk 'FNR == 1 { if (FILENAME ~ /\.g?awk$/ ||
+  xargs -0 -r env -u POSIXLY_CORRECT -u GAWK_PERSIST_FILE LC_ALL=C gawk 'BEGINFILE { if (ERRNO != "") {
+    print FILENAME ": " ERRNO > "/dev/stderr"; nextfile } } FNR == 1 { if (FILENAME ~ /\.g?awk$/ ||
     /^#!.*[\/ ]([gmn]?awk|original-awk)( |$)/) printf "%s\0", FILENAME; nextfile }' \
   > <scratch>/awk.list
 # the lint row from the scratch directory, one program per run (-t names it)
@@ -155,13 +156,10 @@ unless a version is named.
   macOS's `env`, not BusyBox's; an absolute path needs no `-S`.
 - **Implementation differences** a program may rely on (observed): a field
   `0x10` is 16 in BusyBox and mawk 20240123, 0 in gawk, the one-true-awk,
-  and mawk 20260302 (in program text, 16 in gawk and BusyBox, `0` then
-  the variable `x10` elsewhere); under a UTF-8 locale `length("é")` is 1
-  in gawk and the one-true-awk, 2 in mawk and BusyBox, and only the first
-  two upcase it; `-Ft` is a tab in the one-true-awk, a `t` elsewhere;
-  `rand()` without `srand()` repeats every run except in mawk; `ENVIRON`
-  changes reach commands only in gawk; under `ulimit -n 64` the 62nd
-  unclosed output file fails in all but gawk.
+  and mawk 20260302 (in program text, 16 in gawk and BusyBox, `0` then the
+  variable `x10` elsewhere); under a UTF-8 locale `length("é")` is 1 in
+  gawk and the one-true-awk, 2 in mawk and BusyBox, and only the first two
+  upcase it; `-Ft` is a tab in the one-true-awk, a `t` elsewhere.
 
 **One source of truth**
 
@@ -259,11 +257,10 @@ live sources each item names)
   (https://ftp.gnu.org/gnu/gawk/, NEWS), mawk
   (https://invisible-island.net/mawk/CHANGES.html), the one-true-awk
   (https://github.com/onetrueawk/awk/blob/master/FIXES), and BusyBox
-  (https://busybox.net/). On 2026-11-24: gawk 5.4.2 (2026-11-16), mawk
-  1.3.4-20260302, the one-true-awk 20261106, BusyBox 1.38.0 (May 2026);
-  Ubuntu 24.04 ships gawk 5.2.1, 26.04 gawk 5.3.2; Apple's awk-40 predates
-  the second edition (September 2023), which added `--csv` and UTF-8. From
-  20241212 mawk reads hex, inf, and NaN as numbers only with `--posix`.
+  (https://busybox.net/). Ubuntu 24.04 ships gawk 5.2.1, 26.04 gawk 5.3.2;
+  Apple's awk-40 predates the second edition (September 2023), which added
+  `--csv` and UTF-8. From 20241212 mawk reads hex, inf, and NaN as numbers
+  only with `--posix`.
 - **gawk 5.4** (NEWS, README_d/README.matchers): the default matcher is
   MinRX (`GAWK_GNU_MATCHERS` selects the old ones, which "will eventually
   be removed"), with POSIX.1-2024's shortest-match operators:
@@ -277,8 +274,7 @@ live sources each item names)
 - **CI** (beside Step 2's actions and runner labels): the image decides
   which awk runs: gawk on GitHub's Ubuntu runners, mawk in a Debian or
   Ubuntu container until a step installs gawk; testing only gawk while
-  callers say `awk` tests none of the others. `ubuntu-latest` was to move
-  to Ubuntu 26.04 (gawk 5.3.2) by 2026-11-19 (runner-images issue #14748).
+  callers say `awk` tests none of the others.
 
 ## Not findings
 

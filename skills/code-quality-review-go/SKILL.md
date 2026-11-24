@@ -22,7 +22,7 @@ marks are defined in `review-repo-code-quality`.
 `vendor/`, the fixtures in `testdata/`, and generated files — those with
 a line matching `^// Code generated .* DO NOT EDIT\.$` before the
 `package` clause, often below a license header or a `//go:build` line
-(`grep -rlE --include='*.go' '^// Code generated .* DO NOT EDIT\.$' .`
+(`git -C <checkout> grep -lE '^// Code generated .* DO NOT EDIT\.$' -- '*.go'`
 lists them).
 
 ## Project rules

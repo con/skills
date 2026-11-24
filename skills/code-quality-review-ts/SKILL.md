@@ -32,12 +32,13 @@ Read `package.json` (`engines`, `type`, `main` / `module` / `exports` /
 `types` / `bin`, `scripts`, `workspaces`, `packageManager`, and how
 dependencies split between `dependencies`, `devDependencies`, and
 `peerDependencies`), the lock file, which names the package manager
-(`package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, `bun.lock` or the older `bun.lockb`), every
-`tsconfig*.json` and `jsconfig.json`, and whichever of these exist:
-ESLint (`eslint.config.*`, or the older `.eslintrc*`), Prettier
-(`.prettierrc*`, `prettier.config.*`), Biome (`biome.json`,
-`biome.jsonc`), oxlint (`.oxlintrc.json`, `oxlint.config.*`), knip (`knip.json`,
-`knip.config.*`), dependency-cruiser (`.dependency-cruiser.*`), test
+(`package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, `bun.lock` or the
+older `bun.lockb`), every `tsconfig*.json` and `jsconfig.json`, and
+whichever of these exist: ESLint (`eslint.config.*`, or the older
+`.eslintrc*`), Prettier (`.prettierrc*`, `prettier.config.*`), Biome
+(`biome.json`, `biome.jsonc`), oxlint (`.oxlintrc.json`,
+`oxlint.config.*`), knip (`knip.json`, `knip.config.*`),
+dependency-cruiser (`.dependency-cruiser.*`), test
 runners (`vitest.config.*`, `jest.config.*`, `playwright.config.*`),
 bundlers (`vite.config.*`, `webpack.config.*`, `rollup.config.*`,
 `next.config.*`), `.nvmrc` / `.node-version`, and monorepo files
@@ -204,19 +205,18 @@ token there)
   linter and tool versions the lock file pins
   (`npm view typescript-eslint@<locked version> peerDependencies`); where
   only a newer release of such a tool accepts a newer compiler, say both
-  must move together. Check deprecated compiler options against the
-  newest compiler, not only the project's: an `ignoreDeprecations` key in
-  any tsconfig (it silences them, and is itself the finding), the options
-  the project's compiler reports (consent:
-  `<checkout>/node_modules/.bin/tsc --noEmit -p <tsconfig>`), and those a newer major
-  deprecates or removes (its release notes, such as https://aka.ms/ts6).
-  Also a
-  `target` older than every runtime the project supports, which makes the
-  build down-level syntax for nothing (`lib` only decides which built-in
-  APIs type-check). Raising `target` to ES2022 or later also turns on
-  `useDefineForClassFields` unless the tsconfig sets it, which changes how
-  class fields initialize: `NV` unless the option is pinned to its current
-  value.
+  must move together. Check deprecated compiler options against the newest
+  compiler, not only the project's: an `ignoreDeprecations` key in any
+  tsconfig (it silences them, and is itself the finding), the options the
+  project's compiler reports (consent:
+  `<checkout>/node_modules/.bin/tsc --noEmit -p <tsconfig>`), and those a
+  newer major deprecates or removes (its release notes, such as
+  https://aka.ms/ts6). Also a `target` older than every runtime the
+  project supports, which makes the build down-level syntax for nothing
+  (`lib` only decides which built-in APIs type-check). Raising `target` to
+  ES2022 or later also turns on `useDefineForClassFields` unless the
+  tsconfig sets it, which changes how class fields initialize: `NV` unless
+  the option is pinned to its current value.
 - **Tool formats and deprecations.** ESLint's `.eslintrc*` format,
   deprecated in ESLint 9 and no longer read by ESLint 10
   (`npm view eslint dist-tags`); dependencies the registry marks

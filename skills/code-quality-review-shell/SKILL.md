@@ -21,17 +21,14 @@ the **static** / **consent** marks are defined in
 
 `*.sh`, `*.bash`, and `*.bats` files, and scripts without an extension
 whose shebang runs `sh`, `bash`, `dash`, or `ksh`. Also shell embedded
-elsewhere, which counts even in a repository with no script file:
-`run:` steps in GitHub Actions workflows and composite actions
-(`action.yml` or `action.yaml` with `using: composite`), `script:`
-sections in GitLab CI, Makefile recipes, Dockerfile `RUN` lines, and
-`package.json` scripts.
-Zsh and fish scripts are not covered: shellcheck does not support them.
+elsewhere, which counts even in a repository with no script file: `run:`
+steps in GitHub Actions workflows and composite actions (`action.yml` or
+`action.yaml` with `using: composite`), `script:` sections in GitLab CI,
+Makefile recipes, Dockerfile `RUN` lines, and `package.json` scripts. Zsh
+and fish scripts are not covered: shellcheck does not support them.
 
-Awk programs embedded in shell are reviewed with `code-quality-review-awk`,
-which covers the program text (between the quotes, or in its `-f` file)
-and how values reach it; this guide reviews the command around each
-program as shell code.
+Awk programs embedded in shell belong to `code-quality-review-awk`; this
+guide reviews the command around each one.
 
 ## Project rules
 
@@ -73,10 +70,10 @@ grep -nE '^[[:space:]]*(function[[:space:]]+[^[:space:](){]+|[A-Za-z_][A-Za-z0-9
 
 With `--norc`, shellcheck ignores `.shellcheckrc` (its `disable=`,
 `enable=`, `shell=`, `source-path=`, and `external-sources=`); inline
-`# shellcheck` directives still apply. Do not pass its `shell=` as `--shell=`: that
-overrides every shebang and hides the `SC3xxx` hits the Dialect check
-needs; rerun only the files without a shebang (reported as `SC2148`)
-with `--shell=<value>`.
+`# shellcheck` directives still apply. Do not pass its `shell=` as
+`--shell=`: that overrides every shebang and hides the `SC3xxx` hits the
+Dialect check needs; rerun only the files without a shebang (reported as
+`SC2148`) with `--shell=<value>`.
 
 actionlint skips every `run:` script without a word when its
 `-shellcheck` path is empty or names no executable —
@@ -126,14 +123,13 @@ Method & limits as not run, never as clean.
   interpreting backslashes, prints output such as `-n` that `echo` took as
   an option, prints nothing for empty output, and returns the command's
   exit status where `echo` returned 0 (under `set -e` the script then
-  stops). `expr`
-  arithmetic (`SC2003`) is `NV` unless every operand is always a decimal
-  integer with no leading zero that fits in 64 bits and nothing uses
-  `expr`'s exit status: under `$(( ))`, `08` is an error that ends a dash
-  script, `010` is 8, and Bash reads a non-numeric operand as a variable
-  name, while `expr` exits 1 on a zero result (which stops a `set -e`
-  script) and 2 on a bad operand. `bash -n` and shellcheck cannot see
-  these changes; run before and after on representative inputs.
+  stops). `expr` arithmetic (`SC2003`) is `NV` unless every operand is
+  always a decimal integer with no leading zero that fits in 64 bits and
+  nothing uses `expr`'s exit status: under `$(( ))`, `08` is an error that
+  ends a dash script, `010` is 8, and Bash reads a non-numeric operand as
+  a variable name, while `expr` exits 1 on a zero result (which stops a
+  `set -e` script) and 2 on a bad operand. `bash -n` and shellcheck cannot
+  see these changes; run before and after on representative inputs.
 - **Strict mode** (`NV`): scripts without `set -e`, `set -u`, or
   `set -o pipefail` where the project's other scripts use them. Adding
   them changes which failures stop the script; name the commands that

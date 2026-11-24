@@ -1,6 +1,6 @@
 ---
 name: code-quality-review-haskell
-description: Haskell guide for review-repo-code-quality and review-org-code-quality — where a Cabal or Stack project states its rules, its review tools and which need execution consent (anything that builds does, since a build runs Template Haskell and preprocessors), Haskell checks such as a closed set of strings that becomes a sum type deriving Enum and Bounded, partial functions, String and Text, orphan instances, and laziness, currency (GHC releases, GHC2024, Stackage, CI actions), false positives, and verification commands. Not invoked directly. Use when a review skill tells you to read it, or when asked what those reviews check for Haskell.
+description: Haskell guide for review-repo-code-quality and review-org-code-quality — where a Cabal or Stack project states its rules, its review tools and which need execution consent, Haskell checks such as a closed set of strings that becomes a sum type deriving Enum and Bounded, partial functions, String and Text, orphan instances, and laziness, currency (GHC releases, GHC2024, Stackage, CI actions), false positives, and verification commands. Not invoked directly. Use when a review skill tells you to read it, or when asked what those reviews check for Haskell.
 allowed-tools: Read
 user-invocable: false
 ---
@@ -71,9 +71,8 @@ clean (Stack writes `.stack-work/` there).
 |---|---|---|---|
 | Idiom drift, partial functions | `hlint`, your hint file | static with `--hint` | `hlint --hint=<scratch>/hlint.yaml -X<extension> … <files>` from the scratch directory, `<files>` being the tracked `*.hs` and `*.lhs` files as absolute paths (`review-repo-code-quality` Step 1), with `-X` for each `default-extensions` entry hlint leaves off, `--cpp-include=<checkout>/<dir>` for each `include-dirs` entry (a missing `#include` only warns), and the `-X` and `--cpp-*` `arguments` of the project's `.hlint.yaml` (below) |
 | Idiom drift | `hlint`, the project's `.hlint.yaml` | consent | the CI step's invocation, else `hlint .` from the checkout |
-| Formatting | `ormolu` | static with `--no-cabal --no-dot-ormolu` | `ormolu --mode check --no-cabal --no-dot-ormolu -o -X<language> -o -X<extension> … -p <package> … -f '<fixity>' … -r '<re-export>' … <files>` from the scratch directory on the tracked `*.hs` files (it does not parse `*.lhs`), giving it what those flags stop it reading: the `default-language` and each `default-extensions` entry as `-o -X…`, each `build-depends` package as `-p` (for its operators' fixities), and each line of `.ormolu` as `-f` (a fixity) or `-r` (a re-export). Without them, files the project's own run accepted failed: no `-o -XGHC2021` gave ``Found `qualified' in postpositive position``, no `-p containers` another layout of a `Data.Sequence` operator chain. It prints a diff and exits 100 for files it would change |
+| Formatting | `ormolu` | static with `--no-cabal --no-dot-ormolu` | `ormolu --mode check --no-cabal --no-dot-ormolu -o -X<language> -o -X<extension> … -p <package> … -f '<fixity>' … -r '<re-export>' … <files>` from the scratch directory on the tracked `*.hs` files (it does not parse `*.lhs`), giving it what those flags stop it reading: the `default-language` and each `default-extensions` entry as `-o -X…`, each `build-depends` package as `-p` (for its operators' fixities), and each line of `.ormolu` as `-f` (a fixity) or `-r` (a re-export). Without them, files the project's own run accepted failed: no `-o -XGHC2021` gave ``Found `qualified' in postpositive position``, no `-p containers` another layout of a `Data.Sequence` operator chain. It prints a diff and exits 100 (123 through `xargs`) for files it would change; `--no-dot-ormolu` and `-r` need ormolu 0.7: on 0.5 and 0.6 (Ubuntu 24.04) drop them, as `--no-cabal` alone skips `.ormolu` there |
 | Formatting | `fourmolu`, your configuration | static with `--config` and `--no-cabal` | `fourmolu --mode check --config <scratch>/fourmolu.yaml --no-cabal -o -X<language> … -p <package> … <files>` likewise (fourmolu reads no `.ormolu`), the file holding the settings you read from the project's `fourmolu.yaml`, `fixities` and `reexports` included (`{}` gives the defaults; an empty file is rejected); where it sets `import-grouping`, add `--local-modules <module>` once per module of the package, or local imports lose their group |
-| Duplication | `jscpd` (the `analyze-duplicates` skill) | static on the copy | as `review-repo-code-quality` Step 2 runs it, on its Step 1 copy; its `haskell` format found a planted clone. hlint finds none: its "Reduce duplication" hint is compiled out (3.10, issue 1150) |
 | Dead code within a module or component | GHC warnings | consent | `cabal build all --enable-tests --enable-benchmarks --builddir=<scratch>/dist-w --ghc-options='-Wall -Wunused-packages -Wredundant-constraints -Wmissing-export-lists -Wpartial-fields'` (add `-Wincomplete-record-selectors` on GHC 9.10 and 9.12), for `-Wunused-top-binds`, `-Wunused-imports`, and `-Wunused-packages`, into a fresh directory each time: cabal-install 3.14 counts a change of warning flags alone as no change, and a rebuild into a used directory said `Up to date` and printed no warning |
 | Dead code across modules | `weeder` | consent | after a build with `--ghc-options=-fwrite-ide-info`, `weeder --config <weeder.toml> --hie-directory <scratch>/dist` (below); exit status 228 means weeds were found, and weeder 2.11 also reports each configured root that matches nothing (`no declaration matches roots entry "^Paths_"` in a package without one, `"^Main\\.main$"` for a library alone): drop those roots |
 | Partial functions, anti-patterns | `stan` | consent | `stan --hiedir=<scratch>/dist -s --hide-solution` from the checkout; it reads the package's `.cabal` file there, and `.stan.toml` unless given `--no-default` |
@@ -106,14 +105,15 @@ comments and `ANN` pragmas still apply. hlint reads no `.cabal` file and
 leaves `QuasiQuotes`, `OverloadedRecordDot`, `Arrows`, `RecursiveDo`,
 `UnboxedTuples`, and a few more off (code needing one may fail with
 `Error: Parse error`). Its CPP pass knows no macros, Cabal's
-`MIN_VERSION_*` included, so it checks one branch of each `#if`.
+`MIN_VERSION_*` included, so it checks one branch of each `#if`. Its
+"Reduce duplication" hint is compiled out (3.10, issue 1150), so hlint
+finds no clones.
 
 ormolu and fourmolu look for configuration from each input file, so from
 the scratch directory both still read the checkout's `.cabal` file (and
 ormolu its `.ormolu`, fourmolu its `fourmolu.yaml`) until given the flags
-above. No static command here ran a splice, a `-pgmF` preprocessor, or
-`Setup.hs`, or wrote into the checkout. Use the formatter version the
-project pins: releases change the output.
+above. Use the formatter version the project pins: releases change the
+output.
 
 weeder needs a configuration file: the project's `weeder.toml`, or yours:
 
@@ -127,9 +127,9 @@ type-class-roots = true         # false also lists instances with no use seen
 Its defaults (weeder 2.11.0) root only `Main.main` and the `Paths_`
 modules, and no exposed module (`root-modules = []`), so a library's
 exports show up as weeds; with the settings above a planted sample showed
-only its dead code. HIE files
-are specific to the GHC that wrote them (weeder exits 2 on a mismatch):
-build weeder and stan with that GHC (a fetch: ask first, as Step 1 says).
+only its dead code. HIE files are specific to the GHC that wrote them
+(weeder exits 2 on a mismatch): build weeder and stan with that GHC (a
+fetch: ask first, as Step 1 says).
 
 ## Checks
 
@@ -243,15 +243,15 @@ live sources each item names rather than trusting its examples)
 
 - **GHC versions.** Compare `tested-with`, the CI matrix, `base` bounds,
   `with-compiler`, and Stack's compiler with https://www.haskell.org/ghc/,
-  each series' status (https://gitlab.haskell.org/ghc/ghc/-/wikis/GHC-status),
-  and GHCup's tags (`ghcup list`, or
+  each series' status
+  (https://gitlab.haskell.org/ghc/ghc/-/wikis/GHC-status), and GHCup's
+  tags (`ghcup list`, or
   https://raw.githubusercontent.com/haskell/ghcup-metadata/develop/ghcup-0.0.9.yaml).
   GHC 9.14 is the first long-term-support series, supported for two years
   or more; other majors come about every six months with shorter support
-  (https://blog.haskell.org/ghc-lts-releases/, July 2025). On 2026-11-24
-  the newest were 9.14.1 and 9.12.4, and GHCup recommended 9.10.3. Cabal
-  ignores `tested-with`: report entries CI does not build, CI that builds
-  no maintained series, and the newest release missing.
+  (https://blog.haskell.org/ghc-lts-releases/, July 2025). Cabal ignores
+  `tested-with`: report entries CI does not build, CI that builds no
+  maintained series, and the newest release missing.
 - **Language edition.** `Haskell2010`, or no `default-language`, which
   Cabal builds as `Haskell98` (cabal-install 3.14.2.0 passed `-XHaskell98`,
   and `cabal check` reports the omission as an error Hackage rejects; GHC
@@ -264,23 +264,22 @@ live sources each item names rather than trusting its examples)
 - **Cabal.** `cabal-version` too low for the fields used (`cabal check`),
   `build-type: Custom` where `Simple` or `Hooks` would do (Cabal's guide
   recommends `Hooks`), and the specification versions at
-  https://github.com/haskell/cabal/blob/master/doc/file-format-changelog.rst
-  (newest 3.18 on 2026-11-24); raising `cabal-version` raises the
-  cabal-install every builder needs (`NV`).
+  https://github.com/haskell/cabal/blob/master/doc/file-format-changelog.rst;
+  raising `cabal-version` raises the cabal-install every builder needs
+  (`NV`).
 - **Stackage.** `snapshot` (or `resolver`) against https://www.stackage.org/
-  (files: https://github.com/commercialhaskell/stackage-snapshots): on
-  2026-11-24, LTS 24.68 with GHC 9.10.3, Nightly with GHC 9.12.4.
-- **Deprecations.** From the scratch directory, `curl -sS -H 'Accept:
-  application/json' https://hackage.haskell.org/package/<name>/deprecated`
-  gives `is-deprecated` and `in-favour-of` (on 2026-11-24 `cryptonite`:
-  `crypton`, `cryptohash-*`); `.../preferred` lists deprecated versions. In
-  code: `-Wdeprecations` (on by default) and `-Wcompat` (consent build).
-- **CI.** `haskell/actions/setup`, `hlint-setup`, and `hlint-run` come from
-  a repository archived on 2024-01-05: use the same names under
-  `haskell-actions/` (`setup` was at v2.12.1, on `node24`, on 2026-11-24);
-  `haskell-actions/run-ormolu` was archived on 2026-08-20. A haskell-ci
-  workflow names its generator in a `# version:` line and its job image in
-  `container: image:` (`buildpack-deps:<Ubuntu codename>`; see
+  (files: https://github.com/commercialhaskell/stackage-snapshots).
+- **Deprecations.** From the scratch directory,
+  `curl -sS -H 'Accept: application/json' https://hackage.haskell.org/package/<name>/deprecated`
+  gives `is-deprecated` and `in-favour-of`; `.../preferred` lists
+  deprecated versions. In code: `-Wdeprecations` (on by default) and
+  `-Wcompat` (consent build).
+- **CI.** `haskell/actions/setup`, `hlint-setup`, and `hlint-run` come
+  from a repository archived on 2024-01-05: use the same names under
+  `haskell-actions/`; `haskell-actions/run-ormolu` was archived on
+  2026-08-20. A haskell-ci workflow names its generator in a `# version:`
+  line and its job image in `container: image:`
+  (`buildpack-deps:<Ubuntu codename>`; see
   https://ubuntu.com/about/release-cycle); compare tool pins with Hackage.
 
 ## Not findings

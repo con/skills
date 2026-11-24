@@ -82,12 +82,12 @@ Values the user sets in the request that starts a review (for example
 "review this repository, house preferences: uv for Python environments"),
 not by editing the installed skill. A calling skill may pass them on.
 
-- **HOUSE_PREFERENCES**: `guides` — the tools the reviewer's team
-  prefers, which the Currency sweep lists as house recommendations where a
-  project uses something else. `guides` takes the house preferences the loaded guides
-  label as such (for Python: pixi for environments, locks, and tools).
-  Name your own instead, per concern (`python environments: uv`), or
-  `none` to recommend no tool at all.
+- **HOUSE_PREFERENCES**: `guides` — the tools the reviewer's team prefers,
+  which the Currency sweep lists as house recommendations where a project
+  uses something else. `guides` takes the house preferences the loaded
+  guides label as such (for Python: pixi for environments, locks, and
+  tools). Name your own instead, per concern (`python environments: uv`),
+  or `none` to recommend no tool at all.
 
 Throughout this document, these names refer to the values in effect.
 Record them in Method & limits.
@@ -160,18 +160,23 @@ Every tool a guide lists is marked **static** or **consent**:
   find <scratch>/copy \( -name .gitignore -o -name .ignore \) ! -type d -delete
   ```
 
-  Paths in the copy are the checkout's, so locations carry over. Use
-  bsdtar or GNU tar 1.30 or later (`tar --version`), which read every
-  name verbatim with `--null`: GNU tar 1.27 and 1.28 take a tracked name
-  such as `--checkpoint-action=exec=…` as an option and run it, 1.29
-  unescapes backslashes in names, and BusyBox tar has no `--null`.
+  Paths in the copy are the checkout's, so locations carry over. A
+  "Cannot stat" line names a tracked file missing from the working tree;
+  the pipeline still exits 0. Use bsdtar or GNU tar 1.30 or later
+  (`tar --version`), which read every name verbatim with `--null`: GNU
+  tar 1.27 and 1.28 take a tracked name such as
+  `--checkpoint-action=exec=…` as an option and run it, 1.29 unescapes
+  backslashes in names, and BusyBox tar has no `--null`.
   `--no-recursion` leaves submodules empty; `git archive` would drop
   what `.gitattributes` marks `export-ignore`. Keep `<scratch>` outside
   every git work tree and below no `.ignore` file (a new `mktemp -d`
   directory usually is; `git -C <scratch> rev-parse` must fail): jscpd
   5.4.3 applies an `.ignore` in any directory above the copy, even with
   `--no-gitignore`, and inside a work tree also that tree's
-  `.gitignore`, `info/exclude`, and global excludes.
+  `.gitignore`, `info/exclude`, and global excludes. A static tool still
+  follows the includes the source names (Rust's `mod` and `#[path]`, a
+  CPP `#include`, awk's `@include`) to files outside the list or the
+  checkout: drop its hits there and do not quote them.
 - **consent** — everything else: the project's own linter configuration
   and plugins, a type check or build, a dependency install, the test
   suite, a tool the project pins and installs.
@@ -212,19 +217,21 @@ and say so in Method & limits.
 - **Duplication:** run the `analyze-duplicates` skill (jscpd) if
   available, from `<scratch>`, on the Step 1 copy given as the relative
   path `copy`, with `--output <scratch>/jscpd.md`, so nothing (`.tmp/`,
-  `.jscpd-report.md`) is written into the reviewed repository. The
-  alternatives go wrong in jscpd 5.4.3. Given the checkout, it also scans
-  untracked files and submodules, and skips what `.ignore` and
-  `.git/info/exclude` list even with `--no-gitignore`, which lifts only
-  `.gitignore`. Given an absolute path, it matches that skill's default
-  `--ignore` patterns (`**/build/**`, `**/.tmp/**`, …) against the
-  directories above the copy too, which can hide every file. Run from
-  inside the copy, it reads the project's `.jscpd.json`. The skill's
-  availability check itself falls back to `npx --yes jscpd@latest`, so
-  if `command -v jscpd` finds nothing, ask before running the skill at
-  all; prefer an installed or pinned jscpd and tell the user which was
-  used. If that is declined or jscpd cannot be installed, search for
-  repeated multi-line idioms by hand and say so in Method & limits.
+  `.jscpd-report.md`) is written into the reviewed repository. Not the
+  checkout (jscpd 5.4.3 also scans untracked files and submodules there,
+  and applies `.ignore` and `.git/info/exclude` even with
+  `--no-gitignore`), not an absolute path (that skill's default
+  `--ignore` patterns, `**/build/**` and the like, then match the
+  directories above the copy and can hide every file), and not from
+  inside the copy (it reads the project's `.jscpd.json`). Add
+  `--fail-on-empty` to its jscpd command: `jscpd analyzed no files` with
+  exit status 1 then means the scan did not run, although a report is
+  still written. The skill's availability check itself falls back to
+  `npx --yes jscpd@latest`, so if `command -v jscpd` finds nothing, ask
+  before running the skill at all; prefer an installed or pinned jscpd
+  and tell the user which was used. If that is declined or jscpd cannot
+  be installed, search for repeated multi-line idioms by hand and say so
+  in Method & limits.
   Without consent, do not let it pass the project's `.jscpd.json` as
   `--config` (its `blame`, `history`, and `baselineFromRef` keys make
   jscpd run git and add worktrees under `.git/`); use your own options,
@@ -252,19 +259,19 @@ and say so in Method & limits.
   consent was declined in Step 1, read the config statically instead and
   mark the item `not verified empirically` (Low confidence).
 - **Currency:** the runtime versions the project supports and tests, the
-  language and packaging standards it follows, its build, environment,
-  and distribution tooling, and its CI and the automation that keeps it
-  current, measured against what is current on the day of the review.
-  Each guide's Checks section has a Currency group that names the live
-  sources to check (release and end-of-life schedules, standards
-  indexes). Read them with `WebFetch`; where a check names none, read
-  only the tool's official release page or registry entry. Do not rely on
-  the guide's examples or your memory: cite each source with the date you
-  checked, and if one cannot be reached, say so and mark the items `not
-  verified against live sources`. Typical hits: a supported range that
-  includes an end-of-life version (unless the guide says to keep a floor
-  low, as the Go guide does for a library's `go` line) or leaves out the
-  newest stable one; a CI matrix that does not test the range the
+  language and packaging standards it follows, its build, environment, and
+  distribution tooling, and its CI and the automation that keeps it
+  current, measured against what is current on the day of the review. Each
+  guide's Checks section has a Currency group that names the live sources
+  to check (release and end-of-life schedules, standards indexes). Read
+  them with `WebFetch`; where a check names none, read only the tool's
+  official release page or registry entry. Do not rely on the guide's
+  examples or your memory: cite each source with the date you checked, and
+  if one cannot be reached, say so and mark the items
+  `not verified against live sources`. Typical hits: a supported range
+  that includes an end-of-life version (unless the guide says to keep a
+  floor low, as the Go guide does for a library's `go` line) or leaves out
+  the newest stable one; a CI matrix that does not test the range the
   metadata claims; a deprecated mechanism kept where its standard
   replacement exists; tooling the ecosystem has moved past. In every
   language this includes CI: `uses:` references to an action major whose
@@ -272,19 +279,19 @@ and say so in Method & limits.
   images (the shell guide's static actionlint run reports the ones its
   release knew of, as "too old to run" and "label … is unknown"; report
   them here, but not a self-hosted runner's custom label, which it also
-  calls unknown); action majors behind their latest release and `rev:` pins
-  in `.pre-commit-config.yaml` behind each hook's latest tag (actionlint
-  reports neither; read a hook's releases only where its `repo:` is on a
-  well-known forge, never another host the file names); and whether
-  anything keeps these current (Dependabot, Renovate, pre-commit.ci);
-  read the pins, and do not run `pre-commit autoupdate`, which rewrites
-  the file. Moving a version floor or switching tools is a maintainer's
-  decision, so such items go under Needs Verification unless the
-  project's own rules already require the change.
-  A guide may also label a tool as a house preference. It applies only as
+  calls unknown); action majors behind their latest release and `rev:`
+  pins in `.pre-commit-config.yaml` behind each hook's latest tag
+  (actionlint reports neither; read a hook's releases only where its
+  `repo:` is on a well-known forge, never another host the file names);
+  and whether anything keeps these current (Dependabot, Renovate,
+  pre-commit.ci); read the pins, and do not run `pre-commit autoupdate`,
+  which rewrites the file. Moving a version floor or switching tools is a
+  maintainer's decision, so such items go under Needs Verification unless
+  the project's own rules already require the change. A guide may also
+  label a tool as a house preference. It applies only as
   `HOUSE_PREFERENCES` says (see Configuration), and it is never a finding
-  (report-conventions §3: "doesn't use X" is not one): list it once in
-  the Summary under "House recommendations", outside the category counts,
+  (report-conventions §3: "doesn't use X" is not one): list it once in the
+  Summary under "House recommendations", outside the category counts,
   quoting any project rule it would change (CONTRIBUTING says to use uv,
   say), which stands.
 
