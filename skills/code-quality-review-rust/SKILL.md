@@ -96,7 +96,7 @@ files as absolute paths (`review-repo-code-quality` Step 1), and
 | Module graph | `mod` and `use` lines, read as text | static | the searches below |
 | Crate graph, duplicate versions | `cargo tree` | consent | `cargo tree --workspace --duplicates --locked`; `-i <crate>` shows what pulls a crate in; both cover only the host platform unless given `--target all` |
 | Crate graph, duplicate versions | the manifests and `Cargo.lock`, read as text | static | the greps below |
-| Vulnerabilities, unmaintained crates | `cargo-audit` | static from the scratch directory | `cargo audit --file <checkout>/Cargo.lock --db <scratch>/advisory-db` (exit status 2 where no `Cargo.lock` is committed); run from the checkout it would apply the ignore list in `.cargo/audit.toml`; it fetches the RustSec database from GitHub (record its last commit date, `git -C <scratch>/advisory-db log -1 --format=%cd`, in Method & limits) and the crates.io index (`--no-yanked` skips the yanked-crate check); in an org review, share one `--db` directory and pass `--no-fetch` after the first run; its findings are security-sensitive (conventions §2) |
+| Vulnerabilities, unmaintained crates | `cargo-audit` | static from the scratch directory | `cargo audit --file <checkout>/Cargo.lock --db <scratch>/advisory-db` (exit status 2 where no `Cargo.lock` is committed); run from the checkout it would apply the ignore list in `.cargo/audit.toml`; it fetches the RustSec database from GitHub (record its last commit date, `git -C <scratch>/advisory-db log -1 --format=%cd`, in Method & limits) and the crates.io index (`--no-yanked` skips the yanked-crate check); in an org review, share one `--db` directory; its findings are security-sensitive (conventions §2) |
 | Advisories, licenses, bans | `cargo-deny`, the project's `deny.toml` | consent: runs `cargo metadata` | `cargo deny --locked check` (cargo-deny 0.22.0 takes the flag before the subcommand and rejects `check --locked`) |
 | Feature combinations | `cargo-hack` | consent | `cargo hack check --workspace --each-feature --locked`, or `--feature-powerset` (`--depth 2` bounds it); not `--no-dev-deps`, which rewrites `Cargo.toml` while it runs |
 | Tests | `cargo test` | consent | see Verification |
@@ -231,9 +231,9 @@ lists by hand. rustfmt also checks the modules a file declares
   its lint stops firing;
 - an item only tests use, outside `#[cfg(test)]`: move it in;
 - copies of a function per type that generics or a `macro_rules!` can
-  merge (`CON`), identical branches (`clippy::match_same_arms`,
+  merge (`CON`), identical branches (`DUP`; `clippy::match_same_arms`,
   pedantic, and `if_same_then_else`), and test functions that differ
-  only in their data (`DUP`): one test over a table of cases;
+  only in their data (`DUP`; one test over a table of cases);
 - `String`, `Vec<T>`, or `&Vec<T>` parameters where `&str` or `&[T]`
   would do (`clippy::ptr_arg`, `needless_pass_by_value`) — an API change
   in a library (`NV`).

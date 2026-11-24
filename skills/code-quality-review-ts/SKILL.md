@@ -38,13 +38,12 @@ whichever of these exist: ESLint (`eslint.config.*`, or the older
 `.eslintrc*`), Prettier (`.prettierrc*`, `prettier.config.*`), Biome
 (`biome.json`, `biome.jsonc`), oxlint (`.oxlintrc.json`,
 `oxlint.config.*`), knip (`knip.json`, `knip.config.*`),
-dependency-cruiser (`.dependency-cruiser.*`), test
-runners (`vitest.config.*`, `jest.config.*`, `playwright.config.*`),
-bundlers (`vite.config.*`, `webpack.config.*`, `rollup.config.*`,
-`next.config.*`), `.nvmrc` / `.node-version`, and monorepo files
-(`pnpm-workspace.yaml`, `turbo.json`, `nx.json`). Many of these are
-JavaScript or TypeScript: read them as text. Running a tool loads them,
-which executes them.
+dependency-cruiser (`.dependency-cruiser.*`), test runners
+(`vitest.config.*`, `jest.config.*`, `playwright.config.*`), bundlers
+(`vite.config.*`, `webpack.config.*`, `rollup.config.*`, `next.config.*`),
+`.nvmrc` / `.node-version`, and monorepo files (`pnpm-workspace.yaml`,
+`turbo.json`, `nx.json`). Many of these are JavaScript or TypeScript: read
+them as text. Running a tool loads them, which executes them.
 
 The supported runtimes bound what may be proposed: `engines.node`, the
 tsconfig `target` and `lib`, and the browsers the build targets

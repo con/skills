@@ -220,26 +220,25 @@ and say so in Method & limits.
   `.jscpd-report.md`) is written into the reviewed repository. Not the
   checkout (jscpd 5.4.3 also scans untracked files and submodules there,
   and applies `.ignore` and `.git/info/exclude` even with
-  `--no-gitignore`), not an absolute path (that skill's default
-  `--ignore` patterns, `**/build/**` and the like, then match the
-  directories above the copy and can hide every file), and not from
-  inside the copy (it reads the project's `.jscpd.json`). Add
-  `--fail-on-empty` to its jscpd command: `jscpd analyzed no files` with
-  exit status 1 then means the scan did not run, although a report is
-  still written. The skill's availability check itself falls back to
-  `npx --yes jscpd@latest`, so if `command -v jscpd` finds nothing, ask
-  before running the skill at all; prefer an installed or pinned jscpd
-  and tell the user which was used. If that is declined or jscpd cannot
-  be installed, search for repeated multi-line idioms by hand and say so
-  in Method & limits.
-  Without consent, do not let it pass the project's `.jscpd.json` as
-  `--config` (its `blame`, `history`, and `baselineFromRef` keys make
-  jscpd run git and add worktrees under `.git/`); use your own options,
-  read that file as text, and say in Method & limits which configuration
-  was used. With consent, drop `history` and `baselineFromRef` from the
-  configuration you pass: on the copy, either stops jscpd with
-  `not inside a git repository` and no report. Note where copies have
-  **drifted**, since drifted copies are the expensive ones.
+  `--no-gitignore`), not an absolute path (that skill's default `--ignore`
+  patterns, `**/build/**` and the like, then match the directories above
+  the copy and can hide every file), and not from inside the copy (it
+  reads the project's `.jscpd.json`). Add `--fail-on-empty` to its jscpd
+  command: `jscpd analyzed no files` with exit status 1 then means the
+  scan did not run, although a report is still written. The skill's
+  availability check itself falls back to `npx --yes jscpd@latest`, so if
+  `command -v jscpd` finds nothing, ask before running the skill at all;
+  prefer an installed or pinned jscpd and tell the user which was used. If
+  that is declined or jscpd cannot be installed, search for repeated
+  multi-line idioms by hand and say so in Method & limits. Without
+  consent, do not let it pass the project's `.jscpd.json` as `--config`
+  (its `blame`, `history`, and `baselineFromRef` keys make jscpd run git
+  and add worktrees under `.git/`); use your own options, read that file
+  as text, and say in Method & limits which configuration was used. With
+  consent, drop `history` and `baselineFromRef` from the configuration you
+  pass: on the copy, either stops jscpd with `not inside a git repository`
+  and no report. Note where copies have **drifted**, since drifted copies
+  are the expensive ones.
 - **Idiom drift:** with consent, run the project's own linter with the
   extended rule set the guide names, and read its output rather than
   hand-grepping. Without consent, run the guide's static linter with your
