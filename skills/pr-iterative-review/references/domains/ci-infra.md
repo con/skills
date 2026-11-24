@@ -43,8 +43,10 @@ longer pass)
   filter never reports, and the pull request waits forever.
 - `if:` conditions: one that mixes `${{ }}` with text outside it is a
   non-empty string, so it is always true.
-- `continue-on-error`, `|| true` or a missing `set -e` that hides failures;
-  a shell without `pipefail` where a pipeline's failure matters.
+- `continue-on-error` or `|| true` that hides failures. A GitHub Actions
+  `run:` step with no `shell:` runs `bash -e` without `pipefail`, so a
+  failure early in a pipeline goes unnoticed (`shell: bash` adds it); other
+  CI systems may not even set `-e`.
 - The matrix covers the versions and platforms the project says it
   supports; cache keys include the lockfile's hash; `concurrency` with
   `cancel-in-progress` on a release or deploy job can stop it half way.

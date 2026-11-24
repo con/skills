@@ -1,13 +1,14 @@
 # Reviewer briefs
 
 The lead, the agent running `pr-iterative-review`, gives each reviewer one
-brief per round, built from this file: the shared rules and the reviewer's
-angle verbatim, the round's section, and the placeholders (`{SHA}`,
-`{WORK}`, …) filled in. A reviewer sees no other reviewer's work in round 1.
+prompt per round. It names this file and the sections to follow ("Shared
+rules", the reviewer's angle under "Angles", and the round's section), and
+gives the values of the placeholders (`{SHA}`, `{WORK}`, …). A reviewer sees
+no other reviewer's work in round 1.
 
 ## Shared rules
 
-You are one of {N} reviewers of {TARGET} at commit {SHA}. Your angle is
+You are one of {COUNT} reviewers of {TARGET} at commit {SHA}. Your angle is
 **{ID}**: {FOCUS}. The other reviewers cover the other angles, so stay on
 yours, but report anything blocking wherever you see it.
 

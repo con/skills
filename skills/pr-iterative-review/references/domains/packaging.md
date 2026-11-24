@@ -68,7 +68,7 @@ release)
 
 ## Verification
 
-- **static**: `git grep` for imports of added and removed dependencies;
+- **static**: search for imports of added and removed dependencies;
   read the lockfile diff for unexpected packages and hosts.
 - **consent**: resolving or installing the environment, building the
   package and listing its contents, and audit tools that install or build

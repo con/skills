@@ -64,9 +64,8 @@ unwanted action)
   directory.
 
 **Versioning and packaging** (should-fix)
-- The version changes as the repository's rules require (in `con/skills`:
-  MINOR for a changed step, none while the introducing pull request is
-  open); the README or index lists the skill; the installed copy works
+- The version changes as the repository's rules require; the README or
+  index lists the skill; the installed copy works
   where the package manager puts it.
 
 **Economy** (optional)
@@ -85,8 +84,6 @@ unwanted action)
 
 ## Verification
 
-- If your companion skills include `skill-security-review`, apply its
-  checks to each changed skill directory and fold its findings into yours.
 - **static**: read the whole `SKILL.md` and every bundled file it names;
   compare against sibling skills and the repository's rules; check each
   command against the tool's documentation.

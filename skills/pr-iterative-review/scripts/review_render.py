@@ -65,10 +65,13 @@ _REVIEW_URL = re.compile(r"https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/p
                          r"#pullrequestreview-[0-9]+")
 _VERSION = re.compile(r"^version:\s*([\"']?)([0-9]+\.[0-9]+\.[0-9]+)\1\s*(?:#.*)?$", re.MULTILINE)
 _HUNK = re.compile(r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@")
-# A fence opener as CommonMark reads it: a backtick fence's info string holds no backtick.
-_FENCE = re.compile(r"^ {0,3}(`{3,}(?!.*`)|~{3,})")
-# An inline code span closes only on a backtick run of the same length.
-_INLINE_CODE = re.compile(r"(?<!`)(`+)(?!`).*?(?<!`)\1(?!`)")
+# A fence opener as CommonMark reads it: a backtick fence's info string holds no backtick. Only a fence at
+# column 0 counts as code here: an indented one may sit in a list item and end with it.
+_FENCE = re.compile(r"^(`{3,}(?!.*`)|~{3,})")
+# What takes a backtick out of play (a backslash escape, a URL that GitHub links), or an inline code
+# span, which closes only on a backtick run of the same length.
+_INLINE_CODE = re.compile(r"\\.|<[A-Za-z][A-Za-z0-9+.-]+:[^\s<>]*>|(?:https?://|www\.)[^\s<]*|"
+                          r"(?<!`)(`+)(?!`).*?(?<!`)\1(?!`)")
 # A GitHub @-mention outside code; only a word character before it (an e-mail address) rules it out.
 _MENTION = re.compile(r"(?<!\w)@[A-Za-z0-9][A-Za-z0-9-]{0,38}(?:/[A-Za-z0-9_.-]+)?")
 # An image makes every viewer's browser, through GitHub's proxy, request its URL from another host.
@@ -198,7 +201,7 @@ def parse_diff(text: str) -> dict[str, dict[str, dict[int, int]]]:
             elif tag == "-" and old_left > 0:
                 current["LEFT"][old_no] = hunk
                 old_no, old_left = old_no + 1, old_left - 1
-            elif tag in (" ", "") and old_left > 0 and new_left > 0:
+            elif tag in (" ", "", "\r") and old_left > 0 and new_left > 0:
                 current["RIGHT"][new_no] = hunk
                 current["LEFT"][old_no] = hunk
                 new_no, new_left = new_no + 1, new_left - 1
@@ -209,9 +212,9 @@ def parse_diff(text: str) -> dict[str, dict[str, dict[int, int]]]:
         if raw.startswith("diff --git "):
             current, old_path = None, None
         elif raw.startswith("--- "):
-            old_path = _diff_path(raw[4:], "a/")
+            old_path = _diff_path(raw[4:].rstrip("\r"), "a/")
         elif raw.startswith("+++ "):
-            new_path = _diff_path(raw[4:], "b/")
+            new_path = _diff_path(raw[4:].rstrip("\r"), "b/")
             key = new_path if new_path is not None else old_path
             if key is None:
                 raise InputError("diff: a file header names /dev/null on both sides")
@@ -246,7 +249,7 @@ def _prose(text: str) -> str:
         if match:
             fence = match.group(1)
             continue
-        kept.append(_INLINE_CODE.sub(" ", line))
+        kept.append(_INLINE_CODE.sub(lambda m: " " if m.group(1) or m.group(0) == "\\`" else m.group(0), line))
     return "\n".join(kept)
 
 
@@ -279,6 +282,9 @@ def _text(errors: list[str], where: str, value: object, *, required: bool = True
     if _IMAGE.search(prose):
         errors.append(f"{where}: images are not allowed; displaying one sends a request, with whatever its URL "
                       "carries, to another host")
+    if "`" in prose:
+        errors.append(f"{where}: a backtick without its pair on the same line would pair with a later one and "
+                      "turn code into text; close the code span, or write a literal backtick as \\`")
     mention = _MENTION.search(prose)
     if mention:
         errors.append(f"{where}: {mention.group(0)!r} would notify that account; put code such as a "
@@ -434,9 +440,13 @@ def check_findings(data: object) -> list[str]:
                     continue
                 _unknown(errors, where, item, PREVIOUS_ITEM_KEYS)
                 _text(errors, f"{where}.title", item.get("title"), one_line=True, limit=120)
-                if item.get("status") not in PREVIOUS_STATUSES:
+                if not (isinstance(item.get("status"), str) and item["status"] in PREVIOUS_STATUSES):
                     errors.append(f"{where}.status: must be one of {', '.join(PREVIOUS_STATUSES)}")
                 _text(errors, f"{where}.note", item.get("note"), required=False, one_line=True, limit=300)
+    try:
+        json.dumps(data, ensure_ascii=False).encode("utf-8")
+    except UnicodeEncodeError:
+        errors.append("findings: contains a character that cannot be written as UTF-8 (a lone surrogate)")
     return errors
 
 
@@ -526,13 +536,18 @@ def _method(data: dict, short: str) -> str:
     rounds = f"{data['rounds']} round{'s' if data['rounds'] != 1 else ''} in all"
     used_lead = any(LEAD in f["confirmed_by"] for f in data["findings"])
     if data["mode"] == "single-agent":
-        return (f"One agent read the change at `{short}` from {len(reviewers)} "
-                f"angle{'s' if len(reviewers) != 1 else ''} in turn: {angles}. It then re-checked each finding "
-                f"against the code ({rounds}). No independent reviewers were available, "
-                "so no second agent cross-checked the findings.")
+        opening = (f"One agent read the change at `{short}` from {len(reviewers)} "
+                   f"angle{'s' if len(reviewers) != 1 else ''} in turn: {angles}.")
+        if not data["findings"]:
+            return f"{opening} It found nothing ({rounds})."
+        return (f"{opening} It then re-checked each finding against the code ({rounds}). No independent "
+                "reviewers were available, so no second agent cross-checked the findings.")
     if len(reviewers) == 1:
-        return (f"One reviewer read the change at `{short}`: {angles}. The agent that coordinated the review "
-                f"then checked each finding against the code ({rounds}).")
+        opening = f"One reviewer read the change at `{short}`: {angles}."
+        if not data["findings"]:
+            return f"{opening} It found nothing ({rounds})."
+        return (f"{opening} The agent that coordinated the review then checked each finding against the code "
+                f"({rounds}).")
     if data["rounds"] == 1:
         return (f"{len(reviewers)} reviewers read the change at `{short}` independently, each from one angle: "
                 f"{angles}. None of them found anything, so there was nothing to cross-check.")
@@ -785,7 +800,7 @@ def main(argv: list[str] | None = None) -> int:
     handlers = {"render": cmd_render, "previous": cmd_previous}
     try:
         return handlers[args.command](args)
-    except (InputError, OSError, UnicodeDecodeError) as error:
+    except (InputError, OSError, UnicodeError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
 

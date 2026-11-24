@@ -31,10 +31,6 @@ the frontend, scripts, downstream packages).
 
 **Input and trust boundaries** (usually blocking)
 - External input checked for type, size and range before use.
-- Injection: SQL built by string formatting; `subprocess` with `shell=True`
-  or a shell string holding input; template or format strings built from
-  input; `yaml.load` without a safe loader, `pickle` or `eval` on data from
-  outside.
 - Paths: `os.path.join(base, user_value)` returns `user_value` when it is
   absolute, and `..` escapes `base`; resolve the path and check it stays
   under `base`.
@@ -56,9 +52,8 @@ the frontend, scripts, downstream packages).
 
 **Resources and concurrency** (should-fix; blocking on a hot path)
 - Outbound calls without a timeout (`requests` has none by default);
-  retries without backoff or a limit; check-then-act races; connections,
-  files or locks not released on error paths; unbounded queries without
-  pagination; one query per row where one query would do.
+  unbounded queries without pagination; one query per row where one query
+  would do.
 
 **Errors and configuration** (should-fix)
 - Status codes and error bodies follow the API's conventions; new settings
@@ -72,7 +67,7 @@ the frontend, scripts, downstream packages).
 
 ## Verification
 
-- **static**: `git grep -n` for every caller of a changed function,
+- **static**: search for every caller of a changed function,
   endpoint, flag or setting, in tests, scripts, docs and configuration; read
   the migration file itself.
 - **consent**: the project's tests; printing a migration's SQL (`manage.py

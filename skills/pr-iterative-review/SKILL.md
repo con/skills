@@ -2,7 +2,7 @@
 name: pr-iterative-review
 version: 0.1.0
 description: Review a pull request, or a local branch before its pull request exists, with independent reviewers who each take one angle, including the change's domain (frontend, backend, skills, compute, pipelines, CI, docs, packaging), cross-check each other until they agree, and post one consistently formatted review. Use when asked to review a pull request, to answer review requests for a companion review account, or to pre-review your own branch. To act on a review a pull request received, use pr-feedback-review instead.
-allowed-tools: Read, Write, Glob, Grep, Agent, AskUserQuestion, Bash(mktemp -d *), Bash(gh api *), Bash(gh repo clone *), Bash(gh run view *), Bash(git -C * fetch *), Bash(git -C * diff *), Bash(git -C * show *), Bash(git -C * log *), Bash(git -C * rev-parse *), Bash(git -C * merge-base *), Bash(git -C * status *), Bash(git -C * symbolic-ref *), Bash(git -C * ls-remote *), Bash(git -C * worktree remove *), Bash(git -c core.hooksPath=/dev/null -C * worktree add *), Bash(python3 */pr-iterative-review/scripts/review_render.py *)
+allowed-tools: Read, Write, Glob, Grep, Agent, AskUserQuestion, Bash(mktemp -d *), Bash(gh api user *), Bash(gh api repos/*/pulls/*), Bash(gh api repos/*/issues/*), Bash(gh api repos/*/commits/*), Bash(gh api graphql *), Bash(gh api -X GET search/issues *), Bash(gh repo clone *), Bash(gh run view *), Bash(git -C * remote -v), Bash(git -C * fetch *), Bash(git -C * diff *), Bash(git -C * show *), Bash(git -C * log *), Bash(git -C * rev-parse *), Bash(git -C * merge-base *), Bash(git -C * status *), Bash(git -C * symbolic-ref *), Bash(git -C * ls-remote *), Bash(git -C * worktree remove *), Bash(git -c core.hooksPath=/dev/null -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.required=false -C * worktree add *), Bash(python3 */pr-iterative-review/scripts/review_render.py *)
 user-invocable: true
 ---
 
@@ -29,9 +29,10 @@ same whoever runs it. To act on a review, the author can use
 - @-mention anyone, or review a commit this account already reviewed unless
   step 0 allows it.
 
-The `allowed-tools` patterns are hardening, not a guarantee: `gh api *`
-cannot pin the HTTP method, and `*/pr-iterative-review/scripts/…` matches
-any directory of that name. Anything else (a static linter, a test run the
+The `allowed-tools` patterns are hardening, not a guarantee: a `gh api`
+pattern cannot pin the HTTP method (`repos/*/pulls/*` also admits the merge
+endpoint), and `*/pr-iterative-review/scripts/…` matches any directory of
+that name. Anything else (a static linter, a test run the
 user allowed) goes through the host's own permission prompt. The rules above
 are what the review follows.
 
@@ -128,8 +129,8 @@ gh api user --jq '.login + " " + (.id | tostring)'
 That gives `LOGIN` and `ACCOUNT_ID`. If `gh` is not authenticated, stop and
 say so. If `--as` names another login, stop: the review would be posted by
 the wrong account. Resolve the target to `OWNER/REPO` and `N` (for a bare
-number, from the remote of the current checkout that names the
-repository), then read the pull request:
+number, from the remote of the current checkout that names the repository,
+as `git -C . remote -v` lists them), then read the pull request:
 
 ```bash
 gh api repos/OWNER/REPO/pulls/N > WORK/pr.json
@@ -149,26 +150,30 @@ python3 SKILL_DIR/scripts/review_render.py previous WORK/reviews.json --user-id 
 
 - `"already_reviewed": true`: that review is of `HEAD_SHA`. With `--again`,
   go on. Otherwise, in an attended run, ask whether to review the same
-  commit again; in an unattended run, go on only if an account other than
-  `LOGIN`, and not a bot, has commented since that review, and otherwise
-  stop and say why.
-- a review of another commit: this is a re-review. Also follow
-  "Re-reviews" below.
+  commit again; in an unattended run, save the two comment files of step 1
+  now, and go on only if an account other than `LOGIN`, and not a bot
+  (`user.type` is `Bot`), has a comment there created after that review's
+  `submitted_at`; otherwise stop and say why.
+- a review of another commit, or of `HEAD_SHA` when you go on: this is a
+  re-review. Also follow "Re-reviews" below.
 
 ### 1. Gather
 
-Find a local clone with a remote (`REMOTE`) that names `OWNER/REPO`, or clone
-one into `WORK` (`gh repo clone OWNER/REPO WORK/repo -- --filter=blob:none
---no-checkout`, with `REMOTE` = `origin`). `REPO_DIR` is that clone. Fetch
+Find a local clone with a remote (`REMOTE`, from `git -C DIR remote -v`)
+that names `OWNER/REPO`, or clone one into `WORK` (`gh repo clone OWNER/REPO
+WORK/repo -- --filter=blob:none --no-checkout`, with `REMOTE` = `origin`).
+`REPO_DIR` is that clone. Fetch
 the head and the base, and check out the head in a worktree of its own, so
 the user's working tree is not touched. Checking out runs the clone's
 `post-checkout` hook inside the pull request's files, where a hook manager
-would read the author's configuration and run it; `core.hooksPath=/dev/null`
-turns hooks off for that one command:
+would read the author's configuration and run it, and Git LFS, where the
+user has it set up, downloads from the server the pull request's own
+`.lfsconfig` names. The options turn both off for that one command (LFS
+files stay pointers):
 
 ```bash
 git -C REPO_DIR fetch --quiet REMOTE pull/N/head BASE_REF
-git -c core.hooksPath=/dev/null -C REPO_DIR worktree add --detach WORK/tree HEAD_SHA
+git -c core.hooksPath=/dev/null -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.required=false -C REPO_DIR worktree add --detach WORK/tree HEAD_SHA
 ```
 
 Then save the diff GitHub places review comments on, and read the head once
@@ -179,17 +184,19 @@ gh api repos/OWNER/REPO/pulls/N -H "Accept: application/vnd.github.diff" > WORK/
 gh api repos/OWNER/REPO/pulls/N --jq .head.sha
 ```
 
-If the branch moved (`HEAD_SHA` is missing after the fetch, or the head
-read here differs), start again from step 0, once; if it moves again, stop
-and say the branch is changing too fast to review. If GitHub refuses the
-diff as too large, write it from the clone with the same shape
-(`--no-textconv` keeps the repository's `.gitattributes` from passing files
-through conversion filters):
+If the branch moved (`HEAD_SHA` is not in the clone, or the head read here
+differs), remove the worktree as in step 7 and go back to step 0, once; if
+it moves again, stop and say the branch is changing too fast to review.
+If GitHub refuses the diff as too large, write it from the clone with the
+same shape (`--no-textconv` keeps the repository's `.gitattributes` from
+passing files through conversion filters):
 `git -C REPO_DIR diff --no-color --no-ext-diff --no-textconv --src-prefix=a/ --dst-prefix=b/ BASE_SHA...HEAD_SHA > WORK/diff.patch`.
 
-Then save the discussion and the CI results:
+Then save the commits, the discussion (unless step 0 already did) and the
+CI results:
 
 ```bash
+gh api repos/OWNER/REPO/pulls/N/commits --method GET -F per_page=100 --paginate --slurp > WORK/commits.json
 gh api repos/OWNER/REPO/issues/N/comments --method GET -F per_page=100 --paginate --slurp > WORK/issue-comments.json
 gh api repos/OWNER/REPO/pulls/N/comments --method GET -F per_page=100 --paginate --slurp > WORK/review-comments.json
 gh api repos/OWNER/REPO/commits/HEAD_SHA/check-runs --method GET -F per_page=100 --paginate --slurp > WORK/check-runs.json
@@ -214,13 +221,14 @@ words: each check with its conclusion, and for a failure, the path of its
 saved log and the log lines that name the cause, by line number. Add
 whether `WORK/threads.json` exists (a thread's first comment has the
 `databaseId` that is that comment's `id`). `PR_FILES` is the list of all
-these files.
+these files, `WORK/pr.json` and `WORK/commits.json` among them.
 
 ### 2. Rules, domains, reviewers
 
 **Rules.** The change is measured against the rules as they stand on the
 base branch, since the pull request may change them too. Save each of
-these that exists with `git -C REPO_DIR show BASE_SHA:PATH > WORK/rules/NAME`:
+these that exists with `git -C REPO_DIR show BASE_SHA:PATH > WORK/rule-NAME`,
+where `NAME` is `PATH` with each `/` written as `_`:
 `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING*` (root, `.github/`, `docs/`),
 `DEVELOPMENT.md`, `HACKING.md`, the files under `docs/development/`, the
 pull request template (`.github/PULL_REQUEST_TEMPLATE.md`,
@@ -269,8 +277,9 @@ answer as `EXECUTION`.
 Start every reviewer at once, as parallel subagents (the `Agent` tool in
 Claude Code). Each prompt names `SKILL_DIR/references/reviewer-brief.md`
 and its sections to follow ("Shared rules", "Angles", "Round 1", and on a
-re-review "On a re-review"), and gives the placeholder values: `N` (the
-number of reviewers), `TARGET`, `SHA` (`HEAD_SHA`), `ID`, `FOCUS`, `WORK`,
+re-review "On a re-review"), and gives the placeholder values: `COUNT` (the
+number of reviewers), `TARGET` (`OWNER/REPO#N`, or for `--local` the branch
+and the repository's directory), `SHA` (`HEAD_SHA`), `ID`, `FOCUS`, `WORK`,
 `TREE` (`WORK/tree`), `PR_FILES`, `RULE_FILES`, `LENS_FILES` (the absolute
 paths of this reviewer's lenses and companion skills) and `EXECUTION` (what
 may run, word for word). No reviewer sees another's output in this round.
@@ -287,9 +296,11 @@ starting the next, and do not revise an earlier angle afterwards.
    everyone who raised it counts as confirming it, and it starts at the
    highest tier they gave it.
 2. **Round 2.** Give each reviewer the merged findings it did not raise,
-   numbered, with the brief's "Round 2" section, in parallel. With one
-   reviewer, or in single-agent mode, check each finding against the code
-   yourself instead: add `lead` to those that hold, and drop the rest.
+   numbered, in parallel. In this round and the next, name the brief's
+   "Shared rules" and the round's section again, with the same placeholder
+   values: the host may start a new subagent that knows none of them. With
+   one reviewer, or in single-agent mode, check each finding against the
+   code yourself instead: add `lead` to those that hold, and drop the rest.
 3. **Settle each finding:**
    - another reviewer agrees and nobody disagrees: keep it;
    - someone disagrees: round 3. Send the raisers the counter-evidence with
@@ -303,9 +314,9 @@ starting the next, and do not revise an earlier angle afterwards.
    - a `new_blocking` finding from round 2: check it yourself; keep it with
      `lead` added, or drop it.
 4. **Tier.** `blocking` needs a second reviewer (or `lead`) who also rates
-   it blocking; otherwise it becomes `should-fix`. When every confirming
-   reviewer rates a finding lower than its tier, use the highest of their
-   tiers.
+   it blocking; otherwise it becomes `should-fix`. When everyone who checked
+   a finding in round 2 or 3 rates it lower than its tier, use the highest
+   of their tiers.
 5. **The rest.** Merge the reviewers' `checked`, `ran` and `not_checked`
    lists, dropping repeats. Keep at most five `checked` items, the ones that
    matter most to the author. On a re-review, settle each earlier finding's
@@ -372,8 +383,8 @@ once. Report any other error; do not retry in a loop.
 ### 7. Finish
 
 Remove the worktree this run created
-(`git -C REPO_DIR worktree remove --force WORK/tree`); keep `WORK` until the
-user is done with it. Report the review's link, or that it was not posted
+(`git -C REPO_DIR worktree remove --force WORK/tree`), also when the run
+stops early or starts again; keep `WORK` until the user is done with it. Report the review's link, or that it was not posted
 and where `review.md` is, and what was not checked.
 
 ## Re-reviews
@@ -396,9 +407,10 @@ When step 0 finds this skill's earlier review (`PREV_ID`, at `PREV_SHA`):
    finding's status in round 1 (the brief's "On a re-review"), using that
    review's numbers.
 4. In `WORK/findings.json`, `previous` lists every earlier finding with its
-   status, and each `still-open` one is also in `findings`, with
-   `thread_url` set to its thread. The renderer then links it instead of
-   posting it again.
+   status, and each `still-open` one is also in `findings`. Where it had an
+   inline comment, set `thread_url` to that thread: the renderer then links
+   it instead of posting it again. One that was only in the review body
+   has no thread, and goes in the body again.
 
 Otherwise a re-review is a full review: the same rounds, the same layout.
 
@@ -410,8 +422,8 @@ proposed. No GitHub access is needed and nothing is posted.
 
 1. `BASE` defaults to the remote's default branch:
    `git -C REPO_DIR symbolic-ref --short refs/remotes/origin/HEAD`, or, where
-   that ref was never set, the branch `git -C REPO_DIR ls-remote --symref
-   origin HEAD` names. `BASE_SHA` is `git -C REPO_DIR merge-base BASE HEAD`;
+   that ref was never set, `origin/` followed by the branch that
+   `git -C REPO_DIR ls-remote --symref origin HEAD` names. `BASE_SHA` is `git -C REPO_DIR merge-base BASE HEAD`;
    `HEAD_SHA` is `git -C REPO_DIR rev-parse HEAD`.
 2. Only commits are reviewed. If `BASE_SHA` equals `HEAD_SHA`, or the diff
    below is empty, stop and say there is nothing committed to review; do
@@ -430,8 +442,8 @@ proposed. No GitHub access is needed and nothing is posted.
 A caller preparing a pull request with this review (`suggest-skill-fixes`
 does) follows this loop, and this section is its only description:
 
-1. If its tools do not include `Agent` and `Bash`, skip the review and say
-   so in its reply.
+1. If its tools lack `Agent` or `Bash`, skip the review and say so in its
+   reply.
 2. Commit the change on a branch of its own, without pushing, and review it
    with `--local`.
 3. If findings are `blocking` or `should-fix`, fix those it agrees with,
@@ -489,12 +501,15 @@ the old file's lines), `suggestion` (exact replacement lines, empty to
 delete them; only on the `RIGHT` side) and `thread_url` (an open thread
 from an earlier review).
 
-The renderer refuses, outside code, @-mentions (they notify people), raw
-HTML, link reference definitions and images (they hide text from people,
-or send a request to another host); and anywhere, text shaped like a
-GitHub, AWS, Slack or Anthropic credential or a private key.
-`SKILL_DIR/tests/fixtures/example-review.md` is the example above as
-rendered.
+The renderer refuses, outside code, @-mentions (they notify people) and a
+backtick without its pair on the same line (it would turn code into text);
+and anywhere, text shaped like a GitHub, AWS, Slack or Anthropic credential
+or a private key. As a best effort, it also refuses raw HTML, link
+reference definitions and images outside code, which hide text from people
+or send a request to another host; Markdown has other ways to hide text,
+such as a link's title, so this is no guarantee.
+`SKILL_DIR/tests/fixtures/example-review.md` is
+`SKILL_DIR/references/findings-example.json` as rendered.
 
 ## When the skill falls short
 

@@ -87,8 +87,7 @@ standard such as WCAG AA)
 ## Verification
 
 - **static**: read the changed components and the code paths that render
-  them; search for the risky APIs named above (`git grep -n
-  dangerouslySetInnerHTML`); compare the `package.json` and lockfile diff
+  them; search for the risky APIs named above; compare the `package.json` and lockfile diff
   for new client dependencies.
 - **consent**: building the bundle (it runs the project's configuration and
   plugins), component and end-to-end tests, Storybook, accessibility

@@ -79,6 +79,11 @@ class ParseDiffTests(unittest.TestCase):
                 " page\x0cbreak\n-old\u2028text\r\n+new\x85text\r\n same\x1cend\n")
         self.assertEqual(rr.parse_diff(diff), {"x.py": {"RIGHT": {1: 1, 2: 1, 3: 1}, "LEFT": {1: 1, 2: 1, 3: 1}}})
 
+    def test_line_ends_rewritten_to_crlf(self):
+        crlf = example_diff().replace("\n", "\r\n")
+        self.assertEqual(rr.parse_diff(crlf), rr.parse_diff(example_diff()))
+        self.assertEqual(rr.parse_diff(crlf.replace("\r\n \r\n", "\r\n\r\n")), rr.parse_diff(example_diff()))
+
     def test_new_file_and_counts_left_out(self):
         diff = ("diff --git a/new.txt b/new.txt\nnew file mode 100644\n--- /dev/null\n+++ b/new.txt\n"
                 "@@ -0,0 +1 @@\n+only line\n\\ No newline at end of file\n")
@@ -205,6 +210,30 @@ class CheckFindingsTests(unittest.TestCase):
                      "```a`\n@octocat\n```", "node_modules/@types/node"):
             with self.subTest(body=body):
                 self.assertRejects(lambda d, b=body: d["findings"].append(finding(body=b)), "would notify")
+
+    def test_backticks_that_github_pairs_differently(self):
+        cases = {
+            "escaped backticks": "\\`x @octocat\\`",
+            "a span opened on the line above": "see `\n`@octocat` here",
+            "an autolink taking the opening backtick": "<https://example.org/`a> @octocat `b",
+            "an indented fence, which may end with a list item": "   ```\n@octocat\n   ```",
+        }
+        for case, body in cases.items():
+            with self.subTest(case):
+                self.assertRejects(lambda d, b=body: d["findings"].append(finding(body=b)), "")
+        # A title ending in one backtick would pair with the code span of the path after it.
+        self.assertRejects(lambda d: d["findings"].append(finding(title="Odd `", path="@octocat/notes.md")),
+                           "a backtick without its pair")
+        data = example()
+        data["findings"].append(finding(body="An escaped \\` stays text; `` ` `` is a span holding one."))
+        self.assertEqual(rr.check_findings(data), [])
+
+    def test_wrong_types_and_lone_surrogates_are_reported(self):
+        self.assertRejects(lambda d: d.update(previous={"sha": OLD, "url": None,
+                                                        "items": [{"title": "Old", "status": ["fixed"]}]}),
+                           "previous.items[0].status")
+        self.assertRejects(lambda d: d["findings"].append(finding(body="half " + chr(0xD800) + " a pair")),
+                           "lone surrogate")
 
     def test_images_are_refused(self):
         self.assertRejects(lambda d: d.update(summary="See ![x](https://example.org/?q=data)."), "images")
@@ -381,8 +410,11 @@ class RenderTests(unittest.TestCase):
         self.assertEqual(rr.check_findings(data), [])
         self.assertIn("None of them found anything, so there was nothing to cross-check.", render(data)[0])
         data["reviewers"] = data["reviewers"][:1]
-        self.assertIn("One reviewer read the change at `0123456`: correctness", render(data)[0])
-        self.assertIn("(1 round in all)", render(data)[0])
+        self.assertIn("One reviewer read the change at `0123456`: correctness (logic, failure paths, tests). "
+                      "It found nothing (1 round in all).", render(data)[0])
+        data["mode"] = "single-agent"
+        self.assertIn("in turn: correctness (logic, failure paths, tests). It found nothing (1 round in all).",
+                      render(data)[0])
 
     def test_empty_ran_and_not_checked(self):
         data = example()

@@ -76,7 +76,7 @@ pattern the others follow.
 
 ## Verification
 
-- **static**: `git grep` for every reader of a changed output (paths,
+- **static**: search for every reader of a changed output (paths,
   column names, schema names); read the workflow definition to trace inputs
   to outputs.
 - **consent**: dry runs (`snakemake -n`, `dbt compile`, `nextflow run
