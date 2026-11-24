@@ -175,8 +175,10 @@ checks the fields, not their order):
   it. Credit agent-written commits to the person whose pull request they
   came in. Add a name when someone's contribution becomes substantial.
 - `license: MIT`, the license of the whole collection (`LICENSE`).
-- `type: skill`: APM installs it as a native skill and does not also compile
-  it into a consumer's `AGENTS.md`.
+- `type: skill`: states explicitly that the package is a skill. apm-cli 0.31
+  parses it but routes by the package's structure, which gives the same
+  result; the field keeps the intent visible to any later tool or
+  distribution mechanism that reads it.
 - `dependencies` (only when needed): sibling skills this skill's procedure
   runs or requires, as `apm: [{path: ../<skill>}]`. APM installs them with
   the skill, so a consumer needs no separate selection for them. Declare a
