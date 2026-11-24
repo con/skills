@@ -85,8 +85,8 @@ unwanted action)
 
 ## Verification
 
-- If `../skill-security-review/SKILL.md` is installed, apply its checks to
-  each changed skill directory and fold its findings into yours.
+- If your companion skills include `skill-security-review`, apply its
+  checks to each changed skill directory and fold its findings into yours.
 - **static**: read the whole `SKILL.md` and every bundled file it names;
   compare against sibling skills and the repository's rules; check each
   command against the tool's documentation.

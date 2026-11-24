@@ -55,7 +55,7 @@ PREVIOUS_KEYS = {"sha", "url", "items"}
 PREVIOUS_ITEM_KEYS = {"title", "status", "note"}
 
 _MARKER = re.compile(r"^<!-- pr-iterative-review v(?P<version>[0-9]+\.[0-9]+\.[0-9]+|unknown) "
-                     r"sha=(?P<sha>[0-9a-f]{40}) -->$", re.MULTILINE)
+                     r"sha=(?P<sha>[0-9a-f]{40}) -->\r?$", re.MULTILINE)
 _SHA = re.compile(r"[0-9a-f]{40}")
 _REPO = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
 _ID = re.compile(r"[a-z][a-z0-9-]{0,30}")
@@ -69,6 +69,19 @@ _FENCE = re.compile(r"^ {0,3}(`{3,}|~{3,})")
 _INLINE_CODE = re.compile(r"(`+)(?:(?!\1).)*?\1")
 # A GitHub @-mention outside code: not part of an e-mail address or a path.
 _MENTION = re.compile(r"(?<![\w@./`-])@[A-Za-z0-9][A-Za-z0-9-]{0,38}(?:/[A-Za-z0-9_.-]+)?")
+# Raw HTML that Markdown passes through (tags, comments, declarations): it can hide text from people.
+_HTML = re.compile(r"<!--|<\?|<![A-Za-z]|<!\[CDATA\[|</?[A-Za-z][A-Za-z0-9-]*(?:\s[^<>]*)?/?>")
+# A link reference definition renders as nothing: its text reaches agents reading the API, not people.
+_LINK_DEFINITION = re.compile(r"^[ \t]*\[[^\]\n]+\]:", re.MULTILINE)
+# Credentials a review must never quote, in code or not.
+_CREDENTIALS = (
+    ("a GitHub token", re.compile(r"\b(?:gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,})")),
+    ("an AWS access key id", re.compile(r"\b(?:AKIA|ASIA)[0-9A-Z]{16}\b")),
+    ("a Slack token", re.compile(r"\bxox[abprs]-[A-Za-z0-9-]{10,}")),
+    ("an Anthropic API key", re.compile(r"\bsk-ant-[A-Za-z0-9_-]{20,}")),
+    ("a private key", re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----")),
+)
+_CONTROL = re.compile(r"[\x00-\x1f\x7f]")
 _ESCAPES = {"a": 7, "b": 8, "t": 9, "n": 10, "v": 11, "f": 12, "r": 13, '"': 34, "\\": 92}
 
 
@@ -253,10 +266,23 @@ def _text(errors: list[str], where: str, value: object, *, required: bool = True
     if "<!--" in prose:
         errors.append(f"{where}: HTML comments are not allowed outside code; they hide text from the "
                       "reader and could imitate this skill's marker")
+    elif _HTML.search(prose):
+        errors.append(f"{where}: raw HTML is not allowed outside code, since it can hide text from the "
+                      "reader; put code such as `List<int>` in backticks")
+    if _LINK_DEFINITION.search(prose):
+        errors.append(f"{where}: a link reference definition renders as nothing, so its text would be hidden "
+                      "from people; write links inline")
     mention = _MENTION.search(prose)
     if mention:
         errors.append(f"{where}: {mention.group(0)!r} would notify that account; put code such as a "
                       "decorator in backticks and refer to people by their role (the author)")
+    _credentials(errors, where, value)
+
+
+def _credentials(errors: list[str], where: str, value: str) -> None:
+    for kind, pattern in _CREDENTIALS:
+        if pattern.search(value):
+            errors.append(f"{where}: contains what looks like {kind}; never quote a secret, cite where it is")
 
 
 def _text_list(errors: list[str], where: str, value: object) -> None:
@@ -344,9 +370,11 @@ def check_findings(data: object) -> list[str]:
         _text(errors, f"{where}.title", finding.get("title"), one_line=True, limit=120)
         _text(errors, f"{where}.body", finding.get("body"))
         path, line, start = finding.get("path"), finding.get("line"), finding.get("start_line")
-        if path is not None and not (isinstance(path, str) and path.strip() and "\n" not in path
+        if path is not None and not (isinstance(path, str) and path.strip() and not _CONTROL.search(path)
                                      and not path.startswith("/")):
             errors.append(f"{where}.path: must be a repository-relative path")
+        elif isinstance(path, str):
+            _credentials(errors, f"{where}.path", path)
         if line is not None and (path is None or not _positive(line)):
             errors.append(f"{where}.line: must be a line number, and needs a path")
         if start is not None and (not _positive(start) or not _positive(line) or start > line):
@@ -358,6 +386,8 @@ def check_findings(data: object) -> list[str]:
         if suggestion is not None and (not isinstance(suggestion, str) or line is None or side != "RIGHT"):
             errors.append(f"{where}.suggestion: must be text replacing lines of the changed file, so it "
                           "needs a line on the RIGHT side")
+        elif isinstance(suggestion, str):
+            _credentials(errors, f"{where}.suggestion", suggestion)
         thread = finding.get("thread_url")
         if thread is not None and not (isinstance(thread, str) and _THREAD.fullmatch(thread)):
             errors.append(f"{where}.thread_url: must be a review thread link ending in #discussion_rNNN")
@@ -434,6 +464,14 @@ def _lines_word(finding: dict) -> tuple[str, str]:
     return ("removed lines", "lines") if several else ("removed line", "line")
 
 
+def _code(text: str) -> str:
+    """`text` as one inline code span, whatever backticks it holds (a file name can contain them)."""
+    longest = max((len(run) for run in re.findall(r"`+", text)), default=0)
+    fence = "`" * (longest + 1)
+    pad = " " if text[:1] in ("`", " ") or text[-1:] in ("`", " ") else ""
+    return f"{fence}{pad}{text}{pad}{fence}"
+
+
 def _location(finding: dict, repo: str | None, sha: str, link: bool, notes: tuple[str, ...] = ()) -> str:
     """`path:line`, linked to the reviewed commit when asked, with notes such as "inline comment" after it."""
     path = finding.get("path")
@@ -441,15 +479,16 @@ def _location(finding: dict, repo: str | None, sha: str, link: bool, notes: tupl
     if not path:
         return f"({'; '.join(notes)})" if notes else ""
     if finding.get("line") is None:
-        text = f"`{path}`"
+        text = _code(path)
     else:
-        text = f"`{path}:{_span(finding)}`"
+        text = _code(f"{path}:{_span(finding)}")
         if finding.get("side", "RIGHT") == "LEFT":
             notes = (_lines_word(finding)[0],) + notes
         elif link and repo:
             start = finding.get("start_line") or finding["line"]
             anchor = f"#L{start}" + (f"-L{finding['line']}" if start != finding["line"] else "")
-            text = f"[{text}](https://github.com/{repo}/blob/{sha}/{quote(path)}{anchor})"
+            # ?plain=1 shows the source with line numbers even for a file GitHub renders, such as Markdown.
+            text = f"[{text}](https://github.com/{repo}/blob/{sha}/{quote(path)}?plain=1{anchor})"
     return text + (f" ({'; '.join(notes)})" if notes else "")
 
 
@@ -462,8 +501,9 @@ def _anchored(finding: dict, anchors: dict) -> bool:
 
 
 def _suggestion(text: str, label: bool) -> str:
+    """A fenced block; an empty suggestion block proposes deleting the lines it is attached to."""
     fence = _fence_for(text)
-    body = text if text.endswith("\n") else text + "\n"
+    body = text if not text or text.endswith("\n") else text + "\n"
     return f"{fence}suggestion\n{body}{fence}" if label else f"{fence}\n{body}{fence}"
 
 
@@ -572,7 +612,9 @@ def render(data: dict, anchors: dict | None, *, version: str, source: str, event
                 appendix.append(f"### {_location(finding, repo, sha, link=False)}\n\n{comment}")
                 continue
             text = finding["body"].strip()
-            if finding.get("suggestion") is not None:
+            if finding.get("suggestion") == "":
+                text += f"\n\nSuggested change: delete {_lines_word(finding)[1]} {_span(finding)}."
+            elif finding.get("suggestion") is not None:
                 text += (f"\n\nSuggested replacement for {_lines_word(finding)[1]} {_span(finding)}:\n\n"
                          + _suggestion(finding["suggestion"], label=False))
             items.append(f"{prefix}\n\n{_indent(text, width)}")
@@ -667,8 +709,9 @@ def cmd_render(args: argparse.Namespace) -> int:
     if data.get("pr") is not None:
         if not args.diff:
             raise InputError("--diff is required for a pull request: inline comments are checked against it")
-        # Only the diff's structure matters here, so text in another encoding is harmless.
-        anchors = parse_diff(Path(args.diff).read_text(encoding="utf-8", errors="replace"))
+        # Only the diff's structure matters here, so text in another encoding is harmless. Read bytes:
+        # decoding a text file would also turn a carriage return inside a changed line into a newline.
+        anchors = parse_diff(Path(args.diff).read_bytes().decode("utf-8", errors="replace"))
     skill_dir = Path(__file__).resolve().parent.parent
     review_md, payload, notes = render(data, anchors, version=skill_version(skill_dir), source=args.source,
                                        event=args.event, inline=not args.no_inline, footer=args.footer)

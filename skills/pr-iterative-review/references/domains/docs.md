@@ -38,8 +38,8 @@ should-fix)
   way, not three; terms match the rest of the documentation.
 
 **Clarity** (optional)
-- Passages that are hard to follow. If `../review-human-prose/SKILL.md` is
-  installed, use its cues for them.
+- Passages that are hard to follow. If your companion skills include
+  `review-human-prose`, use its cues for them.
 
 **Rendering** (should-fix)
 - Markup that renders wrongly: unclosed code fences, skipped heading

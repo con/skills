@@ -14,7 +14,7 @@ Adds a `--retries` option to the command line and a greeting step to CI. The opt
 ### Should fix
 
 3. **Every retry runs even after a fetch succeeds** — `src/widgets/cli.py:10-11` (inline comment)
-4. **The README still shows the old usage** — [`README.md:12`](https://github.com/acme/widgets/blob/0123456789abcdef0123456789abcdef01234567/README.md#L12)
+4. **The README still shows the old usage** — [`README.md:12`](https://github.com/acme/widgets/blob/0123456789abcdef0123456789abcdef01234567/README.md?plain=1#L12)
 
    `README.md:12` documents `widgets NAME` only. The project's CONTRIBUTING asks for user-facing options to be documented in the same pull request.
 

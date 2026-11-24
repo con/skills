@@ -85,5 +85,5 @@ longer pass)
   request itself.
 - **consent**: building the container, `terraform plan` (it also needs
   credentials), running the workflow locally.
-- If `../code-quality-review-shell/SKILL.md` is installed, apply its checks
-  to the shell inside `run:` steps.
+- If your companion skills include `code-quality-review-shell`, apply its
+  checks to the shell inside `run:` steps.

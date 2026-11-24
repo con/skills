@@ -60,7 +60,9 @@ release)
 
 ## Not findings
 
-- Dependency bumps opened by bots (`bot-pr-sweep` handles those).
+- That a bot opened the bump. Review what the new version brings (Supply
+  chain above) as for any other bump: `bot-pr-sweep` checks only the bot's
+  identity and CI before it merges.
 - A preference between environment tools (pip, uv, pixi, poetry) unless the
   project states one.
 
