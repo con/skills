@@ -90,6 +90,22 @@ A plugin install records nothing in your project; use APM (above) when a project
 In Claude Code on the web, neither plugins installed on your computer nor marketplaces declared in a repository's settings are added to a session.
 Add the marketplace or its plugins to your claude.ai account at [claude.ai/customize/plugins](https://claude.ai/customize/plugins), including `con-common` with `con-code-quality` or `con-project-setup`, and start a new session.
 
+## Codex
+
+Codex reads skills from `.agents/skills/` in a repository and from `~/.agents/skills/`, where APM's `--target agent-skills` installs them, so the APM instructions above work for Codex unchanged.
+Codex can also install the plugins above from this repository's Claude Code marketplace (tested with Codex CLI 0.172.0):
+
+```console
+codex plugin marketplace add con/skills
+codex plugin add con-common@con-skills
+codex plugin add con-code-quality@con-skills
+```
+
+Codex does not install a plugin's `dependencies`, so add `con-common` yourself with `con-code-quality` or `con-project-setup`.
+Mention a skill with `$` and its listed name, for example `$con-code-quality:review-repo-code-quality`.
+Codex ignores the Claude Code frontmatter fields `allowed-tools` and `user-invocable`: the helper skills, such as `code-quality-report-conventions`, appear in its skill list too, and Codex's sandbox and approval settings, not `allowed-tools`, decide what a skill may run.
+The skills were written for Claude Code, so a step that names a Claude Code tool, such as `AskUserQuestion`, may need a nudge, and `issue-triage` keeps its state under `.git/`, which Codex's sandbox keeps read-only.
+
 ## Development
 
 Skill sources live in `skills/`.

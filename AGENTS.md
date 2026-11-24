@@ -161,12 +161,17 @@ plugins (marketplace `con-skills`). Every skill in `skills/` belongs to
 exactly one plugin, listed there as `./skills/<name>`
 (`ci/validate_skills.py` fails with E012 otherwise): add a new skill to the
 plugin whose topic fits, or start a plugin for it. Plugin names start with
-`con-`: a plugin's name becomes the namespace of its skills
-(`/con-code-quality:review-repo-code-quality`), and a generic name would
-share that namespace with other marketplaces' plugins. A plugin whose skills
-invoke a skill from another plugin lists that plugin under `dependencies`,
-as `con-code-quality` and `con-project-setup` do with `con-common`. Each
-plugin's `source` is the repository root, so an installed plugin holds the
-whole repository and relative paths into sibling skills (`../<skill>/...`)
-still resolve. Plugins declare no `version`: Claude Code versions them by
-commit, so every merge is a new plugin version without a bump.
+`con-`, which E012 also checks: a plugin's name becomes the namespace of its
+skills (`/con-code-quality:review-repo-code-quality`), and a generic name
+would share that namespace with other marketplaces' plugins. A plugin whose
+skills invoke a skill from another plugin lists that plugin under
+`dependencies`, as `con-code-quality` and `con-project-setup` do with
+`con-common`. Each plugin's `source` is the repository root, so an installed
+plugin holds the whole repository and relative paths into sibling skills
+(`../<skill>/...`) still resolve. Plugins declare no `version`: Claude Code
+versions them by commit, so every merge is a new plugin version without a
+bump. Codex reads the same file, but it ignores `dependencies`, and a plugin
+manifest at the repository root (`.claude-plugin/plugin.json`,
+`.codex-plugin/plugin.json`) would become every plugin's manifest and break
+their installs there, while an `.agents/plugins/marketplace.json` would hide
+this one from Codex: add neither.

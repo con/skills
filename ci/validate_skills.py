@@ -28,10 +28,10 @@ Every *.py bundled alongside a SKILL.md:
 
 The Claude Code plugin marketplace (``.claude-plugin/marketplace.json``),
 checked when no skill directories are given:
-  E012  The file exists; plugin names are unique strings; each plugin lists
-        skills as ``./skills/<name>`` of published skills; every published
-        skill is in exactly one plugin; ``dependencies`` name other plugins
-        of this marketplace
+  E012  The file exists; plugin names are unique strings starting with
+        ``con-``; each plugin lists skills as ``./skills/<name>`` of
+        published skills; every published skill is in exactly one plugin;
+        ``dependencies`` name other plugins of this marketplace
 
 Exit codes: 0 = all clear, 1 = one or more errors, 2 = usage/internal error.
 Warnings never affect the exit code.
@@ -284,6 +284,8 @@ def check_marketplace(repo_root: Path) -> Result:
         result.error("E012", path, f"plugin name {name!r} is used more than once")
     for plugin in plugins:
         name = plugin["name"]
+        if not name.startswith("con-"):
+            result.error("E012", path, f"plugin name {name!r} must start with 'con-'")
         if not all(isinstance(plugin.get(key, []), list) for key in ("skills", "dependencies")):
             result.error("E012", path, f"plugin {name!r}: give 'skills' and 'dependencies' as lists")
             continue

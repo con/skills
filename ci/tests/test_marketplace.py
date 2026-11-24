@@ -24,8 +24,8 @@ class MarketplaceTests(unittest.TestCase):
 
     def test_valid(self):
         self.assertEqual(self.check([
-            {'name': 'one', 'skills': ['./skills/a']},
-            {'name': 'two', 'skills': ['./skills/b'], 'dependencies': ['one', 'x@other']},
+            {'name': 'con-one', 'skills': ['./skills/a']},
+            {'name': 'con-two', 'skills': ['./skills/b'], 'dependencies': ['con-one', 'x@other']},
         ]), [])
 
     def test_invalid(self):
@@ -44,9 +44,8 @@ class MarketplaceTests(unittest.TestCase):
             ([{'name': 'one', 'skills': './skills/'}], 'as lists'),
             ([{'name': 'one', 'skills': both, 'dependencies': ['two']}], "depends on 'two'"),
             ([{'name': 'one', 'skills': both, 'dependencies': ['one']}], "depends on 'one'"),
-            ([{'name': 'one', 'skills': both}, {'name': 1, 'skills': []},
-              {'name': 1, 'skills': []}], 'string name'),
             ([{'name': ['one'], 'skills': both}], 'string name'),
+            ([{'name': 'one', 'skills': both}], "must start with 'con-'"),
         ):
             with self.subTest(plugins=plugins):
                 errors = self.check(plugins)
