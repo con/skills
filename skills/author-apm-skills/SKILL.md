@@ -18,7 +18,7 @@ Do not develop reusable skills inside an application repository and then commit 
 - Find existing skills before adding another.
   Keep the trigger specific to the workflow; generic skill creation does not imply APM distribution.
 - Preserve existing source layout when APM can publish it.
-  In `con/skills`, each `skills/<name>/` directory is canonical and is its own APM package: an `apm.yml` beside `SKILL.md` declares `name` (the directory name) and `version: "MAJOR.MINOR.PATCH"`.
+  In `con/skills`, each `skills/<name>/` directory is canonical and is its own APM package: an `apm.yml` beside `SKILL.md` declares `name` (the directory name), `version: "MAJOR.MINOR.PATCH"`, a one-line `description` for people, `author`, `license`, `type: skill` and any sibling-skill `dependencies` (AGENTS.md "Skill manifest metadata").
   The repository is a monorepo, not a package: there is no root `apm.yml`, and consumers depend on `skills/<name>` as a subdirectory, so their lock records that skill's version.
   Add a new skill directory there, with its `apm.yml` at `0.1.0`.
   In a new package, `.apm/skills/<name>/` is also a valid canonical layout.
@@ -29,6 +29,9 @@ Do not develop reusable skills inside an application repository and then commit 
 Version the skill package in its `apm.yml`; APM records that version for consumers and does not read a `SKILL.md` frontmatter `version:`.
 Bump it in the same change as any change to the skill's procedure, output, or bundled files, following the repository's rules (in `con/skills`, AGENTS.md "Skill versions").
 Keep `version:` out of the `SKILL.md` frontmatter; a skill that stamps its output with its own version reads it from the `apm.yml` beside its `SKILL.md` (APM deploys both).
+Keep package metadata (`author`, `license`) in `apm.yml` only too.
+Its `description` is a short summary for people (`apm view`, `apm search`); APM does not fall back to the `SKILL.md` one, and neither should repeat the other.
+When the procedure runs or requires another skill from the same repository, declare it in `apm.yml` as `dependencies: {apm: [{path: ../<skill>}]}`; APM installs it from the same commit.
 
 Create `SKILL.md` with `name` and a discriminating `description`.
 Include only workflow-specific guidance; put substantial conditional detail in linked references.
@@ -51,7 +54,7 @@ In `con/skills`, run:
 tox -e validate,apm,security-static,security-deps
 ```
 
-The package check must install each skill as its own package into a disposable consumer, verify all selected skills, bundled resources, and the versions recorded in the lock, restore a fresh disposable consumer from the same manifest/lock with `apm install --frozen`, and run `apm audit --ci`.
+The package check must install each skill as its own package into a disposable consumer, verify all selected skills and their declared dependencies, bundled resources, and the versions recorded in the lock, restore a fresh disposable consumer from the same manifest/lock with `apm install --frozen`, and run `apm audit --ci`.
 Confirm installed content is ignored and setup metadata stays unchanged.
 A local-path test checks packaging; before adoption, also test the published Git repository at the exact commit consumers will pin.
 

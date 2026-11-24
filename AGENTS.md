@@ -137,8 +137,9 @@ Keep operational instructions self-contained in each skill; this convention prov
 
 ### Skill versions
 
-Every skill is its own APM package: `skills/<name>/apm.yml` declares only its
-`name` (the directory name) and `version: "MAJOR.MINOR.PATCH"`. That
+Every skill is its own APM package: `skills/<name>/apm.yml` declares its
+`name` (the directory name) and `version: "MAJOR.MINOR.PATCH"`, plus the
+metadata described under "Skill manifest metadata" below. That
 `version` is the one APM reads and records for a consumer, in
 `apm.lock.yaml` and `apm deps list`; APM does not
 read a `SKILL.md` frontmatter `version:` (as of `apm-cli` 0.31 it takes only
@@ -159,6 +160,36 @@ A skill whose output records which version of the skill produced it (e.g.
 `bot-pr-sweep`, `suggest-skill-fixes`, the `review-*` skills) reads the
 version at run time from the `apm.yml` beside its `SKILL.md`, which APM
 deploys with it.
+
+### Skill manifest metadata
+
+Each `apm.yml` also carries, in this order after `version`
+(`ci/validate_skills.py` E010 checks them):
+
+- `description`: one line of at most 100 characters for people, shown by
+  `apm view`, `apm search` and `apm deps list`. It is not the `SKILL.md`
+  `description`, which tells an agent when to use the skill; APM never merges
+  or falls back between the two, so do not copy one into the other.
+- `author`: the people who contributed significantly to this skill, comma
+  separated: its original author and anyone who wrote a substantial share of
+  it. Credit agent-written commits to the person whose pull request they
+  came in. Add a name when someone's contribution becomes substantial.
+- `license: MIT`, the license of the whole collection (`LICENSE`).
+- `type: skill`: APM installs it as a native skill and does not also compile
+  it into a consumer's `AGENTS.md`.
+- `dependencies` (only when needed): sibling skills this skill's procedure
+  runs or requires, as `apm: [{path: ../<skill>}]`. APM installs them with
+  the skill, from the same repository and commit, so a consumer needs no
+  separate selection for them. Leave out skills a procedure follows only
+  "if installed", such as `suggest-skill-fixes`, so installing them stays the
+  consumer's choice.
+
+Keep these fields out of the `SKILL.md` frontmatter (E011 fails on
+`version:`, `author:` or `license:` there, also under `metadata:`); only
+`name` appears in both, because APM and the agent runtimes each require it.
+Changing this metadata alone (a description, an added author) does not bump
+the version. Adding or removing a dependency is a PATCH bump, since it
+changes what a consumer installs.
 
 ## APM distribution
 

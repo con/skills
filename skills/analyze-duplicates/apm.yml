@@ -1,2 +1,6 @@
 name: analyze-duplicates
 version: "0.1.0"
+description: "One-off jscpd duplication report in Markdown, with a refactoring plan"
+author: Yaroslav Halchenko
+license: MIT
+type: skill

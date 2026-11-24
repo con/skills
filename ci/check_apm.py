@@ -4,8 +4,8 @@
 Every skill is its own APM package (``skills/<name>/apm.yml``), so consumers
 depend on ``skills/<name>`` as a subdirectory of this repository and their
 lock records that skill's own version.  This check installs each skill that
-way into a disposable consumer, verifies the deployed files and the versions
-in the lock, restores a fresh consumer from the manifest and lock with
+way into a disposable consumer, verifies the deployed files (a skill's
+``path: ../<sibling>`` dependencies included) and the versions in the lock, restores a fresh consumer from the manifest and lock with
 ``apm install --frozen``, audits it, and confirms the audit catches tampering.
 The repository root is not a package: nobody installs con/skills as a whole.
 """
@@ -36,6 +36,25 @@ def snapshot(root: Path) -> dict[str, bytes]:
 
 def skill_version(skill_dir: Path) -> str:
     return yaml.safe_load((skill_dir / 'apm.yml').read_text())['version']
+
+
+def sibling_dependencies(skill_dir: Path) -> list[str]:
+    """Names of the sibling skills this skill's ``apm.yml`` depends on (``path: ../<name>``)."""
+    manifest = yaml.safe_load((skill_dir / 'apm.yml').read_text())
+    entries = (manifest.get('dependencies') or {}).get('apm') or []
+    return [Path(entry['path']).name for entry in entries]
+
+
+def with_dependencies(selection: list[str]) -> list[str]:
+    """The selected skills plus every skill they depend on, directly or not."""
+    found: set[str] = set()
+    pending = list(selection)
+    while pending:
+        name = pending.pop()
+        if name not in found:
+            found.add(name)
+            pending.extend(sibling_dependencies(ROOT / 'skills' / name))
+    return sorted(found)
 
 
 def lock_entries(lock: object) -> list[dict]:
@@ -100,9 +119,15 @@ def main() -> None:
     if not skill_dirs:
         raise RuntimeError('empty skill collection')
     names = [p.name for p in skill_dirs]
-    # Local CI checks the complete collection; Git CI checks selective deployment.
-    selection = names[:2] if args.source else names
-    versions = {p.name: skill_version(p) for p in skill_dirs if p.name in selection}
+    # Local CI checks the complete collection; Git CI checks selective
+    # deployment, including one skill whose dependencies must come along.
+    if args.source:
+        with_deps = next(p.name for p in skill_dirs if sibling_dependencies(p))
+        selection = sorted({*names[:2], with_deps})
+    else:
+        selection = names
+    deployed = with_dependencies(selection)
+    versions = {p.name: skill_version(p) for p in skill_dirs if p.name in deployed}
     with tempfile.TemporaryDirectory(prefix='con-skills-apm-') as directory:
         base = Path(directory)
         package = base / 'package'
@@ -134,10 +159,10 @@ def main() -> None:
         ignore = consumer / '.gitignore'
         existing = ignore.read_text() if ignore.exists() else ''
         ignore.write_text(existing.rstrip('\n') + '\n/apm_modules/\n' + ''.join(
-            f'/.agents/skills/{name}/\n' for name in selection))
+            f'/.agents/skills/{name}/\n' for name in deployed))
         metadata = {name: (consumer / name).read_bytes()
                     for name in ('apm.yml', 'apm.lock.yaml', '.gitignore')}
-        installed = check_deployed(consumer, package, selection)
+        installed = check_deployed(consumer, package, deployed)
         lock = yaml.safe_load(metadata['apm.lock.yaml'])
         if args.source:
             check_pin(lock, args.source, versions)

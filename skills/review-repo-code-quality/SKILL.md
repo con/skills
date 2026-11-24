@@ -17,7 +17,8 @@ Shared rules — where the report goes, the provenance stamp that records
 which version of this skill produced it, evidence standards, re-review,
 and confidence/status labels — live in
 [`../code-quality-report-conventions/report-conventions.md`](../code-quality-report-conventions/report-conventions.md),
-a sibling skill installed alongside this one. Read that file first; it is
+a sibling skill that APM installs with this one (a dependency in its
+`apm.yml`). Read that file first; it is
 part of this skill's contract. If it is not installed, stop and ask the
 user to install `code-quality-report-conventions`; do not proceed from memory.
 

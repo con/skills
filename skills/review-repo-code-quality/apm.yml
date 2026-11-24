@@ -1,2 +1,10 @@
 name: review-repo-code-quality
-version: "0.2.0"
+version: "0.2.1"
+description: "Functionality-preserving code-quality review of one repository"
+author: Cody C. Baker
+license: MIT
+type: skill
+dependencies:
+  apm:
+    - path: ../code-quality-report-conventions
+    - path: ../analyze-duplicates

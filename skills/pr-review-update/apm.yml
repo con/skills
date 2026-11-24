@@ -1,2 +1,6 @@
 name: pr-review-update
 version: "0.1.0"
+description: "Follow up on your open PRs from an improveit-dashboard, rebasing codespell ones"
+author: Yaroslav Halchenko
+license: MIT
+type: skill

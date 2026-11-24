@@ -1,2 +1,6 @@
 name: make-scriv-changelog
 version: "0.1.0"
+description: "Add a changelog.d/ fragment for scriv"
+author: Yaroslav Halchenko
+license: MIT
+type: skill

@@ -9,7 +9,7 @@ A collection of [Claude Code Agent Skills](https://agentskills.io/) for software
 | [analyze-duplicates](skills/analyze-duplicates/) | Detect code and documentation duplication using jscpd, generate a Markdown report with collapsible `<details>` sections (suitable for GitHub/Gitea issues), and propose a mediation plan with refactoring strategies. |
 | [author-apm-skills](skills/author-apm-skills/) | Create and maintain portable skills for APM distribution. |
 | [bot-pr-sweep](skills/bot-pr-sweep/) | Sweep repositories for open `dependabot[bot]` and `pre-commit-ci[bot]` pull requests, verify authors by account ID, gate on complete and passing CI with a tested stdlib script, squash-merge the green ones guarded by the head SHA (optionally approving the ones branch protection holds back), assign the maintainer, and report the rest. |
-| [code-quality-report-conventions](skills/code-quality-report-conventions/) | Shared report conventions read by the `review-*` skills (report location, provenance stamp, evidence rules, security-sensitive findings, re-review, confidence/status labels). Not invoked directly; install alongside them. |
+| [code-quality-report-conventions](skills/code-quality-report-conventions/) | Shared report conventions read by the `review-*` skills (report location, provenance stamp, evidence rules, security-sensitive findings, re-review, confidence/status labels). Not invoked directly; APM installs it with them. |
 | [github-project-status](skills/github-project-status/) | Assess whether a GitHub project is healthy, in maintenance mode, stagnant, or abandoned. Checks commits, releases, issues, PRs, forks, and package registries to produce a structured status report. |
 | [install-apm-skills](skills/install-apm-skills/) | Install and update pinned reusable skills with metadata-only consumer setup. |
 | [issue-triage](skills/issue-triage/) | Triage open GitHub issues by cross-referencing the codebase and git history. Detects duplicates, drafts proposed comments, and serves results in a local web dashboard. Includes Python helper scripts for gathering and serving data. |
@@ -45,6 +45,7 @@ Reload your agent if needed, then ask it:
 Or install at project scope from the project directory, pinning a reviewed commit: `apm install con/skills/skills/tinuous-analyzer#<full-commit-SHA> --target agent-skills`.
 
 Each skill is its own APM package (`skills/<name>/apm.yml` carries its version), so `apm.lock.yaml` and `apm deps list` show which version of each skill a project has.
+A skill that needs another one from this collection declares it as a dependency, and APM installs both from the same commit.
 Install individual skills only; `con/skills` is a monorepo of independent skills, not a package to install as a whole.
 
 The installer uses APM to select and install skills, record their commit and content hashes, ignore downloaded skill directories, and verify restoration.
@@ -66,4 +67,4 @@ See [`AGENTS.md`](AGENTS.md) (alias `CLAUDE.md`) for cross-cutting rules that ap
 
 ## License
 
-TBD
+MIT; see [`LICENSE`](LICENSE). Each skill's `apm.yml` declares the license and credits the skill's authors.
