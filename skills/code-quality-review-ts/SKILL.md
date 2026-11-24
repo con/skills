@@ -162,6 +162,22 @@ change behavior goes under `NV` instead, with the change spelled out.
 - `package.json` scripts that repeat one another, or that nothing calls
   (`DUP`, `DC`).
 
+**Currency** — check the live sources below on the day of the review and
+cite them with the date. Moving a version floor or switching tools is
+usually `NV`, a maintainer's decision.
+
+- **Node.js versions.** Compare `engines.node`, `.nvmrc` /
+  `.node-version`, and the CI matrix with the release schedule at
+  https://nodejs.org/en/about/previous-releases: an end-of-life line
+  still supported or tested, or the current LTS line missing.
+- **Compiler and syntax.** A `typescript` dependency well behind the
+  current release, tsconfig options the installed compiler reports as
+  deprecated, and a `target` or `lib` older than every runtime the
+  project supports, which makes the build down-level syntax for nothing.
+- **Tool formats.** ESLint's `.eslintrc*` format, deprecated since
+  ESLint 9 in favour of `eslint.config.*`, and dependencies the registry
+  marks deprecated (the package manager warns on install).
+
 ## Not findings
 
 What looks dead or wrong in TypeScript or JavaScript but is not. List the

@@ -97,6 +97,12 @@ change behavior goes under `NV` instead, with the change spelled out.
 - **Executable bit and shebang** (`CL`): a script with a shebang that is
   not executable, or run as `bash script.sh` despite one. Changing how it
   is invoked is `NV`.
+- **Currency** (`CL`, or `NV` where behavior changes): obsolete commands —
+  `egrep` and `fgrep` (GNU grep 3.8 and later warns; use `grep -E` and
+  `grep -F`), `which` (use `command -v`) — and shellcheck or shfmt
+  versions pinned in CI or pre-commit far behind their latest releases,
+  which miss newer checks. Check the latest release on the day of the
+  review and cite it.
 
 ## Not findings
 

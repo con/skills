@@ -1,7 +1,7 @@
 ---
 name: code-quality-review-python
 version: 0.1.0
-description: Python guide for the code-quality review skills — where a Python project states its rules, which tools sweep it (each marked static or needing execution consent), Python checks such as a long or growing Literal list that belongs in one Enum, Python false positives to reject, and the commands that verify a change. review-repo-code-quality reads it for Python code, and review-org-code-quality uses its static tools. Use when a review skill tells you to read it, or when asked for a code-quality review of Python code (then run review-repo-code-quality, which loads this guide).
+description: Python guide for the code-quality review skills — where a Python project states its rules, which tools sweep it (each marked static or needing execution consent), Python checks such as a long or growing Literal list that belongs in one Enum, currency checks (supported Python versions, PEPs, PyPA packaging standards, pixi for environments and locks), Python false positives to reject, and the commands that verify a change. review-repo-code-quality reads it for Python code, and review-org-code-quality uses its static tools. Use when a review skill tells you to read it, or when asked for a code-quality review of Python code (then run review-repo-code-quality, which loads this guide).
 allowed-tools: Read, Skill
 user-invocable: true
 ---
@@ -43,9 +43,11 @@ tables for ruff, mypy, pyright, pytest, coverage and vulture — and
 whichever of these exist: `setup.cfg`, `setup.py`, `ruff.toml` /
 `.ruff.toml`, `mypy.ini` / `.mypy.ini`, `pyrightconfig.json`, `.flake8`,
 `.pylintrc` / `pylintrc`, `tox.ini`, `noxfile.py`,
-`.pre-commit-config.yaml`, `requirements*.txt`, `constraints*.txt`, and
-the lock file (`uv.lock`, `poetry.lock`, `pdm.lock`, `pixi.lock`).
-`setup.py`, `noxfile.py` and `conftest.py` are code: read them as text.
+`.pre-commit-config.yaml`, `requirements*.txt`, `constraints*.txt`, the
+environment files (`pixi.toml` or `[tool.pixi]` in `pyproject.toml`,
+`environment.yml`, `.python-version`), and the lock file (`pixi.lock`,
+`uv.lock`, `poetry.lock`, `pdm.lock`, `pylock.toml`). `setup.py`,
+`noxfile.py` and `conftest.py` are code: read them as text.
 
 The oldest Python the project supports — `requires-python`, else the
 oldest version CI tests — bounds what may be proposed: no `X | Y` union
@@ -165,6 +167,50 @@ function returns (confirm with the type checker under consent).
   `pyproject.toml` (`CON`);
 - a `requires-python` lower bound that CI never tests (`NV`: the claim or
   the test matrix has to change).
+
+**Currency** — check the live sources below on the day of the review and
+cite them with the date; the examples here are a starting point, not the
+current state. Moving the version floor or switching tools is usually
+`NV`, a maintainer's decision.
+
+- **Python versions.** Compare `requires-python`, the
+  `Programming Language :: Python :: 3.x` classifiers, and the CI matrix
+  with the status of each version at https://devguide.python.org/versions/,
+  or with the support policy the project states (scientific Python
+  projects often follow SPEC 0, https://scientific-python.org/specs/spec-0000/).
+  Report an end-of-life version still supported or tested, the newest
+  stable release missing from CI, and classifiers or a matrix that
+  disagree with `requires-python`.
+- **The PEPs a newer floor brings.** With `--target-version` at the new
+  floor, ruff's `UP` rules apply the syntax PEPs — built-in generics
+  (PEP 585, 3.9), `X | Y` unions (PEP 604, 3.10), type parameters and
+  `type` aliases (PEP 695, 3.12; `UP040`, `UP046`, `UP047`) — and remove
+  branches for versions no longer supported (`UP036`). For the rest, read
+  the "What's New" of each version the floor now guarantees
+  (https://docs.python.org/3/whatsnew/) and the PEP index
+  (https://peps.python.org/).
+- **Packaging standards** (the PyPA specifications,
+  https://packaging.python.org/en/latest/specifications/): metadata in
+  the `[project]` table (PEP 621) with a declared `[build-system]`
+  (PEP 517, PEP 518) rather than `setup.py` arguments; `python -m build`
+  and `pip install .` rather than `python setup.py …` commands; an SPDX
+  `license` expression with `license-files` (PEP 639) rather than a
+  license table or license classifiers; development, test, and
+  documentation dependencies in `[dependency-groups]` (PEP 735) rather
+  than extras or loose requirements files; inline script metadata
+  (PEP 723) for standalone scripts; `importlib.metadata`,
+  `importlib.resources`, and `sysconfig` rather than `pkg_resources` and
+  `distutils` (removed in 3.12); releases uploaded through PyPI Trusted
+  Publishing rather than with a stored API token.
+- **Environments, locks, and tools: pixi.** These guides recommend pixi
+  (https://pixi.sh) for how a project is installed, locked, and run: one
+  manifest (`pixi.toml`, or `[tool.pixi]` in `pyproject.toml`) and one
+  `pixi.lock` for conda-forge and PyPI packages on every platform the
+  project supports, `pixi run` tasks for the commands contributors and CI
+  share, and `pixi global install` for command-line tools. It replaces
+  uv, conda or mamba `environment.yml` files, pip-tools, hand-pinned
+  `requirements*.txt` files, and `pipx`. Recommend the move with the
+  files it would replace and the CI steps it would change (`NV`).
 
 **Tests**
 

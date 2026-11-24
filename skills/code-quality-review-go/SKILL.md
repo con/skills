@@ -143,6 +143,21 @@ change behavior goes under `NV` instead, with the change spelled out.
   that `go mod tidy -diff` would drop, and a `tools.go` file of blank
   imports kept after the `go` line allows `tool` directives.
 
+**Currency** — check the live sources below on the day of the review and
+cite them with the date. Moving the `go` line or switching tools is
+usually `NV`, a maintainer's decision.
+
+- **Go releases.** Each major Go release is supported until there are two
+  newer major releases (https://go.dev/doc/devel/release). Report CI that
+  tests no supported release, and a `toolchain` line pinned to an
+  unsupported one. In a library, keep the `go` line as low as the code
+  allows: raising it forces every importer to upgrade.
+- **Deprecated APIs.** `staticcheck` check `SA1019` (consent) reports uses
+  of deprecated identifiers, such as `io/ioutil`, deprecated since
+  Go 1.16.
+- **Tool formats.** A golangci-lint configuration still in the version 1
+  format (`golangci-lint migrate` converts it).
+
 ## Not findings
 
 What looks dead or wrong in Go but is not. List the ones you checked

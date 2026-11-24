@@ -130,7 +130,7 @@ links to it.
 | **Data quality gates** | Row-count, null, freshness, schema checks — present, and do they block or just log? |
 | **Observability** | Structured logs, metrics, lineage emission, run metadata. Can you tell from outside why a run failed? |
 | **Testing** | Unit tests on transforms, contract/fixture tests on I/O, any integration test. Test-to-logic ratio. |
-| **Dependency health** | Shared-lib version lag, pinned vs. floating deps, known CVEs, EOL runtimes. |
+| **Dependency health** | Shared-lib version lag, pinned vs. floating deps, known CVEs, EOL runtimes, outdated packaging and environment tooling (each language guide's Currency checks, against the live sources they name). |
 | **Secrets & access** | Hardcoded credentials, over-broad IAM/service accounts, secrets in logs. |
 | **Ownership & docs** | CODEOWNERS / on-call, README accuracy, runbook exists. |
 | **Dead code & config** | Unused DAG tasks, stuck feature flags, stale env-specific branches, lint-ignore entries for rules never selected. Use grep, and only the dead-code tools the language guides mark **static**. Anything else waits for Phase 4. |
