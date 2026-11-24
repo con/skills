@@ -68,7 +68,9 @@ are what the review follows.
   for changes. Default: a comment.
 - `--domains a,b`: use these lenses instead of choosing them from the files.
 - `--angle NAME` (repeatable): add a reviewer with that angle, such as
-  `security` or `performance`. `--reviewers 1`: one reviewer covers all
+  `security` or `performance`. `NAME` becomes the reviewer's id: lowercase
+  letters, digits and hyphens (`api-design`, not "API design"), and not
+  `lead`. `--reviewers 1`: one reviewer covers all
   three default angles, for small, low-risk changes. A review has at most
   six reviewers; step 2 refuses more before any reviewer starts.
 - `--again`: review a commit this account already reviewed.
@@ -101,16 +103,16 @@ into every command. `WORK` is the run's working directory (step 0);
 
 Every lens has the same sections: **Recognize** (the files it covers),
 **Context to read**, **Checks** (each with its usual tier), **Not findings**
-and **Verification**. Verification marks tools **static** or **consent**, as
-the `code-quality-review-<language>` guides do. A **static** tool runs
-nothing from the repository and loads none of its configuration: run it
-from a scratch directory with your own configuration, writing nothing into
-the checkout. Everything else is **consent**: it needs the execution consent
-of step 2. Use a tool only if it is already installed, and record its
-version under `ran`. Never install one during a review; list a missing one
-under `not_checked`. A change no lens recognizes gets the correctness and
-project-fit angles only, and the review says so under "Not checked". To add
-a domain, add a lens with these sections and a row here.
+and **Verification**. Verification marks tools **static** or **consent**. A
+**static** tool runs nothing from the repository and loads none of its
+configuration: run it from a scratch directory with your own
+configuration, writing nothing into the checkout. Everything else is
+**consent**: it needs the execution consent of step 2. Use a tool only if
+it is already installed, and record its version under `ran`. Never install
+one during a review; list a missing one under `not_checked`. A change no
+lens recognizes gets the correctness and project-fit angles only, and the
+review says so under "Not checked". To add a domain, add a lens with these
+sections and a row here.
 
 ## Procedure
 
