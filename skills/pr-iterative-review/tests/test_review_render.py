@@ -212,7 +212,7 @@ class CheckFindingsTests(unittest.TestCase):
             (lambda d: d.update(pr=True), "pr: must be"),
             (lambda d: d.update(head_sha="0123456"), "head_sha"),
             (lambda d: d.update(domains=["Front End"]), "domains"),
-            (lambda d: d.update(mode="solo"), "mode"),
+            (lambda d: d.update(mode="single-agent"), "unknown field 'mode'"),
             (lambda d: d.update(rounds=0), "rounds"),
             (lambda d: d.update(rounds=4), "rounds: must be 1"),
             (
@@ -228,6 +228,10 @@ class CheckFindingsTests(unittest.TestCase):
             (lambda d: d.update(findings=None), "findings: must be a list"),
             (lambda d: d.update(verdict="ok"), "unknown field 'verdict'"),
             (lambda d: d.update(reviewers=[]), "reviewers: must list"),
+            (
+                lambda d: d.update(reviewers=d["reviewers"][:1]),
+                "reviewers: must list 2 to 6",
+            ),
             (lambda d: d["reviewers"][0].update(id="lead"), "reviewers[0].id"),
             (
                 lambda d: d["reviewers"][1].update(id="correctness"),
@@ -747,29 +751,11 @@ class RenderTests(unittest.TestCase):
             "Each finding above was confirmed by at least two of them.\n",
             render(data)[0],
         )
-        data["mode"] = "single-agent"
-        self.assertIn(
-            "One agent read the change at `0123456` from 3 angles in turn",
-            render(data)[0],
-        )
-        data["mode"] = "independent"
         data["findings"], data["rounds"] = [], 1
         self.assertEqual(rr.check_findings(data), [])
         self.assertIn(
             "None of them found anything, so there was nothing to"
             " cross-check.",
-            render(data)[0],
-        )
-        data["reviewers"] = data["reviewers"][:1]
-        self.assertIn(
-            "One reviewer read the change at `0123456`: correctness (logic,"
-            " failure paths, tests). It found nothing (1 round in all).",
-            render(data)[0],
-        )
-        data["mode"] = "single-agent"
-        self.assertIn(
-            "in turn: correctness (logic, failure paths, tests). It found"
-            " nothing (1 round in all).",
             render(data)[0],
         )
 

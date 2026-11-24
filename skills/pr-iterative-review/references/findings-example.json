@@ -9,7 +9,6 @@
     {"id": "domain", "focus": "backend and ci-infra lenses"},
     {"id": "project-fit", "focus": "project rules, consistency, docs"}
   ],
-  "mode": "independent",
   "rounds": 2,
   "summary": "Adds a `--retries` option to the command line and a greeting step to CI. The option works for the usual case, but both new shell commands run text that an outside contributor controls, so this cannot merge as is.",
   "ci": "3 passed, 1 failed (`lint`: ruff E501 in `src/widgets/cli.py`)",

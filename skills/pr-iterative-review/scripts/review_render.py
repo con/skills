@@ -57,7 +57,6 @@ PREVIOUS_STATUSES = {
     "declined": "Declined",
     "withdrawn": "Withdrawn",
 }
-MODES = ("independent", "single-agent")
 # The agent that coordinated the review; it may confirm a finding
 # against the code.
 LEAD = "lead"
@@ -74,7 +73,6 @@ FINDINGS_KEYS = {
     "head_sha",
     "domains",
     "reviewers",
-    "mode",
     "rounds",
     "summary",
     "ci",
@@ -522,9 +520,12 @@ def check_findings(data: object) -> list[str]:
     reviewer_ids: list[str] = []
     reviewers = data.get("reviewers")
     if not (
-        isinstance(reviewers, list) and 1 <= len(reviewers) <= MAX_REVIEWERS
+        isinstance(reviewers, list) and 2 <= len(reviewers) <= MAX_REVIEWERS
     ):
-        errors.append(f"reviewers: must list 1 to {MAX_REVIEWERS} reviewers")
+        errors.append(
+            f"reviewers: must list 2 to {MAX_REVIEWERS} reviewers, since a"
+            " review is their cross-check"
+        )
         reviewers = reviewers if isinstance(reviewers, list) else []
     for index, reviewer in enumerate(reviewers):
         where = f"reviewers[{index}]"
@@ -549,8 +550,6 @@ def check_findings(data: object) -> list[str]:
             one_line=True,
             limit=120,
         )
-    if data.get("mode") not in MODES:
-        errors.append(f"mode: must be one of {', '.join(MODES)}")
     rounds = data.get("rounds")
     if not (_positive(rounds) and rounds <= 3):
         errors.append(
@@ -862,26 +861,6 @@ def _method(data: dict, short: str) -> str:
         f"{data['rounds']} round{'s' if data['rounds'] != 1 else ''} in all"
     )
     used_lead = any(LEAD in f["confirmed_by"] for f in data["findings"])
-    if data["mode"] == "single-agent":
-        opening = (
-            f"One agent read the change at `{short}` from {len(reviewers)} "
-            f"angle{'s' if len(reviewers) != 1 else ''} in turn: {angles}."
-        )
-        if not data["findings"]:
-            return f"{opening} It found nothing ({rounds})."
-        return (
-            f"{opening} It then re-checked each finding against the code"
-            f" ({rounds}). No independent reviewers were available, so no"
-            " second agent cross-checked the findings."
-        )
-    if len(reviewers) == 1:
-        opening = f"One reviewer read the change at `{short}`: {angles}."
-        if not data["findings"]:
-            return f"{opening} It found nothing ({rounds})."
-        return (
-            f"{opening} The agent that coordinated the review then checked"
-            f" each finding against the code ({rounds})."
-        )
     if data["rounds"] == 1:
         return (
             f"{len(reviewers)} reviewers read the change at `{short}`"

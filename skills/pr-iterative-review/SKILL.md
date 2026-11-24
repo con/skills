@@ -66,8 +66,7 @@ follows.
 - `--angle NAME` (repeatable): add a reviewer with that angle, such as
   `security` or `performance`. `NAME` becomes the reviewer's id: lowercase
   letters, digits and hyphens (`api-design`, not "API design"), and not
-  `lead`. `--reviewers 1`: one reviewer covers all three default angles,
-  for small, low-risk changes. A review has at most six reviewers.
+  `lead`. A review has at most six reviewers.
 - `--again`: review a commit this account already reviewed.
 
 `SKILL_DIR` is the absolute path of the directory holding this SKILL.md; Claude Code reports it as "Base directory for this skill". If it is not known, stop and say so; do not search for or guess it.
@@ -113,6 +112,10 @@ sections and a row here.
 > request.
 
 ### 0. Prepare
+
+The reviewers are independent subagents (the `Agent` tool in Claude Code).
+If this host cannot start them, stop and say so: the review is their
+cross-check, and one agent cannot stand in for it.
 
 Create the working directory and note its literal path as `WORK`:
 
@@ -259,10 +262,9 @@ gets, with its lenses, in `LENS_FILES`:
 **Reviewers.** Three by default: `correctness`, `domain` (with the lenses
 chosen above; with more than three lenses, split them between `domain`
 and `domain-2`), and `project-fit`. Each `--angle NAME` adds a reviewer
-`NAME`; `--reviewers 1` makes one `correctness` reviewer that also takes
-the lenses and the project-fit angle. Beyond six reviewers, drop the last
-`--angle` ones before round 1 and say so under `not_checked`. The angles
-are described in `SKILL_DIR/references/reviewer-brief.md`.
+`NAME`. Beyond six reviewers, drop the last `--angle` ones before round 1
+and say so under `not_checked`. The angles are described in
+`SKILL_DIR/references/reviewer-brief.md`.
 
 ### 3. Round 1: independent reviews
 
@@ -276,11 +278,9 @@ and the repository's directory), `SHA` (`HEAD_SHA`), `ID`, `FOCUS`, `WORK`,
 absolute paths of this reviewer's lenses and companion skills). No reviewer
 sees another's output in this round.
 Save each reply as `WORK/round1-ID.json`; if one is not valid JSON in the
-brief's format, ask that reviewer once to correct it.
-
-If the host has no subagents, run the angles yourself in turn
-(**single-agent** mode): write each angle's findings to its file before
-starting the next, and do not revise an earlier angle afterwards.
+brief's format, ask that reviewer once to correct it. If a reviewer cannot
+be started, or its reply is still unusable, stop and report it, as in step
+7; never write a reviewer's findings yourself.
 
 ### 4. Cross-check until agreement
 
@@ -291,9 +291,7 @@ starting the next, and do not revise an earlier angle afterwards.
 2. **Round 2.** Give each reviewer the merged findings it did not raise,
    numbered, in parallel. In this round and the next, name the brief's
    "Shared rules" and the round's section again, with the same placeholder
-   values: the host may start a new subagent that knows none of them. With
-   one reviewer, or in single-agent mode, check each finding against the
-   code yourself instead: add `lead` to those that hold, and drop the rest.
+   values: the host may start a new subagent that knows none of them.
 3. **Settle each finding:**
    - another reviewer agrees and nobody disagrees: keep it;
    - someone disagrees: round 3. Send the raisers the counter-evidence with
@@ -479,8 +477,7 @@ not know.
 | `repo`, `pr` | `OWNER/REPO` and `N`; both `null` for `--local` |
 | `head_sha` | the full SHA reviewed |
 | `domains` | the lenses used, e.g. `["backend", "ci-infra"]` |
-| `reviewers` | `[{"id": …, "focus": …}]`, one per reviewer, in the order the method should name them |
-| `mode` | `independent`, or `single-agent` when the host had no subagents |
+| `reviewers` | `[{"id": …, "focus": …}]`, one per reviewer (two to six), in the order the method should name them |
 | `rounds` | 1, 2 or 3, as step 4 defines |
 | `summary` | two to four sentences (Markdown) |
 | `ci` | optional; one line, such as ``3 passed, 1 failed (`lint`)`` |
