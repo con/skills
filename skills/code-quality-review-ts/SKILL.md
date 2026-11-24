@@ -12,7 +12,7 @@ user-invocable: true
 and the architecture principles that apply to every language; this guide
 adds what holds for TypeScript and JavaScript only. That skill reads it in
 Step 1 for every repository with such code in scope, and
-`review-org-code-quality` uses its **static** tools in Phase 2. The
+`review-org-code-quality` uses its **static** tools before its depth reviews. The
 category prefixes (`ARC`, `DC`, `DUP`, `CON`, `CL`, `NV`) and the
 **static** / **consent** marks are defined in `review-repo-code-quality`.
 
@@ -73,14 +73,16 @@ at a webpack configuration it then executes, and an `oxlint.config.ts` is itself
 configuration only with consent; for static use, pass the flags in the
 table and run from a scratch directory outside the checkout (madge reads
 `.madgerc` from the working directory and every parent). Run the
-project's own copies as `npx --no -- <tool>`, which stops instead of
-fetching a missing tool: plain `npx` installs whatever it does not find
-without asking (for `tsc`, an unrelated package). Install anything else
-yourself, pinned, outside the checkout. Given a directory, oxlint skips
-what `.gitignore` and `.eslintignore` list (even with `--no-ignore`), and
-lizard skips what `.gitignore` lists: pass them the tracked files
-(`git -C <checkout> ls-files -z -- '*.ts' '*.tsx' …`), or lizard
-`--no-gitignore`.
+project's own copy of a tool as `npx --no -- <tool>` only after
+`npm ls <package>` shows it installed in the checkout: plain `npx`
+installs whatever it does not find without asking (for `tsc`, an
+unrelated package), and `npx --no` runs a copy from a parent directory's
+`node_modules/.bin` or npm's global prefix, whatever its version, before
+it gives up. Install anything else yourself, pinned, outside the
+checkout. Given a directory, oxlint skips what `.gitignore` lists even
+with `--no-ignore` (which turns off only `.eslintignore`), and lizard
+skips it unless given `--no-gitignore`: pass oxlint the tracked `*.ts`,
+`*.tsx`, … files as `review-repo-code-quality` Step 1 shows.
 
 | Sweep | Tool | Mark | Command |
 |---|---|---|---|
@@ -89,19 +91,25 @@ lizard skips what `.gitignore` lists: pass them the tracked files
 | Idiom drift | the project's ESLint, plus `typescript-eslint` `strictTypeChecked` and `stylisticTypeChecked` (with `languageOptions.parserOptions.projectService: true`), `eslint-plugin-unicorn`, `eslint-plugin-sonarjs` | consent: typed linting needs the installed dependencies | the project's lint script with those configurations layered on |
 | Idiom drift | `oxlint`, your configuration | static | `oxlint -c <scratch>/oxlintrc.json --disable-nested-config -D correctness -D suspicious -W pedantic -W no-var -W eqeqeq -W typescript/no-explicit-any -W typescript/no-non-null-assertion <paths>`; floating promises need `--type-aware`, which reads the project's types (consent) |
 | Idiom drift | `biome lint`, your configuration | static | `biome lint --config-path=<scratch>/biome.json --reporter=concise <paths>` |
-| Import graph and cycles | `madge`, your tsconfig | static from a scratch directory outside the checkout | `madge --circular --extensions ts,tsx,mts,cts,js,jsx,mjs,cjs [--ts-config <scratch>/tsconfig.json] <paths>`, where your `tsconfig.json` holds only an absolute `baseUrl` and the `paths` entries inside the checkout that you read from the project's tsconfig and the files it extends; leave out `--ts-config` where the project maps no paths |
-| Cycles through `.mts` / `.cts` files | `dependency-cruiser`, your configuration | static from a scratch directory outside the checkout | `depcruise --config <scratch>/dc.json --output-type err <paths>`, with `dc.json` holding `{"forbidden": [{"name": "no-circular", "severity": "error", "from": {}, "to": {"circular": true}}]}`; madge reads no imports from those files |
+| Import graph and cycles | `madge`, your tsconfig | static | `madge --circular --extensions ts,tsx,mts,cts,js,jsx,mjs,cjs [--ts-config <scratch>/tsconfig.json] <paths>`, where your `tsconfig.json` holds only an absolute `baseUrl` and the `paths` entries inside the checkout that you read from the project's tsconfig and the files it extends; leave out `--ts-config` where the project maps no paths |
+| Cycles through `.mts` / `.cts` files | `dependency-cruiser`, your configuration | static | `depcruise --config <scratch>/dc.json --output-type err <paths>`, with `dc.json` holding `{"forbidden": [{"name": "no-circular", "severity": "error", "from": {}, "to": {"circular": true}}]}`; madge reads no imports from those files |
 | Types | `tsc` | consent | `npx --no -- tsc --noEmit -p <tsconfig>` |
-| Complexity | `lizard` | static | `lizard -l typescript -l tsx -l javascript -l vue -w <paths>`; it does not measure `.mts`, `.cts`, or `.svelte` files (say so in Method & limits) |
+| Complexity | `lizard` | static | `lizard -l typescript -l tsx -l javascript -l vue -w <paths>`; it skips `.mts`, `.cts`, and `.svelte` files in a directory, and given one by name parses it with its C reader and reports wrong functions, so leave them out of a file list (say so in Method & limits) |
 | Tests | the project's runner | consent | see Verification |
 
 Check what each tsc run covers: `tsc --listFilesOnly -p <tsconfig>` must
 list the sources. A solution-style root `tsconfig.json` (`"files": []`
 with `references`) compiles nothing, so `tsc --noEmit` on it exits 0
 having checked no file. Run each command with `-p` on every referenced
-configuration instead, or `tsc -b --noEmit` (it writes `.tsbuildinfo`
-files: throwaway checkout only), and pass madge the configuration that
-holds `paths`.
+configuration instead. A configuration that itself has `references`
+fails under `-p` (TS6305) until the projects it references are built, so
+first run `tsc -b --verbose` in the throwaway checkout: it checks every
+project in reference order and writes their outputs and `.tsbuildinfo`
+files. Do not use `tsc -b --noEmit` there (it fails with TS6310 and
+checks none of the referencing projects), and note that `tsc -b` rejects
+`--noUnusedLocals` and `--noUnusedParameters`. For madge, build its
+scratch tsconfig (see its row) from the configuration that holds
+`paths`, rather than passing that configuration itself.
 
 ## Checks
 
@@ -182,7 +190,9 @@ holds `paths`.
   (`DUP`, `DC`; see Not findings for the scripts npm runs by name).
 
 **Currency** (reported as `review-repo-code-quality` Step 2 says; read the
-live sources each item names)
+live sources each item names, and run every `npm view` from a scratch
+directory: a project's `.npmrc` can redirect the registry and send its
+token there)
 
 - **Node.js versions.** Compare `engines.node`, `.nvmrc` /
   `.node-version`, and the CI matrix with the release schedule at
@@ -190,11 +200,17 @@ live sources each item names)
   still supported or tested, or the current LTS line missing.
 - **Compiler and syntax.** A `typescript` dependency behind the newest
   version the project's tooling accepts: compare
-  `npm view typescript dist-tags` with what the linters and other tools
-  that load the compiler support (`npm view typescript-eslint
-  peerDependencies`), since a new TypeScript major can outpace them. Also
-  tsconfig options the project's compiler reports as deprecated (consent:
-  `npx --no -- tsc --noEmit -p <tsconfig>`), and a
+  `npm view typescript dist-tags` with the `typescript` peer range of the
+  linter and tool versions the lock file pins
+  (`npm view typescript-eslint@<locked version> peerDependencies`); where
+  only a newer release of such a tool accepts a newer compiler, say both
+  must move together. Check deprecated compiler options against the
+  newest compiler, not only the project's: an `ignoreDeprecations` key in
+  any tsconfig (it silences them, and is itself the finding), the options
+  the project's compiler reports (consent:
+  `npx --no -- tsc --noEmit -p <tsconfig>`), and those a newer major
+  deprecates or removes (its release notes, such as https://aka.ms/ts6).
+  Also a
   `target` older than every runtime the project supports, which makes the
   build down-level syntax for nothing (`lib` only decides which built-in
   APIs type-check). Raising `target` to ES2022 or later also turns on
@@ -208,9 +224,6 @@ live sources each item names)
   scratch directory, installs nothing).
 
 ## Not findings
-
-What looks dead or wrong in TypeScript or JavaScript but is not. List the
-ones you checked under "Not changed (deliberately)".
 
 - Exports reached from outside the source tree: `package.json` `exports`,
   `main`, `module`, `types`, and `bin`, and the published API of a
@@ -231,7 +244,9 @@ ones you checked under "Not changed (deliberately)".
 - `package.json` scripts the package manager runs by name: lifecycle
   scripts (`prepare`, `prepublishOnly`, `prepack`, `postpack`,
   `preinstall`, `install`, `postinstall`, `version`, …) and the
-  `pre<name>` / `post<name>` hooks of scripts that are run, plus scripts
+  `pre<name>` / `post<name>` hooks of scripts that are run (npm, pnpm,
+  Bun, and Yarn 1 run them; Yarn 2 and later do not, so there an uncalled
+  one is dead), plus scripts
   that CI, documentation, other scripts, or a task runner (turbo, nx)
   invoke.
 - Registrations by decorator or dependency injection (Angular, NestJS),
@@ -247,12 +262,15 @@ ones you checked under "Not changed (deliberately)".
 - **Install** (consent, in the throwaway checkout): the package manager
   the lock file names, at the version `packageManager` names, with the
   lock frozen — `npm ci`, `pnpm install --frozen-lockfile`,
-  `yarn install --frozen-lockfile` for Yarn 1 (a `yarn.lock` that starts
-  `# yarn lockfile v1`) or `yarn install --immutable` for Yarn 2 and
-  later, `bun install --frozen-lockfile`.
+  `yarn install --immutable` for Yarn 2 and later (a `yarn.lock` with a
+  top-level `__metadata:` key), else `yarn install --frozen-lockfile` for
+  Yarn 1 (`# yarn lockfile v1` on its second line; Yarn 1 silently
+  ignores `--immutable` and rewrites an out-of-date lock),
+  `bun install --frozen-lockfile`.
 - **Baseline and after each group** (consent): the project's own scripts —
-  `lint`, `typecheck` (else `tsc -b --noEmit`, or `tsc --noEmit -p` on
-  each referenced configuration), `test` (vitest, jest, playwright), and
+  `lint`, `typecheck` (else `tsc -b` in the throwaway checkout, or `tsc --noEmit -p`
+  on each referenced configuration once the projects it references are
+  built), `test` (vitest, jest, playwright), and
   `build`, since bundling catches broken imports a type check can miss.
 - **Static, after any edit**: the static oxlint or biome command above on
   the changed files.

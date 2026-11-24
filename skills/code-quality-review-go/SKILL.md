@@ -11,8 +11,7 @@ user-invocable: true
 `review-repo-code-quality` holds the review procedure, the report layout,
 and the architecture principles that apply to every language; this guide
 adds what holds for Go only. That skill reads it in Step 1 for every
-repository with Go code in scope, and `review-org-code-quality` uses its
-**static** tools in Phase 2. The category prefixes (`ARC`, `DC`, `DUP`,
+repository with Go code in scope, and `review-org-code-quality` uses its **static** tools before its depth reviews. The category prefixes (`ARC`, `DC`, `DUP`,
 `CON`, `CL`, `NV`) and the **static** / **consent** marks are defined in
 `review-repo-code-quality`.
 
@@ -79,7 +78,7 @@ modules covered in Method & limits.
 | Dead code: unused unexported code | `staticcheck` (`U1000`) | consent | `staticcheck -checks U1000 ./...` |
 | Dead code: unreachable from `main` | `deadcode` | consent | `deadcode -test ./...` |
 | Idiom drift | `go vet`, `staticcheck` | consent | `go vet ./...`; `staticcheck ./...` |
-| Idiom drift | the project's golangci-lint, plus `unparam`, `dupl`, `goconst`, `gocognit`, `exhaustive`, `errorlint`, `copyloopvar`, `revive` | consent | the project's configuration with those linters enabled and the output caps lifted (`--max-issues-per-linter=0 --max-same-issues=0`; by default it shows at most 3 issues with the same text and 50 per linter); the flags that choose linters differ between golangci-lint versions 1 and 2 |
+| Idiom drift | the project's golangci-lint, plus `unparam`, `dupl`, `goconst`, `gocognit`, `exhaustive`, `errorlint`, `copyloopvar`, `revive` | consent | the project's configuration with those linters enabled and the output filters lifted (`--max-issues-per-linter=0 --max-same-issues=0 --uniq-by-line=false`; by default it shows at most 3 issues with the same text, 50 per linter, and one per line), and with `--new=false`, `--new-from-rev=`, or `--new-from-merge-base=` where the configuration limits the run to recent changes; the flags that choose linters differ between golangci-lint versions 1 and 2 |
 | Import graph | `go list` | consent | `go list -f '{{.ImportPath}}: {{join .Imports " "}}' ./...` |
 | Import graph | the `import` blocks and `go.mod`, read as text | static | `grep -n` the `import` blocks of each package's files, with the module path from `go.mod` to tell internal imports from external ones |
 | Modules | `go mod tidy -diff` (Go 1.23 or later) | consent | prints what `go mod tidy` would change, without writing |
@@ -105,6 +104,12 @@ pass gocyclo `-ignore`.
   - A Go named type does not close the set: `Mode("x")` and untyped
     constants give any value. Keep the validation where values enter
     (parsing, decoding, flags); removing it is `NV`.
+  - Typing the constants changes their dynamic type wherever a value
+    passes through `any`: comparisons with values from a
+    `map[string]any` (decoded JSON or YAML), `context.WithValue` keys
+    looked up with a plain string, type switches on `case string:`,
+    `%T`, and reflection stop matching, with no build or vet error.
+    Search for such uses; where any exist, the change is `NV`.
   - Keep a string set a string type. An `iota` integer type, with a
     `String` method from `stringer`, suits values that are never
     persisted or sent; turning a string set into one changes its JSON,
@@ -115,8 +120,9 @@ pass gocyclo `-ignore`.
   - Changing the type of an exported constant or parameter is an API
     change for importers (`NV` in a library), and adding `String`,
     `MarshalText`, or `MarshalJSON` changes formatting and encoding.
-- **The same literal in several places** (`ARC`; `CON` when it stays
-  inside one package; `goconst` finds them): one named constant.
+- **The same literal in several places** (`ARC` across packages, found
+  by searching for the literal; `CON` inside one package, where `goconst`
+  finds it, since it checks one package at a time): one named constant.
 
 **Packages and structure**
 
@@ -134,12 +140,13 @@ pass gocyclo `-ignore`.
 - `context.Context` not passed as the first parameter, stored in a struct,
   or replaced by `context.Background()` deep in a call chain (`ARC`; `NV`
   when the fix changes cancellation).
-- In a library, the fixes above are incompatible API changes, which
-  `apidiff` lists: removing or moving an exported interface, changing an
-  exported function's result from an interface to a concrete type,
-  putting `ctx` first in an exported signature, and moving `init` work
-  into a setup call. They are `NV` unless the old forms stay as
-  deprecated wrappers.
+- In a library, the fixes above change the API: removing or moving an
+  exported interface, changing an exported function's result from an
+  interface to a concrete type, and putting `ctx` first in an exported
+  signature are incompatible changes `apidiff` lists; moving `init` work
+  into a setup call keeps the API compatible but changes behavior for
+  every importer that does not call it. They are `NV` unless the old
+  forms stay as deprecated wrappers, or `init` keeps calling the setup.
 
 **Errors**
 
@@ -158,11 +165,14 @@ pass gocyclo `-ignore`.
 - hand-written `contains`, `min`, `max`, and sorting helpers that `slices`
   and the built-ins replace (1.21 or later), and map-key helpers that
   `slices.Sorted(maps.Keys(m))` or `slices.Collect(maps.Keys(m))` replace
-  (1.23 or later). `CL` only where no float operand can be NaN and the
-  original sort was not stable: the built-in `min` and `max` return NaN
-  when any operand is NaN, and `slices.Sort` and `slices.SortFunc` are
-  not stable (`slices.SortStableFunc` replaces a stable sort); otherwise
-  `NV`;
+  (1.23 or later). `CL` only where no float operand can be NaN, the
+  original sort was not stable, and no caller can tell an empty result
+  from nil: the built-in `min` and `max` return NaN when any operand is
+  NaN, `slices.Sort` and `slices.SortFunc` are not stable
+  (`slices.SortStableFunc` replaces a stable sort), and `slices.Collect`
+  and `slices.Sorted` return nil for an empty map where a helper built
+  with `make` returned an empty slice (`encoding/json` then writes `null`,
+  not `[]`); otherwise `NV`;
 - functions copied once per type that generics can merge (1.18 or later)
   — `CON`;
 - names against Go conventions: package-name stutter
@@ -195,16 +205,15 @@ live sources each item names)
   unsupported one. In a library, keep the `go` line as low as the code
   allows: raising it forces every importer to upgrade.
 - **Deprecated APIs.** `staticcheck` check `SA1019` (consent) reports uses
-  of deprecated identifiers, but only those deprecated as of the module's
-  `go` line: it reports `io/ioutil` once the line is 1.19 or later, so
-  below that, search for the import directly.
+  of deprecated identifiers. For the standard library it reports only
+  those deprecated as of the module's `go` line, such as `io/ioutil` once
+  the line is 1.19 or later; below that, search for such imports directly
+  (their `io` and `os` replacements need 1.16). Deprecations in
+  dependencies are reported at any `go` line.
 - **Tool formats.** A golangci-lint configuration still in the version 1
   format (`golangci-lint migrate` converts it).
 
 ## Not findings
-
-What looks dead or wrong in Go but is not. List the ones you checked
-under "Not changed (deliberately)".
 
 - Exported identifiers in a module that others import: having no caller
   inside the repository does not make them dead. `deadcode` reports them

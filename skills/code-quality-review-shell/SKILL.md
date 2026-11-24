@@ -12,7 +12,7 @@ user-invocable: true
 and the architecture principles that apply to every language; this guide
 adds what holds for shell scripts only. That skill reads it in Step 1 for
 every repository with shell code in scope, and `review-org-code-quality`
-uses its **static** tools in Phase 2. The category prefixes (`ARC`, `DC`,
+uses its **static** tools before its depth reviews. The category prefixes (`ARC`, `DC`,
 `DUP`, `CON`, `CL`, `NV`) and the **static** / **consent** marks are
 defined in `review-repo-code-quality`.
 
@@ -32,8 +32,8 @@ guide alone.
 `*.sh`, `*.bash`, and `*.bats` files, and scripts without an extension
 whose shebang runs `sh`, `bash`, `dash`, or `ksh`. Also shell embedded
 elsewhere, which counts even in a repository with no script file:
-`run:` steps in GitHub Actions workflows, `script:` sections in GitLab
-CI, Makefile recipes, Dockerfile `RUN` lines, and `package.json` scripts.
+`run:` steps in GitHub Actions workflows and composite actions
+(`action.yml` with `using: composite`), `script:` sections in GitLab CI, Makefile recipes, Dockerfile `RUN` lines, and `package.json` scripts.
 Zsh and fish scripts are not covered: shellcheck does not support them.
 
 ## Project rules
@@ -56,14 +56,24 @@ no `${var,,}`.
 | Sweep | Tool | Mark | Command |
 |---|---|---|---|
 | Lint: idioms, bugs, portability | `shellcheck` | static with `--norc` | `shellcheck --norc -P SCRIPTDIR -P <absolute path of the repository root> --severity=style --format=gcc <files>`, with the files each script sources listed alongside it (`SCRIPTDIR` resolves `. "$(dirname "$0")/lib.sh"`, the repository root resolves `. scripts/lib.sh`; shellcheck still reads only the listed files); pass each `source-path=` from `.shellcheckrc` as a further `-P`, made absolute against the repository root; add `--enable=all` to see the optional checks |
-| Shell in GitHub Actions `run:` steps | `actionlint`, your empty configuration | static on copies | copy the workflow files into `<scratch>/wf/.github/workflows/` (actionlint reads the repository's own `.github/actionlint.yaml` even when given `-config-file`), then from `<scratch>/wf` run `actionlint -config-file <scratch>/actionlint.yaml -shellcheck <absolute path of the shellcheck the lint row ran> -oneline -verbose .github/workflows/*` |
+| Shell in GitHub Actions `run:` steps | `actionlint`, your empty configuration | static | from the scratch directory, `actionlint -config-file <scratch>/actionlint.yaml -shellcheck <absolute path of the shellcheck the lint row ran> -oneline -verbose <checkout>/.github/workflows/*.y*ml`; the repository's own `.github/actionlint.yaml` is parsed but not applied, and if it is malformed the run stops with exit status 3: then lint copies, and note that the local-action and reusable-workflow checks did not run |
 | Shell in Dockerfile `RUN` lines | `hadolint`, your configuration | static | `hadolint --config <scratch>/hadolint.yaml <Dockerfiles>`, the file holding `ignored: []` (an empty one is rejected) |
-| Other embedded shell | `shellcheck` on extracted copies | static | copy GitLab `script:` sections, Makefile recipes (with `$$` turned back into `$`), and `package.json` scripts into scratch files and run the static shellcheck command with `--shell=sh` (or `bash` where the runner uses it); or read them by hand and say so in Method & limits |
-| Formatting | `shfmt` | static on an explicit file list with explicit flags (any formatting flag makes it skip the formatting properties of `.editorconfig`, but a directory walk still skips files an `ignore = true` section matches) | `shfmt -d <flags> <files>`, listing the files (never a directory), prints the diff; never `-w`; `<flags>` translates every shfmt key of the matching `.editorconfig` section (`indent_style = tab` to `-i 0`, `indent_size = N` to `-i N`, `binary_next_line` to `-bn`, `switch_case_indent` to `-ci`, `space_redirects` to `-sr`, `function_next_line` to `-fn`, `shell_variant` to `-ln`), or copies the flags the project's CI or pre-commit hook passes |
-| Source and call graph | `grep` | static | `grep -rnE '^[[:space:]]*(\.|source)[[:space:]]' <files>` for the files each script sources; search scripts, workflows, Makefiles, and `package.json` for what runs each script |
-| Dead code | none dedicated | static | list function definitions (`grep -nE '^[[:space:]]*(function[[:space:]]+[^[:space:](){]+|[A-Za-z_][A-Za-z0-9_:.-]*[[:space:]]*\(\))'`, which also catches `function name {` and names such as `log::info`) and search for their callers; list scripts and search for what runs them; shellcheck `SC2034` flags unused variables |
+| Other embedded shell | `shellcheck` on extracted copies | static | copy composite-action `run:` steps (with `--shell=` from each step's `shell:`; actionlint does not lint action files), GitLab `script:` sections, Makefile recipes (with `$$` turned back into `$`), and `package.json` scripts into scratch files and run the static shellcheck command with `--shell=sh` (or `bash` where the runner uses it); or read them by hand and say so in Method & limits |
+| Formatting | `shfmt` | static on an explicit file list with explicit flags (any formatting flag makes it skip the formatting properties of `.editorconfig`, but a directory walk still skips files an `ignore = true` section matches) | `shfmt -d <flags> <files>`, listing the files (never a directory), prints the diff; never `-w`; `<flags>` translates the shfmt properties that apply to each file, merged from every matching section (including `[*]` and shfmt's `[[shell]]` / `[[bash]]`) of every `.editorconfig` up to the one with `root = true`: `indent_style = space` to `-i <indent_size, or 8>`, any other `indent_style` to `-i 0`, `binary_next_line` to `-bn`, `switch_case_indent` to `-ci`, `space_redirects` to `-sr`, `keep_padding` to `-kp`, `function_next_line` to `-fn`, `simplify` to `-s`, `minify` to `-mn`, `shell_variant` to `-ln`; run files with different properties separately, or copy the flags the project's CI or pre-commit hook passes |
+| Source and call graph | `grep` | static | the source grep below; search scripts, workflows, Makefiles, and `package.json` for what runs each script |
+| Dead code | none dedicated | static | list function definitions with the function grep below and search for their callers; list scripts and search for what runs them; shellcheck `SC2034` flags unused variables |
 | Complexity | none dedicated | static | script and function length (`wc -l`), nesting depth by reading |
 | Tests | `bats` | consent | see Verification |
+
+The two greps, kept out of the table because their `|` would split its
+cells:
+
+```sh
+# files each script sources, guarded ones included ([ -f x ] && . x)
+grep -rnE '(^|[;&|({]|\b(then|do|else))[[:space:]]*((command|builtin)[[:space:]]+)?(\.|source)[[:space:]]' <files>
+# function definitions, including `function name {` and names like log::info
+grep -nE '^[[:space:]]*(function[[:space:]]+[^[:space:](){]+|[A-Za-z_][A-Za-z0-9_:.-]*[[:space:]]*\(\))' <files>
+```
 
 With `--norc`, shellcheck ignores `.shellcheckrc` (its `disable=`,
 `enable=`, `shell=`, `source-path=`, and `external-sources=`); inline
@@ -117,7 +127,10 @@ Method & limits as not run, never as clean.
   `echo "$(cmd)"` (`SC2005`) are `NV`: dropping the `echo` stops line
   joining, blank collapsing, and globbing, keeps the command's own
   trailing newlines or their absence, stops dash's `echo` from
-  interpreting backslashes, and prints nothing for empty output. `expr`
+  interpreting backslashes, prints output such as `-n` that `echo` took as
+  an option, prints nothing for empty output, and returns the command's
+  exit status where `echo` returned 0 (under `set -e` the script then
+  stops). `expr`
   arithmetic (`SC2003`) is `NV` unless every operand is always a decimal
   integer with no leading zero that fits in 64 bits and nothing uses
   `expr`'s exit status: under `$(( ))`, `08` is an error that ends a dash
@@ -164,9 +177,6 @@ Method & limits as not run, never as clean.
 
 ## Not findings
 
-What looks dead or wrong in shell but is not. List the ones you checked
-under "Not changed (deliberately)".
-
 - Functions called indirectly: through a variable (`"$cmd" "$@"`
   dispatch), from a `trap`, as completion functions (`complete -F`), or by
   the scripts and interactive shells that `source` the file. A library
@@ -198,5 +208,7 @@ under "Not changed (deliberately)".
   target, or `package.json` script that runs the script.
 - **Scripts with effects** (consent): run the script before and after the
   change, in a scratch directory on the same inputs, traced with the
-  interpreter its shebang names (`sh -x` for `#!/bin/sh`, `bash -x` for
-  Bash), and compare outputs and the files written.
+  interpreter and the options its shebang line names plus `-x` (`sh -ex`
+  for `#!/bin/sh -e`, `sh -x` for `#!/bin/sh`, `bash -x` for Bash; plain
+  `sh -x script` drops the shebang's options), and compare outputs, exit
+  statuses, and the files written.

@@ -40,7 +40,7 @@ idiom for a closed set of values and a Currency group), **Not findings**
 To add a language, add a sibling `code-quality-review-<language>` skill
 with those sections, a row in this table, and a row in the repository's
 README. Install the guides together with this skill, for example
-`apm install con/skills#<commit> --skill code-quality-report-conventions --skill review-repo-code-quality --skill code-quality-review-python --skill code-quality-review-ts --skill code-quality-review-go --skill code-quality-review-shell`.
+`apm install con/skills#<commit> --skill code-quality-report-conventions --skill review-repo-code-quality --skill code-quality-review-python --skill code-quality-review-ts --skill code-quality-review-go --skill code-quality-review-shell --skill analyze-duplicates --target agent-skills`.
 
 Shared rules — where the report goes, the provenance stamp that records
 which version of this skill produced it, evidence standards, re-review,
@@ -77,8 +77,8 @@ Values the user sets in the request that starts a review (for example
 not by editing the installed skill. A calling skill may pass them on.
 
 - **HOUSE_PREFERENCES**: `guides` — the tools the reviewer's team
-  prefers, which the Currency sweep recommends where a project uses
-  something else. `guides` takes the house preferences the loaded guides
+  prefers, which the Currency sweep lists as house recommendations where a
+  project uses something else. `guides` takes the house preferences the loaded guides
   label as such (for Python: pixi for environments, locks, and tools).
   Name your own instead, per concern (`python environments: uv`), or
   `none` to recommend no tool at all.
@@ -99,16 +99,16 @@ Record them in Method & limits.
 
 Read `AGENTS.md` / `CLAUDE.md` and `CONTRIBUTING.md`, whichever exist.
 
-Then find the languages in scope. Read the Recognize section of each
-guide in the table above that is installed (`../<guide>/SKILL.md`), and
-of any other installed `../code-quality-review-*/SKILL.md`, and match
-them against the tracked files (`git ls-files`, by extension, by shebang
-for scripts without one, and by content where a guide says so, such as
-shell inside CI workflows), leaving out what the scope excludes. Load
-each guide that matches. A language in scope whose guide is listed in the
-table but not installed: ask the user whether to stop and install it or
-to review that language with the general checks only. A language with no
-guide gets the general checks only. The general checks are the
+Then find the languages in scope: list the tracked files (`git ls-files`)
+by extension, and by shebang for scripts without one, leaving out what
+the scope excludes. Read the Recognize section of every installed
+`../code-quality-review-*/SKILL.md` (the table's guides and any others),
+match them against that list and, where a guide says so, against file
+contents (shell inside CI workflows, for example), and load each guide
+that matches. A language still unmatched either has a guide in the table
+that is not installed — ask the user whether to stop and install it or
+to review that language with the general checks only — or has no guide,
+and gets the general checks only. The general checks are the
 language-independent parts of this procedure: Step 2's duplication,
 project-rule-drift, inert-configuration and currency sweeps and its
 "in any language" idiom checks, `lizard` where it supports the language,
@@ -131,9 +131,16 @@ Every tool a guide lists is marked **static** or **consent**:
   installs nothing, and writes nothing into the repository (caches off,
   output to a scratch directory). Ignore files count as configuration
   too: given a directory, several tools skip what `.gitignore`, `.ignore`,
-  or `.eslintignore` lists, so pass the scope's tracked files explicitly
-  (`git ls-files -z -- '<pattern>' | xargs -0 <tool> …`) unless the guide
-  names a switch that turns this off.
+  or `.eslintignore` lists, so pass the scope's tracked files as absolute
+  paths — `git -C <checkout> ls-files -z --format='<checkout>/%(path)' --
+  '<pattern>' | xargs -0 -r <tool> …` (plain `ls-files` prints paths
+  relative to the checkout, which a tool started in the scratch directory
+  cannot open, and some tools then report a clean run; `-r` keeps an empty
+  list from running the tool on the scratch directory) — unless the guide
+  names a switch that turns this off. `xargs` may split a long list into
+  several runs, so for a tool that reads the code as a whole (dead code,
+  an import graph) prefer the guide's switch, or check with `xargs -t`
+  that it ran once.
 - **consent** — everything else: the project's own linter configuration
   and plugins, a type check or build, a dependency install, the test
   suite, a tool the project pins and installs.
@@ -173,7 +180,7 @@ and say so in Method & limits.
   configuration that is never consulted.
 - **Duplication:** run the `analyze-duplicates` skill (jscpd) if
   available — from a scratch directory, with `--output <scratch>/jscpd.md`,
-  so nothing (`.tmp/`, `.gitignore`, `.jscpd-report.md`) is written into
+  so nothing (`.tmp/`, `.jscpd-report.md`) is written into
   the reviewed repository. Its availability check itself falls back to
   `npx --yes jscpd@latest`, so if `command -v jscpd` finds nothing, ask
   before running the skill at all; prefer an installed or pinned jscpd
@@ -204,30 +211,37 @@ and say so in Method & limits.
   consent was declined in Step 1, read the config statically instead and
   mark the item `not verified empirically` (Low confidence).
 - **Currency:** the runtime versions the project supports and tests, the
-  language and packaging standards it follows, and its build,
-  environment, and distribution tooling, measured against what is current
-  on the day of the review. Each guide's Checks section has a Currency
-  group: the live sources to check (release and end-of-life schedules,
-  standards indexes), and the house preferences it labels as such, which
-  apply only as `HOUSE_PREFERENCES` says (see Configuration): a
-  recommendation of the reviewer's team, not a rule of the reviewed
-  project.
-  Read the sources the guide names, with `WebFetch`; where a check names
-  none, read only the tool's official release page or registry entry. Do
-  not rely on the guide's examples or your memory, and cite each source
-  with the date you checked; if one cannot be reached, say so and mark the
-  items `not verified against live sources`. Typical hits: a supported
-  range that includes an end-of-life version or leaves out the newest
-  stable one, a CI matrix that does not test the range the metadata
-  claims, a deprecated mechanism kept where its standard replacement
-  exists, and tooling the ecosystem has moved past. A house preference is
-  reported as a recommendation, never as a currency problem. Moving a version
-  floor or switching tools is a maintainer's decision, so such items go
-  under Needs Verification unless the project's own rules already require
-  the change. Where the project's rules name a different tool than the
-  house preference in effect (CONTRIBUTING says to use uv, say), the
-  project's rule stands: report the preference once, as a Needs
-  Verification item that quotes the rule it would change.
+  language and packaging standards it follows, its build, environment,
+  and distribution tooling, and its CI and the automation that keeps it
+  current, measured against what is current on the day of the review.
+  Each guide's Checks section has a Currency group that names the live
+  sources to check (release and end-of-life schedules, standards
+  indexes). Read them with `WebFetch`; where a check names none, read
+  only the tool's official release page or registry entry. Do not rely on
+  the guide's examples or your memory: cite each source with the date you
+  checked, and if one cannot be reached, say so and mark the items `not
+  verified against live sources`. Typical hits: a supported range that
+  includes an end-of-life version (unless the guide says to keep a floor
+  low, as the Go guide does for a library's `go` line) or leaves out the
+  newest stable one; a CI matrix that does not test the range the
+  metadata claims; a deprecated mechanism kept where its standard
+  replacement exists; tooling the ecosystem has moved past. In every
+  language this includes CI: `uses:` references to an action major whose
+  runtime GitHub no longer runs or that trails its latest release,
+  `runs-on` labels of retired runner images (the shell guide's static
+  actionlint run reports both; report them here), `rev:` pins in
+  `.pre-commit-config.yaml` behind each hook's latest tag, and whether
+  anything keeps these current (Dependabot, Renovate, pre-commit.ci); read
+  the pins, and do not run `pre-commit autoupdate`, which rewrites the
+  file. Moving a version floor or switching tools is a maintainer's
+  decision, so such items go under Needs Verification unless the
+  project's own rules already require the change.
+  A guide may also label a tool as a house preference. It applies only as
+  `HOUSE_PREFERENCES` says (see Configuration), and it is never a finding
+  (report-conventions §3: "doesn't use X" is not one): list it once in
+  the Summary under "House recommendations", outside the category counts,
+  quoting any project rule it would change (CONTRIBUTING says to use uv,
+  say), which stands.
 
 ### Step 3 — Architecture pass
 
@@ -271,8 +285,10 @@ first, and against these principles second:
   validation, and error reporting are implemented once and reused, not
   rewritten at each call site. Each job has one library: two libraries
   doing the same job (HTTP clients, date handling, logging, command-line
-  parsing, serialization) are a `CON` finding that names the one to keep;
-  dropping a dependency that shipped code exposes is Needs Verification.
+  parsing, serialization) are a finding that names the one to keep —
+  `CON` only when the Step 4 trace shows every moved call site keeps its
+  output, defaults, and errors, otherwise Needs Verification; dropping a
+  dependency that shipped code exposes is always Needs Verification.
 
 An architecture finding carries the same burden as any other: a
 concrete, behavior-preserving change, a trace in Step 4, and a
@@ -352,7 +368,8 @@ read — and "No changes have been applied" (or what was).}
 ## Summary
 {What is genuinely well built (specific, cited). Then the dominant themes, each
 with the handful of findings that make it up. Then anything surfaced under
-Needs Verification that a maintainer should look at soon.}
+Needs Verification that a maintainer should look at soon. Then any house
+recommendations (`HOUSE_PREFERENCES`), which are not findings.}
 
 ### Findings by category
 | Category | High confidence | Medium | Low | Total |

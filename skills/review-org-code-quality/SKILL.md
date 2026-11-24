@@ -20,10 +20,11 @@ root cause.
 This skill is the breadth pass; `review-repo-code-quality` is the depth
 pass. It expects the shared `code-quality-report-conventions` skill installed
 alongside, the `code-quality-review-<language>` guide for each language
-the repositories use (`review-repo-code-quality` lists them), and
-`review-repo-code-quality` when Phase 4's depth reviews are wanted (in
-APM, select them all; in a `con/skills` checkout they are sibling
-directories). Three things are delegated rather than repeated here:
+the repositories use, and `review-repo-code-quality` itself: its table
+lists the guides, its Step 1 defines the **static** mark and the language
+detection Phases 1–2 use, and Phase 4 runs it in full (in APM, select
+them all; in a `con/skills` checkout they are sibling directories).
+Three things are delegated rather than repeated here:
 
 - **Depth reviews (Phase 4)** run `review-repo-code-quality` *in full*, one
   report per repository, on the few repositories the graph and matrix
@@ -43,9 +44,9 @@ directories). Three things are delegated rather than repeated here:
   a prior report, and confidence/status labels — are defined once in the
   sibling `code-quality-report-conventions` skill
   (`../code-quality-report-conventions/report-conventions.md`). Read it first; it is
-  part of this skill's contract. If that file is not installed, stop and
-  ask the user to install `code-quality-report-conventions`; do not proceed from
-  memory.
+  part of this skill's contract. If that file or `review-repo-code-quality`
+  is not installed, stop and ask the user to install the missing skill; do
+  not proceed from memory.
 
 ## When to use
 
@@ -113,8 +114,8 @@ CI, IAM/secrets wiring, test layout, dead-code tool output). Nothing in
 this phase executes the reviewed repositories' code; a per-repository test
 baseline belongs to the depth reviews in Phase 4. First find each
 repository's languages the way `review-repo-code-quality` Step 1 does —
-its tracked files matched against every installed guide's Recognize
-section, embedded shell included — not from the single `language` column
+its tracked files listed by extension and shebang, then matched against
+every installed guide's Recognize section, embedded shell included — not from the single `language` column
 `scan-projects` records, which names only the most common file type
 (sometimes Markdown or YAML). Then read those guides and run only the
 tools they mark **static**. Use `Agent` to
@@ -137,7 +138,8 @@ links to it.
 | **Data quality gates** | Row-count, null, freshness, schema checks — present, and do they block or just log? |
 | **Observability** | Structured logs, metrics, lineage emission, run metadata. Can you tell from outside why a run failed? |
 | **Testing** | Unit tests on transforms, contract/fixture tests on I/O, any integration test. Test-to-logic ratio. |
-| **Dependency health** | Shared-lib version lag, pinned vs. floating deps, known CVEs, EOL runtimes, and end-of-life or deprecated versions and formats from each language guide's Currency checks (against the live sources they name). A guide's preferred tool, such as pixi, is reported as a recommendation, not scored. |
+| **Dependency health** | Shared-lib version lag, pinned vs. floating deps, known CVEs, EOL runtimes. |
+| **Currency** | The static parts of each language guide's Currency checks and `review-repo-code-quality`'s Currency sweep, against the live sources they name: supported versions, deprecated formats and mechanisms, CI actions and runner images, update automation. The house preferences in effect are recommendations, listed once in the Summary and never scored. |
 | **Secrets & access** | Hardcoded credentials, over-broad IAM/service accounts, secrets in logs. |
 | **Ownership & docs** | CODEOWNERS / on-call, README accuracy, runbook exists. |
 | **Dead code & config** | Unused DAG tasks, stuck feature flags, stale env-specific branches, lint-ignore entries for rules never selected. Use grep, and only the dead-code tools the language guides mark **static**. Anything else waits for Phase 4. |
@@ -149,7 +151,7 @@ Look across the matrix for **systemic** issues:
 
 1. **Drift clusters.** Which pipelines have diverged from the template, in what direction, and did divergences propagate by copy-paste? Group by "generation" — pipelines forked from the same ancestor often share the same bug.
 2. **Contract fragility.** For every edge in the graph: is the schema enforced on both sides, one side, or neither? Rank edges by (criticality × lack of enforcement).
-3. **Copy-paste logic across repos.** Run `analyze-duplicates` once over all repositories with `--cross-project` (from a scratch directory, `--output <scratch>/jscpd.md`, so nothing is written into the reviewed repos; its availability check itself falls back to `npx --yes jscpd@latest`, so if `command -v jscpd` finds nothing, ask before running it at all (this is separate from the depth-set execution consent, which covers only Phase 4); prefer an installed or pinned jscpd and say which was used; do not let it pass a repository's `.jscpd.json` as `--config`, since its `blame`, `history`, and `baselineFromRef` keys make jscpd run git in that repository, and use your own options instead; if declined, look for repeated idioms by hand and say so in Method & limits) and group the hits into clusters. Each duplicate is a place a fix won't land; the recommendation is a shared-library helper plus a migration, not N tickets.
+3. **Copy-paste logic across repos.** Run `analyze-duplicates` once over all repositories with `--cross-project`, under the rules `review-repo-code-quality` Step 2 gives for it (a scratch directory and output; asking before jscpd is fetched, a question separate from the depth-set execution consent, which covers only Phase 4; never a repository's `.jscpd.json`; if declined, repeated idioms by hand, said in Method & limits), and group the hits into clusters. Each duplicate is a place a fix won't land; the recommendation is a shared-library helper plus a migration, not N tickets.
 4. **Shared library blast radius.** What breaks if the shared lib ships a breaking change? Which pipelines are N versions behind and why? Does the shared layer itself have CI?
 5. **Failure propagation.** Trace a failure from a hub node downstream: does it cascade, stall, or silently produce stale data? Where are the circuit breakers?
 6. **Convention gaps.** Things the template *doesn't* specify that everyone solved differently (e.g. timezone handling, null semantics, late-arriving data, what a `limit` parameter means).
@@ -204,11 +206,11 @@ Previous review: {link to prior report, or "none"}
 layers — and the headline in two sentences.}
 
 ## Summary
-Top 3 systemic risks in order, top 3 quick wins, what was out of scope.
+Top 3 systemic risks in order, top 3 quick wins, what was out of scope, and any house recommendations (the house preferences in effect), which are not findings.
 
 ## Since last review
 Fixed / still open / new vs. the previous report, re-verified at the current SHA (omit if first review).
-Name any matrix dimension whose definition changed since the skill version that wrote the previous report, so its scores are not compared like for like (from 0.3.0, Dependency health includes the language guides' Currency checks).
+Name any matrix dimension added or redefined since the skill version that wrote the previous report (0.3.0 added Currency), so scores are compared like for like.
 
 ## Reference pattern
 What "good" looks like here (a table of concern → house pattern), and the template's own gaps.
@@ -234,7 +236,8 @@ Retire / Accept & document / Fix systemically / Fix now — each item with its s
 
 ## Method & limits
 What was scanned, what was sampled, which language guide covered each language
-(or which languages had none), what was verified empirically vs. inferred,
+(or which languages had none), the house preferences in effect, the live sources
+the Currency checks read (with dates), what was verified empirically vs. inferred,
 confidence level, where this report lives for the next run.
 
 ## Evidence appendix

@@ -11,8 +11,7 @@ user-invocable: true
 `review-repo-code-quality` holds the review procedure, the report layout,
 and the architecture principles that apply to every language; this guide
 adds what holds for Python only. That skill reads it in Step 1 for every
-repository with Python code in scope, and `review-org-code-quality` uses
-its **static** tools in Phase 2. The category prefixes (`ARC`, `DC`,
+repository with Python code in scope, and `review-org-code-quality` uses its **static** tools before its depth reviews. The category prefixes (`ARC`, `DC`,
 `DUP`, `CON`, `CL`, `NV`) and the **static** / **consent** marks are
 defined in `review-repo-code-quality`.
 
@@ -57,15 +56,15 @@ evaluated at run time before 3.10, no `match` before 3.10, no
 
 ## Tools
 
-Run each tool from a scratch directory outside the checkout, with paths
-pointing into it: `vulture` reads `[tool.vulture]` from the
-`pyproject.toml` in its working directory. Given a directory, ruff (even
-with `--isolated`) skips what `.gitignore` and `.ignore` list, and so does
-`lizard`: add `--no-respect-gitignore` to ruff and `--no-gitignore` to
-lizard, or pass the tracked files
-(`git -C <checkout> ls-files -z -- '*.py' '*.pyi'`). List scripts without
-an extension in `<paths>` explicitly; neither vulture nor ruff collects
-them from a directory.
+`vulture` reads `[tool.vulture]` from the `pyproject.toml` in its working
+directory, hence the scratch directory (`review-repo-code-quality`
+Step 1). Given a directory, ruff (even with `--isolated`) and `lizard`
+skip ignored files: add `--config 'respect-gitignore = false'` to ruff (it
+works for `ruff check` and `ruff analyze graph`, which rejects
+`--no-respect-gitignore`) and `--no-gitignore` to lizard, or pass the
+tracked `*.py` and `*.pyi` files as Step 1 shows. List scripts without an
+extension in `<paths>` explicitly; neither vulture nor ruff collects them
+from a directory.
 
 | Sweep | Tool | Mark | Command |
 |---|---|---|---|
@@ -75,7 +74,7 @@ them from a directory.
 | Types | the project's mypy or pyright setup | consent | the project's own invocation |
 | Dependencies | `deptry` | consent: maps distributions to modules through the installed project | `deptry .` from the checkout |
 | Import graph | `ruff analyze graph` (experimental) | static | `ruff analyze graph --isolated <paths>`; `--direction dependents` for the reverse map |
-| Complexity | `ruff` | static | `ruff check --isolated --no-cache --select C901,PLR0911,PLR0912,PLR0913,PLR0915 --output-format concise <paths>` (each hit names the function and its count), or `lizard -l python <paths>` |
+| Complexity | `ruff` | static | `ruff check --isolated --no-cache --select C901,PLR0911,PLR0912,PLR0913,PLR0915 --output-format concise <paths>` (each hit gives its count at the function's `def` line; only `C901` names the function), or `lizard -l python <paths>` |
 | Tests | the project's runner | consent | see Verification |
 
 `--statistics` turns a ruff command into per-rule totals for the summary,
@@ -161,8 +160,9 @@ when `<paths>` lists files rather than directories, add
   First rule out submodules of the package (a star import loads them) and
   names that a module-level `__getattr__` serves;
   `ruff check --isolated --preview --select F822` lists candidates,
-  submodule names included. Public names that the documentation presents
-  but `__all__` leaves out are `CL`.
+  submodule names included. For public names that the documentation
+  presents but `__all__` leaves out, correcting the documentation is `CL`;
+  adding them to `__all__` changes what a star import binds (`NV`).
 - **Star imports** (`CL`; `F403`, `F405`) outside an `__init__.py` that
   re-exports.
 
@@ -231,25 +231,34 @@ not that the fix is safe).
 live sources each item names rather than trusting its examples)
 
 - **Python versions.** Compare `requires-python`, the
-  `Programming Language :: Python :: 3.x` classifiers, and the CI matrix
-  with the status of each version at https://devguide.python.org/versions/,
-  or with the support policy the project states (scientific Python
-  projects often follow SPEC 0, https://scientific-python.org/specs/spec-0000/).
-  Report an end-of-life version still supported or tested, the newest
-  stable release missing from CI, and classifiers or a matrix that
-  disagree with `requires-python`.
-- **The PEPs a newer floor brings.** With `--target-version` at the new
-  floor, ruff's `UP` rules apply the syntax PEPs — built-in generics
-  (PEP 585, 3.9), `X | Y` unions (PEP 604, 3.10), type parameters and
-  `type` aliases (PEP 695, 3.12; `UP040`, `UP046`, `UP047`) — and remove
-  branches for versions no longer supported (`UP036`). The PEP 695
-  rewrites are `NV` unless nothing reads the alias or type variable at
-  run time: `UP040` turns an alias into a `TypeAliasType`, so
-  `typing.get_args()` returns `()` and `isinstance()` rejects it, and
-  ruff marks all three fixes unsafe. For the rest, read the "What's New"
-  of each version the floor now guarantees
-  (https://docs.python.org/3/whatsnew/) and the PEP index
-  (https://peps.python.org/).
+  `Programming Language :: Python :: 3.x` classifiers, the CI matrix, and
+  the other places a version is named (`.python-version`, tox `envlist`
+  and nox sessions, the pixi or conda `python` pin, and tool targets such
+  as `[tool.ruff] target-version`, `[tool.mypy] python_version`, and
+  pyright's `pythonVersion`; a current mypy ignores a `python_version` it
+  no longer supports) with the status of each version at
+  https://devguide.python.org/versions/, or with the support policy the
+  project states (scientific Python projects often follow SPEC 0,
+  https://scientific-python.org/specs/spec-0000/, which also drops core
+  dependencies two years after their release: compare their lower bounds
+  too). Report an end-of-life version still supported or tested, the
+  newest stable release missing from CI, and places that disagree with
+  `requires-python`.
+- **The PEPs a newer floor brings.** Model the floor the Python versions
+  item would move to, run the static ruff command with `--target-version`
+  at that floor, and list its `UP` hits inside that floor-raise `NV` item,
+  as what the move unlocks: built-in generics (PEP 585, 3.9), `X | Y`
+  unions (PEP 604, 3.10), type parameters and `type` aliases (PEP 695,
+  3.12; `UP040`, `UP046`, `UP047`), and branches for versions no longer
+  supported (`UP036`). None is a finding of its own while the current
+  floor is lower: a `type` statement is a `SyntaxError` before 3.12.
+  Where the current floor already allows them, the PEP 695 rewrites are
+  still `NV` unless nothing reads the alias or type variable at run time:
+  `UP040` turns an alias into a `TypeAliasType`, so `typing.get_args()`
+  returns `()` and `isinstance()` rejects it, and ruff marks all three
+  fixes unsafe. For the rest, read the "What's New" of each version the
+  floor now guarantees (https://docs.python.org/3/whatsnew/) and the PEP
+  index (https://peps.python.org/).
 - **Packaging standards** (the PyPA specifications,
   https://packaging.python.org/en/latest/specifications/): metadata in
   the `[project]` table (PEP 621) with a declared `[build-system]`
@@ -259,26 +268,34 @@ live sources each item names rather than trusting its examples)
   license table or license classifiers; development, test, and
   documentation dependencies in `[dependency-groups]` (PEP 735) rather
   than extras or loose requirements files; inline script metadata
-  (PEP 723) for standalone scripts; `importlib.metadata`,
-  `importlib.resources`, and `sysconfig` rather than `pkg_resources` and
-  `distutils` (removed in 3.12); releases uploaded through PyPI Trusted
-  Publishing rather than with a stored API token.
-- **Environments, locks, and tools: pixi** (this guide's house
-  preference; it applies only as the run's `HOUSE_PREFERENCES` says — see
-  `review-repo-code-quality` Configuration — and is reported as a
-  recommendation, never as a currency problem). By default, recommend
-  pixi (https://pixi.sh) for how a project is installed, locked, and run:
-  one manifest (`pixi.toml`, or `[tool.pixi]` in `pyproject.toml`) and one
-  `pixi.lock` for conda-forge and PyPI packages on every platform the
-  project supports, `pixi run` tasks for the commands contributors and CI
-  share, and `pixi global install` for command-line tools. Suggest it in
-  place of uv, conda or mamba `environment.yml` files, pip-tools,
-  hand-pinned `requirements*.txt` files, and `pipx`, as one `NV` item with
-  the files it would replace and the CI steps it would change. When the
-  run names another tool, recommend that one the same way; with `none`,
-  skip this item. A working, locked setup on another tool is not out of
-  date, and where the project's rules name its tooling, they stand
-  (`review-repo-code-quality` Step 2).
+  (PEP 723) for standalone scripts; `sysconfig` or setuptools rather than
+  `distutils` (removed from the standard library in 3.12, PEP 632);
+  releases uploaded through PyPI Trusted Publishing
+  (https://docs.pypi.org/trusted-publishers/) rather than with a stored
+  API token. These migrations change what the built distributions
+  declare, so each is `NV` unless the project's rules already require it:
+  extras moved into `[dependency-groups]` leave the published metadata
+  (`pip install pkg[test]` stops installing them), an SPDX `license`
+  string needs a build backend that implements PEP 639 (setuptools 77 or
+  later), and moving `setup.py` arguments into `[project]` can change
+  package discovery, data files, and entry points.
+- **`pkg_resources`.** Setuptools removed it in 82.0.0
+  (https://setuptools.pypa.io/en/latest/history.html), so a run-time
+  import fails wherever setuptools 82 or later, or none, is installed:
+  report it under Needs Verification as a bug, not as a preference, unless
+  the project pins `setuptools<82`; `importlib.metadata` and
+  `importlib.resources` replace it.
+- **Environments, locks, and tools: pixi** (house preference; see
+  `review-repo-code-quality` Configuration and Step 2). Pixi
+  (https://pixi.sh) gives one manifest (`pixi.toml`, or `[tool.pixi]` in
+  `pyproject.toml`) and one `pixi.lock` for conda-forge and PyPI packages
+  on every platform the project supports, `pixi run` tasks for the
+  commands contributors and CI share, and `pixi global install` for
+  command-line tools that conda-forge packages (it installs conda
+  packages only). It replaces uv, conda or mamba `environment.yml` files,
+  pip-tools, hand-pinned `requirements*.txt` files, and `pipx` for tools
+  on conda-forge; name the files it would replace and the CI steps it
+  would change.
 
 **Tests**
 
@@ -299,9 +316,6 @@ live sources each item names rather than trusting its examples)
   the move run those tests and check that each mock was called.
 
 ## Not findings
-
-What looks dead or wrong in Python but is not. List the ones you checked
-under "Not changed (deliberately)".
 
 - Names reached by string or by convention: `getattr`, `importlib`,
   `__import__`, string-keyed registries, `[project.scripts]` and
@@ -356,6 +370,10 @@ under "Not changed (deliberately)".
   (add `--search src` for a src layout) to list breaking API changes;
   griffe loads the old version through a temporary git worktree, and
   `--no-inspection` stops it from importing a package it cannot find.
+- **Packaging changes** (consent, throwaway checkout): `python -m build
+  --outdir <scratch>/dist-before` before the change and
+  `--outdir <scratch>/dist-after` after it; diff each archive's file list,
+  `METADATA`, and `entry_points.txt`.
 - **Enum migrations**: capture what crosses each boundary — JSON or YAML
   output, database values, log lines, command-line help — on the same
   fixture before and after, under both the oldest and the newest
