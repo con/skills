@@ -40,20 +40,21 @@ and generated clients and types (OpenAPI or GraphQL code generation,
 ## Project rules
 
 Read `package.json` (`engines`, `type`, `main` / `module` / `exports` /
-`types` / `bin`, `scripts`, `workspaces`, and how dependencies split
-between `dependencies`, `devDependencies`, and `peerDependencies`), the
-lock file, which names the package manager (`package-lock.json`,
-`pnpm-lock.yaml`, `yarn.lock`, `bun.lock`), every `tsconfig*.json`, and
-whichever of these exist: ESLint (`eslint.config.*`, or the older
-`.eslintrc*`), Prettier (`.prettierrc*`, `prettier.config.*`), Biome
-(`biome.json`, `biome.jsonc`), oxlint (`.oxlintrc.json`), knip
-(`knip.json`, `knip.config.*`), dependency-cruiser
-(`.dependency-cruiser.*`), test runners (`vitest.config.*`,
-`jest.config.*`, `playwright.config.*`), bundlers (`vite.config.*`,
-`webpack.config.*`, `rollup.config.*`, `next.config.*`), `.nvmrc` /
-`.node-version`, and monorepo files (`pnpm-workspace.yaml`, `turbo.json`,
-`nx.json`). Many of these are JavaScript or TypeScript: read them as
-text. Running a tool loads them, which executes them.
+`types` / `bin`, `scripts`, `workspaces`, `packageManager`, and how
+dependencies split between `dependencies`, `devDependencies`, and
+`peerDependencies`), the lock file, which names the package manager
+(`package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, `bun.lock`), every
+`tsconfig*.json` and `jsconfig.json`, and whichever of these exist:
+ESLint (`eslint.config.*`, or the older `.eslintrc*`), Prettier
+(`.prettierrc*`, `prettier.config.*`), Biome (`biome.json`,
+`biome.jsonc`), oxlint (`.oxlintrc.json`), knip (`knip.json`,
+`knip.config.*`), dependency-cruiser (`.dependency-cruiser.*`), test
+runners (`vitest.config.*`, `jest.config.*`, `playwright.config.*`),
+bundlers (`vite.config.*`, `webpack.config.*`, `rollup.config.*`,
+`next.config.*`), `.nvmrc` / `.node-version`, and monorepo files
+(`pnpm-workspace.yaml`, `turbo.json`, `nx.json`). Many of these are
+JavaScript or TypeScript: read them as text. Running a tool loads them,
+which executes them.
 
 The supported runtimes bound what may be proposed: `engines.node`, the
 tsconfig `target` and `lib`, and the browsers the build targets
@@ -70,21 +71,37 @@ load code (ESLint and knip configurations are modules, oxlint
 configurations can name JavaScript plugins, a madge `.madgerc` can point
 at a webpack configuration it then executes). Run them with the project's
 configuration only with consent; for static use, pass the flags in the
-table and run from a scratch directory. Install the tools yourself,
-pinned and outside the checkout; never run the copies in the project's
-`node_modules` without consent.
+table and run from a scratch directory outside the checkout (madge reads
+`.madgerc` from the working directory and every parent). Run the
+project's own copies as `npx --no -- <tool>`, which stops instead of
+fetching a missing tool: plain `npx` installs whatever it does not find
+without asking (for `tsc`, an unrelated package). Install anything else
+yourself, pinned, outside the checkout. Given a directory, oxlint skips
+what `.gitignore` and `.eslintignore` list (even with `--no-ignore`), and
+lizard skips what `.gitignore` lists: pass them the tracked files
+(`git -C <checkout> ls-files -z -- '*.ts' '*.tsx' …`), or lizard
+`--no-gitignore`.
 
 | Sweep | Tool | Mark | Command |
 |---|---|---|---|
-| Dead code: files, exports, dependencies | `knip` | consent | `npx knip --reporter compact` from the installed checkout; add `--production` for shipped code only |
-| Dead code: locals, parameters | `tsc` | consent | `npx tsc --noEmit --noUnusedLocals --noUnusedParameters -p <tsconfig>` |
-| Idiom drift | the project's ESLint, plus `typescript-eslint` (`strict`, `stylistic`), `eslint-plugin-unicorn`, `eslint-plugin-sonarjs` | consent | the project's lint script with those configurations layered on |
+| Dead code: files, exports, dependencies | `knip` | consent | `npx --no -- knip --reporter compact` from the installed checkout; add `--production --strict` for shipped code only (`--strict` is what lists `devDependencies` that shipped code imports) |
+| Dead code: locals, parameters | `tsc` | consent | `npx --no -- tsc --noEmit --noUnusedLocals --noUnusedParameters -p <tsconfig>` |
+| Idiom drift | the project's ESLint, plus `typescript-eslint` `strictTypeChecked` and `stylisticTypeChecked` (with `languageOptions.parserOptions.projectService: true`), `eslint-plugin-unicorn`, `eslint-plugin-sonarjs` | consent: typed linting needs the installed dependencies | the project's lint script with those configurations layered on |
 | Idiom drift | `oxlint`, your configuration | static | `oxlint -c <scratch>/oxlintrc.json --disable-nested-config -D correctness -D suspicious -W pedantic -W style <paths>` |
 | Idiom drift | `biome lint`, your configuration | static | `biome lint --config-path=<scratch>/biome.json --reporter=concise <paths>` |
-| Import graph and cycles | `madge` | static from a scratch directory, so that it finds no `.madgerc` | `madge --circular --extensions ts,tsx,js,jsx --ts-config <checkout>/tsconfig.json <paths>` |
-| Types | `tsc` | consent | `npx tsc --noEmit -p <tsconfig>` |
-| Complexity | `lizard` | static | `lizard -l typescript -l tsx -l javascript -l vue -w <paths>` |
+| Import graph and cycles | `madge`, your tsconfig | static from a scratch directory outside the checkout | `madge --circular --extensions ts,tsx,mts,cts,js,jsx,mjs,cjs [--ts-config <scratch>/tsconfig.json] <paths>`, where your `tsconfig.json` holds only an absolute `baseUrl` and the `paths` entries inside the checkout that you read from the project's tsconfig and the files it extends; leave out `--ts-config` where the project maps no paths |
+| Cycles through `.mts` / `.cts` files | `dependency-cruiser`, your configuration | static from a scratch directory outside the checkout | `depcruise --config <scratch>/dc.json --output-type err <paths>`, with `dc.json` holding `{"forbidden": [{"name": "no-circular", "severity": "error", "from": {}, "to": {"circular": true}}]}`; madge reads no imports from those files |
+| Types | `tsc` | consent | `npx --no -- tsc --noEmit -p <tsconfig>` |
+| Complexity | `lizard` | static | `lizard -l typescript -l tsx -l javascript -l vue -w <paths>`; it does not measure `.mts`, `.cts`, or `.svelte` files (say so in Method & limits) |
 | Tests | the project's runner | consent | see Verification |
+
+Check what each tsc run covers: `tsc --listFilesOnly -p <tsconfig>` must
+list the sources. A solution-style root `tsconfig.json` (`"files": []`
+with `references`) compiles nothing, so `tsc --noEmit` on it exits 0
+having checked no file. Run each command with `-p` on every referenced
+configuration instead, or `tsc -b --noEmit` (it writes `.tsbuildinfo`
+files: throwaway checkout only), and pass madge the configuration that
+holds `paths`.
 
 Without consent, read the project's ESLint, Biome, or oxlint rule
 settings as text and drop the hits for rules it deliberately disables.
@@ -109,8 +126,8 @@ change behavior goes under `NV` instead, with the change spelled out.
   assignable to `Mode.Fast`), and a numeric enum serializes as numbers
   where the union serialized strings. Replacing a union with an `enum` in
   a public signature is an API change (`NV`).
-- **The same magic value in several modules** (`CON`): one exported
-  constant.
+- **The same magic value in several modules** (`ARC`; `CON` when it stays
+  inside one module): one exported constant.
 - **Hand-written types that restate a schema** (`ARC`): an interface
   mirroring a zod schema, a JSON Schema, or an OpenAPI or GraphQL type
   becomes `z.infer<typeof schema>` or the generated type.
@@ -123,10 +140,15 @@ change behavior goes under `NV` instead, with the change spelled out.
 - **Deep imports into another workspace package's internals** (`ARC`),
   bypassing its `exports`.
 - **Effects at module scope** (`ARC`): network calls, `process.env` reads
-  into constants, and listeners or timers registered on import.
-- **Mixed module systems** (`CL`, or `ARC` across packages): `require` and
-  `import` in one package without a reason, or a `"type"` that does not
-  match the files' syntax.
+  into constants, and listeners or timers registered on import. Moving
+  them into a function the entry point calls changes when they happen;
+  trace every importer, tests included.
+- **Mixed module systems** (`NV` unless every importer is traced; `ARC`
+  across packages): `require` and `import` in one package without a
+  reason, or a `"type"` that does not match the files' syntax. Converting
+  moves a dependency's evaluation ahead of the module body (`import`
+  declarations are hoisted) and makes the file strict, and a `"type"`
+  change alters how Node and consumers load every `.js` file.
 - **Default and named exports** mixed against the project's own rule
   (`CL`).
 - **One shape declared in several files** (`DUP`): export it once.
@@ -142,10 +164,14 @@ change behavior goes under `NV` instead, with the change spelled out.
   first.
 - `==` and `!=` (`eqeqeq`) — `NV` unless both sides always have the same
   type.
-- Promises: floating promises (`@typescript-eslint/no-floating-promises`),
-  `async` functions that never `await` (`require-await`), and `.then`
-  chains mixed with `await` in one function — `CL`; rejections nobody
-  handles — `NV`.
+- Promises: a floating promise (`@typescript-eslint/no-floating-promises`)
+  is `CL` when the fix marks it `void` deliberately, and `NV` when the fix
+  awaits it or adds a handler. `async` functions that never `await`
+  (`@typescript-eslint/require-await`) and `.then` chains mixed with
+  `await` are `NV` unless every caller is traced: dropping `async` turns
+  rejections into synchronous throws and returns a non-promise, and an
+  `await` inside `try` catches rejections that a returned `.then` chain
+  did not.
 - `@ts-ignore`, `@ts-expect-error`, and `eslint-disable` comments without
   a reason, or for rules the configuration no longer enables (`DC`).
 
@@ -153,14 +179,12 @@ change behavior goes under `NV` instead, with the change spelled out.
 
 - dependencies never imported, packages imported but not declared, and
   `devDependencies` imported by shipped code (`DC` or `NV`; knip reports
-  all three);
-- two libraries doing one job (two date libraries, two HTTP clients)
-  (`CON`);
+  the first two, and the third with `--production --strict`);
 - `@types/*` packages for libraries that ship their own types (`DC`);
 - several `tsconfig` files repeating options instead of using `extends`
   (`CON`);
 - `package.json` scripts that repeat one another, or that nothing calls
-  (`DUP`, `DC`).
+  (`DUP`, `DC`; see Not findings for the scripts npm runs by name).
 
 **Currency** — check the live sources below on the day of the review and
 cite them with the date. Moving a version floor or switching tools is
@@ -170,13 +194,24 @@ usually `NV`, a maintainer's decision.
   `.node-version`, and the CI matrix with the release schedule at
   https://nodejs.org/en/about/previous-releases: an end-of-life line
   still supported or tested, or the current LTS line missing.
-- **Compiler and syntax.** A `typescript` dependency well behind the
-  current release, tsconfig options the installed compiler reports as
-  deprecated, and a `target` or `lib` older than every runtime the
-  project supports, which makes the build down-level syntax for nothing.
-- **Tool formats.** ESLint's `.eslintrc*` format, deprecated since
-  ESLint 9 in favour of `eslint.config.*`, and dependencies the registry
-  marks deprecated (the package manager warns on install).
+- **Compiler and syntax.** A `typescript` dependency behind the newest
+  version the project's tooling accepts: compare
+  `npm view typescript dist-tags` with what the linters and other tools
+  that load the compiler support (`npm view typescript-eslint
+  peerDependencies`), since a new TypeScript major can outpace them. Also
+  tsconfig options the project's compiler reports as deprecated (consent:
+  `npx --no -- tsc --noEmit -p <tsconfig>`), and a
+  `target` older than every runtime the project supports, which makes the
+  build down-level syntax for nothing (`lib` only decides which built-in
+  APIs type-check). Raising `target` to ES2022 or later also turns on
+  `useDefineForClassFields` unless the tsconfig sets it, which changes how
+  class fields initialize: `NV` unless the option is pinned to its current
+  value.
+- **Tool formats and deprecations.** ESLint's `.eslintrc*` format,
+  deprecated in ESLint 9 and no longer read by ESLint 10
+  (`npm view eslint dist-tags`); dependencies the registry marks
+  deprecated (`npm view <package>@<version> deprecated`, run from a
+  scratch directory, installs nothing).
 
 ## Not findings
 
@@ -192,6 +227,19 @@ ones you checked under "Not changed (deliberately)".
   route modules), configuration files that tools load (`*.config.*`),
   Storybook stories (`*.stories.*`), tests found by glob, service and web
   workers loaded by URL, and dynamic `import()` with a computed path.
+- Exports a framework reads by name from such files: Next.js `metadata`,
+  `generateMetadata`, `generateStaticParams`, `revalidate`, `dynamic`,
+  `runtime`, `getServerSideProps`; React Router and Remix `loader`,
+  `action`, `meta`, `links`; SvelteKit `load`, `prerender`, `ssr`, `csr`,
+  `actions`, `GET` / `POST`; Astro `getStaticPaths`; and the default
+  export those files must have. Also modules loaded by glob
+  (`import.meta.glob`, webpack `require.context`).
+- `package.json` scripts the package manager runs by name: lifecycle
+  scripts (`prepare`, `prepublishOnly`, `prepack`, `postpack`,
+  `preinstall`, `install`, `postinstall`, `version`, …) and the
+  `pre<name>` / `post<name>` hooks of scripts that are run, plus scripts
+  that CI, documentation, other scripts, or a task runner (turbo, nx)
+  invoke.
 - Registrations by decorator or dependency injection (Angular, NestJS),
   and Vue or Svelte components used only from templates.
 - Side-effect imports (`import "./polyfills"`, stylesheet imports),
@@ -203,14 +251,22 @@ ones you checked under "Not changed (deliberately)".
 ## Verification
 
 - **Install** (consent, in the throwaway checkout): the package manager
-  the lock file names, with the lock frozen — `npm ci`,
-  `pnpm install --frozen-lockfile`, `yarn install --immutable`.
+  the lock file names, at the version `packageManager` names, with the
+  lock frozen — `npm ci`, `pnpm install --frozen-lockfile`,
+  `yarn install --frozen-lockfile` for Yarn 1 (a `yarn.lock` that starts
+  `# yarn lockfile v1`) or `yarn install --immutable` for Yarn 2 and
+  later, `bun install --frozen-lockfile`.
 - **Baseline and after each group** (consent): the project's own scripts —
-  `lint`, `typecheck` (else `tsc --noEmit`), `test` (vitest, jest,
-  playwright), and `build`, since bundling catches broken imports a type
-  check can miss.
+  `lint`, `typecheck` (else `tsc -b --noEmit`, or `tsc --noEmit -p` on
+  each referenced configuration), `test` (vitest, jest, playwright), and
+  `build`, since bundling catches broken imports a type check can miss.
 - **Static, after any edit**: the static oxlint or biome command above on
   the changed files.
-- **Public surface** (consent): emit declarations before and after
-  (`tsc --declaration --emitDeclarationOnly --outDir <scratch>`) and diff
-  them, or compare the project's API Extractor report if it keeps one.
+- **Public surface** (consent): emit declarations before and after with
+  `tsc -p <the configuration that builds the package> --declaration
+  --emitDeclarationOnly --noEmit false --outDir <scratch>/api-before`
+  (then `api-after`), check that each directory holds the package's
+  `.d.ts` files — a configuration with `"noEmit": true` or a solution
+  file writes nothing and still exits 0 — and diff them; or compare the
+  `.d.ts` files, or the API Extractor report, the project's own build
+  writes.

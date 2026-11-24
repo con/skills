@@ -57,23 +57,38 @@ evaluated at run time before 3.10, no `match` before 3.10, no
 
 ## Tools
 
-Run each from a scratch directory, with paths pointing into the checkout:
-`vulture` reads `[tool.vulture]` from the `pyproject.toml` in its working
-directory.
+Run each tool from a scratch directory outside the checkout, with paths
+pointing into it: `vulture` reads `[tool.vulture]` from the
+`pyproject.toml` in its working directory. Given a directory, ruff (even
+with `--isolated`) skips what `.gitignore` and `.ignore` list, and so does
+`lizard`: add `--no-respect-gitignore` to ruff and `--no-gitignore` to
+lizard, or pass the tracked files
+(`git -C <checkout> ls-files -z -- '*.py' '*.pyi'`). List scripts without
+an extension in `<paths>` explicitly; neither vulture nor ruff collects
+them from a directory.
 
 | Sweep | Tool | Mark | Command |
 |---|---|---|---|
-| Dead code | `vulture` | static | `vulture <paths> --min-confidence 60`; again without `--min-confidence` for the long tail |
-| Idiom drift | `ruff`, your configuration | static | `ruff check --isolated --no-cache --target-version py3XX --select E,F,W,B,UP,RET,SIM,C4,PIE,PERF,PLR,PLC0415 --output-format concise --statistics <paths>` |
-| Idiom drift | `ruff`, the project's configuration | consent | `ruff check --no-cache --extend-select B,UP,RET,SIM,C4,PIE,PERF,PLR --statistics` from the checkout |
+| Dead code | `vulture` | static | `vulture <paths> --min-confidence 90` for unused imports (90%), unreachable code and unused parameters (100%); then without `--min-confidence` for the 60% tail (functions, classes, methods, attributes, variables) |
+| Idiom drift | `ruff`, your configuration | static | `ruff check --isolated --no-cache --target-version py3XX --select E,F,W,B,UP,RET,SIM,C4,PIE,PERF,PLR,PLC0415,BLE001,S110,RUF012,PLW0603,T201,PGH003 --output-format concise <paths>` |
+| Idiom drift | `ruff`, the project's configuration | consent | `ruff check --no-cache --extend-select B,UP,RET,SIM,C4,PIE,PERF,PLR,PLC0415,BLE001,S110,RUF012,PLW0603,T201,PGH003 --output-format concise` from the checkout |
 | Types | the project's mypy or pyright setup | consent | the project's own invocation |
 | Dependencies | `deptry` | consent: maps distributions to modules through the installed project | `deptry .` from the checkout |
 | Import graph | `ruff analyze graph` (experimental) | static | `ruff analyze graph --isolated <paths>`; `--direction dependents` for the reverse map |
-| Complexity | `ruff` | static | `ruff check --isolated --no-cache --select C901,PLR0911,PLR0912,PLR0913,PLR0915 --statistics <paths>`, or `lizard -l python <paths>` |
+| Complexity | `ruff` | static | `ruff check --isolated --no-cache --select C901,PLR0911,PLR0912,PLR0913,PLR0915 --output-format concise <paths>` (each hit names the function and its count), or `lizard -l python <paths>` |
 | Tests | the project's runner | consent | see Verification |
 
-With `--isolated`, ruff ignores the project's `per-file-ignores` and
-disabled rules: read them from its configuration and drop those hits.
+`--statistics` turns a ruff command into per-rule totals for the summary,
+but it then prints no locations. With `--isolated`, ruff ignores the
+whole project configuration: its `per-file-ignores` and disabled rules,
+and also `exclude` / `extend-exclude`, `line-length`, thresholds
+(`lint.pylint.max-args`, `max-branches`, `max-returns`, `max-statements`,
+`lint.mccabe.max-complexity`), and rule options such as
+`lint.flake8-bugbear.extend-immutable-calls` and
+`lint.pyupgrade.keep-runtime-typing`. Read them from the project's
+configuration and drop or re-judge the affected hits, or pass the values
+back with `--config 'KEY = VALUE'`, which reads nothing from the
+repository.
 
 ## Checks
 
@@ -87,20 +102,31 @@ change behavior goes under `NV` instead, with the change spelled out.
   handful of values, or one that has gained values over time, will need
   updating again. When it is repeated across signatures, mirrored by a
   run-time tuple or set (validation, `argparse` `choices`, `click.Choice`),
-  or compared against bare strings elsewhere, define one `Enum` —
-  `enum.StrEnum` from Python 3.11, `class Mode(str, Enum)` before — and
-  use it in every annotation, choice list, and comparison. Keep short,
-  stable sets as `Literal` (`Literal["r", "w"]`); one named `Literal` alias
-  is enough when nothing at run time needs the list. Before rating the
-  change **High**, trace every place a value crosses a boundary: pydantic
-  models (`model_dump()` returns members unless `use_enum_values` or JSON
-  mode is set), YAML dumpers and custom JSON encoders, database columns,
-  pickles, and formatting — `str()` and f-strings of a `(str, Enum)` member
-  give `"Mode.FAST"`, not `"fast"` (`StrEnum` gives the value). Type
-  checkers also reject callers that pass plain strings, so for a public
-  function the switch is an API change (`NV`).
-- **The same magic value in several modules** (`CON`): one named constant,
-  or a member of the `Enum` above. `PLR2004` finds the comparisons.
+  or compared against bare strings elsewhere, recommend one `Enum` —
+  `enum.StrEnum` from Python 3.11, `class Mode(str, Enum)` before — used
+  in every annotation, choice list, and comparison. Keep short, stable
+  sets as `Literal` (`Literal["r", "w"]`).
+  Before rating the switch **High**, trace every place a value crosses a
+  boundary: pydantic models (`model_dump()` returns members unless
+  `use_enum_values` or JSON mode is set), YAML dumpers and custom JSON
+  encoders, database columns, pickles, and formatting. `str()` of a
+  `(str, Enum)` member gives `"Mode.FAST"` on every version, while
+  f-strings and `format()` give `"fast"` up to Python 3.10 and
+  `"Mode.FAST"` from 3.11, so one line prints different text across a
+  range that spans both; `StrEnum`, or `__str__ = str.__str__` on the
+  class, gives the value everywhere. Type checkers also reject callers
+  that pass plain strings, so for a public function the switch is an API
+  change (`NV`).
+  The safe first step, which changes no annotation, value, or output
+  (`CON`), is one named alias that the run-time copies derive from:
+  `Mode = Literal["fast", "slow", …]` and `MODES = typing.get_args(Mode)`
+  for `choices=` and validation (`get_args(Mode.__value__)` for a PEP 695
+  `type` alias). Propose the `Enum` alongside it as the follow-up.
+- **The same magic value in several modules** (`ARC`; `CON` when it stays
+  inside one module): one named constant, or a member of the `Enum`
+  above. `PLR2004` finds numeric comparisons only; for strings add
+  `--config 'lint.pylint.allow-magic-value-types = []'` (its default
+  skips `str` and `bytes`), or search for the literal.
 - **Dicts with a fixed set of keys passed between functions** (`ARC`):
   a `dataclass`, `TypedDict`, or `NamedTuple` makes the shape one
   definition. Code that serializes, mutates, or `**`-unpacks the dict
@@ -114,7 +140,10 @@ change behavior goes under `NV` instead, with the change spelled out.
   only in annotations are fine.
 - **Function-local imports** (`CL`; `PLC0415`) with no cycle to break and
   no slow or optional dependency to defer move to the top of the module.
-  Keep the ones that do either, and say which.
+  Keep the ones that break a cycle, defer a slow or optional dependency,
+  or must run at a set time (a Django `AppConfig.ready()` importing
+  `signals`; at the top of `apps.py` it raises `AppRegistryNotReady`),
+  and say which.
 - **Private imports** (`ARC`): `from pkg._impl import X` where `pkg`
   exports `X` publicly, and private names imported across package
   boundaries.
@@ -122,8 +151,13 @@ change behavior goes under `NV` instead, with the change spelled out.
   variables read into module constants, file or network access, `sys.path`
   edits, and registrations. Moving them into a function the entry point
   calls changes when they happen; trace every importer, tests included.
-- **`__all__` drift** (`CL`): names listed but not defined, or public
-  names the documentation presents but `__all__` leaves out.
+- **`__all__` drift**: a name listed but defined nowhere makes
+  `from pkg import *` raise `AttributeError` today, so its fix is `NV`.
+  First rule out submodules of the package (a star import loads them) and
+  names that a module-level `__getattr__` serves;
+  `ruff check --isolated --preview --select F822` lists candidates,
+  submodule names included. Public names that the documentation presents
+  but `__all__` leaves out are `CL`.
 - **Star imports** (`CL`; `F403`, `F405`) outside an `__init__.py` that
   re-exports.
 
@@ -136,9 +170,18 @@ change behavior goes under `NV` instead, with the change spelled out.
   (`C4`), `pass` in a non-empty body (`PIE790`), loops that only build a
   list (`PERF401`);
 - old typing spellings (`typing.List`, `Optional[X]`; `UP006`, `UP007`,
-  `UP035`, `UP045`) where the oldest supported Python has the new ones;
+  `UP035`, `UP045`) where the oldest supported Python has the new ones.
+  Where a library reads the annotations at run time (see Types), the
+  oldest supported Python must evaluate the new spelling, and code that
+  checks `typing.get_origin(…) is Union` breaks, since
+  `get_origin(int | None)` is `types.UnionType` before Python 3.14. The
+  PEP 695 rewrites (`UP040`, `UP046`, `UP047`) are not spellings: see
+  Currency;
 - `any(...)` written to mean "not empty": `if xs:` is the same only when
-  no element can be falsy;
+  `xs` is a sized built-in collection (list, tuple, set, dict, str) and no
+  element can be falsy. An iterator or generator (`path.iterdir()`,
+  `os.scandir()`, `map()`) is always truthy, and a NumPy array or pandas
+  object raises `ValueError`, so keep `any()` there;
 - `open()` outside a `with` block (`SIM115`) — `CL` when every path
   already closes the file, else `NV`.
 
@@ -149,14 +192,25 @@ change behavior goes under `NV` instead, with the change spelled out.
 - module state changed through `global` (`PLW0603`);
 - `print` in library code where the project logs (`T201`).
 
-**Types** (`CL`): `Any` where the concrete type is known; `# type: ignore`
-without an error code (`PGH003`); annotations that disagree with what the
-function returns (confirm with the type checker under consent).
+**Types** (`CL` when only type checkers read the annotations; `NV` when a
+library reads them at run time: pydantic models, settings, and
+`validate_call`; FastAPI route parameters, and the return annotation,
+which is the response model unless the decorator passes
+`response_model=`; typer commands; cattrs structuring;
+`functools.singledispatch` registration; run-time checkers such as
+beartype and typeguard; SQLAlchemy `Mapped[...]` columns; any other
+`typing.get_type_hints` caller. There, narrowing `Any` changes coercion,
+validation, dispatch, or the response, and matching a return annotation
+to the body can send fields the old one filtered out): `Any` where the
+concrete type is known; `# type: ignore` without an error code
+(`PGH003`; a comment, so always `CL`); annotations that disagree with
+what the function returns (the type checker confirms the disagreement,
+not that the fix is safe).
 
 **Packaging and dependencies**
 
-- metadata declared in both `setup.py` / `setup.cfg` and `pyproject.toml`,
-  or one version string kept in several files (`CON`);
+- metadata declared in both `setup.py` / `setup.cfg` and `pyproject.toml`
+  (`CON`), and one version string kept in several files (`ARC`);
 - dependencies declared for run time but never imported by shipped code
   (`deptry` `DEP002`; it skips `tests/` by default, so this also catches
   dependencies only tests use), imported but not declared (`DEP001`), or
@@ -164,7 +218,7 @@ function returns (confirm with the type checker under consent).
   dependencies that shipped code imports (`DEP004`) — `DC`, or `NV` when
   the fix changes what installs;
 - the same pins repeated across `requirements*.txt`, `tox.ini`, CI, and
-  `pyproject.toml` (`CON`);
+  `pyproject.toml` (`ARC`);
 - a `requires-python` lower bound that CI never tests (`NV`: the claim or
   the test matrix has to change).
 
@@ -185,8 +239,12 @@ current state. Moving the version floor or switching tools is usually
   floor, ruff's `UP` rules apply the syntax PEPs — built-in generics
   (PEP 585, 3.9), `X | Y` unions (PEP 604, 3.10), type parameters and
   `type` aliases (PEP 695, 3.12; `UP040`, `UP046`, `UP047`) — and remove
-  branches for versions no longer supported (`UP036`). For the rest, read
-  the "What's New" of each version the floor now guarantees
+  branches for versions no longer supported (`UP036`). The PEP 695
+  rewrites are `NV` unless nothing reads the alias or type variable at
+  run time: `UP040` turns an alias into a `TypeAliasType`, so
+  `typing.get_args()` returns `()` and `isinstance()` rejects it, and
+  ruff marks all three fixes unsafe. For the rest, read the "What's New"
+  of each version the floor now guarantees
   (https://docs.python.org/3/whatsnew/) and the PEP index
   (https://peps.python.org/).
 - **Packaging standards** (the PyPA specifications,
@@ -218,8 +276,17 @@ current state. Moving the version floor or switching tools is usually
   one fixture in the nearest shared `conftest.py`;
 - test functions that differ only in their data (`DUP`):
   `pytest.mark.parametrize`, noting that test IDs change;
-- `mock.patch("pkg.mod.name")` targets naming a symbol the review moves:
-  the patch target moves with it.
+- patch targets around a symbol the review moves (`mock.patch("pkg.mod.name")`,
+  `mocker.patch`, `monkeypatch.setattr("pkg.mod.name", …)`): a patch
+  replaces the name only in the module it names, so it must name the
+  module where the code under test looks the name up when it runs, not
+  where the symbol is defined. The target stays when that code stays and
+  imports the name with `from … import`, or keeps calling
+  `old.mod.name()` through a re-export. It moves when that code moves
+  with the symbol (a re-export left in the old module does not carry the
+  patch) or is rewritten to call `new.mod.name()`. A target that resolves
+  on the wrong module raises nothing and the real function runs, so after
+  the move run those tests and check that each mock was called.
 
 ## Not findings
 
@@ -236,6 +303,21 @@ under "Not changed (deliberately)".
 - Functions registered by decorator: web routes (Flask, FastAPI),
   commands (click, typer), Django views, models, admin classes and signal
   handlers, Celery tasks, `atexit` handlers.
+- Imports kept for their side effects: `import readline`, or a module
+  imported so that it registers handlers, plugins, or codecs (a Django
+  app's `ready()` importing `signals`). vulture reports them, and ruff's
+  `F401` fix would delete them; marking them `# noqa: F401` with the
+  reason is a `CL` both tools honor.
+- Methods that a library or framework calls by name on a subclass
+  (`json.JSONEncoder.default`, `BaseHTTPRequestHandler.do_GET`, Django's
+  `get_queryset` and `clean_<field>`), and parameters a signature must
+  keep because its caller passes them: a signal handler's `frame`,
+  `sys.excepthook`'s `tb`, a Django signal receiver's `sender` and
+  `**kwargs`, callbacks, overrides. vulture reports such a parameter at
+  100% confidence when its name is unused anywhere in the scan. Renaming
+  it to `_name` silences vulture but is safe only when every caller
+  passes it by position (`signal.signal`, `sys.excepthook`); Django calls
+  receivers by keyword.
 - Dunder methods, `__all__` entries, `__version__`, re-exports in
   `__init__.py`, `if TYPE_CHECKING:` imports, `@overload` signatures,
   `Protocol` members, abstract methods, and `*.pyi` stubs.
@@ -258,9 +340,13 @@ under "Not changed (deliberately)".
   --check` when the project configures them.
 - **Static, after any edit**: `ruff check --isolated --no-cache --select
   E9,F63,F7,F82 <paths>` reports syntax errors and undefined names.
-- **Public surface** (consent): `python -c "import pkg; print(sorted(pkg.__all__))"`
-  before and after, or `griffe check pkg --against <ref>` to list breaking
-  API changes (it loads the old version through a temporary git worktree).
+- **Public surface** (consent):
+  `python -c "import pkg; print(sorted(getattr(pkg, '__all__', None) or [n for n in dir(pkg) if not n.startswith('_')]))"`
+  before and after, or `griffe check pkg --against <ref> --no-inspection`
+  (add `--search src` for a src layout) to list breaking API changes;
+  griffe loads the old version through a temporary git worktree, and
+  `--no-inspection` stops it from importing a package it cannot find.
 - **Enum migrations**: capture what crosses each boundary — JSON or YAML
   output, database values, log lines, command-line help — on the same
-  fixture before and after; the bytes must match.
+  fixture before and after, under both the oldest and the newest
+  supported Python; the bytes must match.
