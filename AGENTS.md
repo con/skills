@@ -176,7 +176,7 @@ checks the fields, not their order):
   came in. Add a name when someone's contribution becomes substantial.
 - `license: MIT`, the license of the whole collection (`LICENSE`).
 - `type: skill`: states explicitly that the package is a skill. apm-cli 0.31
-  parses it but routes by the package's structure, which gives the same
+  validates it but routes by the package's structure, which gives the same
   result; the field keeps the intent visible to any later tool or
   distribution mechanism that reads it.
 - `dependencies` (only when needed): sibling skills this skill's procedure
