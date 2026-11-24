@@ -1,29 +1,22 @@
 ---
 name: code-quality-review-python
 version: 0.1.0
-description: Python guide for review-repo-code-quality and review-org-code-quality — where a Python project states its rules, its review tools and which need execution consent, Python checks such as a long or growing Literal list that becomes one Enum, currency (Python versions, PEPs, PyPA standards, pixi), false positives, and verification commands. Use when a review skill reads it, or when asked for a code-quality review of Python code specifically (it then starts review-repo-code-quality).
-allowed-tools: Read, Skill
-user-invocable: true
+description: Python guide for review-repo-code-quality and review-org-code-quality — where a Python project states its rules, its review tools and which need execution consent, Python checks such as a long or growing Literal list that becomes one Enum, currency (Python versions, PEPs, PyPA standards, pixi), false positives, and verification commands. Not invoked directly. Use when a review skill tells you to read it, or when asked what those reviews check for Python.
+allowed-tools: Read
+user-invocable: false
 ---
 
 # Python guide for the code-quality reviews
 
 `review-repo-code-quality` holds the review procedure, the report layout,
 and the architecture principles that apply to every language; this guide
-adds what holds for Python only. That skill reads it in Step 1 for every
-repository with Python code in scope, and `review-org-code-quality` uses its **static** tools before its depth reviews. The category prefixes (`ARC`, `DC`,
-`DUP`, `CON`, `CL`, `NV`) and the **static** / **consent** marks are
-defined in `review-repo-code-quality`.
-
-## When invoked directly
-
-This guide is not a review on its own. Asked for a Python code-quality
-review, or for this guide by name, run `review-repo-code-quality` (with
-`Skill`, or by reading `../review-repo-code-quality/SKILL.md`); its Step 1
-loads this guide. Limit that review to the Python code only when the user
-asked for that; otherwise it covers every language in the repository,
-each with its own guide. If `review-repo-code-quality` is not installed,
-stop and ask the user to install it; do not review from this guide alone.
+adds what holds for Python only. It is not a review on its own: a review
+starts from `review-repo-code-quality`, which reads this guide in Step 1
+for every repository with Python code in scope, and
+`review-org-code-quality` uses its **static** tools before its depth
+reviews. The category prefixes (`ARC`, `DC`, `DUP`, `CON`, `CL`, `NV`) and
+the **static** / **consent** marks are defined in
+`review-repo-code-quality`.
 
 ## Recognize
 

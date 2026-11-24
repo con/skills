@@ -27,7 +27,6 @@ sibling skill:
 | Shell (POSIX sh, Bash), including shell embedded in CI workflows, Makefiles, and Dockerfiles | `code-quality-review-shell` |
 
 Every guide has the same sections, which the steps below refer to:
-**When invoked directly** (a guide asked for by name starts this skill),
 **Recognize** (the files it covers), **Project rules** (where the
 language keeps its configuration, and the version settings that bound
 what may be proposed), **Tools** (for each sweep, a tool marked
@@ -38,7 +37,7 @@ idiom for a closed set of values and a Currency group), **Not findings**
 (what looks dead or wrong in that language but is not), and
 **Verification** (the commands that show a change preserved behavior).
 To add a language, add a sibling `code-quality-review-<language>` skill
-with those sections, a row in this table, and a row in the repository's
+(`user-invocable: false`, `allowed-tools: Read`) with those sections, a row in this table, and a row in the repository's
 README. Install the guides together with this skill, for example
 `apm install con/skills#<commit> --skill code-quality-report-conventions --skill review-repo-code-quality --skill code-quality-review-python --skill code-quality-review-ts --skill code-quality-review-go --skill code-quality-review-shell --skill analyze-duplicates --target agent-skills`.
 

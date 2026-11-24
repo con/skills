@@ -1,32 +1,22 @@
 ---
 name: code-quality-review-ts
 version: 0.1.0
-description: TypeScript and JavaScript guide for review-repo-code-quality and review-org-code-quality — where a project states its rules, its review tools and which need execution consent (ESLint and knip configurations are code), checks such as a long or growing string-literal union that becomes one as-const list, currency, false positives, and verification commands. Use when a review skill reads it, or when asked for a code-quality review of TypeScript or JavaScript code specifically (it then starts review-repo-code-quality).
-allowed-tools: Read, Skill
-user-invocable: true
+description: TypeScript and JavaScript guide for review-repo-code-quality and review-org-code-quality — where a project states its rules, its review tools and which need execution consent (ESLint and knip configurations are code), checks such as a long or growing string-literal union that becomes one as-const list, currency, false positives, and verification commands. Not invoked directly. Use when a review skill tells you to read it, or when asked what those reviews check for TypeScript or JavaScript.
+allowed-tools: Read
+user-invocable: false
 ---
 
 # TypeScript and JavaScript guide for the code-quality reviews
 
 `review-repo-code-quality` holds the review procedure, the report layout,
 and the architecture principles that apply to every language; this guide
-adds what holds for TypeScript and JavaScript only. That skill reads it in
-Step 1 for every repository with such code in scope, and
-`review-org-code-quality` uses its **static** tools before its depth reviews. The
-category prefixes (`ARC`, `DC`, `DUP`, `CON`, `CL`, `NV`) and the
-**static** / **consent** marks are defined in `review-repo-code-quality`.
-
-## When invoked directly
-
-This guide is not a review on its own. Asked for a TypeScript or
-JavaScript code-quality review, or for this guide by name, run
-`review-repo-code-quality` (with `Skill`, or by reading
-`../review-repo-code-quality/SKILL.md`); its Step 1 loads this guide.
-Limit that review to the TypeScript and JavaScript code only when the
-user asked for that; otherwise it covers every language in the
-repository, each with its own guide. If `review-repo-code-quality` is not
-installed, stop and ask the user to install it; do not review from this
-guide alone.
+adds what holds for TypeScript and JavaScript only. It is not a review on
+its own: a review starts from `review-repo-code-quality`, which reads this
+guide in Step 1 for every repository with such code in scope, and
+`review-org-code-quality` uses its **static** tools before its depth
+reviews. The category prefixes (`ARC`, `DC`, `DUP`, `CON`, `CL`, `NV`) and
+the **static** / **consent** marks are defined in
+`review-repo-code-quality`.
 
 ## Recognize
 

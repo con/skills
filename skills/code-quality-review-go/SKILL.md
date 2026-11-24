@@ -1,29 +1,21 @@
 ---
 name: code-quality-review-go
 version: 0.1.0
-description: Go guide for review-repo-code-quality and review-org-code-quality — where a Go module states its rules, its review tools and which need execution consent (anything that loads packages does), Go checks such as typed constants for closed sets, error wrapping, and interface placement, currency, false positives, and verification commands. Use when a review skill reads it, or when asked for a code-quality review of Go code specifically (it then starts review-repo-code-quality).
-allowed-tools: Read, Skill
-user-invocable: true
+description: Go guide for review-repo-code-quality and review-org-code-quality — where a Go module states its rules, its review tools and which need execution consent (anything that loads packages does), Go checks such as typed constants for closed sets, error wrapping, and interface placement, currency, false positives, and verification commands. Not invoked directly. Use when a review skill tells you to read it, or when asked what those reviews check for Go.
+allowed-tools: Read
+user-invocable: false
 ---
 
 # Go guide for the code-quality reviews
 
 `review-repo-code-quality` holds the review procedure, the report layout,
 and the architecture principles that apply to every language; this guide
-adds what holds for Go only. That skill reads it in Step 1 for every
-repository with Go code in scope, and `review-org-code-quality` uses its **static** tools before its depth reviews. The category prefixes (`ARC`, `DC`, `DUP`,
-`CON`, `CL`, `NV`) and the **static** / **consent** marks are defined in
-`review-repo-code-quality`.
-
-## When invoked directly
-
-This guide is not a review on its own. Asked for a Go code-quality
-review, or for this guide by name, run `review-repo-code-quality` (with
-`Skill`, or by reading `../review-repo-code-quality/SKILL.md`); its Step 1
-loads this guide. Limit that review to the Go code only when the user
-asked for that; otherwise it covers every language in the repository,
-each with its own guide. If `review-repo-code-quality` is not installed,
-stop and ask the user to install it; do not review from this guide alone.
+adds what holds for Go only. It is not a review on its own: a review
+starts from `review-repo-code-quality`, which reads this guide in Step 1
+for every repository with Go code in scope, and `review-org-code-quality`
+uses its **static** tools before its depth reviews. The category prefixes
+(`ARC`, `DC`, `DUP`, `CON`, `CL`, `NV`) and the **static** / **consent**
+marks are defined in `review-repo-code-quality`.
 
 ## Recognize
 
