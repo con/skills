@@ -63,15 +63,18 @@ at a webpack configuration it then executes, and an `oxlint.config.ts` is itself
 configuration only with consent; for static use, pass the flags in the
 table and run from a scratch directory outside the checkout (madge reads
 `.madgerc` from the working directory and every parent). Run the
-project's own copies by path from the checkout's `node_modules/.bin`
-(`<checkout>/node_modules/.bin/tsc …`), or as `yarn <tool>` under Yarn
-Plug'n'Play, which has no `node_modules`. Do not use `npx`: plain `npx`
-installs whatever it does not find without asking (for `tsc`, an
-unrelated package), and `npx --no` still runs, without notice, any copy
-in a parent directory's `node_modules/.bin`, npm's global prefix, or its
-`_npx` cache, whatever the version. Where the project does not install a
-tool, install your own pinned copy outside the checkout. Record each
-tool's `--version` in Method & limits and compare it with the lock file. Given a directory, oxlint skips what `.gitignore` lists even
+project's own copies by path from the `node_modules/.bin` of the package
+that declares them (`<checkout>/node_modules/.bin/tsc …`; in a pnpm
+workspace, `<checkout>/packages/<name>/node_modules/.bin/tsc …`), or as
+`yarn <tool>` under Yarn Plug'n'Play, which has no `node_modules`. Do
+not use `npx`: plain `npx` installs whatever it does not find without
+asking (for `tsc`, an unrelated package), and `npx --no` still runs,
+without notice, any copy in a parent directory's `node_modules/.bin`,
+npm's global prefix, or its `_npx` cache, whatever the version. A tool
+the project does not install is yours to supply, as
+`review-repo-code-quality` Step 1 says; compare each project tool's
+`--version` with the lock file. Given a directory, oxlint skips what
+`.gitignore` lists even
 with `--no-ignore` (which turns off only `.eslintignore`), and lizard
 skips it unless given `--no-gitignore`: pass oxlint the tracked `*.ts`,
 `*.tsx`, … files as `review-repo-code-quality` Step 1 shows.
@@ -218,8 +221,7 @@ token there)
 - **Tool formats and deprecations.** ESLint's `.eslintrc*` format,
   deprecated in ESLint 9 and no longer read by ESLint 10
   (`npm view eslint dist-tags`); dependencies the registry marks
-  deprecated (`npm view <package>@<version> deprecated`, run from a
-  scratch directory, installs nothing).
+  deprecated (`npm view <package>@<version> deprecated`).
 
 ## Not findings
 
@@ -242,9 +244,10 @@ token there)
 - `package.json` scripts the package manager runs by name: lifecycle
   scripts (`prepare`, `prepublishOnly`, `prepack`, `postpack`,
   `preinstall`, `install`, `postinstall`, `version`, …) and the
-  `pre<name>` / `post<name>` hooks of scripts that are run (npm, pnpm,
-  Bun, and Yarn 1 run them; Yarn 2 and later do not, so there an uncalled
-  one is dead), plus scripts
+  `pre<name>` / `post<name>` hooks of scripts that are run (npm, Bun, and
+  Yarn 1 run them; pnpm only when `enable-pre-post-scripts` is on, the
+  default from pnpm 9; Yarn 2 and later do not: where they do not run, an
+  uncalled one is dead), plus scripts
   that CI, documentation, other scripts, or a task runner (turbo, nx)
   invoke.
 - Registrations by decorator or dependency injection (Angular, NestJS),
@@ -266,11 +269,11 @@ token there)
   ignores `--immutable` and rewrites an out-of-date lock),
   `bun install --frozen-lockfile`.
 - **Baseline and after each group** (consent): the project's own scripts —
-  `lint`, `typecheck` (else `tsc --noEmit -p <tsconfig>`; for a solution with
-  `references`, `tsc -b --verbose` in the throwaway checkout as under
-  Tools, never plain `tsc -b` elsewhere, which without `outDir` or
-  `noEmit` writes `.js` files next to the sources, tests included), `test` (vitest, jest, playwright), and
-  `build`, since bundling catches broken imports a type check can miss.
+  `lint`, `typecheck` (else the `tsc` runs under Tools; plain `tsc -b`
+  without `outDir` or `noEmit` writes `.js` files next to the sources,
+  tests included, so run it only in the throwaway checkout), `test`
+  (vitest, jest, playwright), and `build`, since bundling catches broken
+  imports a type check can miss.
 - **Static, after any edit**: the static oxlint or biome command above on
   the changed files.
 - **Public surface** (consent): emit declarations before and after with

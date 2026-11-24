@@ -113,11 +113,9 @@ declarations, and source (orchestrator definitions, schema declarations,
 CI, IAM/secrets wiring, test layout, dead-code tool output). Nothing in
 this phase executes the reviewed repositories' code; a per-repository test
 baseline belongs to the depth reviews in Phase 4. First find each
-repository's languages the way `review-repo-code-quality` Step 1 does —
-its tracked files listed by extension and shebang, then matched against
-every installed guide's Recognize section, embedded shell included — not from the single `language` column
-`scan-projects` records, which names only the most common file type
-(sometimes Markdown or YAML). Then read those guides and run only the
+repository's languages the way `review-repo-code-quality` Step 1 does,
+not from the single `language` column `scan-projects` records, which
+names only the most common file type (sometimes Markdown or YAML). Then read those guides and run only the
 tools they mark **static**. Use `Agent` to
 parallelize when there are many repositories, and give each subagent the
 guides for its repository's languages, this read-only rule, and the rule
@@ -139,7 +137,7 @@ links to it.
 | **Observability** | Structured logs, metrics, lineage emission, run metadata. Can you tell from outside why a run failed? |
 | **Testing** | Unit tests on transforms, contract/fixture tests on I/O, any integration test. Test-to-logic ratio. |
 | **Dependency health** | Shared-lib version lag, pinned vs. floating deps, known CVEs, EOL runtimes. |
-| **Currency** | The static parts of each language guide's Currency checks and `review-repo-code-quality`'s Currency sweep, against the live sources they name: supported versions, deprecated formats and mechanisms, CI actions and runner images, update automation. The house preferences in effect are recommendations, listed once in the Summary and never scored. |
+| **Currency** | The static parts of each language guide's Currency checks and `review-repo-code-quality`'s Currency sweep, against the live sources they name: supported and tested version ranges (a runtime already end-of-life stays under Dependency health), deprecated formats and mechanisms, CI actions and runner images, update automation. House preferences are never scored. |
 | **Secrets & access** | Hardcoded credentials, over-broad IAM/service accounts, secrets in logs. |
 | **Ownership & docs** | CODEOWNERS / on-call, README accuracy, runbook exists. |
 | **Dead code & config** | Unused DAG tasks, stuck feature flags, stale env-specific branches, lint-ignore entries for rules never selected. Use grep, and only the dead-code tools the language guides mark **static**. Anything else waits for Phase 4. |
@@ -151,7 +149,7 @@ Look across the matrix for **systemic** issues:
 
 1. **Drift clusters.** Which pipelines have diverged from the template, in what direction, and did divergences propagate by copy-paste? Group by "generation" — pipelines forked from the same ancestor often share the same bug.
 2. **Contract fragility.** For every edge in the graph: is the schema enforced on both sides, one side, or neither? Rank edges by (criticality × lack of enforcement).
-3. **Copy-paste logic across repos.** Run `analyze-duplicates` once over all repositories with `--cross-project`, under the rules `review-repo-code-quality` Step 2 gives for it (a scratch directory and output; asking before jscpd is fetched, a question separate from the depth-set execution consent, which covers only Phase 4; never a repository's `.jscpd.json`; if declined, repeated idioms by hand, said in Method & limits), and group the hits into clusters. Each duplicate is a place a fix won't land; the recommendation is a shared-library helper plus a migration, not N tickets.
+3. **Copy-paste logic across repos.** Run `analyze-duplicates` once over all repositories with `--cross-project`, under the rules `review-repo-code-quality` Step 2 gives for it (asking before jscpd is fetched is a question separate from the depth-set execution consent, which covers only Phase 4), and group the hits into clusters. Each duplicate is a place a fix won't land; the recommendation is a shared-library helper plus a migration, not N tickets.
 4. **Shared library blast radius.** What breaks if the shared lib ships a breaking change? Which pipelines are N versions behind and why? Does the shared layer itself have CI?
 5. **Failure propagation.** Trace a failure from a hub node downstream: does it cascade, stall, or silently produce stale data? Where are the circuit breakers?
 6. **Convention gaps.** Things the template *doesn't* specify that everyone solved differently (e.g. timezone handling, null semantics, late-arriving data, what a `limit` parameter means).

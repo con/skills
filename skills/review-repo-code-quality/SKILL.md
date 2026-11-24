@@ -37,8 +37,8 @@ idiom for a closed set of values and a Currency group), **Not findings**
 (what looks dead or wrong in that language but is not), and
 **Verification** (the commands that show a change preserved behavior).
 To add a language, add a sibling `code-quality-review-<language>` skill
-(`user-invocable: false`, `allowed-tools: Read`) with those sections, a row in this table, and a row in the repository's
-README. Install the guides together with this skill, for example
+(`user-invocable: false`, `allowed-tools: Read`) with those sections, a
+row in this table, and a row in the repository's README. Install the guides together with this skill, for example
 `apm install con/skills#<commit> --skill code-quality-report-conventions --skill review-repo-code-quality --skill code-quality-review-python --skill code-quality-review-ts --skill code-quality-review-go --skill code-quality-review-shell --skill analyze-duplicates --target agent-skills`.
 
 Shared rules — where the report goes, the provenance stamp that records
@@ -132,14 +132,15 @@ Every tool a guide lists is marked **static** or **consent**:
   too: given a directory, several tools skip what `.gitignore`, `.ignore`,
   or `.eslintignore` lists, so pass the scope's tracked files as absolute
   paths — `git -C <checkout> ls-files -z --format='<checkout>/%(path)' --
-  '<pattern>' | xargs -0 -r <tool> …` (plain `ls-files` prints paths
-  relative to the checkout, which a tool started in the scratch directory
-  cannot open, and some tools then report a clean run; `-r` keeps an empty
-  list from running the tool on the scratch directory) — unless the guide
-  names a switch that turns this off. `xargs` may split a long list into
-  several runs, so for a tool that reads the code as a whole (dead code,
-  an import graph) prefer the guide's switch, or check with `xargs -t`
-  that it ran once.
+  '<pattern>' | xargs -0 -r <tool> …` (git 2.38 or later; relative paths
+  would not open from the scratch directory, and some tools then report
+  a clean run; `-r` keeps an empty list from running the tool there, so
+  confirm the list is not empty: an older git rejects `--format`, leaves
+  it empty, and the pipeline still exits 0) — unless the guide names a
+  switch that turns this off. `xargs` may split a long list into several
+  runs, so for a tool that reads the code as a whole (dead code, an
+  import graph) prefer the guide's switch, or check with `xargs -t` that
+  it ran once.
 - **consent** — everything else: the project's own linter configuration
   and plugins, a type check or build, a dependency install, the test
   suite, a tool the project pins and installs.
@@ -226,13 +227,16 @@ and say so in Method & limits.
   metadata claims; a deprecated mechanism kept where its standard
   replacement exists; tooling the ecosystem has moved past. In every
   language this includes CI: `uses:` references to an action major whose
-  runtime GitHub no longer runs or that trails its latest release,
-  `runs-on` labels of retired runner images (the shell guide's static
-  actionlint run reports both; report them here), `rev:` pins in
-  `.pre-commit-config.yaml` behind each hook's latest tag, and whether
-  anything keeps these current (Dependabot, Renovate, pre-commit.ci); read
-  the pins, and do not run `pre-commit autoupdate`, which rewrites the
-  file. Moving a version floor or switching tools is a maintainer's
+  runtime GitHub no longer runs, and `runs-on` labels of retired runner
+  images (the shell guide's static actionlint run reports the ones its
+  release knew of, as "too old to run" and "label … is unknown"; report
+  them here); action majors behind their latest release and `rev:` pins
+  in `.pre-commit-config.yaml` behind each hook's latest tag (actionlint
+  reports neither; read a hook's releases only where its `repo:` is on a
+  well-known forge, never another host the file names); and whether
+  anything keeps these current (Dependabot, Renovate, pre-commit.ci);
+  read the pins, and do not run `pre-commit autoupdate`, which rewrites
+  the file. Moving a version floor or switching tools is a maintainer's
   decision, so such items go under Needs Verification unless the
   project's own rules already require the change.
   A guide may also label a tool as a house preference. It applies only as

@@ -24,7 +24,9 @@ the **static** / **consent** marks are defined in
 whose shebang runs `sh`, `bash`, `dash`, or `ksh`. Also shell embedded
 elsewhere, which counts even in a repository with no script file:
 `run:` steps in GitHub Actions workflows and composite actions
-(`action.yml` with `using: composite`), `script:` sections in GitLab CI, Makefile recipes, Dockerfile `RUN` lines, and `package.json` scripts.
+(`action.yml` or `action.yaml` with `using: composite`), `script:`
+sections in GitLab CI, Makefile recipes, Dockerfile `RUN` lines, and
+`package.json` scripts.
 Zsh and fish scripts are not covered: shellcheck does not support them.
 
 ## Project rules
@@ -49,15 +51,14 @@ no `${var,,}`.
 | Lint: idioms, bugs, portability | `shellcheck` | static with `--norc` | `shellcheck --norc -P SCRIPTDIR -P <absolute path of the repository root> --severity=style --format=gcc <files>`, with the files each script sources listed alongside it (`SCRIPTDIR` resolves `. "$(dirname "$0")/lib.sh"`, the repository root resolves `. scripts/lib.sh`; shellcheck still reads only the listed files); pass each `source-path=` from `.shellcheckrc` as a further `-P`, made absolute against the repository root; add `--enable=all` to see the optional checks |
 | Shell in GitHub Actions `run:` steps | `actionlint`, your empty configuration | static | from the scratch directory, `actionlint -config-file <scratch>/actionlint.yaml -shellcheck <absolute path of the shellcheck the lint row ran> -oneline -verbose <checkout>/.github/workflows/*.y*ml`; the repository's own `.github/actionlint.yaml` is parsed but not applied, and if it is malformed the run stops with exit status 3: then lint copies, and note that the local-action and reusable-workflow checks did not run |
 | Shell in Dockerfile `RUN` lines | `hadolint`, your configuration | static | `hadolint --config <scratch>/hadolint.yaml <Dockerfiles>`, the file holding `ignored: []` (an empty one is rejected) |
-| Other embedded shell | `shellcheck` on extracted copies | static | copy composite-action `run:` steps (with `--shell=` from each step's `shell:`; actionlint does not lint action files), GitLab `script:` sections, Makefile recipes (with `$$` turned back into `$`), and `package.json` scripts into scratch files and run the static shellcheck command with `--shell=sh` (or `bash` where the runner uses it); or read them by hand and say so in Method & limits |
+| Other embedded shell | `shellcheck` on extracted copies | static | copy composite-action `run:` steps (actionlint does not lint action files; replace each `${{ … }}` with a placeholder such as `_`, as actionlint does, or shellcheck reports `SC2296` for them), GitLab `script:` sections, Makefile recipes (with `$$` turned back into `$`), and `package.json` scripts into scratch files and run the static shellcheck command with `--shell=sh` (or `bash` where the runner or the step's `shell:` uses it); or read them by hand and say so in Method & limits |
 | Formatting | `shfmt` | static on an explicit file list with explicit flags (any formatting flag makes it skip the formatting properties of `.editorconfig`, but a directory walk still skips files an `ignore = true` section matches) | `shfmt -d <flags> <files>`, listing the files (never a directory), prints the diff; never `-w`; `<flags>` translates the shfmt properties that apply to each file, merged from every matching section (including `[*]` and shfmt's `[[shell]]` / `[[bash]]`) of every `.editorconfig` up to the one with `root = true`: `indent_style = space` to `-i <indent_size, or 8>`, any other `indent_style` to `-i 0`, `binary_next_line` to `-bn`, `switch_case_indent` to `-ci`, `space_redirects` to `-sr`, `keep_padding` to `-kp`, `function_next_line` to `-fn`, `simplify` to `-s`, `minify` to `-mn`, `shell_variant` to `-ln`; run files with different properties separately, or copy the flags the project's CI or pre-commit hook passes |
 | Source and call graph | `grep` | static | the source grep below; search scripts, workflows, Makefiles, and `package.json` for what runs each script |
 | Dead code | none dedicated | static | list function definitions with the function grep below and search for their callers; list scripts and search for what runs them; shellcheck `SC2034` flags unused variables |
 | Complexity | none dedicated | static | script and function length (`wc -l`), nesting depth by reading |
 | Tests | `bats` | consent | see Verification |
 
-The two greps, kept out of the table because their `|` would split its
-cells:
+The two greps:
 
 ```sh
 # files each script sources, guarded ones included ([ -f x ] && . x)

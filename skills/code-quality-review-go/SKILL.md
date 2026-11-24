@@ -70,7 +70,7 @@ modules covered in Method & limits.
 | Dead code: unused unexported code | `staticcheck` (`U1000`) | consent | `staticcheck -checks U1000 ./...` |
 | Dead code: unreachable from `main` | `deadcode` | consent | `deadcode -test ./...` |
 | Idiom drift | `go vet`, `staticcheck` | consent | `go vet ./...`; `staticcheck ./...` |
-| Idiom drift | the project's golangci-lint, plus `unparam`, `dupl`, `goconst`, `gocognit`, `exhaustive`, `errorlint`, `copyloopvar`, `revive` | consent | the project's configuration with those linters enabled and the output filters lifted (`--max-issues-per-linter=0 --max-same-issues=0 --uniq-by-line=false`; by default it shows at most 3 issues with the same text, 50 per linter, and one per line), and with `--new=false`, `--new-from-rev=`, or `--new-from-merge-base=` where the configuration limits the run to recent changes; the flags that choose linters differ between golangci-lint versions 1 and 2 |
+| Idiom drift | the project's golangci-lint, plus `unparam`, `dupl`, `goconst`, `gocognit`, `exhaustive`, `errorlint`, `copyloopvar`, `revive` | consent | the project's configuration with those linters enabled and the output filters lifted (`--max-issues-per-linter=0 --max-same-issues=0 --uniq-by-line=false`; by default it shows at most 3 issues with the same text, 50 per linter, and one per line), and with `--new=false`, `--new-from-rev=`, `--new-from-merge-base=`, or `--new-from-patch=` where the configuration limits the run to recent changes; the flags that choose linters differ between golangci-lint versions 1 and 2 |
 | Import graph | `go list` | consent | `go list -f '{{.ImportPath}}: {{join .Imports " "}}' ./...` |
 | Import graph | the `import` blocks and `go.mod`, read as text | static | `grep -n` the `import` blocks of each package's files, with the module path from `go.mod` to tell internal imports from external ones |
 | Modules | `go mod tidy -diff` (Go 1.23 or later) | consent | prints what `go mod tidy` would change, without writing |
@@ -103,9 +103,11 @@ pass gocyclo `-ignore`.
     `map[string]any` from JSON or YAML), `case string:` in type
     switches, `v.(string)` (which then panics), plain-string lookups in
     `context.Value` or `map[any]…`, `reflect.TypeOf` and
-    `reflect.DeepEqual` (testify's `assert.Equal`), `%T`, and `gob` of
-    an interface value change silently; `%v`, `%s`, and reflection by
-    kind (`encoding/json`, `database/sql` arguments) do not. Find each
+    `reflect.DeepEqual` (testify's `assert.Equal`), and `%T` change
+    silently, and `gob` fails on an interface value holding the new type
+    until it is registered (`gob: type not registered for interface`);
+    `%v`, `%s`, and reflection by kind (`encoding/json`, `database/sql`
+    arguments) do not change. Find each
     such place first, and convert there with `string(ModeFast)` as part
     of the change, or rate it `NV`.
   - Keep a string set a string type. An `iota` integer type, with a
