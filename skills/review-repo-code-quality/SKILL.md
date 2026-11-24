@@ -23,7 +23,10 @@ sibling skill:
 | Python | `code-quality-review-python` |
 | TypeScript and JavaScript | `code-quality-review-ts` |
 | Go | `code-quality-review-go` |
+| Rust | `code-quality-review-rust` |
+| Haskell | `code-quality-review-haskell` |
 | Shell (POSIX sh, Bash), including shell embedded in CI workflows, Makefiles, and Dockerfiles | `code-quality-review-shell` |
+| AWK (POSIX awk, gawk), including programs embedded in shell scripts, Makefiles, and CI steps | `code-quality-review-awk` |
 
 Every guide has the same sections, which the steps below refer to:
 **Recognize** (the files it covers), **Project rules** (where the
@@ -138,13 +141,37 @@ Every tool a guide lists is marked **static** or **consent**:
   paths — `git -C <checkout> ls-files -z --format='<checkout>/%(path)' --
   '<pattern>' | xargs -0 -r <tool> …` (git 2.38 or later; relative paths
   would not open from the scratch directory, and some tools then report
-  a clean run; `-r` keeps an empty list from running the tool there, so
-  confirm the list is not empty: an older git rejects `--format`, leaves
-  it empty, and the pipeline still exits 0) — unless the guide names a
+  a clean run; `-r` keeps an empty list from running the tool there;
+  check that the list is not empty, since an older git rejects
+  `--format` and the pipeline still exits 0) — unless the guide names a
   switch that turns this off. `xargs` may split a long list into several
   runs, so for a tool that reads the code as a whole (dead code, an
   import graph) prefer the guide's switch, or check with `xargs -t` that
-  it ran once.
+  it ran once. A tool that needs a directory runs instead on a copy of
+  the scope's tracked files without their `.gitignore` and `.ignore`
+  files (`<scope>` as git pathspecs, such as `. ':!vendor/'`; for a file
+  list above, put its pattern under each positive pathspec, as in
+  `'*.rs' ':!vendor/'` or `'src/*.rs'`, since git lists what any
+  positive pathspec matches):
+
+  ```sh
+  mkdir <scratch>/copy
+  git -C <checkout> ls-files -z -- <scope> | tar -C <checkout> --null --no-recursion -T - -cf - | tar -xf - -C <scratch>/copy
+  find <scratch>/copy \( -name .gitignore -o -name .ignore \) ! -type d -delete
+  ```
+
+  Paths in the copy are the checkout's, so locations carry over. Use
+  bsdtar or GNU tar 1.30 or later (`tar --version`), which read every
+  name verbatim with `--null`: GNU tar 1.27 and 1.28 take a tracked name
+  such as `--checkpoint-action=exec=…` as an option and run it, 1.29
+  unescapes backslashes in names, and BusyBox tar has no `--null`.
+  `--no-recursion` leaves submodules empty; `git archive` would drop
+  what `.gitattributes` marks `export-ignore`. Keep `<scratch>` outside
+  every git work tree and below no `.ignore` file (a new `mktemp -d`
+  directory usually is; `git -C <scratch> rev-parse` must fail): jscpd
+  5.4.3 applies an `.ignore` in any directory above the copy, even with
+  `--no-gitignore`, and inside a work tree also that tree's
+  `.gitignore`, `info/exclude`, and global excludes.
 - **consent** — everything else: the project's own linter configuration
   and plugins, a type check or build, a dependency install, the test
   suite, a tool the project pins and installs.
@@ -183,18 +210,28 @@ and say so in Method & limits.
   fire, lint-ignore entries for rules the selected rule set never reaches,
   configuration that is never consulted.
 - **Duplication:** run the `analyze-duplicates` skill (jscpd) if
-  available — from a scratch directory, with `--output <scratch>/jscpd.md`,
-  so nothing (`.tmp/`, `.jscpd-report.md`) is written into
-  the reviewed repository. Its availability check itself falls back to
-  `npx --yes jscpd@latest`, so if `command -v jscpd` finds nothing, ask
-  before running the skill at all; prefer an installed or pinned jscpd
-  and tell the user which was used. If that is declined or jscpd cannot
-  be installed, search for repeated multi-line idioms by hand and say so
-  in Method & limits. Without consent, do not let it pass the project's
-  `.jscpd.json` as `--config` (its `blame`, `history`, and
-  `baselineFromRef` keys make jscpd run git and add worktrees under
-  `.git/`); use your own options, read that file as text, and say in
-  Method & limits which configuration was used. Note where copies have
+  available, from `<scratch>`, on the Step 1 copy given as the relative
+  path `copy`, with `--output <scratch>/jscpd.md`, so nothing (`.tmp/`,
+  `.jscpd-report.md`) is written into the reviewed repository. The
+  alternatives go wrong in jscpd 5.4.3. Given the checkout, it also scans
+  untracked files and submodules, and skips what `.ignore` and
+  `.git/info/exclude` list even with `--no-gitignore`, which lifts only
+  `.gitignore`. Given an absolute path, it matches that skill's default
+  `--ignore` patterns (`**/build/**`, `**/.tmp/**`, …) against the
+  directories above the copy too, which can hide every file. Run from
+  inside the copy, it reads the project's `.jscpd.json`. The skill's
+  availability check itself falls back to `npx --yes jscpd@latest`, so
+  if `command -v jscpd` finds nothing, ask before running the skill at
+  all; prefer an installed or pinned jscpd and tell the user which was
+  used. If that is declined or jscpd cannot be installed, search for
+  repeated multi-line idioms by hand and say so in Method & limits.
+  Without consent, do not let it pass the project's `.jscpd.json` as
+  `--config` (its `blame`, `history`, and `baselineFromRef` keys make
+  jscpd run git and add worktrees under `.git/`); use your own options,
+  read that file as text, and say in Method & limits which configuration
+  was used. With consent, drop `history` and `baselineFromRef` from the
+  configuration you pass: on the copy, either stops jscpd with
+  `not inside a git repository` and no report. Note where copies have
   **drifted**, since drifted copies are the expensive ones.
 - **Idiom drift:** with consent, run the project's own linter with the
   extended rule set the guide names, and read its output rather than
@@ -234,7 +271,8 @@ and say so in Method & limits.
   runtime GitHub no longer runs, and `runs-on` labels of retired runner
   images (the shell guide's static actionlint run reports the ones its
   release knew of, as "too old to run" and "label … is unknown"; report
-  them here); action majors behind their latest release and `rev:` pins
+  them here, but not a self-hosted runner's custom label, which it also
+  calls unknown); action majors behind their latest release and `rev:` pins
   in `.pre-commit-config.yaml` behind each hook's latest tag (actionlint
   reports neither; read a hook's releases only where its `repo:` is on a
   well-known forge, never another host the file names); and whether

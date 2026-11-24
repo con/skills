@@ -28,6 +28,11 @@ sections in GitLab CI, Makefile recipes, Dockerfile `RUN` lines, and
 `package.json` scripts.
 Zsh and fish scripts are not covered: shellcheck does not support them.
 
+Awk programs embedded in shell are reviewed with `code-quality-review-awk`,
+which covers the program text (between the quotes, or in its `-f` file)
+and how values reach it; this guide reviews the command around each
+program as shell code.
+
 ## Project rules
 
 Read `.shellcheckrc` (disabled checks, `shell=`, `source-path=`),
