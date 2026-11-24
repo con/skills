@@ -29,17 +29,30 @@ Review the selected skills, including `allowed-tools`, and bundled scripts befor
 
 ## Install or update
 
-For a Git skill collection, replace PACKAGE, SHA, and SKILL with the chosen source, full commit SHA, and skill name:
+For a Git skill collection where each skill directory carries its own `apm.yml` (as in `con/skills`), depend on that skill's subdirectory so the lock records the skill's own name and version.
+Replace PACKAGE, SKILL_PATH, and SHA with the chosen source, the skill's directory in it (`skills/SKILL` in `con/skills`), and the full commit SHA:
+
+```console
+apm install PACKAGE/SKILL_PATH#SHA --target agent-skills
+```
+
+In `apm.yml` this is `{git: PACKAGE, path: SKILL_PATH, ref: SHA}`; install each skill as its own dependency.
+To move such a pin, edit the SHA and run `apm install`; `apm update` and semver refs can resolve to an older repository-wide tag (in `con/skills`, `0.20261015.0`, where most skills do not exist).
+Name several skills in one `apm install` call (or list them in `apm.yml` and run `apm install`); with APM 0.31, adding them in separate calls leaves lock entries that the next `apm install --frozen` rewrites.
+
+For a collection whose skills have no `apm.yml` of their own, select skills from the repository root:
 
 ```console
 apm install PACKAGE#SHA --skill SKILL --target agent-skills
 ```
 
+Repeated `--skill` selections are additive; to remove one, edit the dependency's `skills:` list and run `apm install`.
+This form records the collection's version (or `unknown`), not the skill's.
+To migrate an existing root-form dependency to subdirectory dependencies, replace it with one entry per selected skill, run `apm install`, and confirm the deployed paths are unchanged.
 Add `--global` for user scope.
 Adapt the package argument for other supported sources.
 Optional `--dry-run` previews package changes, not individual files, and can create initial project metadata.
-Repeated `--skill` selections are additive; to remove one, edit the dependency's `skills:` list and run `apm install`.
-Let APM generate the lock; check that its repository URL and `resolved_commit` match the requested source and SHA, and inspect its deployment paths.
+Let APM generate the lock; check that its repository URL, `virtual_path` (for a subdirectory dependency), and `resolved_commit` match the requested source and SHA, and inspect its deployment paths and recorded `version`.
 Do not bypass collisions or scan findings with `--force`, or disable policy lookup without the user's request.
 
 For every project installation, add `/apm_modules/` and all APM-deployed skill directories to the project's `.gitignore`, using the lock's actual deployment paths.
@@ -56,7 +69,7 @@ Check fresh restoration in a disposable directory without deleting the real inst
 Run `apm audit --ci` from the project root, or from `~/.apm/` for the user store; report failures rather than bypassing them.
 This checks installed integrity, not whether a skill is safe.
 Confirm selected skills and resources exist; use `git check-ignore` and `git ls-files` to verify generated copies are ignored and untracked.
-Report the source/revision, installed paths, metadata changes, and verification results.
+Report the source/revision, each skill's version from the lock, installed paths, metadata changes, and verification results.
 Reload an already running client if needed to discover the skills.
 
 ## Before preparing a pull request

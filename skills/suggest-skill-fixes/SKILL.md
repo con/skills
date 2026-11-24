@@ -1,6 +1,5 @@
 ---
 name: suggest-skill-fixes
-version: 0.1.0
 description: Shared procedure a skill follows at the end of a run that showed the skill itself falling short (a result the user corrects by hand every time, a setup it cannot read, an input whose shape has changed). Reports suggested skill changes after the run's output and, in an attended run of a skill installed from con/skills, asks before preparing a pull request there. Not invoked directly. Use when a skill tells you to follow it at the end of a run.
 allowed-tools: Read
 user-invocable: false
@@ -81,9 +80,9 @@ procedure and the skill version it was made against:
 Suggested by: con/skills `suggest-skill-fixes` v{version} for `{calling skill}` v{calling skill version} ({skill source})
 ```
 
-- **Versions.** Read `version:` from the frontmatter of this file and of the
-  calling skill's `SKILL.md` as you loaded them; do not guess either from
-  memory. A calling skill without `version:` is `unversioned`.
+- **Versions.** Read `version` from the `apm.yml` beside this file and
+  beside the calling skill's `SKILL.md`; do not guess either from memory.
+  A skill without an `apm.yml` is `unversioned`.
 - **`{skill source}`.** Take it as `code-quality-report-conventions` §1
   does (`../code-quality-report-conventions/report-conventions.md`). If that
   skill is not installed, use `git -C {skill dir} rev-parse --short HEAD`,

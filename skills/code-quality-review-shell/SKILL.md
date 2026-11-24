@@ -1,6 +1,5 @@
 ---
 name: code-quality-review-shell
-version: 0.1.0
 description: Shell guide for review-repo-code-quality and review-org-code-quality — the POSIX sh and Bash it covers (including shell embedded in CI workflows, Makefiles, and Dockerfiles), its static review tools, shell checks such as strict mode, quoting, Bash features under /bin/sh, and snippets copied between workflow steps, false positives, and verification commands. Not invoked directly. Use when a review skill tells you to read it, or when asked what those reviews check for shell scripts.
 allowed-tools: Read
 user-invocable: false

@@ -1,6 +1,5 @@
 ---
 name: code-quality-review-python
-version: 0.1.0
 description: Python guide for review-repo-code-quality and review-org-code-quality — where a Python project states its rules, its review tools and which need execution consent, Python checks such as a long or growing Literal list that becomes one Enum, currency (Python versions, PEPs, PyPA standards, pixi), false positives, and verification commands. Not invoked directly. Use when a review skill tells you to read it, or when asked what those reviews check for Python.
 allowed-tools: Read
 user-invocable: false

@@ -1,6 +1,5 @@
 ---
 name: code-quality-review-ts
-version: 0.1.0
 description: TypeScript and JavaScript guide for review-repo-code-quality and review-org-code-quality — where a project states its rules, its review tools and which need execution consent (ESLint and knip configurations are code), checks such as a long or growing string-literal union that becomes one as-const list, currency, false positives, and verification commands. Not invoked directly. Use when a review skill tells you to read it, or when asked what those reviews check for TypeScript or JavaScript.
 allowed-tools: Read
 user-invocable: false

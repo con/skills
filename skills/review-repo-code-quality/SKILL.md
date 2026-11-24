@@ -1,6 +1,5 @@
 ---
 name: review-repo-code-quality
-version: 0.3.0
 description: Functionality-preserving code-quality review of a single repository — architecture, dead code, duplication, consolidation, cleanup, and items needing verification — written as a dated Markdown report with per-finding location, proposed change, safety confidence, and a verification command. Language-agnostic; it loads a code-quality-review-<language> guide for each language the repository uses. Use when asked to review, audit, or assess the code quality or health of one codebase. For an organization of related repositories use review-org-code-quality instead.
 allowed-tools: Bash, Read, Write, Glob, Grep, AskUserQuestion, Agent, Skill, WebFetch
 user-invocable: true
@@ -37,9 +36,14 @@ idiom for a closed set of values and a Currency group), **Not findings**
 (what looks dead or wrong in that language but is not), and
 **Verification** (the commands that show a change preserved behavior).
 To add a language, add a sibling `code-quality-review-<language>` skill
-(`user-invocable: false`, `allowed-tools: Read`) with those sections, a
-row in this table, and a row in the repository's README. Install the guides together with this skill, for example
-`apm install con/skills#<commit> --skill code-quality-report-conventions --skill review-repo-code-quality --skill code-quality-review-python --skill code-quality-review-ts --skill code-quality-review-go --skill code-quality-review-shell --skill analyze-duplicates --target agent-skills`.
+(`user-invocable: false`, `allowed-tools: Read`, its own `apm.yml`) with
+those sections, a row in this table, and a row in the repository's
+README. Install the guides for the languages you review together with
+this skill, each skill as its own APM package, for example:
+
+```console
+apm install con/skills/skills/code-quality-report-conventions#<commit> con/skills/skills/review-repo-code-quality#<commit> con/skills/skills/analyze-duplicates#<commit> con/skills/skills/code-quality-review-python#<commit> con/skills/skills/code-quality-review-shell#<commit> --target agent-skills
+```
 
 Shared rules — where the report goes, the provenance stamp that records
 which version of this skill produced it, evidence standards, re-review,

@@ -1,6 +1,5 @@
 ---
 name: code-quality-review-go
-version: 0.1.0
 description: Go guide for review-repo-code-quality and review-org-code-quality — where a Go module states its rules, its review tools and which need execution consent (anything that loads packages does), Go checks such as typed constants for closed sets, error wrapping, and interface placement, currency, false positives, and verification commands. Not invoked directly. Use when a review skill tells you to read it, or when asked what those reviews check for Go.
 allowed-tools: Read
 user-invocable: false
