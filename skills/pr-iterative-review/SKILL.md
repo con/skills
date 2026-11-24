@@ -36,10 +36,10 @@ how a command starts, not what follows: `repos/*/pulls/*` also admits the
 merge endpoint, the GraphQL pattern admits mutations such as resolving a
 thread, a git pattern admits options such as `--upload-pack`, `--output`,
 `--ext-diff` or `--textconv`, and `*/pr-iterative-review/scripts/…` matches
-any directory of that name. A tool outside them, such as a static linter, runs only where
-the host's permission settings already allow it; where one is refused, the
-check goes under `not_checked`. The rules above are what the review
-follows.
+any directory of that name. A tool outside them, such as a static linter,
+runs only where the host's permission settings already allow it; where one
+is refused, the check goes under `not_checked`. The rules above are what
+the review follows.
 
 ## Inputs
 
@@ -268,19 +268,19 @@ and say so under `not_checked`. The angles are described in
 
 ### 3. Round 1: independent reviews
 
-Start every reviewer at once, as parallel subagents. Each prompt names `SKILL_DIR/references/reviewer-brief.md`
-and its sections to follow ("Shared rules", "Angles", "Round 1", and on a
-re-review "On a re-review"), and gives the placeholder values: `COUNT` (the
-number of reviewers), `TARGET` (`OWNER/REPO#N`, or for `--local` the branch
-and the repository's directory), `SHA` (`HEAD_SHA`), `ID`, `FOCUS`, `WORK`,
-`TREE` (`WORK/tree`), `PR_FILES`, `RULE_FILES` and `LENS_FILES` (the
-absolute paths of this reviewer's lenses and companion skills). No reviewer
-sees another's output in this round.
-Save each reply as `WORK/round1-ID.json`; if one is not valid JSON in the
-brief's format, ask that reviewer once to correct it. In any round, if a
-reviewer cannot be started, or its reply is still unusable after that one
-request, stop and report it, as in step 7; never write a reviewer's
-findings or verdicts yourself.
+Start every reviewer at once, as parallel subagents. Each prompt names
+`SKILL_DIR/references/reviewer-brief.md` and its sections to follow
+("Shared rules", "Angles", "Round 1", and on a re-review "On a re-review"),
+and gives the placeholder values: `COUNT` (the number of reviewers),
+`TARGET` (`OWNER/REPO#N`, or for `--local` the branch and the repository's
+directory), `SHA` (`HEAD_SHA`), `ID`, `FOCUS`, `WORK`, `TREE`
+(`WORK/tree`), `PR_FILES`, `RULE_FILES` and `LENS_FILES` (the absolute
+paths of this reviewer's lenses and companion skills). No reviewer sees
+another's output in this round. Save each reply as `WORK/round1-ID.json`;
+if one is not valid JSON in the brief's format, ask that reviewer once to
+correct it. In any round, if a reviewer cannot be started, or its reply is
+still unusable after that one request, stop and report it, as in step 7;
+never write a reviewer's reply yourself.
 
 ### 4. Cross-check until agreement
 
@@ -417,8 +417,9 @@ proposed. No GitHub access is needed and nothing is posted.
 1. `BASE` defaults to the remote's default branch:
    `git -C REPO_DIR symbolic-ref --short refs/remotes/origin/HEAD`, or, where
    that ref was never set, `origin/` followed by the branch that
-   `git -C REPO_DIR ls-remote --symref origin HEAD` names. `BASE_SHA` is `git -C REPO_DIR merge-base BASE HEAD`;
-   `HEAD_SHA` is `git -C REPO_DIR rev-parse HEAD`.
+   `git -C REPO_DIR ls-remote --symref origin HEAD` names. `BASE_SHA` is
+   `git -C REPO_DIR merge-base BASE HEAD`; `HEAD_SHA` is
+   `git -C REPO_DIR rev-parse HEAD`.
 2. Only commits are reviewed. If `BASE_SHA` equals `HEAD_SHA`, or the diff
    below is empty, stop and say there is nothing committed to review; do
    not render a verdict. If `git -C REPO_DIR status --porcelain` lists
@@ -436,14 +437,15 @@ proposed. No GitHub access is needed and nothing is posted.
 A caller preparing a pull request with this review (`suggest-skill-fixes`
 does) follows this loop, and this section is its only description:
 
-1. If its tools lack `Agent` or `Bash`, or a review stops without a
-   verdict, go on without one and say so in its reply.
+1. If its tools lack `Agent` or `Bash`, skip the review and say so in its
+   reply.
 2. Commit the change on a branch of its own, without pushing, and review it
    with `--local`.
 3. If findings are `blocking` or `should-fix`, fix those it agrees with,
    commit the fixes, and review once more. Two reviews at most.
 4. Put the last review's verdict line in the pull request description, and
-   list the findings it left open, each with its tier and title.
+   list the findings it left open, each with its tier and title; if that
+   review stopped, say so in its reply instead.
 
 The review itself still changes nothing.
 
@@ -499,10 +501,10 @@ from an earlier review).
 The renderer refuses, outside code, a backtick without its pair on the same
 line (it would turn code into text); and anywhere, text shaped like a
 GitHub, AWS, Slack or Anthropic credential or a private key. As a best
-effort, it also refuses outside code @-mentions (they notify people), and
-raw HTML, link reference definitions and images, which hide text from
-people or send a request to another host; Markdown has other ways to write
-a mention or hide text, such as a link's title, so this is no guarantee.
+effort, it also refuses, outside code, @-mentions (they notify people) and
+raw HTML, link reference definitions and images (they hide text from people
+or send a request to another host); Markdown has other ways to hide text,
+such as a link's title, and to write a mention, so this is no guarantee.
 `SKILL_DIR/tests/fixtures/example-review.md` is
 `SKILL_DIR/references/findings-example.json` as rendered.
 
