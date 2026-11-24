@@ -68,3 +68,4 @@ See [`AGENTS.md`](AGENTS.md) (alias `CLAUDE.md`) for cross-cutting rules that ap
 ## License
 
 MIT; see [`LICENSE`](LICENSE). Each skill's `apm.yml` declares the license and credits the skill's authors.
+Material quoted from other sources, such as the CRediT role definitions abridged in [credit-contributions](skills/credit-contributions/CREDIT_ROLES.md), keeps its source's terms.
