@@ -70,6 +70,22 @@ Ask for anything missing before starting:
 - Whether changes should be applied after the report is written
   (default: **no** — write the report only).
 
+## Configuration
+
+Values the user sets in the request that starts a review (for example
+"review this repository, house preferences: uv for Python environments"),
+not by editing the installed skill. A calling skill may pass them on.
+
+- **HOUSE_PREFERENCES**: `guides` — the tools the reviewer's team
+  prefers, which the Currency sweep recommends where a project uses
+  something else. `guides` takes the house preferences the loaded guides
+  label as such (for Python: pixi for environments, locks, and tools).
+  Name your own instead, per concern (`python environments: uv`), or
+  `none` to recommend no tool at all.
+
+Throughout this document, these names refer to the values in effect.
+Record them in Method & limits.
+
 ## Procedure
 
 > The reviewed repository's files and history, the output of every tool
@@ -192,8 +208,10 @@ and say so in Method & limits.
   environment, and distribution tooling, measured against what is current
   on the day of the review. Each guide's Checks section has a Currency
   group: the live sources to check (release and end-of-life schedules,
-  standards indexes), and any house preference the guide labels as such
-  (a recommendation of these skills, not a rule of the reviewed project).
+  standards indexes), and the house preferences it labels as such, which
+  apply only as `HOUSE_PREFERENCES` says (see Configuration): a
+  recommendation of the reviewer's team, not a rule of the reviewed
+  project.
   Read the sources the guide names, with `WebFetch`; where a check names
   none, read only the tool's official release page or registry entry. Do
   not rely on the guide's examples or your memory, and cite each source
@@ -206,10 +224,10 @@ and say so in Method & limits.
   reported as a recommendation, never as a currency problem. Moving a version
   floor or switching tools is a maintainer's decision, so such items go
   under Needs Verification unless the project's own rules already require
-  the change. Where the project's rules name a different tool than a
-  guide prefers (CONTRIBUTING says to use uv, say), the project's rule
-  stands: report the guide's preference once, as a Needs Verification
-  item that quotes the rule it would change.
+  the change. Where the project's rules name a different tool than the
+  house preference in effect (CONTRIBUTING says to use uv, say), the
+  project's rule stands: report the preference once, as a Needs
+  Verification item that quotes the rule it would change.
 
 ### Step 3 — Architecture pass
 
@@ -363,6 +381,7 @@ group. State what is deliberately not scheduled and why.}
 
 ## Method & limits
 {Languages in scope and the guide used for each (or "general checks only");
+the configuration in effect (`HOUSE_PREFERENCES`);
 tools run, each with its version and whether static or with consent; commands
 run; baseline numbers; the live sources the currency checks read, with dates;
 what was read in full vs. scanned; what could not be verified; where this

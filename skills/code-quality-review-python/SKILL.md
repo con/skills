@@ -263,19 +263,22 @@ live sources each item names rather than trusting its examples)
   `importlib.resources`, and `sysconfig` rather than `pkg_resources` and
   `distutils` (removed in 3.12); releases uploaded through PyPI Trusted
   Publishing rather than with a stored API token.
-- **Environments, locks, and tools: pixi** (a house preference of these
-  guides, reported as a recommendation, not as a currency problem). These
-  guides recommend pixi (https://pixi.sh) for how a project is installed,
-  locked, and run: one manifest (`pixi.toml`, or `[tool.pixi]` in
-  `pyproject.toml`) and one `pixi.lock` for conda-forge and PyPI packages
-  on every platform the project supports, `pixi run` tasks for the
-  commands contributors and CI share, and `pixi global install` for
-  command-line tools. Suggest it in place of uv, conda or mamba
-  `environment.yml` files, pip-tools, hand-pinned `requirements*.txt`
-  files, and `pipx`, as one `NV` item with the files it would replace and
-  the CI steps it would change. A working, locked setup on another tool is
-  not out of date, and where the project's rules name its tooling, they
-  stand (`review-repo-code-quality` Step 2).
+- **Environments, locks, and tools: pixi** (this guide's house
+  preference; it applies only as the run's `HOUSE_PREFERENCES` says — see
+  `review-repo-code-quality` Configuration — and is reported as a
+  recommendation, never as a currency problem). By default, recommend
+  pixi (https://pixi.sh) for how a project is installed, locked, and run:
+  one manifest (`pixi.toml`, or `[tool.pixi]` in `pyproject.toml`) and one
+  `pixi.lock` for conda-forge and PyPI packages on every platform the
+  project supports, `pixi run` tasks for the commands contributors and CI
+  share, and `pixi global install` for command-line tools. Suggest it in
+  place of uv, conda or mamba `environment.yml` files, pip-tools,
+  hand-pinned `requirements*.txt` files, and `pipx`, as one `NV` item with
+  the files it would replace and the CI steps it would change. When the
+  run names another tool, recommend that one the same way; with `none`,
+  skip this item. A working, locked setup on another tool is not out of
+  date, and where the project's rules name its tooling, they stand
+  (`review-repo-code-quality` Step 2).
 
 **Tests**
 

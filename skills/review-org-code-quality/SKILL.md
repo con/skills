@@ -70,6 +70,7 @@ Inputs you have:
 - Lineage or DAG dependency source, if any: {FILL}
 - Known incidents or pain points: {FILL}
 - Out of scope: {FILL}
+- House preferences: the tools your team prefers, which reviews recommend where a repository uses something else (default "guides": the language guides' own, such as pixi for Python environments; or name yours per concern, or "none"): {FILL}
 - May Phase 4 depth reviews execute those repositories' tests and tooling (yes / no / sandbox only — "sandbox only" means a sandbox the user names, or a throwaway checkout you create, never the user's working tree): {FILL}
 
 Work in the phases below. At each phase, distinguish between what you OBSERVED (with file paths /
@@ -175,7 +176,8 @@ for executing a repository's tests and tooling is answered once, by the
 core prompt's input, for the whole depth set rather than per repository:
 "yes" is passed down as consent given, "sandbox only" as consent given
 for the named sandbox or throwaway checkout (say which), and "no" as
-"declined, do not ask again".
+"declined, do not ask again". The core prompt's house preferences are
+passed down as its `HOUSE_PREFERENCES`.
 Depth reviews are report-only (its Step 6, applying changes, is not run)
 unless the user asks for changes to be applied.
 
