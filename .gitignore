@@ -5,7 +5,7 @@ __pycache__
 node_modules/
 .env
 .env.*
-.venv/
+.venv
 venvs/
 
 # Local validation environments
