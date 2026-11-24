@@ -73,27 +73,29 @@ at a webpack configuration it then executes, and an `oxlint.config.ts` is itself
 configuration only with consent; for static use, pass the flags in the
 table and run from a scratch directory outside the checkout (madge reads
 `.madgerc` from the working directory and every parent). Run the
-project's own copy of a tool as `npx --no -- <tool>` only after
-`npm ls <package>` shows it installed in the checkout: plain `npx`
+project's own copies by path from the checkout's `node_modules/.bin`
+(`<checkout>/node_modules/.bin/tsc …`), or as `yarn <tool>` under Yarn
+Plug'n'Play, which has no `node_modules`. Do not use `npx`: plain `npx`
 installs whatever it does not find without asking (for `tsc`, an
-unrelated package), and `npx --no` runs a copy from a parent directory's
-`node_modules/.bin` or npm's global prefix, whatever its version, before
-it gives up. Install anything else yourself, pinned, outside the
-checkout. Given a directory, oxlint skips what `.gitignore` lists even
+unrelated package), and `npx --no` still runs, without notice, any copy
+in a parent directory's `node_modules/.bin`, npm's global prefix, or its
+`_npx` cache, whatever the version. Where the project does not install a
+tool, install your own pinned copy outside the checkout. Record each
+tool's `--version` in Method & limits and compare it with the lock file. Given a directory, oxlint skips what `.gitignore` lists even
 with `--no-ignore` (which turns off only `.eslintignore`), and lizard
 skips it unless given `--no-gitignore`: pass oxlint the tracked `*.ts`,
 `*.tsx`, … files as `review-repo-code-quality` Step 1 shows.
 
 | Sweep | Tool | Mark | Command |
 |---|---|---|---|
-| Dead code: files, exports, dependencies | `knip` | consent | `npx --no -- knip --reporter compact` from the installed checkout; add `--production --strict` for shipped code only (`--strict` is what lists `devDependencies` that shipped code imports) |
-| Dead code: locals, parameters | `tsc` | consent | `npx --no -- tsc --noEmit --noUnusedLocals --noUnusedParameters -p <tsconfig>` |
+| Dead code: files, exports, dependencies | `knip` | consent | `<checkout>/node_modules/.bin/knip --reporter compact` from the installed checkout; add `--production --strict` for shipped code only (`--strict` is what lists `devDependencies` that shipped code imports) |
+| Dead code: locals, parameters | `tsc` | consent | `<checkout>/node_modules/.bin/tsc --noEmit --noUnusedLocals --noUnusedParameters -p <tsconfig>` |
 | Idiom drift | the project's ESLint, plus `typescript-eslint` `strictTypeChecked` and `stylisticTypeChecked` (with `languageOptions.parserOptions.projectService: true`), `eslint-plugin-unicorn`, `eslint-plugin-sonarjs` | consent: typed linting needs the installed dependencies | the project's lint script with those configurations layered on |
 | Idiom drift | `oxlint`, your configuration | static | `oxlint -c <scratch>/oxlintrc.json --disable-nested-config -D correctness -D suspicious -W pedantic -W no-var -W eqeqeq -W typescript/no-explicit-any -W typescript/no-non-null-assertion <paths>`; floating promises need `--type-aware`, which reads the project's types (consent) |
 | Idiom drift | `biome lint`, your configuration | static | `biome lint --config-path=<scratch>/biome.json --reporter=concise <paths>` |
 | Import graph and cycles | `madge`, your tsconfig | static | `madge --circular --extensions ts,tsx,mts,cts,js,jsx,mjs,cjs [--ts-config <scratch>/tsconfig.json] <paths>`, where your `tsconfig.json` holds only an absolute `baseUrl` and the `paths` entries inside the checkout that you read from the project's tsconfig and the files it extends; leave out `--ts-config` where the project maps no paths |
 | Cycles through `.mts` / `.cts` files | `dependency-cruiser`, your configuration | static | `depcruise --config <scratch>/dc.json --output-type err <paths>`, with `dc.json` holding `{"forbidden": [{"name": "no-circular", "severity": "error", "from": {}, "to": {"circular": true}}]}`; madge reads no imports from those files |
-| Types | `tsc` | consent | `npx --no -- tsc --noEmit -p <tsconfig>` |
+| Types | `tsc` | consent | `<checkout>/node_modules/.bin/tsc --noEmit -p <tsconfig>` |
 | Complexity | `lizard` | static | `lizard -l typescript -l tsx -l javascript -l vue -w <paths>`; it skips `.mts`, `.cts`, and `.svelte` files in a directory, and given one by name parses it with its C reader and reports wrong functions, so leave them out of a file list (say so in Method & limits) |
 | Tests | the project's runner | consent | see Verification |
 
@@ -208,7 +210,7 @@ token there)
   newest compiler, not only the project's: an `ignoreDeprecations` key in
   any tsconfig (it silences them, and is itself the finding), the options
   the project's compiler reports (consent:
-  `npx --no -- tsc --noEmit -p <tsconfig>`), and those a newer major
+  `<checkout>/node_modules/.bin/tsc --noEmit -p <tsconfig>`), and those a newer major
   deprecates or removes (its release notes, such as https://aka.ms/ts6).
   Also a
   `target` older than every runtime the project supports, which makes the

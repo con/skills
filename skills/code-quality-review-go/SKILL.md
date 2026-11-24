@@ -104,12 +104,18 @@ pass gocyclo `-ignore`.
   - A Go named type does not close the set: `Mode("x")` and untyped
     constants give any value. Keep the validation where values enter
     (parsing, decoding, flags); removing it is `NV`.
-  - Typing the constants changes their dynamic type wherever a value
-    passes through `any`: comparisons with values from a
-    `map[string]any` (decoded JSON or YAML), `context.WithValue` keys
-    looked up with a plain string, type switches on `case string:`,
-    `%T`, and reflection stop matching, with no build or vet error.
-    Search for such uses; where any exist, the change is `NV`.
+  - Typing the constants changes the dynamic type of every value that
+    reaches an interface: an untyped constant becomes a `string` there,
+    a typed one stays a `Mode` (and so do retyped fields and variables).
+    Comparisons with interface values (`raw["mode"] == ModeFast` on a
+    `map[string]any` from JSON or YAML), `case string:` in type
+    switches, `v.(string)` (which then panics), plain-string lookups in
+    `context.Value` or `map[any]…`, `reflect.TypeOf` and
+    `reflect.DeepEqual` (testify's `assert.Equal`), `%T`, and `gob` of
+    an interface value change silently; `%v`, `%s`, and reflection by
+    kind (`encoding/json`, `database/sql` arguments) do not. Find each
+    such place first, and convert there with `string(ModeFast)` as part
+    of the change, or rate it `NV`.
   - Keep a string set a string type. An `iota` integer type, with a
     `String` method from `stringer`, suits values that are never
     persisted or sent; turning a string set into one changes its JSON,
