@@ -1,7 +1,7 @@
 ---
 name: code-quality-review-shell
 version: 0.1.0
-description: Shell guide for the code-quality review skills — which POSIX sh and Bash scripts a review covers (including shell embedded in CI workflows, Makefiles, and Dockerfiles), which tools sweep them (shellcheck, shfmt, actionlint, and hadolint, static when run without the project's configuration), shell checks such as strict mode, quoting, Bash features under /bin/sh, and snippets copied between scripts and workflows, false positives such as sourced libraries and scripts run from outside the repository, and the commands that verify a change. review-repo-code-quality reads it for shell code, and review-org-code-quality uses its static tools. Use when a review skill tells you to read it, or when asked for a code-quality review of shell scripts (then run review-repo-code-quality, which loads this guide).
+description: Shell guide for review-repo-code-quality and review-org-code-quality — the POSIX sh and Bash it covers (including shell embedded in CI workflows, Makefiles, and Dockerfiles), its static review tools, shell checks such as strict mode, quoting, Bash features under /bin/sh, and snippets copied between workflow steps, false positives, and verification commands. Use when a review skill reads it, or when asked for a code-quality review of shell scripts specifically (it then starts review-repo-code-quality).
 allowed-tools: Read, Skill
 user-invocable: true
 ---
@@ -67,8 +67,7 @@ no `${var,,}`.
 
 With `--norc`, shellcheck ignores `.shellcheckrc` (its `disable=`,
 `enable=`, `shell=`, `source-path=`, and `external-sources=`); inline
-`# shellcheck` directives still apply. Read `.shellcheckrc` and drop the
-hits for checks it disables. Do not pass its `shell=` as `--shell=`: that
+`# shellcheck` directives still apply. Do not pass its `shell=` as `--shell=`: that
 overrides every shebang and hides the `SC3xxx` hits the Dialect check
 needs; rerun only the files without a shebang (reported as `SC2148`)
 with `--shell=<value>`.
@@ -83,8 +82,6 @@ Method & limits as not run, never as clean.
 
 ## Checks
 
-Each check names the category it usually lands in. A fix that would
-change behavior goes under `NV` instead, with the change spelled out.
 
 - **One source of truth** (`ARC`): versions, paths, URLs, and tool flags
   hard-coded in several scripts or workflow steps; read them from one
@@ -155,7 +152,8 @@ change behavior goes under `NV` instead, with the change spelled out.
   not executable, or run as `bash script.sh` despite one. Changing how it
   is invoked is `NV`.
 - **Currency** (`CL`, or `NV` where behavior changes): obsolete commands —
-  `egrep` and `fgrep` (GNU grep 3.8 and later warns; use `grep -E` and
+  `egrep` and `fgrep` (obsolescent: upstream GNU grep 3.8 and later
+  warns, though Debian and Ubuntu ship silent wrappers; use `grep -E` and
   `grep -F`), `which` (use `command -v`) — and shellcheck, shfmt, or
   hadolint versions pinned in CI or pre-commit far behind their latest
   releases, which miss newer checks. Compare the pins with

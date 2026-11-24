@@ -1,7 +1,7 @@
 ---
 name: code-quality-review-ts
 version: 0.1.0
-description: TypeScript and JavaScript guide for the code-quality review skills — where a Node or browser project states its rules, which tools sweep it (each marked static or needing execution consent, since ESLint, knip and similar configurations are code), checks such as a long or growing string-literal union that belongs in one as-const list, false positives such as package exports and file-system routes, and the commands that verify a change. review-repo-code-quality reads it for TypeScript and JavaScript code, and review-org-code-quality uses its static tools. Use when a review skill tells you to read it, or when asked for a code-quality review of TypeScript or JavaScript code (then run review-repo-code-quality, which loads this guide).
+description: TypeScript and JavaScript guide for review-repo-code-quality and review-org-code-quality — where a project states its rules, its review tools and which need execution consent (ESLint and knip configurations are code), checks such as a long or growing string-literal union that becomes one as-const list, currency, false positives, and verification commands. Use when a review skill reads it, or when asked for a code-quality review of TypeScript or JavaScript code specifically (it then starts review-repo-code-quality).
 allowed-tools: Read, Skill
 user-invocable: true
 ---
@@ -43,11 +43,11 @@ Read `package.json` (`engines`, `type`, `main` / `module` / `exports` /
 `types` / `bin`, `scripts`, `workspaces`, `packageManager`, and how
 dependencies split between `dependencies`, `devDependencies`, and
 `peerDependencies`), the lock file, which names the package manager
-(`package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, `bun.lock`), every
+(`package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, `bun.lock` or the older `bun.lockb`), every
 `tsconfig*.json` and `jsconfig.json`, and whichever of these exist:
 ESLint (`eslint.config.*`, or the older `.eslintrc*`), Prettier
 (`.prettierrc*`, `prettier.config.*`), Biome (`biome.json`,
-`biome.jsonc`), oxlint (`.oxlintrc.json`), knip (`knip.json`,
+`biome.jsonc`), oxlint (`.oxlintrc.json`, `oxlint.config.*`), knip (`knip.json`,
 `knip.config.*`), dependency-cruiser (`.dependency-cruiser.*`), test
 runners (`vitest.config.*`, `jest.config.*`, `playwright.config.*`),
 bundlers (`vite.config.*`, `webpack.config.*`, `rollup.config.*`,
@@ -69,7 +69,7 @@ ESLint, knip, dependency-cruiser, oxlint, and madge all load the
 project's configuration by default, and that configuration is code or can
 load code (ESLint and knip configurations are modules, oxlint
 configurations can name JavaScript plugins, a madge `.madgerc` can point
-at a webpack configuration it then executes). Run them with the project's
+at a webpack configuration it then executes, and an `oxlint.config.ts` is itself a module). Run them with the project's
 configuration only with consent; for static use, pass the flags in the
 table and run from a scratch directory outside the checkout (madge reads
 `.madgerc` from the working directory and every parent). Run the
@@ -87,7 +87,7 @@ lizard skips what `.gitignore` lists: pass them the tracked files
 | Dead code: files, exports, dependencies | `knip` | consent | `npx --no -- knip --reporter compact` from the installed checkout; add `--production --strict` for shipped code only (`--strict` is what lists `devDependencies` that shipped code imports) |
 | Dead code: locals, parameters | `tsc` | consent | `npx --no -- tsc --noEmit --noUnusedLocals --noUnusedParameters -p <tsconfig>` |
 | Idiom drift | the project's ESLint, plus `typescript-eslint` `strictTypeChecked` and `stylisticTypeChecked` (with `languageOptions.parserOptions.projectService: true`), `eslint-plugin-unicorn`, `eslint-plugin-sonarjs` | consent: typed linting needs the installed dependencies | the project's lint script with those configurations layered on |
-| Idiom drift | `oxlint`, your configuration | static | `oxlint -c <scratch>/oxlintrc.json --disable-nested-config -D correctness -D suspicious -W pedantic -W style <paths>` |
+| Idiom drift | `oxlint`, your configuration | static | `oxlint -c <scratch>/oxlintrc.json --disable-nested-config -D correctness -D suspicious -W pedantic -W no-var -W eqeqeq -W typescript/no-explicit-any -W typescript/no-non-null-assertion <paths>`; floating promises need `--type-aware`, which reads the project's types (consent) |
 | Idiom drift | `biome lint`, your configuration | static | `biome lint --config-path=<scratch>/biome.json --reporter=concise <paths>` |
 | Import graph and cycles | `madge`, your tsconfig | static from a scratch directory outside the checkout | `madge --circular --extensions ts,tsx,mts,cts,js,jsx,mjs,cjs [--ts-config <scratch>/tsconfig.json] <paths>`, where your `tsconfig.json` holds only an absolute `baseUrl` and the `paths` entries inside the checkout that you read from the project's tsconfig and the files it extends; leave out `--ts-config` where the project maps no paths |
 | Cycles through `.mts` / `.cts` files | `dependency-cruiser`, your configuration | static from a scratch directory outside the checkout | `depcruise --config <scratch>/dc.json --output-type err <paths>`, with `dc.json` holding `{"forbidden": [{"name": "no-circular", "severity": "error", "from": {}, "to": {"circular": true}}]}`; madge reads no imports from those files |
@@ -103,13 +103,8 @@ configuration instead, or `tsc -b --noEmit` (it writes `.tsbuildinfo`
 files: throwaway checkout only), and pass madge the configuration that
 holds `paths`.
 
-Without consent, read the project's ESLint, Biome, or oxlint rule
-settings as text and drop the hits for rules it deliberately disables.
-
 ## Checks
 
-Each check names the category it usually lands in. A fix that would
-change behavior goes under `NV` instead, with the change spelled out.
 
 **Closed sets and constants**
 
@@ -186,9 +181,8 @@ change behavior goes under `NV` instead, with the change spelled out.
 - `package.json` scripts that repeat one another, or that nothing calls
   (`DUP`, `DC`; see Not findings for the scripts npm runs by name).
 
-**Currency** — check the live sources below on the day of the review and
-cite them with the date. Moving a version floor or switching tools is
-usually `NV`, a maintainer's decision.
+**Currency** (reported as `review-repo-code-quality` Step 2 says; read the
+live sources each item names)
 
 - **Node.js versions.** Compare `engines.node`, `.nvmrc` /
   `.node-version`, and the CI matrix with the release schedule at

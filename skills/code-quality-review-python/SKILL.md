@@ -1,7 +1,7 @@
 ---
 name: code-quality-review-python
 version: 0.1.0
-description: Python guide for the code-quality review skills — where a Python project states its rules, which tools sweep it (each marked static or needing execution consent), Python checks such as a long or growing Literal list that belongs in one Enum, currency checks (supported Python versions, PEPs, PyPA packaging standards, pixi for environments and locks), Python false positives to reject, and the commands that verify a change. review-repo-code-quality reads it for Python code, and review-org-code-quality uses its static tools. Use when a review skill tells you to read it, or when asked for a code-quality review of Python code (then run review-repo-code-quality, which loads this guide).
+description: Python guide for review-repo-code-quality and review-org-code-quality — where a Python project states its rules, its review tools and which need execution consent, Python checks such as a long or growing Literal list that becomes one Enum, currency (Python versions, PEPs, PyPA standards, pixi), false positives, and verification commands. Use when a review skill reads it, or when asked for a code-quality review of Python code specifically (it then starts review-repo-code-quality).
 allowed-tools: Read, Skill
 user-invocable: true
 ---
@@ -98,8 +98,6 @@ when `<paths>` lists files rather than directories, add
 
 ## Checks
 
-Each check names the category it usually lands in. A fix that would
-change behavior goes under `NV` instead, with the change spelled out.
 
 **Closed sets and constants**
 
@@ -140,8 +138,9 @@ change behavior goes under `NV` instead, with the change spelled out.
 
 **Imports and modules**
 
-- **Import cycles** (`ARC`): `ruff analyze graph` shows them, and so do
-  imports moved into functions or under `if TYPE_CHECKING:` to dodge one.
+- **Import cycles** (`ARC`): look for them in the map `ruff analyze graph`
+  prints (it lists imports, not cycles), and in imports moved into
+  functions or under `if TYPE_CHECKING:` to dodge one.
   Name the cycle and the move that breaks it. `TYPE_CHECKING` imports used
   only in annotations are fine.
 - **Function-local imports** (`CL`; `PLC0415`) with no cycle to break and
@@ -228,10 +227,8 @@ not that the fix is safe).
 - a `requires-python` lower bound that CI never tests (`NV`: the claim or
   the test matrix has to change).
 
-**Currency** — check the live sources below on the day of the review and
-cite them with the date; the examples here are a starting point, not the
-current state. Moving the version floor or switching tools is usually
-`NV`, a maintainer's decision.
+**Currency** (reported as `review-repo-code-quality` Step 2 says; read the
+live sources each item names rather than trusting its examples)
 
 - **Python versions.** Compare `requires-python`, the
   `Programming Language :: Python :: 3.x` classifiers, and the CI matrix
@@ -266,15 +263,19 @@ current state. Moving the version floor or switching tools is usually
   `importlib.resources`, and `sysconfig` rather than `pkg_resources` and
   `distutils` (removed in 3.12); releases uploaded through PyPI Trusted
   Publishing rather than with a stored API token.
-- **Environments, locks, and tools: pixi.** These guides recommend pixi
-  (https://pixi.sh) for how a project is installed, locked, and run: one
-  manifest (`pixi.toml`, or `[tool.pixi]` in `pyproject.toml`) and one
-  `pixi.lock` for conda-forge and PyPI packages on every platform the
-  project supports, `pixi run` tasks for the commands contributors and CI
-  share, and `pixi global install` for command-line tools. It replaces
-  uv, conda or mamba `environment.yml` files, pip-tools, hand-pinned
-  `requirements*.txt` files, and `pipx`. Recommend the move with the
-  files it would replace and the CI steps it would change (`NV`).
+- **Environments, locks, and tools: pixi** (a house preference of these
+  guides, reported as a recommendation, not as a currency problem). These
+  guides recommend pixi (https://pixi.sh) for how a project is installed,
+  locked, and run: one manifest (`pixi.toml`, or `[tool.pixi]` in
+  `pyproject.toml`) and one `pixi.lock` for conda-forge and PyPI packages
+  on every platform the project supports, `pixi run` tasks for the
+  commands contributors and CI share, and `pixi global install` for
+  command-line tools. Suggest it in place of uv, conda or mamba
+  `environment.yml` files, pip-tools, hand-pinned `requirements*.txt`
+  files, and `pipx`, as one `NV` item with the files it would replace and
+  the CI steps it would change. A working, locked setup on another tool is
+  not out of date, and where the project's rules name its tooling, they
+  stand (`review-repo-code-quality` Step 2).
 
 **Tests**
 

@@ -1,7 +1,7 @@
 ---
 name: code-quality-review-go
 version: 0.1.0
-description: Go guide for the code-quality review skills — where a Go module states its rules, which tools sweep it (gofmt and gocyclo are static; vet, staticcheck, deadcode and golangci-lint need execution consent because they load and build the module), Go checks such as typed constants for closed sets, error wrapping and interface placement, false positives such as exported API, build tags and implicit interface methods, and the commands that verify a change. review-repo-code-quality reads it for Go code, and review-org-code-quality uses its static tools. Use when a review skill tells you to read it, or when asked for a code-quality review of Go code (then run review-repo-code-quality, which loads this guide).
+description: Go guide for review-repo-code-quality and review-org-code-quality — where a Go module states its rules, its review tools and which need execution consent (anything that loads packages does), Go checks such as typed constants for closed sets, error wrapping, and interface placement, currency, false positives, and verification commands. Use when a review skill reads it, or when asked for a code-quality review of Go code specifically (it then starts review-repo-code-quality).
 allowed-tools: Read, Skill
 user-invocable: true
 ---
@@ -88,15 +88,10 @@ modules covered in Method & limits.
 
 `gocyclo` skips `vendor/` and `testdata/` but not generated files, and
 `gofmt -l` walks all three: drop their hits in out-of-scope files, or
-pass gocyclo `-ignore`. Without consent, the sweep is `gofmt`,
-`gocyclo`, jscpd with your own options (never the project's
-`.jscpd.json`), the import blocks read as text, and plain searches; say
-so in Method & limits.
+pass gocyclo `-ignore`.
 
 ## Checks
 
-Each check names the category it usually lands in. A fix that would
-change behavior goes under `NV` instead, with the change spelled out.
 
 **Closed sets and constants**
 
@@ -191,9 +186,8 @@ change behavior goes under `NV` instead, with the change spelled out.
   importers ignore them, but removing one changes which code this
   repository's own builds and tests use.
 
-**Currency** — check the live sources below on the day of the review and
-cite them with the date. Moving the `go` line or switching tools is
-usually `NV`, a maintainer's decision.
+**Currency** (reported as `review-repo-code-quality` Step 2 says; read the
+live sources each item names)
 
 - **Go releases.** Each major Go release is supported until there are two
   newer major releases (https://go.dev/doc/devel/release). Report CI that
