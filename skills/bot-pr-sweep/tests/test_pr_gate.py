@@ -840,14 +840,18 @@ class HelperTests(unittest.TestCase):
         self.assertEqual(gate.pages({"n": 1}), [{"n": 1}])
         self.assertEqual(gate.pages([[]]), [])
 
-    def test_skill_version_comes_from_the_frontmatter(self):
+    def test_skill_version_comes_from_apm_yml(self):
         self.assertRegex(gate.skill_version(SKILL_DIR), r"^\d+\.\d+\.\d+$")
         with tempfile.TemporaryDirectory() as directory:
             self.assertEqual(gate.skill_version(Path(directory)), "unknown")
-            (Path(directory) / "SKILL.md").write_text("---\nname: x\n---\nversion: 9.9.9\n", encoding="utf-8")
+            (Path(directory) / "SKILL.md").write_text("---\nname: x\nversion: 9.9.9\n---\nbody\n", encoding="utf-8")
             self.assertEqual(gate.skill_version(Path(directory)), "unknown")
-            (Path(directory) / "SKILL.md").write_text("---\nname: x\nversion: 1.2.3\n---\nbody\n", encoding="utf-8")
-            self.assertEqual(gate.skill_version(Path(directory)), "1.2.3")
+            for text in ('name: x\nversion: "1.2.3"\n', "name: x\nversion: '1.2.3'\n", "name: x\nversion: 1.2.3\n",
+                         'name: x\nversion: "1.2.3"  # comment\n'):
+                (Path(directory) / "apm.yml").write_text(text, encoding="utf-8")
+                self.assertEqual(gate.skill_version(Path(directory)), "1.2.3")
+            (Path(directory) / "apm.yml").write_text('name: x\nversion: "1.2.3\n', encoding="utf-8")
+            self.assertEqual(gate.skill_version(Path(directory)), "unknown")
 
 
 def review(state="APPROVED", uid=MAINTAINER, sha=HEAD, number=7, repo=REPO, login="maintainer"):
