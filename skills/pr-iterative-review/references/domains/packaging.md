@@ -48,10 +48,9 @@ installed or is unsafe)
 **Versions and releases** (should-fix; blocking when it cuts the wrong
 release)
 - The version change matches the change, under Semantic Versioning or the
-  scheme the project states: a removal or other breaking change is a major
-  release (a minor one before 1.0), a new feature or a new deprecation is
-  minor, a fix is a patch. A removal ships only after a release that warned
-  about it (the brief's Deprecation section).
+  scheme the project states: a breaking change is a major release (a minor
+  one before 1.0), a new feature or a new deprecation is minor, a fix is a
+  patch. Removals follow the brief's Deprecation section.
 - A changelog entry or fragment exists where the project requires one, and
   deprecations and removals are listed where readers look for them (Keep a
   Changelog's "Deprecated" and "Removed" sections, or the project's

@@ -331,6 +331,12 @@ class CheckFindingsTests(unittest.TestCase):
             "@@octocat",
             "```a`\n@octocat\n```",
             "node_modules/@types/node",
+            "hi \\@octocat",
+            "_@octocat_",
+            "_x_@octocat",
+            "caf" + chr(0xE9) + "@octocat",
+            "Fine.\x0c~~~\x0c@octocat",
+            "&#64;octocat, &#x40;octocat and &commat;octocat",
         ):
             with self.subTest(body=body):
                 self.assertRejects(
@@ -349,10 +355,19 @@ class CheckFindingsTests(unittest.TestCase):
                 "   ```\n@octocat\n   ```"
             ),
         }
+        expected = {
+            "escaped backticks": "would notify",
+            "a span opened on the line above": "a backtick without its pair",
+            "an autolink taking the opening backtick": "would notify",
+            "an indented fence, which may end with a list item": (
+                "would notify"
+            ),
+        }
         for case, body in cases.items():
             with self.subTest(case):
                 self.assertRejects(
-                    lambda d, b=body: d["findings"].append(finding(body=b)), ""
+                    lambda d, b=body: d["findings"].append(finding(body=b)),
+                    expected[case],
                 )
         # A title ending in one backtick would pair with the code span
         # of the path after it.
@@ -388,6 +403,13 @@ class CheckFindingsTests(unittest.TestCase):
                 finding(body="half " + chr(0xD800) + " a pair")
             ),
             "lone surrogate",
+        )
+
+    def test_a_fence_left_open_is_refused(self):
+        # In the posted review it would pair with a later field's fence.
+        self.assertRejects(
+            lambda d: d.update(summary="Fine.\n\n```text\nno end"),
+            "summary: a code fence is opened but never closed",
         )
 
     def test_images_are_refused(self):
@@ -450,6 +472,17 @@ class CheckFindingsTests(unittest.TestCase):
 
 
 class RenderTests(unittest.TestCase):
+    def test_a_range_across_two_hunks_goes_to_the_body(self):
+        diff = (
+            "diff --git a/x.py b/x.py\n--- a/x.py\n+++ b/x.py\n@@ -1,2 +1,2"
+            " @@\n a\n-b\n+B\n@@ -10,2 +10,2 @@\n c\n-d\n+D\n"
+        )
+        data = example()
+        data["findings"] = [finding(path="x.py", start_line=2, line=10)]
+        _, payload, notes = render(data, diff=diff)
+        self.assertEqual(payload["comments"], [])
+        self.assertIn("x.py:2-10", " ".join(notes))
+
     def test_golden_example(self):
         review_md, payload, notes = render(
             example(),
@@ -505,8 +538,10 @@ class RenderTests(unittest.TestCase):
         review_md, payload, notes = render(data)
         self.assertEqual(payload["comments"], [])
         self.assertEqual(len(notes), 3)
+        blob = f"https://github.com/acme/widgets/blob/{SHA}"
         self.assertIn(
-            f"[`src/widgets/cli.py:40`](https://github.com/acme/widgets/blob/{SHA}/src/widgets/cli.py?plain=1#L40)",
+            f"[`src/widgets/cli.py:40`]({blob}/src/widgets/cli.py"
+            "?plain=1#L40)",
             review_md,
         )
         self.assertIn("?plain=1#L4-L13)", review_md)
@@ -599,9 +634,10 @@ class RenderTests(unittest.TestCase):
         data["findings"][2]["thread_url"] = THREAD
         review_md, payload, _ = render(data)
         self.assertEqual(len(payload["comments"]), 4)
+        blob = f"https://github.com/acme/widgets/blob/{SHA}"
         self.assertIn(
-            f"`src/widgets/cli.py:10-11`](https://github.com/acme/widgets/blob/{SHA}/src/widgets/cli.py?plain=1#L10-L11)"
-            f" (still open; [thread]({THREAD}))",
+            f"`src/widgets/cli.py:10-11`]({blob}/src/widgets/cli.py"
+            f"?plain=1#L10-L11) (still open; [thread]({THREAD}))",
             review_md,
         )
 
@@ -774,7 +810,8 @@ class PreviousTests(unittest.TestCase):
             "state": state,
             "submitted_at": submitted,
             "html_url": (
-                f"https://github.com/acme/widgets/pull/42#pullrequestreview-{rid}"
+                "https://github.com/acme/widgets/pull/42"
+                f"#pullrequestreview-{rid}"
             ),
             "commit_id": SHA,
         }
@@ -900,6 +937,22 @@ class CliTests(unittest.TestCase):
             self.assertIn("two confirmations", err)
             self.assertIn("would notify", err)
             self.assertFalse((Path(directory) / "payload.json").exists())
+
+    def test_render_reports_text_it_cannot_write(self):
+        # Invalid bytes on a command line arrive as lone surrogates.
+        with tempfile.TemporaryDirectory() as directory:
+            code, _, err = self.run_main(
+                "render",
+                str(EXAMPLE),
+                "--diff",
+                str(FIXTURES / "example.diff"),
+                "--out",
+                directory,
+                "--footer",
+                "Made by " + chr(0xDCFF),
+            )
+            self.assertEqual(code, 2)
+            self.assertIn("error:", err)
 
     def test_render_needs_the_diff_for_a_pull_request(self):
         with tempfile.TemporaryDirectory() as directory:

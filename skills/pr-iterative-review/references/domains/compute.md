@@ -87,7 +87,7 @@ run on terabytes).
 - **static**: read the dtypes and shapes at each step; search the tests for
   the tolerances used; check claimed complexity against the code; a small
   experiment with `python3 -I` in a scratch directory that uses installed
-  libraries only, never the pull request's code (to show that a dtype
-  wraps, say).
+  libraries only, never the pull request's code, imported or pasted (to
+  show that a dtype wraps, say).
 - **CI only**: the project's tests and benchmarks, and anything that
   imports the pull request's code.

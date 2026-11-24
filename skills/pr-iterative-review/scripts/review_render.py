@@ -30,6 +30,7 @@ again.
 from __future__ import annotations
 
 import argparse
+import html
 import json
 import re
 import sys
@@ -62,9 +63,8 @@ MODES = ("independent", "single-agent")
 LEAD = "lead"
 SIDES = ("RIGHT", "LEFT")
 EVENTS = ("comment", "request-changes")  # never an approval
-MAX_BODY = (
-    65000  # GitHub refuses review and comment bodies over 65536 characters
-)
+# GitHub refuses review and comment bodies over 65536 characters.
+MAX_BODY = 65000
 MAX_REVIEWERS = 6
 
 FINDINGS_KEYS = {
@@ -112,7 +112,8 @@ _SOURCE = re.compile(
     r"(?:con/skills@)?[0-9a-f]{7,40}(?:\+dirty)?|source commit unknown"
 )
 _THREAD = re.compile(
-    r"https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/pull/[0-9]+#discussion_r[0-9]+"
+    r"https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/pull/[0-9]+"
+    r"#discussion_r[0-9]+"
 )
 _REVIEW_URL = re.compile(
     r"https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/pull/[0-9]+"
@@ -133,11 +134,16 @@ _INLINE_CODE = re.compile(
     r"\\.|<[A-Za-z][A-Za-z0-9+.-]+:[^\s<>]*>|(?:https?://|www\.)[^\s<]*|"
     r"(?<!`)(`+)(?!`).*?(?<!`)\1(?!`)"
 )
-# A GitHub @-mention outside code; only a word character before it (an
-# e-mail address) rules it out.
+# A GitHub @-mention outside code. Only an ASCII letter or digit before
+# it, as in an e-mail address, rules it out: GitHub looks for mentions
+# in the rendered text, where `_@octocat_` is emphasis around a bare
+# @octocat, and a letter such as an accented one may not count.
 _MENTION = re.compile(
-    r"(?<!\w)@[A-Za-z0-9][A-Za-z0-9-]{0,38}(?:/[A-Za-z0-9_.-]+)?"
+    r"(?<![A-Za-z0-9])@[A-Za-z0-9][A-Za-z0-9-]{0,38}(?:/[A-Za-z0-9_.-]+)?"
 )
+# Line ends as CommonMark reads them. str.splitlines() also splits on
+# characters such as a form feed, which Markdown keeps inside a line.
+_LINE_END = re.compile(r"\r\n?|\n")
 # An image makes every viewer's browser, through GitHub's proxy, request
 # its URL from another host.
 _IMAGE = re.compile(r"!\[")
@@ -342,11 +348,14 @@ def parse_diff(text: str) -> dict[str, dict[str, dict[int, int]]]:
 # ----------------------------------------------------------------------
 
 
-def _prose(text: str) -> str:
-    """The text, with fenced code blocks and code spans removed."""
+def _prose(text: str) -> tuple[str, bool]:
+    """The text, with fenced code blocks and code spans removed.
+
+    The flag is true when a fence is still open at the end.
+    """
     kept: list[str] = []
     fence = ""
-    for line in text.splitlines():
+    for line in _LINE_END.split(text):
         if fence:
             stripped = line.strip()
             if (
@@ -368,7 +377,7 @@ def _prose(text: str) -> str:
                 line,
             )
         )
-    return "\n".join(kept)
+    return "\n".join(kept), bool(fence)
 
 
 def _text(
@@ -394,7 +403,12 @@ def _text(
         errors.append(f"{where}: must be one line")
     if len(value) > limit:
         errors.append(f"{where}: longer than {limit} characters")
-    prose = _prose(value)
+    prose, unclosed = _prose(value)
+    if unclosed:
+        errors.append(
+            f"{where}: a code fence is opened but never closed, so it would"
+            " pair with a fence in a later part of the review"
+        )
     if "<!--" in prose:
         errors.append(
             f"{where}: HTML comments are not allowed outside code; they hide"
@@ -421,7 +435,8 @@ def _text(
             " with a later one and turn code into text; close the code span,"
             " or write a literal backtick as \\`"
         )
-    mention = _MENTION.search(prose)
+    # An entity such as &#64; renders as @.
+    mention = _MENTION.search(html.unescape(prose))
     if mention:
         errors.append(
             f"{where}: {mention.group(0)!r} would notify that account; put"
@@ -727,9 +742,13 @@ def _plural(count: int, word: str) -> str:
     return f"{count} {word}" + ("s" if word == "nit" and count != 1 else "")
 
 
+def _backtick_run(text: str) -> int:
+    """The length of the longest run of backticks in `text`."""
+    return max((len(run) for run in re.findall(r"`+", text)), default=0)
+
+
 def _fence_for(text: str) -> str:
-    longest = max((len(run) for run in re.findall(r"`+", text)), default=0)
-    return "`" * max(3, longest + 1)
+    return "`" * max(3, _backtick_run(text) + 1)
 
 
 def _indent(text: str, width: int) -> str:
@@ -744,18 +763,22 @@ def _cell(text: str) -> str:
     return text.replace("|", "\\|")
 
 
+def _is_range(finding: dict) -> bool:
+    start = finding.get("start_line")
+    return bool(start) and start != finding["line"]
+
+
 def _span(finding: dict) -> str:
-    start, line = finding.get("start_line"), finding["line"]
-    return f"{start}-{line}" if start and start != line else f"{line}"
+    if _is_range(finding):
+        return f"{finding['start_line']}-{finding['line']}"
+    return f"{finding['line']}"
 
 
 def _lines_word(finding: dict) -> tuple[str, str]:
     """('removed line', 'line'), or their plurals for a range."""
-    several = (
-        bool(finding.get("start_line"))
-        and finding["start_line"] != finding["line"]
-    )
-    return ("removed lines", "lines") if several else ("removed line", "line")
+    if _is_range(finding):
+        return ("removed lines", "lines")
+    return ("removed line", "line")
 
 
 def _code(text: str) -> str:
@@ -763,8 +786,7 @@ def _code(text: str) -> str:
 
     A file name can contain backticks.
     """
-    longest = max((len(run) for run in re.findall(r"`+", text)), default=0)
-    fence = "`" * (longest + 1)
+    fence = "`" * (_backtick_run(text) + 1)
     pad = " " if text[:1] in ("`", " ") or text[-1:] in ("`", " ") else ""
     return f"{fence}{pad}{text}{pad}{fence}"
 
@@ -781,7 +803,6 @@ def _location(
     Notes such as "inline comment" follow it.
     """
     path = finding.get("path")
-    notes = tuple(notes)
     if not path:
         return f"({'; '.join(notes)})" if notes else ""
     if finding.get("line") is None:
@@ -791,13 +812,16 @@ def _location(
         if finding.get("side", "RIGHT") == "LEFT":
             notes = (_lines_word(finding)[0],) + notes
         elif link and repo:
-            start = finding.get("start_line") or finding["line"]
-            anchor = f"#L{start}" + (
-                f"-L{finding['line']}" if start != finding["line"] else ""
-            )
+            anchor = f"#L{finding['line']}"
+            if _is_range(finding):
+                anchor = f"#L{finding['start_line']}-L{finding['line']}"
             # ?plain=1 shows the source with line numbers even for a
             # file GitHub renders, such as Markdown.
-            text = f"[{text}](https://github.com/{repo}/blob/{sha}/{quote(path)}?plain=1{anchor})"
+            url = (
+                f"https://github.com/{repo}/blob/{sha}/{quote(path)}"
+                f"?plain=1{anchor}"
+            )
+            text = f"[{text}]({url})"
     return text + (f" ({'; '.join(notes)})" if notes else "")
 
 
@@ -1020,10 +1044,7 @@ def render(
                     "side": finding.get("side", "RIGHT"),
                     "body": comment,
                 }
-                if (
-                    finding.get("start_line")
-                    and finding["start_line"] != finding["line"]
-                ):
+                if _is_range(finding):
                     entry["start_line"] = finding["start_line"]
                     entry["start_side"] = entry["side"]
                 comments.append(entry)

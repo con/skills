@@ -99,31 +99,17 @@ it is written, so readability and consistency come before anyone's taste.
 - Consistency within the module comes first, then within the project, then
   with the language's style guide: PEP 8 for Python, `gofmt` and Effective
   Go for Go, the project's formatter and linter elsewhere. Where the
-  project's configuration sets something (a line length, a quote style),
-  the configuration wins.
-- In Python, check the changed lines for what PEP 8 asks and the project's
-  tools do not already enforce:
-  - names: `snake_case` functions, methods and variables, `CapWords`
-    classes, `UPPER_CASE` module constants, one leading underscore for
-    what is internal, and no `l`, `O` or `I` as a one-letter name;
-  - imports at the top of the module, one module per `import` statement,
-    in three groups (standard library, third party, the project's own),
-    absolute where possible, and no wildcard imports;
-  - `is` and `is not` for `None`, `isinstance()` rather than comparing
-    types, no `== True`, and `if not items:` for an empty sequence;
-  - the narrowest exception class that fits in each `except`, never a
-    bare `except:`; `raise … from` where the cause matters; custom
-    exceptions derived from `Exception`;
-  - either every `return` in a function returns a value or none does;
-  - `def` rather than a `lambda` assigned to a name;
-  - lines within the project's limit, else 79 characters (72 for comments
-    and docstrings);
-  - docstrings on public modules, classes and functions (PEP 257).
-
-  `ruff check --isolated --no-cache --select E,W,N,I --line-length LIMIT`
-  on the changed files, with the project's limit or 79 as `LIMIT`, finds
-  many of these; `--isolated` keeps it from reading the project's
-  configuration, so it is **static**.
+  project's configuration sets something (a line length, a quote style, a
+  rule it ignores), the configuration wins.
+- In Python, check the changed lines against what PEP 8 asks and the
+  project's configuration neither enforces nor disables (`ignore`,
+  `per-file-ignores`): its naming, import, comparison, exception and
+  line-length recommendations, and PEP 257 docstrings on public names.
+  `ruff check --isolated --no-cache --select E,W,N --line-length LIMIT` on
+  the changed files, with the project's limit or 79 as `LIMIT`, finds many
+  of these. `--isolated` keeps it from reading the project's configuration,
+  so it is **static**, and also blind to what that configuration ignores:
+  drop those hits.
 - Tier: `nit`, or `should-fix` for a public name (a module, class,
   function, argument or option that callers use), since renaming it later
   takes a deprecation cycle.
@@ -152,8 +138,8 @@ only one --obvious way to do it."
 ### Deprecation
 
 Anything public, such as a name, argument, default, endpoint, flag,
-configuration key, output field or file format, is retired in steps and
-never removed or changed incompatibly in one release:
+configuration key, output field or file format, is retired in steps rather
+than removed or changed incompatibly in one release:
 
 1. **Soft deprecation**, the default: the old form keeps working and stays
    tested; its documentation and the changelog mark it deprecated and name
@@ -165,13 +151,17 @@ never removed or changed incompatibly in one release:
 3. **Removal**, in a later major release (before 1.0, a later minor one),
    after at least one release that carried the warning.
 
-A removal or incompatible change that skips these steps is `blocking` where
-the project promises compatibility (Semantic Versioning from 1.0, or a
-stated policy), and `should-fix` elsewhere. A deprecation that names no
+A deprecation policy the project states replaces these steps. A change
+that updates every caller, all inside the repository, retires nothing.
+
+Breaking the project's compatibility promise is `blocking`: under Semantic
+Versioning from 1.0, a removal or incompatible change outside a major
+release, or any change its stated policy forbids. Keeping the promise but
+skipping these steps, such as a removal in a major release that no earlier
+release warned about, is `should-fix`. So is a deprecation that names no
 replacement, warns without saying which release removes it, or has no test
-that the old form still works is `should-fix`, and so is new code that
-uses what one of its dependencies has deprecated. Your lenses add what
-holds in their domain.
+that the old form still works, and new code that uses what one of its
+dependencies has deprecated. Your lenses add what holds in their domain.
 
 ## Angles
 
