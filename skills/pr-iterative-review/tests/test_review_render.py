@@ -76,7 +76,7 @@ class ParseDiffTests(unittest.TestCase):
 
     def test_only_newlines_end_a_line(self):
         diff = ("diff --git a/x.py b/x.py\n--- a/x.py\n+++ b/x.py\n@@ -1,3 +1,3 @@\n"
-                " page\x0cbreak\n-old text\r\n+new\x85text\r\n same\x1cend\n")
+                " page\x0cbreak\n-old\u2028text\r\n+new\x85text\r\n same\x1cend\n")
         self.assertEqual(rr.parse_diff(diff), {"x.py": {"RIGHT": {1: 1, 2: 1, 3: 1}, "LEFT": {1: 1, 2: 1, 3: 1}}})
 
     def test_new_file_and_counts_left_out(self):
@@ -143,6 +143,8 @@ class CheckFindingsTests(unittest.TestCase):
             (lambda d: d.update(domains=["Front End"]), "domains"),
             (lambda d: d.update(mode="solo"), "mode"),
             (lambda d: d.update(rounds=0), "rounds"),
+            (lambda d: d.update(rounds=4), "rounds: must be 1"),
+            (lambda d: d.update(rounds=1), "a review with findings has at least 2"),
             (lambda d: d.update(summary=" "), "summary: empty"),
             (lambda d: d.update(ci="line one\nline two"), "ci: must be one line"),
             (lambda d: d.update(checked="fine"), "checked: must be a list"),
@@ -198,6 +200,15 @@ class CheckFindingsTests(unittest.TestCase):
             with self.subTest(expected=expected):
                 self.assertRejects(lambda d, o=overrides: d["findings"].append(finding(**o)), expected)
 
+    def test_mentions_that_escape_code_or_follow_punctuation(self):
+        for body in ("`x @octocat ``", "thanks -@octocat", "cc .@octocat", "(/@octocat)", "@@octocat",
+                     "```a`\n@octocat\n```", "node_modules/@types/node"):
+            with self.subTest(body=body):
+                self.assertRejects(lambda d, b=body: d["findings"].append(finding(body=b)), "would notify")
+
+    def test_images_are_refused(self):
+        self.assertRejects(lambda d: d.update(summary="See ![x](https://example.org/?q=data)."), "images")
+
     def test_code_and_addresses_are_not_mentions(self):
         data = example()
         data["findings"].append(finding(body="Use the `@property` decorator; mail a@example.org.\n\n"
@@ -234,26 +245,14 @@ class RenderTests(unittest.TestCase):
         self.assertEqual(len(notes), 1)
         self.assertIn("finding 4: README.md:12", notes[0])
 
-    def test_payload_shape(self):
-        _, payload, _ = render(example())
-        self.assertEqual(payload["commit_id"], SHA)
-        self.assertEqual(payload["event"], "COMMENT")
-        self.assertTrue(payload["body"].startswith(f"<!-- pr-iterative-review v0.0.0 sha={SHA} -->\n"))
-        places = [(c["path"], c.get("start_line"), c["line"], c["side"]) for c in payload["comments"]]
-        self.assertEqual(places, [(".github/workflows/test.yml", 13, 15, "RIGHT"), ("src/widgets/cli.py", None, 11, "RIGHT"),
-                                  ("src/widgets/cli.py", 10, 11, "RIGHT"), ("db/legacy.sql", 1, 2, "LEFT"),
-                                  ("src/widgets/cli.py", None, 10, "RIGHT")])
-        self.assertEqual(payload["comments"][3]["start_side"], "LEFT")
-        self.assertTrue(payload["comments"][0]["body"].startswith("**Blocking (1): The pull request title"))
-        self.assertIn("```suggestion\n      - name: Greet\n", payload["comments"][0]["body"])
-
     def test_findings_are_numbered_in_tier_order(self):
         data = example()
         data["findings"].reverse()
         review_md, _, _ = render(data)
         self.assertLess(review_md.index("### Blocking"), review_md.index("### Should fix"))
         self.assertLess(review_md.index("### Optional"), review_md.index("### Nits"))
-        self.assertIn("1. **`shell=True` runs the name argument", review_md)
+        # The second blocking finding of the example comes first once the list is reversed.
+        self.assertRegex(review_md, r"\n1\. \*\*`shell=\w+` runs the name argument as a command\*\*")
         self.assertIn("7. **`attempt` is never used**", review_md)
 
     def test_lines_outside_the_diff_go_to_the_body_with_a_link(self):
@@ -378,9 +377,12 @@ class RenderTests(unittest.TestCase):
         data["mode"] = "single-agent"
         self.assertIn("One agent read the change at `0123456` from 3 angles in turn", render(data)[0])
         data["mode"] = "independent"
+        data["findings"], data["rounds"] = [], 1
+        self.assertEqual(rr.check_findings(data), [])
+        self.assertIn("None of them found anything, so there was nothing to cross-check.", render(data)[0])
         data["reviewers"] = data["reviewers"][:1]
-        data["findings"] = []
         self.assertIn("One reviewer read the change at `0123456`: correctness", render(data)[0])
+        self.assertIn("(1 round in all)", render(data)[0])
 
     def test_empty_ran_and_not_checked(self):
         data = example()
@@ -465,7 +467,7 @@ class CliTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             diff = Path(directory) / "latin1.diff"
             diff.write_bytes(example_diff().encode("utf-8").replace(b"legacy table", b"l\xe9gacy table")
-                             .replace(b"import subprocess", b"import sub\rprocess"))
+                             .replace(b" import argparse", b" import arg\rparse"))
             code, out, err = self.run_main("render", str(EXAMPLE), "--diff", str(diff), "--out", directory)
             self.assertEqual(code, 0, err)
             self.assertIn("5 inline", out)

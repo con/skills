@@ -42,7 +42,7 @@ PREVIOUS_STATUSES = {"fixed": "Fixed", "still-open": "Still open", "declined": "
 MODES = ("independent", "single-agent")
 LEAD = "lead"  # the agent that coordinated the review; it may confirm a finding against the code
 SIDES = ("RIGHT", "LEFT")
-EVENTS = {"comment": "COMMENT", "request-changes": "REQUEST_CHANGES"}
+EVENTS = ("comment", "request-changes")  # never an approval
 MAX_BODY = 65000  # GitHub refuses review and comment bodies over 65536 characters
 MAX_REVIEWERS = 6
 
@@ -65,10 +65,14 @@ _REVIEW_URL = re.compile(r"https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/p
                          r"#pullrequestreview-[0-9]+")
 _VERSION = re.compile(r"^version:\s*([\"']?)([0-9]+\.[0-9]+\.[0-9]+)\1\s*(?:#.*)?$", re.MULTILINE)
 _HUNK = re.compile(r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@")
-_FENCE = re.compile(r"^ {0,3}(`{3,}|~{3,})")
-_INLINE_CODE = re.compile(r"(`+)(?:(?!\1).)*?\1")
-# A GitHub @-mention outside code: not part of an e-mail address or a path.
-_MENTION = re.compile(r"(?<![\w@./`-])@[A-Za-z0-9][A-Za-z0-9-]{0,38}(?:/[A-Za-z0-9_.-]+)?")
+# A fence opener as CommonMark reads it: a backtick fence's info string holds no backtick.
+_FENCE = re.compile(r"^ {0,3}(`{3,}(?!.*`)|~{3,})")
+# An inline code span closes only on a backtick run of the same length.
+_INLINE_CODE = re.compile(r"(?<!`)(`+)(?!`).*?(?<!`)\1(?!`)")
+# A GitHub @-mention outside code; only a word character before it (an e-mail address) rules it out.
+_MENTION = re.compile(r"(?<!\w)@[A-Za-z0-9][A-Za-z0-9-]{0,38}(?:/[A-Za-z0-9_.-]+)?")
+# An image makes every viewer's browser, through GitHub's proxy, request its URL from another host.
+_IMAGE = re.compile(r"!\[")
 # Raw HTML that Markdown passes through (tags, comments, declarations): it can hide text from people.
 _HTML = re.compile(r"<!--|<\?|<![A-Za-z]|<!\[CDATA\[|</?[A-Za-z][A-Za-z0-9-]*(?:\s[^<>]*)?/?>")
 # A link reference definition renders as nothing: its text reaches agents reading the API, not people.
@@ -272,6 +276,9 @@ def _text(errors: list[str], where: str, value: object, *, required: bool = True
     if _LINK_DEFINITION.search(prose):
         errors.append(f"{where}: a link reference definition renders as nothing, so its text would be hidden "
                       "from people; write links inline")
+    if _IMAGE.search(prose):
+        errors.append(f"{where}: images are not allowed; displaying one sends a request, with whatever its URL "
+                      "carries, to another host")
     mention = _MENTION.search(prose)
     if mention:
         errors.append(f"{where}: {mention.group(0)!r} would notify that account; put code such as a "
@@ -347,8 +354,10 @@ def check_findings(data: object) -> list[str]:
     if data.get("mode") not in MODES:
         errors.append(f"mode: must be one of {', '.join(MODES)}")
     rounds = data.get("rounds")
-    if not (_positive(rounds) and rounds <= 5):
-        errors.append("rounds: must be a number of rounds from 1 to 5")
+    if not (_positive(rounds) and rounds <= 3):
+        errors.append("rounds: must be 1 (round 1 found nothing), 2 (a cross-check) or 3 (with rebuttals)")
+    elif rounds == 1 and data.get("findings"):
+        errors.append("rounds: a finding is confirmed in round 2, so a review with findings has at least 2")
     _text(errors, "summary", data.get("summary"), limit=4000)
     _text(errors, "ci", data.get("ci"), required=False, one_line=True, limit=300)
     for key in ("checked", "ran", "not_checked"):
@@ -507,34 +516,45 @@ def _suggestion(text: str, label: bool) -> str:
     return f"{fence}suggestion\n{body}{fence}" if label else f"{fence}\n{body}{fence}"
 
 
+def _counts(findings: list[dict]) -> dict[str, int]:
+    return {tier: sum(1 for f in findings if f["tier"] == tier) for tier in TIERS}
+
+
 def _method(data: dict, short: str) -> str:
     reviewers = data["reviewers"]
     angles = "; ".join(f"{r['id']} ({r['focus']})" for r in reviewers)
+    rounds = f"{data['rounds']} round{'s' if data['rounds'] != 1 else ''} in all"
     used_lead = any(LEAD in f["confirmed_by"] for f in data["findings"])
     if data["mode"] == "single-agent":
         return (f"One agent read the change at `{short}` from {len(reviewers)} "
                 f"angle{'s' if len(reviewers) != 1 else ''} in turn: {angles}. It then re-checked each finding "
-                f"against the code ({data['rounds']} rounds in all). No independent reviewers were available, "
+                f"against the code ({rounds}). No independent reviewers were available, "
                 "so no second agent cross-checked the findings.")
+    if len(reviewers) == 1:
+        return (f"One reviewer read the change at `{short}`: {angles}. The agent that coordinated the review "
+                f"then checked each finding against the code ({rounds}).")
+    if data["rounds"] == 1:
+        return (f"{len(reviewers)} reviewers read the change at `{short}` independently, each from one angle: "
+                f"{angles}. None of them found anything, so there was nothing to cross-check.")
     agreement = ("Each finding above was confirmed by at least two of them, or by one of them and the agent "
                  "that coordinated the review, after checking it against the code." if used_lead else
                  "Each finding above was confirmed by at least two of them.")
-    if len(reviewers) == 1:
-        return (f"One reviewer read the change at `{short}`: {angles}. The agent that coordinated the review "
-                f"then checked each finding against the code ({data['rounds']} rounds in all).")
     return (f"{len(reviewers)} reviewers read the change at `{short}` independently, each from one angle: "
-            f"{angles}. They then checked each other's findings ({data['rounds']} rounds in all). {agreement}")
+            f"{angles}. They then checked each other's findings ({rounds}). {agreement}")
 
 
 def render(data: dict, anchors: dict | None, *, version: str, source: str, event: str = "comment",
            inline: bool = True, footer: str | None = None) -> tuple[str, dict | None, list[str]]:
-    """Render checked findings into (review.md text, payload or None, notes for the operator)."""
+    """Render checked findings into (review.md text, payload or None, notes for the operator).
+
+    Findings are grouped by tier and keep their given order within it, most important first.
+    """
     repo, sha = data.get("repo"), data["head_sha"]
     short = sha[:7]
     local = data.get("pr") is None
     notes: list[str] = []
-    ordered = sorted(data["findings"], key=lambda f: TIERS.index(f["tier"]))
-    counts = {tier: sum(1 for f in ordered if f["tier"] == tier) for tier in TIERS}
+    findings = data["findings"]
+    counts = _counts(findings)
 
     api_event = "COMMENT"
     if not local and event == "request-changes":
@@ -545,7 +565,7 @@ def render(data: dict, anchors: dict | None, *, version: str, source: str, event
 
     if counts["blocking"]:
         verdict = "blocking issues found"
-    elif ordered:
+    elif findings:
         verdict = "no blocking issues"
     else:
         verdict = "no issues found"
@@ -575,7 +595,7 @@ def render(data: dict, anchors: dict | None, *, version: str, source: str, event
     appendix: list[str] = []
     number = 0
     for tier in TIERS:
-        group = [f for f in ordered if f["tier"] == tier]
+        group = [f for f in findings if f["tier"] == tier]
         if not group:
             continue
         items = []
@@ -725,7 +745,7 @@ def cmd_render(args: argparse.Namespace) -> int:
         written.append(str(out / "payload.json"))
     for note in notes:
         print(f"note: {note}", file=sys.stderr)
-    tiers = ", ".join(f"{sum(1 for f in data['findings'] if f['tier'] == t)} {t}" for t in TIERS)
+    tiers = ", ".join(f"{count} {tier}" for tier, count in _counts(data["findings"]).items())
     inline = len(payload["comments"]) if payload else 0
     print(f"{len(data['findings'])} findings ({tiers}); {inline} inline; wrote {' and '.join(written)}")
     return 0
@@ -746,7 +766,7 @@ def build_parser() -> argparse.ArgumentParser:
     render_cmd.add_argument("findings", help="the reconciled findings (JSON)")
     render_cmd.add_argument("--out", required=True, help="directory to write review.md and payload.json into")
     render_cmd.add_argument("--diff", help="the pull request diff the review will be posted on")
-    render_cmd.add_argument("--event", choices=sorted(EVENTS), default="comment",
+    render_cmd.add_argument("--event", choices=EVENTS, default="comment",
                             help="request-changes only when the invocation asked for it; never an approval")
     render_cmd.add_argument("--no-inline", action="store_true",
                             help="put every finding in the review body (after GitHub refused an inline comment)")

@@ -13,8 +13,9 @@ yours, but report anything blocking wherever you see it.
 
 Inputs, all read-only:
 
-- the diff: `{WORK}/diff.patch`, and on a re-review `{WORK}/previous.md`;
-- the pull request's description, linked issue and discussion: `{WORK}/pr.md`;
+- the diff: `{WORK}/diff.patch`;
+- the pull request, its discussion, linked issue and CI, as GitHub returned
+  them, with the lead's CI summary in `ci.md`: {PR_FILES};
 - the code at {SHA}: `{TREE}`. Read whole files and their callers, not only
   the diff;
 - the project's rules: {RULE_FILES};
@@ -174,9 +175,11 @@ new evidence from the code.
 
 ## On a re-review
 
-`{WORK}/previous.md` holds the previous review's findings, the replies to
-them, and the diff since the commit it reviewed ({PREV_SHA}). In round 1,
-also return the status of each earlier finding:
+`{PR_FILES}` then also holds the previous review ({PREV_ID} in
+`reviews.json`, its inline comments in `previous-comments.json`), the
+replies to it, and the diff since the commit it reviewed ({PREV_SHA}) in
+`since-previous.patch`. In round 1, also return the status of each earlier
+finding, by that review's number:
 
 ```json
 "previous": [{"n": 1, "status": "fixed", "evidence": "…"}]

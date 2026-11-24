@@ -27,11 +27,6 @@ should-fix)
 - Commands that delete, overwrite or publish say so before the reader runs
   them.
 
-**Completeness for this change** (should-fix)
-- New behaviour, options and configuration are documented; removed ones
-  are gone from the docs; breaking changes carry migration notes; a
-  changelog entry exists where the project keeps one.
-
 **Structure** (optional; should-fix when it misleads)
 - The page leads with what the reader needs; prerequisites come before the
   steps that need them; the steps are in order; there is one recommended
@@ -51,8 +46,6 @@ should-fix)
 
 ## Not findings
 
-- Wording preferences where the meaning is clear.
-- Rewriting sections the pull request does not touch.
 - Style choices the project's documentation already makes consistently.
 
 ## Verification

@@ -60,23 +60,13 @@ the frontend, scripts, downstream packages).
   files or locks not released on error paths; unbounded queries without
   pagination; one query per row where one query would do.
 
-**Errors and logs** (should-fix)
-- Exceptions swallowed or replaced by a generic message; the wrong status
-  code; secrets, tokens or personal data in logs and error messages.
-
-**Configuration** (should-fix)
-- New settings documented with their defaults; secrets read from the
-  environment or a secret store, never committed; feature flags have an
-  owner and a removal plan.
-
-**Tests** (should-fix)
-- New behaviour and its failure paths are tested; tests do not depend on
-  the network, the clock or ordering they do not control.
+**Errors and configuration** (should-fix)
+- Status codes and error bodies follow the API's conventions; new settings
+  are documented with their defaults and read secrets from the environment
+  or a secret store; feature flags have a removal plan.
 
 ## Not findings
 
-- Framework or library preferences.
-- Scaling concerns for low-volume or administrative paths with no data.
 - Missing caching with no measurement.
 - Internal helpers whose signature changed together with every caller.
 

@@ -78,7 +78,6 @@ standard such as WCAG AA)
 
 ## Not findings
 
-- Styling preferences the project's linters do not enforce.
 - `useMemo` or `useCallback` missing where nothing shows a cost.
 - `rel="noopener"` on `target="_blank"` links: browsers have implied it
   since 2021.

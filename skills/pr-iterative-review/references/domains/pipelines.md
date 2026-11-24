@@ -73,8 +73,6 @@ pattern the others follow.
 ## Not findings
 
 - The choice of orchestrator or storage format.
-- Refactoring stages the pull request does not touch.
-- Scale worries with no volumes behind them.
 
 ## Verification
 

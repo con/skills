@@ -75,7 +75,6 @@ run on terabytes).
 
 - Micro-optimizations off the hot path.
 - Notation and naming that follow the field's conventions.
-- GPU or distributed support the pull request does not set out to add.
 
 ## Verification
 
