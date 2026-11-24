@@ -29,6 +29,11 @@ pattern the others follow.
   encoding: find who reads it, here and in sibling repositories. Is the
   schema versioned? Are existing outputs migrated, or can readers still read
   them?
+- Retiring a column, field, path or configuration key goes through the
+  brief's Deprecation steps: the new one is written beside the old, readers
+  accept both, a renamed configuration key is still read and warns, and the
+  old one goes only after its consumers have moved. A schema that carries a
+  version gets a new one for an incompatible change.
 
 **Re-runs and failure** (usually blocking)
 - Running a stage twice gives the same result: no duplicated rows, no
@@ -79,5 +84,5 @@ pattern the others follow.
 - **static**: search for every reader of a changed output (paths,
   column names, schema names); read the workflow definition to trace inputs
   to outputs.
-- **consent**: dry runs (`snakemake -n`, `dbt compile`, `nextflow run
+- **CI only**: dry runs (`snakemake -n`, `dbt compile`, `nextflow run
   -preview`) evaluate the project's code; running a stage on sample data.

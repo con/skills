@@ -33,6 +33,9 @@ installed or is unsafe)
   does not pin or cap without a stated reason; an application's lockfile
   changed together with its manifest, by the project's tool, without
   unrelated churn.
+- Dropping a supported Python, runtime or platform version follows the
+  project's support policy (such as SPEC 0 in the scientific Python
+  ecosystem) and is announced in the changelog.
 - A removed dependency is no longer imported anywhere, tests and scripts
   included.
 
@@ -44,10 +47,17 @@ installed or is unsafe)
 
 **Versions and releases** (should-fix; blocking when it cuts the wrong
 release)
-- The version change matches the change (a breaking change is a major
-  version, or minor before 1.0); a changelog entry or fragment exists where
-  the project requires one; release labels are right, since label-driven
-  tools release from them (a stray `major` label cuts a major release).
+- The version change matches the change, under Semantic Versioning or the
+  scheme the project states: a removal or other breaking change is a major
+  release (a minor one before 1.0), a new feature or a new deprecation is
+  minor, a fix is a patch. A removal ships only after a release that warned
+  about it (the brief's Deprecation section).
+- A changelog entry or fragment exists where the project requires one, and
+  deprecations and removals are listed where readers look for them (Keep a
+  Changelog's "Deprecated" and "Removed" sections, or the project's
+  fragment types), each with its replacement.
+- Release labels are right, since label-driven tools release from them (a
+  stray `major` label cuts a major release).
 
 **Licensing** (should-fix)
 - New files carry the headers the project uses (REUSE); vendored code keeps
@@ -70,6 +80,6 @@ release)
 
 - **static**: search for imports of added and removed dependencies;
   read the lockfile diff for unexpected packages and hosts.
-- **consent**: resolving or installing the environment, building the
+- **CI only**: resolving or installing the environment, building the
   package and listing its contents, and audit tools that install or build
   packages to resolve them (they can run build scripts).

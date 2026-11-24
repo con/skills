@@ -89,8 +89,7 @@ standard such as WCAG AA)
 - **static**: read the changed components and the code paths that render
   them; search for the risky APIs named above; compare the `package.json` and lockfile diff
   for new client dependencies.
-- **consent**: building the bundle (it runs the project's configuration and
-  plugins), component and end-to-end tests, Storybook, accessibility
-  checkers run against a local build.
-- The pull request's CI (visual review, end-to-end runs) is often the best
-  evidence; read its results.
+- **CI only**: building the bundle (it runs the project's configuration and
+  plugins), component and end-to-end tests, Storybook, and accessibility
+  checkers run against a build. The pull request's visual review and
+  end-to-end runs are often the best evidence there is.

@@ -35,6 +35,9 @@ unwanted action)
   illustrate.
 - Failure paths: a missing tool, a refused API call, empty input, an
   unexpected response shape. Each says what to do, including when to stop.
+- A skill meant to run unattended (on a schedule, from automation) never
+  waits for an answer: each decision comes from its invocation or a stated
+  default, and what they leave open is reported, not asked.
 - Nothing depends on the author's machine (absolute paths, personal
   accounts) or on a file that will not be installed with the skill, such as
   the source repository's `AGENTS.md`.
@@ -65,8 +68,13 @@ unwanted action)
 
 **Versioning and packaging** (should-fix)
 - The version changes as the repository's rules require; the README or
-  index lists the skill; the installed copy works
-  where the package manager puts it.
+  index lists the skill; the installed copy works where the package
+  manager puts it.
+- A skill's inputs (flags, arguments, the files it reads) and the layout of
+  what it writes are an interface that schedules and other skills depend
+  on. Renaming or removing one goes through the brief's Deprecation steps:
+  the old form keeps working, documented as deprecated, for at least one
+  version.
 
 **Economy** (optional)
 - Text the agent does not need, rules repeated across skills that will
@@ -87,6 +95,6 @@ unwanted action)
 - **static**: read the whole `SKILL.md` and every bundled file it names;
   compare against sibling skills and the repository's rules; check each
   command against the tool's documentation.
-- **consent**: the repository's validator and test suite (`tox`, a
+- **CI only**: the repository's validator and test suite (`tox`, a
   workflow), and a bundled script's own tests, since both run code from the
   pull request.

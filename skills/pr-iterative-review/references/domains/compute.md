@@ -42,6 +42,12 @@ run on terabytes).
 - Units and conventions: unit conversions, time bases and epochs, time
   zones, index origins (0 or 1), row-major or column-major layout.
 
+**Changed results** (tiers as in the brief's Deprecation section)
+- A changed default (a dtype, a tolerance, an algorithm, a random stream)
+  that changes existing callers' results warns first with `FutureWarning`,
+  as NumPy and pandas do, unless the old result was a bug; the changelog
+  says so either way.
+
 **Reproducibility** (should-fix)
 - Random generators are seeded through a passed-in generator, not global
   state, and the seed is recorded with results; GPU operations known to be
@@ -79,6 +85,9 @@ run on terabytes).
 ## Verification
 
 - **static**: read the dtypes and shapes at each step; search the tests for
-  the tolerances used; check claimed complexity against the code.
-- **consent**: the project's tests and benchmarks; a small numerical
-  experiment in a scratch directory that imports the pull request's code.
+  the tolerances used; check claimed complexity against the code; a small
+  experiment with `python3 -I` in a scratch directory that uses installed
+  libraries only, never the pull request's code (to show that a dtype
+  wraps, say).
+- **CI only**: the project's tests and benchmarks, and anything that
+  imports the pull request's code.

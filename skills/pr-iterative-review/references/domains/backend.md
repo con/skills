@@ -26,8 +26,24 @@ the frontend, scripts, downstream packages).
 **Contracts** (blocking when it breaks callers without a path forward)
 - A changed request or response shape, status code, error format, default
   value, command-line flag, exit code or function signature. Search for
-  every caller, and check that the docs, schema and changelog say so and a
-  deprecation path exists where the project promises one.
+  every caller, and check that the docs, schema and changelog say so.
+
+**Deprecation** (tiers as in the brief's Deprecation section)
+- Retiring any of those goes through the brief's steps, in the form the
+  interface offers:
+  - Python: the old name, argument or default keeps working beside the new
+    one. Once removal is planned it warns with `warnings.warn(…,
+    DeprecationWarning, stacklevel=2)`, with `FutureWarning` where end
+    users rather than developers should see it, or with PEP 702's
+    `@deprecated` (`warnings.deprecated` from Python 3.13,
+    `typing_extensions.deprecated` before).
+  - Command-line tools: an old flag stays as an alias that warns on stderr
+    and leaves the exit status alone.
+  - Web APIs: `deprecated: true` in OpenAPI, `@deprecated(reason: …)` in
+    GraphQL, `[deprecated = true]` in Protocol Buffers (a removed field's
+    number and name then `reserved`); the `Deprecation` and `Sunset`
+    response headers (RFC 9745, RFC 8594) announce the dates. Removal
+    waits for a new API version.
 
 **Input and trust boundaries** (usually blocking)
 - External input checked for type, size and range before use.
@@ -70,6 +86,6 @@ the frontend, scripts, downstream packages).
 - **static**: search for every caller of a changed function,
   endpoint, flag or setting, in tests, scripts, docs and configuration; read
   the migration file itself.
-- **consent**: the project's tests; printing a migration's SQL (`manage.py
+- **CI only**: the project's tests; printing a migration's SQL (`manage.py
   sqlmigrate`, `alembic upgrade --sql`) runs project code; starting the
   service.

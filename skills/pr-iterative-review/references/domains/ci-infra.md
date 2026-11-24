@@ -57,6 +57,14 @@ longer pass)
   is idempotent or guarded; deploys go through protected environments;
   there is a way back.
 
+**Shared actions and workflows** (tiers as in the brief's Deprecation
+section)
+- The inputs and outputs of an action or reusable workflow that other
+  repositories call are an interface. An input being retired stays
+  accepted and warns (`deprecationMessage` in `action.yml`, a `::warning::`
+  line in a reusable workflow) until the next major tag, such as `v2`; an
+  existing major tag never moves to an incompatible release.
+
 **Containers** (should-fix; blocking for leaked secrets)
 - Base images pinned to a version or digest; the process does not run as
   root without a reason; secrets never land in a layer (`ARG`, `ENV`, a
@@ -85,7 +93,7 @@ longer pass)
   workflow security linter such as `zizmor` run the same way and offline,
   and `hadolint` on a copied `Dockerfile`; read the workflow run of the pull
   request itself.
-- **consent**: building the container, `terraform plan` (it also needs
+- **CI only**: building the container, `terraform plan` (it also needs
   credentials), running the workflow locally.
 - If your companion skills include `code-quality-review-shell`, apply its
   checks to the shell inside `run:` steps.
