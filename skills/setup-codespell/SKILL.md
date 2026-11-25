@@ -32,6 +32,11 @@ Set up codespell spell-checking infrastructure in a project, identify typos, con
 6. **Review**: Check for functional fixes (potential bug fixes)
 7. **Finalize**: Prepare PR message and create PR
 
+## Project conventions
+
+Before the first change, read `../con-skill-conventions/conventions.md` (installed beside this skill) and follow it for the whole run: the target project's own configuration, settings and contribution rules win over this skill's defaults.
+If that file is missing, stop and ask the user to install `con-skill-conventions`; do not proceed from memory.
+
 ## Step 0: Check for Existing Codespell Integration
 
 Before creating anything, check if codespell is already configured:
@@ -156,11 +161,6 @@ the hook with the central skip list:
 ### If no codespell configuration exists:
 
 Proceed with Step 1 to set up from scratch.
-
-## Project conventions
-
-Before the first change, read `../con-skill-conventions/conventions.md` (installed beside this skill) and follow it for the whole run: the target project's own configuration, settings and contribution rules win over this skill's defaults.
-If that file is missing, stop and ask the user to install `con-skill-conventions`; do not proceed from memory.
 
 ## Step 1: Initial Setup
 

@@ -30,6 +30,11 @@ Write all commit messages to `.git-meta/COMMIT_MSG` and use `git commit -F .git-
 
 ---
 
+## Project conventions
+
+Before the first change, read `../con-skill-conventions/conventions.md` (installed beside this skill) and follow it for the whole run: the target project's own configuration, settings and contribution rules win over this skill's defaults.
+If that file is missing, stop and ask the user to install `con-skill-conventions`; do not proceed from memory.
+
 ## Step 0: Check Existing Configuration
 
 Before creating anything, check if auto is already set up:
@@ -69,11 +74,6 @@ git tag --sort=-v:refname | head -5
 ```
 
 ---
-
-## Project conventions
-
-Before the first change, read `../con-skill-conventions/conventions.md` (installed beside this skill) and follow it for the whole run: the target project's own configuration, settings and contribution rules win over this skill's defaults.
-If that file is missing, stop and ask the user to install `con-skill-conventions`; do not proceed from memory.
 
 ## Step 1: Ask User for Configuration
 

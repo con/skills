@@ -76,6 +76,11 @@ If not installed, guide the user through installation (pick one):
 8. **Update CLAUDE.md** - Add AI assistant context hints
 9. **Commit & PR** - Commit documentation, prepare PR
 
+## Project conventions
+
+Before the first change, read `../con-skill-conventions/conventions.md` (installed beside this skill) and follow it for the whole run: the target project's own configuration, settings and contribution rules win over this skill's defaults.
+If that file is missing, stop and ask the user to install `con-skill-conventions`; do not proceed from memory.
+
 ## Step 0: Check for Existing git-bug Configuration
 
 ```bash
@@ -95,11 +100,6 @@ git for-each-ref refs/bugs/ --count=1
 ### If no configuration exists:
 
 Proceed with Step 1.
-
-## Project conventions
-
-Before the first change, read `../con-skill-conventions/conventions.md` (installed beside this skill) and follow it for the whole run: the target project's own configuration, settings and contribution rules win over this skill's defaults.
-If that file is missing, stop and ask the user to install `con-skill-conventions`; do not proceed from memory.
 
 ## Step 1: Gather Project Information
 

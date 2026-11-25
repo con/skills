@@ -79,6 +79,11 @@ workflow: config, wiring, CI, mitigation refactors, threshold tightening.
 11. **Prepare PR** — respect upstream conventions; do not push/open a PR
     without being asked (see Step 11)
 
+## Project conventions
+
+Before the first change, read `../con-skill-conventions/conventions.md` (installed beside this skill) and follow it for the whole run: the target project's own configuration, settings and contribution rules win over this skill's defaults.
+If that file is missing, stop and ask the user to install `con-skill-conventions`; do not proceed from memory.
+
 ## Step 0: Check Existing State (MANDATORY first step)
 
 Before creating anything, determine whether this project already has
@@ -197,11 +202,6 @@ Anything beyond a bare `npx jscpd@<PINNED_VERSION> <path>` (which reads `.jscpd.
 automatically) is a candidate to migrate into the central config file. Fix
 this **before** running the analysis in Step 7, or the analysis will reflect
 the masking rather than the project's real state.
-
-## Project conventions
-
-Before the first change, read `../con-skill-conventions/conventions.md` (installed beside this skill) and follow it for the whole run: the target project's own configuration, settings and contribution rules win over this skill's defaults.
-If that file is missing, stop and ask the user to install `con-skill-conventions`; do not proceed from memory.
 
 ## Step 1: Initial Setup
 
