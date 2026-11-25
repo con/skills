@@ -18,9 +18,6 @@ Users customize a skill in their own agent instruction files (for example a user
 Those instructions replace the skill's defaults, but not the project's configuration or contribution rules.
 When a user instruction conflicts with the project's configuration or contribution rules, ask the user which to follow; a request in the conversation overrides all of them.
 
-If nothing answers the question, use the skill's default and tell the user it was a default.
-If a source above disagrees with the skill's default, follow the source and say so.
-
 ## Respect upstream PR conventions when preparing a pull request
 
 Any skill that prepares a pull request (currently: `setup-chromatic`,
