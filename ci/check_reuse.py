@@ -33,7 +33,8 @@ def reuse_report() -> list[dict]:
     lint = subprocess.run(['reuse', '--root', str(ROOT), 'lint', '--json'],
                           capture_output=True, text=True, check=False)
     if lint.returncode:
-        sys.exit(f'reuse lint failed (exit {lint.returncode}); fix what it reports first.\n{lint.stderr}')
+        sys.exit(f'reuse lint failed (exit {lint.returncode}); run `reuse lint` and fix what it reports.\n'
+                 f'{lint.stderr}'.rstrip())
     return json.loads(lint.stdout)['files']
 
 
@@ -52,7 +53,8 @@ def main() -> int:
             declared = yaml.safe_load((skill_dir / 'apm.yml').read_text())['license']
             declared_keys = license_keys(declared)
         except Exception as exc:  # unreadable manifest (validate reports E010) or license_expression's errors
-            errors.append(f'{skill_dir.name}: apm.yml license is not an SPDX expression ({exc!r})')
+            errors.append(f'{skill_dir.name}: cannot read an SPDX expression from apm.yml license '
+                          f'({type(exc).__name__}: {exc})')
             continue
         found = by_skill.get(skill_dir.name, set())
         if declared_keys != found:
