@@ -6,6 +6,8 @@ Before making a choice the target project will see, look for the project's own a
 - repository settings that limit the action, such as which merge methods are allowed;
 - the project's contribution rules: pull request template, contribution guide, branch and commit style (see below).
 
+Commit messages, sign-off, and AI-attribution trailers such as `Co-Authored-By` follow the user's or the project's conventions; do not invent a format.
+
 Users customize a skill in their agent instruction files (`CLAUDE.md` / `AGENTS.md`, user-level or in the project), for example in a section named after the skill (`## setup-codespell`).
 Those instructions override both the project's configuration and the skill's defaults; a request in the conversation overrides all of them.
 
