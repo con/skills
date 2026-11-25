@@ -1,6 +1,9 @@
 name: setup-reuse-compliance
-version: "0.1.0"
+version: "0.2.0"
 description: "Make a project REUSE-compliant: licenses, SPDX headers, CI checks"
 author: Yaroslav Halchenko
 license: MIT
 type: skill
+dependencies:
+  apm:
+    - path: ../con-skill-conventions

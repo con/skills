@@ -22,23 +22,6 @@ Set up codespell spell-checking infrastructure in a project, identify typos, con
 - `gh` CLI for PR creation (optional)
 - Git repository
 
-## Commit Co-Authorship
-
-All commits created during this workflow MUST include a `Co-Authored-By` trailer identifying
-both Claude Code version and the model used. Get the version via `claude --version` and
-use the model name from the environment. Format:
-
-```
-Co-Authored-By: Claude Code <VERSION> / Claude <MODEL> <noreply@anthropic.com>
-```
-
-Example:
-```
-Co-Authored-By: Claude Code 2.1.63 / Claude Opus 4.6 <noreply@anthropic.com>
-```
-
-This applies to ALL commits: config, workflow, ambiguous fixes, non-ambiguous fixes, formatting fixups.
-
 ## Workflow Overview
 
 1. **Check existing**: See if codespell is already configured
@@ -48,6 +31,11 @@ This applies to ALL commits: config, workflow, ambiguous fixes, non-ambiguous fi
 5. **Fix**: Apply fixes for legitimate typos
 6. **Review**: Check for functional fixes (potential bug fixes)
 7. **Finalize**: Prepare PR message and create PR
+
+## Project conventions
+
+Before the first change, read `../con-skill-conventions/conventions.md` (installed beside this skill) and follow it for the whole run.
+If that file is missing, stop and ask the user to install `con-skill-conventions`; do not proceed from memory.
 
 ## Step 0: Check for Existing Codespell Integration
 
@@ -1367,43 +1355,16 @@ uvx codespell 2>&1
 
 **If ANY errors appear**, go back to Step 7.6 and fix the remaining false positives!
 
-### MANDATORY: Respect upstream PR template and CONTRIBUTING.md
+### PR template and checkboxes
 
-Before drafting the PR body, follow the repo-wide rule in this collection's
-top-level `AGENTS.md` ("Respect upstream PR conventions when preparing a
-pull request"). In short:
+Before drafting the PR body, follow `../con-skill-conventions/conventions.md`, "Respect upstream PR conventions when preparing a pull request".
+For a codespell PR, a template's checkboxes typically come out as:
 
-1. **Look for a PR template** — check `.github/PULL_REQUEST_TEMPLATE.md`,
-   `.github/pull_request_template.md`, `.github/PULL_REQUEST_TEMPLATE/*.md`,
-   `docs/PULL_REQUEST_TEMPLATE.md`, root `PULL_REQUEST_TEMPLATE.md`, and
-   the Codeberg/Forgejo (`.gitea/`, `.forgejo/`) and GitLab
-   (`.gitlab/merge_request_templates/`) equivalents.
-2. **If a template exists**, use its section headings as the skeleton.
-   Fill every section. Tick checkbox items truthfully — for codespell PRs
-   that typically means:
-   - tests: usually `[ ]` (codespell config is not user-facing logic)
-   - documentation: usually `[ ]` (no manual changes required)
-   - **changelog entry**: if the project uses `changelog/unreleased/`,
-     `changelog.d/`, `news/`, or `CHANGELOG.md`, add an entry as part of
-     this PR — do not just check the box. For restic-style projects, see
-     `changelog/TEMPLATE`.
-   - "ready for review" / DCO sign-off: tick only when actually ready
-3. **Read `CONTRIBUTING.md`** (and `.github/CONTRIBUTING.md`,
-   `DEVELOPMENT.md`) at repo root. Honor branch-naming, commit-message,
-   issue-first, and changelog conventions it spells out.
-4. **In the final report to the user**, state plainly:
-   - which template file was found (or that none was) and that the PR
-     body follows it
-   - which CONTRIBUTING / DEVELOPMENT guide was found and any
-     contributor-facing requirements that shaped the PR
-   - any outstanding items the user must do manually (e.g. enabling
-     "Allow edits from maintainers" in the GitHub PR UI)
+- tests: usually `[ ]` (codespell config is not user-facing logic)
+- documentation: usually `[ ]` (no manual changes required)
+- changelog entry: if the project keeps one (`changelog/unreleased/`, `changelog.d/`, `news/`, `CHANGELOG.md`), add the entry in this PR rather than ticking the box
 
 ### Prepare PR Message
-
-If a template exists, the structure below is just the *content* to fold into
-that template's sections. Do NOT overwrite the template's headings with
-this default structure.
 
 Write the PR description to `.git/pr-description.md` (**NOT** `.git/prospective-PR.md`):
 

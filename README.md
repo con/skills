@@ -10,6 +10,7 @@ A collection of [Claude Code Agent Skills](https://agentskills.io/) for software
 | [author-apm-skills](skills/author-apm-skills/) | Create and maintain portable skills for APM distribution. |
 | [bot-pr-sweep](skills/bot-pr-sweep/) | Sweep repositories for open `dependabot[bot]` and `pre-commit-ci[bot]` pull requests, verify authors by account ID, gate on complete and passing CI with a tested stdlib script, squash-merge the green ones guarded by the head SHA (optionally approving the ones branch protection holds back), assign the maintainer, and report the rest. |
 | [code-quality-report-conventions](skills/code-quality-report-conventions/) | Shared report conventions read by the `review-*` skills (report location, provenance stamp, evidence rules, security-sensitive findings, re-review, confidence/status labels). Not invoked directly; APM installs it with them. |
+| [con-skill-conventions](skills/con-skill-conventions/) | Shared run-time conventions read by other skills: respect the target project's own configuration, settings, and contribution rules over a skill's defaults. Not invoked directly; APM installs it with them. |
 | [github-project-status](skills/github-project-status/) | Assess whether a GitHub project is healthy, in maintenance mode, stagnant, or abandoned. Checks commits, releases, issues, PRs, forks, and package registries to produce a structured status report. |
 | [install-apm-skills](skills/install-apm-skills/) | Install and update pinned reusable skills with metadata-only consumer setup. |
 | [issue-triage](skills/issue-triage/) | Triage open GitHub issues by cross-referencing the codebase and git history. Detects duplicates, drafts proposed comments, and serves results in a local web dashboard. Includes Python helper scripts for gathering and serving data. |
@@ -52,6 +53,7 @@ The installer uses APM to select and install skills, record their commit and con
 Projects track `apm.yml`, `apm.lock.yaml`, and setup instructions—not the installed skills themselves.
 It also supports other APM-compatible sources and user-level installations.
 For configuration options, see each skill’s `SKILL.md` (for example, [pr-review-update](skills/pr-review-update/SKILL.md#configuration) and [pr-feedback-review](skills/pr-feedback-review/SKILL.md#configuration)); supply values in your request rather than editing installed copies.
+To customize a skill for every run, add a section named after it (for example `## setup-codespell`) to your own agent instruction file (for example `~/.claude/CLAUDE.md`, or `CLAUDE.local.md` in a project); skills that follow [con-skill-conventions](skills/con-skill-conventions/conventions.md) treat it as overriding their defaults.
 
 ## Development
 
@@ -64,7 +66,7 @@ CI checks skill structure, package restoration, licensing, and security; passing
 
 ## Repo-wide conventions
 
-See [`AGENTS.md`](AGENTS.md) (alias `CLAUDE.md`) for cross-cutting rules that apply to every skill in this collection — most notably the rule that any skill preparing a pull request must respect the upstream project's `PULL_REQUEST_TEMPLATE.md` and `CONTRIBUTING.md`.
+See [`AGENTS.md`](AGENTS.md) (alias `CLAUDE.md`) for cross-cutting rules for authoring or modifying skills in this collection, and [`con-skill-conventions`](skills/con-skill-conventions/conventions.md) for the rules skills follow when they run, such as respecting the target project's configuration, pull request template and contribution guide.
 
 ## License
 

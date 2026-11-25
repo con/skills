@@ -76,6 +76,11 @@ If not installed, guide the user through installation (pick one):
 8. **Update CLAUDE.md** - Add AI assistant context hints
 9. **Commit & PR** - Commit documentation, prepare PR
 
+## Project conventions
+
+Before the first change, read `../con-skill-conventions/conventions.md` (installed beside this skill) and follow it for the whole run.
+If that file is missing, stop and ask the user to install `con-skill-conventions`; do not proceed from memory.
+
 ## Step 0: Check for Existing git-bug Configuration
 
 ```bash
@@ -377,21 +382,9 @@ If the commit fails with "files were modified", just re-run the commit.
 
 ## Step 9: Prepare and Create Pull Request
 
-### MANDATORY: Respect upstream PR template and CONTRIBUTING.md
-
-Before drafting the PR body, follow the repo-wide rule in this collection's
-top-level `AGENTS.md` ("Respect upstream PR conventions when preparing a
-pull request"): scan for `.github/PULL_REQUEST_TEMPLATE.md` (and the
-Codeberg / Forgejo / GitLab equivalents), use it as the skeleton if
-present, read `CONTRIBUTING.md` for branch-naming / commit-message /
-changelog conventions, fill out checkboxes truthfully, and surface to the
-user both what was found and any items the user still needs to handle
-manually (e.g. enabling "Allow edits from maintainers").
+Before drafting the PR body, follow `../con-skill-conventions/conventions.md`, "Respect upstream PR conventions when preparing a pull request".
 
 ### Write PR description
-
-If a template was found, fold the content below into the template's
-sections rather than overwriting its headings.
 
 Save to `.git/PR_BODY.md`:
 

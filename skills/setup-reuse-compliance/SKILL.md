@@ -167,20 +167,10 @@ Per [bids-specification#2078](https://github.com/bids-standard/bids-specificatio
 - Can be included in REUSE.toml or dataset_description.json
 - See: https://github.com/EBISPOT/DUO
 
-## Commit Co-Authorship
+## Project conventions
 
-All commits created during this workflow MUST include a `Co-Authored-By` trailer identifying
-both Claude Code version and the model used. Get the version via `claude --version` and
-use the model name from the environment. Format:
-
-```
-Co-Authored-By: Claude Code <VERSION> / Claude <MODEL> <noreply@anthropic.com>
-```
-
-Example:
-```
-Co-Authored-By: Claude Code 2.1.123 / Claude Opus 4.7 <noreply@anthropic.com>
-```
+Before the first change, read `../con-skill-conventions/conventions.md` (installed beside this skill) and follow it for the whole run.
+If that file is missing, stop and ask the user to install `con-skill-conventions`; do not proceed from memory.
 
 ## Execution Steps
 
@@ -694,8 +684,7 @@ working tree may already contain unrelated uncommitted changes
    `.git-meta/COMMIT_MSG` convention if `CLAUDE.md` documents it
    (most user setups do); otherwise inline `-m` is fine. The message
    should describe the REUSE work only — not any unrelated state
-   present in the tree. Include the Co-Authored-By trailer from the
-   "Commit Co-Authorship" section.
+   present in the tree.
 
    Example body:
    ```
@@ -708,8 +697,6 @@ working tree may already contain unrelated uncommitted changes
    - Document Licensing layout in README
 
    `reuse lint` reports 100% compliance over the tracked tree.
-
-   Co-Authored-By: Claude Code <VERSION> / Claude <MODEL> <noreply@anthropic.com>
    ```
 
 6. **Do NOT push.** Stop after the commit. Pushing is a governance

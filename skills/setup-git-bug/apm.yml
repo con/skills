@@ -1,6 +1,9 @@
 name: setup-git-bug
-version: "0.1.0"
+version: "0.2.0"
 description: "Set up git-bug issue tracking synced with GitHub"
 author: Yaroslav Halchenko
 license: MIT
 type: skill
+dependencies:
+  apm:
+    - path: ../con-skill-conventions

@@ -24,14 +24,16 @@ transition, and release-process documentation.
 - Python `build` + `twine` for PyPI uploads (Python projects only)
 - `auto` binary (downloaded during workflow setup, not required locally)
 
-## Commit Co-Authorship
-
-All commits MUST include a `Co-Authored-By` trailer. Get the version via `claude --version`.
-Format: `Co-Authored-By: Claude Code <VERSION> / Claude <MODEL> <noreply@anthropic.com>`
+## Commit messages
 
 Write all commit messages to `.git-meta/COMMIT_MSG` and use `git commit -F .git-meta/COMMIT_MSG`.
 
 ---
+
+## Project conventions
+
+Before the first change, read `../con-skill-conventions/conventions.md` (installed beside this skill) and follow it for the whole run.
+If that file is missing, stop and ask the user to install `con-skill-conventions`; do not proceed from memory.
 
 ## Step 0: Check Existing Configuration
 
@@ -628,6 +630,8 @@ Commit in logical chunks (one concern per commit):
 5. `chore: prepare CHANGELOG.md for auto-managed entries` (if CHANGELOG needs editing)
 
 ### 7.2 PR Body Template
+
+Before drafting the PR body, follow `../con-skill-conventions/conventions.md`, "Respect upstream PR conventions when preparing a pull request".
 
 Write to `.git-meta/PR_BODY.md`:
 

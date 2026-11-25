@@ -1,0 +1,6 @@
+name: con-skill-conventions
+version: "0.1.0"
+description: "Run-time conventions shared by skills in this collection; not invoked directly"
+author: Yaroslav Halchenko, Austin Macdonald
+license: MIT
+type: skill

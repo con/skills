@@ -58,11 +58,8 @@ The commit commands below take the message from a file —
 `git commit -F <GIT_TMP>/COMMIT_MSG` — where `<GIT_TMP>` is whatever
 untracked scratch location the user or project has adopted for commit and
 PR message drafts. Substitute it; if none is established, ask the user (or
-fall back to `git commit -m`). Annotate commits — message style, sign-off,
-AI-attribution trailers such as `Co-Authored-By` — as the user's or
-project's agreed conventions specify; do not invent a format. This applies
-to ALL commits in this workflow: config, wiring, CI, mitigation refactors,
-threshold tightening.
+fall back to `git commit -m`). This applies to ALL commits in this
+workflow: config, wiring, CI, mitigation refactors, threshold tightening.
 
 ## Workflow Overview
 
@@ -81,6 +78,11 @@ threshold tightening.
 10. **Final verification** — the newly-wired check passes standalone
 11. **Prepare PR** — respect upstream conventions; do not push/open a PR
     without being asked (see Step 11)
+
+## Project conventions
+
+Before the first change, read `../con-skill-conventions/conventions.md` (installed beside this skill) and follow it for the whole run.
+If that file is missing, stop and ask the user to install `con-skill-conventions`; do not proceed from memory.
 
 ## Step 0: Check Existing State (MANDATORY first step)
 
@@ -209,7 +211,7 @@ the masking rather than the project's real state.
 git checkout -b enh-duplication-analysis
 ```
 
-If the project's contributor guide (Step 11) sets a branch-naming
+If the project's contributor guide sets a branch-naming
 convention, follow it instead.
 
 ### Detect Build Tooling (in priority order)
@@ -735,32 +737,7 @@ checks below, and report them, before handing over that command.
 
 ### Respect upstream conventions
 
-1. **PR template** — use the first that exists:
-   `.github/PULL_REQUEST_TEMPLATE.md`, `.github/pull_request_template.md`,
-   `.github/PULL_REQUEST_TEMPLATE/*.md` (pick the one matching this change,
-   or ask), `docs/PULL_REQUEST_TEMPLATE.md`, `PULL_REQUEST_TEMPLATE.md`; on
-   Codeberg/Forgejo/Gitea the same names under `.gitea/` or `.forgejo/`; on
-   GitLab `.gitlab/merge_request_templates/*.md`. If one exists, build the
-   PR body on it instead of the default below: keep its headings and prose,
-   replace its `<!-- ... -->` guidance with real content, fill every section
-   (write `N/A — <reason>` rather than deleting one), and tick a checklist
-   box only for work actually done.
-2. **Contributor guide** — read `CONTRIBUTING.md` / `CONTRIBUTING.rst` /
-   `CONTRIBUTING`, `.github/CONTRIBUTING.md`, `DEVELOPMENT.md`,
-   `HACKING.md` or `docs/development/`, ideally before Step 1 so the branch
-   and commits follow it from the start. Honor its branch-naming,
-   commit-message and sign-off rules. If it requires a changelog entry
-   (`changelog.d/`, `news/`, `changelog/unreleased/`, `CHANGELOG.md`), add
-   one — don't just tick a template's checkbox. Run any lint/format gate it
-   names before the final commit.
-3. **Issue first** — if the guide wants an issue or discussion before a
-   non-trivial PR, say so before handing over the command, and link an
-   existing one or suggest opening one.
-4. **Report** to the user, with the command: which template the body
-   follows (or that there is none), which guide was found (or none) and
-   what it changed (e.g. branch name, changelog entry), and what is left
-   for them — e.g. ticking "allow edits from maintainers" in the web UI,
-   or adding the PR number to a changelog entry once it exists.
+Before drafting the PR body, follow `../con-skill-conventions/conventions.md`, "Respect upstream PR conventions when preparing a pull request".
 
 ### Write the PR body
 
