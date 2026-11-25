@@ -382,8 +382,6 @@ If the commit fails with "files were modified", just re-run the commit.
 
 ## Step 9: Prepare and Create Pull Request
 
-### MANDATORY: Respect upstream PR template and CONTRIBUTING.md
-
 Before drafting the PR body, follow `../con-skill-conventions/conventions.md`, "Respect upstream PR conventions when preparing a pull request": the target project's PR template, contribution guide, and what to report.
 
 ### Write PR description

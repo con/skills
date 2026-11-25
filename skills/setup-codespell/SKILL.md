@@ -1355,7 +1355,7 @@ uvx codespell 2>&1
 
 **If ANY errors appear**, go back to Step 7.6 and fix the remaining false positives!
 
-### MANDATORY: Respect upstream PR template and CONTRIBUTING.md
+### PR template and checkboxes
 
 Before drafting the PR body, follow `../con-skill-conventions/conventions.md`, "Respect upstream PR conventions when preparing a pull request": the target project's PR template, contribution guide, and what to report.
 For a codespell PR, a template's checkboxes typically come out as:
