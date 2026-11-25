@@ -254,7 +254,7 @@ npm run format && npm run lint    # whichever of format, lint, typecheck the rep
 Call `build-archive-storybook` through its path, not `npm exec`, which takes `--output-dir` as one of its own options and drops it.
 `npm run storybook` is a dev server that never exits, so do not run it; looking at every story in both themes by eye is the user's, in the hand-over.
 Before the hand-over, when the push will open a pull request, follow `../con-skill-conventions/conventions.md`, "Respect upstream PR conventions when preparing a pull request": the target project's PR template, contribution guide, and what to report.
-Then stop and report: what was added, what step 0's answers decided, what step 6 still needs, the commit and push the user should make (this skill does not push), and what only they can do afterwards: enable "allow edits from maintainers" on the pull request, and link the PR number into the changelog entry once GitHub assigns it.
+Then stop and report: what was added, what step 0's answers decided, what step 6 still needs, the commit and push the user should make (this skill does not push), and what only they can do afterwards.
 Once pushed, both build workflows should go green; the publish workflow first runs after the merge, since `workflow_run` only fires from a file already on the default branch.
 Its first build of each project becomes the baseline (look it over in Chromatic once), and the two badges render.
 Symptoms after that are in [references/troubleshooting.md](references/troubleshooting.md).
