@@ -1,2 +1,6 @@
 name: setup-git-bug
 version: "0.1.0"
+description: "Set up git-bug issue tracking synced with GitHub"
+author: Yaroslav Halchenko
+license: MIT
+type: skill

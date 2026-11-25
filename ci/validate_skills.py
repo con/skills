@@ -23,9 +23,14 @@ Every SKILL.md:
 
 Every skill's ``apm.yml`` (its APM package manifest, beside SKILL.md):
   E010  Present, a YAML mapping whose ``name`` equals the directory name,
-        and ``version`` is a ``MAJOR.MINOR.PATCH`` string
-  E011  SKILL.md frontmatter has no ``version:``; the skill's version lives
-        only in its ``apm.yml``, the one APM records in consumers' locks
+        ``version`` is a ``MAJOR.MINOR.PATCH`` string, ``description`` is
+        one line of at most 100 characters that differs from the SKILL.md
+        ``description``, ``author`` is a non-empty string, ``license`` is
+        ``MIT``, ``type`` is ``skill``, and any ``dependencies`` are
+        ``apm: [{path: ../<sibling skill>}]`` entries naming other skills here
+  E011  SKILL.md frontmatter has no ``version:``, ``author:`` or
+        ``license:`` (nor under ``metadata:``); they live only in ``apm.yml``,
+        the manifest APM reads and records in consumers' locks
 
 Every *.py bundled alongside a SKILL.md:
   E005  Python syntax error (py_compile)
@@ -204,9 +209,55 @@ def check_apm_manifest(skill_dir: Path, result: Result) -> None:
         result.error("E010", manifest, f"version must be a MAJOR.MINOR.PATCH string, got {version!r}")
 
     fm, _ = _parse_frontmatter((skill_dir / "SKILL.md").read_text(encoding="utf-8"))
-    if isinstance(fm, dict) and "version" in fm:
-        result.error("E011", skill_dir / "SKILL.md",
-                     "frontmatter must not carry version:; the version lives only in apm.yml")
+    fm = fm if isinstance(fm, dict) else {}
+
+    # apm.yml description is the human one-liner (apm view, apm deps info);
+    # the SKILL.md one tells the agent when to trigger. APM never merges them.
+    description = data.get("description")
+    if not (isinstance(description, str) and description.strip()):
+        result.error("E010", manifest, "description must be a non-empty one-line summary for people")
+    elif "\n" in description.strip() or len(description) > 100:
+        result.error("E010", manifest, "description must be one line of at most 100 characters")
+    elif description.strip() == str(fm.get("description", "")).strip():
+        result.error("E010", manifest, "description repeats the SKILL.md description; "
+                     "give people a short summary and leave triggering to SKILL.md")
+    author = data.get("author")
+    if not (isinstance(author, str) and author.strip()):
+        result.error("E010", manifest, "author must name the skill's significant contributors")
+    if data.get("license") != "MIT":
+        result.error("E010", manifest, f"license must be MIT (see LICENSE), got {data.get('license')!r}")
+    if data.get("type") != "skill":
+        result.error("E010", manifest, f"type must be skill, got {data.get('type')!r}")
+    check_manifest_dependencies(skill_dir, data.get("dependencies"), manifest, result)
+
+    meta = fm.get("metadata") if isinstance(fm.get("metadata"), dict) else {}
+    for key in ("version", "author", "license"):
+        if key in fm or key in meta:
+            result.error("E011", skill_dir / "SKILL.md",
+                         f"frontmatter must not carry {key}:; it lives only in apm.yml")
+
+
+def check_manifest_dependencies(skill_dir: Path, deps: object, manifest: Path, result: Result) -> None:
+    """E010: dependencies may only name sibling skills, as same-repo relative paths.
+
+    APM resolves ``path: ../<sibling>`` in a Git-installed skill to the same
+    repository and commit, so the dependency is installed with the skill.
+    """
+    if deps is None:
+        return
+    if not (isinstance(deps, dict) and set(deps) == {"apm"} and isinstance(deps["apm"], list)):
+        result.error("E010", manifest, "dependencies must be a mapping with only an apm: list")
+        return
+    seen: set[str] = set()
+    for entry in deps["apm"]:
+        path = entry.get("path") if isinstance(entry, dict) and set(entry) == {"path"} else None
+        if isinstance(path, str) and path in seen:
+            result.error("E010", manifest, f"dependency {path!r} is listed twice")
+        seen.add(str(path))
+        sibling = skill_dir.parent / str(path)[3:] if isinstance(path, str) and path.startswith("../") else None
+        if (sibling is None or "/" in str(path)[3:] or sibling == skill_dir
+                or not (sibling / "SKILL.md").is_file()):
+            result.error("E010", manifest, f"dependency {entry!r} must be {{path: ../<another skill>}}")
 
 
 def check_python_file(py_path: Path, result: Result) -> None:

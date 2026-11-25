@@ -1,2 +1,6 @@
 name: author-apm-skills
-version: "0.1.0"
+version: "0.2.0"
+description: "Author and maintain portable skills for distribution through APM"
+author: John Lee, Cody C. Baker
+license: MIT
+type: skill
