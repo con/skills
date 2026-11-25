@@ -14,7 +14,7 @@ For Claude Code, take the version from `claude --version`:
 Co-Authored-By: Claude Code <VERSION> / Claude <MODEL> <noreply@anthropic.com>
 ```
 
-Users customize a skill in their own agent instruction files (for example a user-level `CLAUDE.md`), such as a section named after the skill (`## setup-codespell`).
+Users customize a skill in their own agent instruction files (for example `~/.claude/CLAUDE.md`, or `CLAUDE.local.md` in a project), such as a section named after the skill (`## setup-codespell`).
 Those instructions replace the skill's defaults, but not the project's configuration or contribution rules.
 When a user instruction conflicts with the project's configuration or contribution rules, ask the user which to follow; a request in the conversation overrides all of them.
 

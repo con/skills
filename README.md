@@ -53,7 +53,7 @@ The installer uses APM to select and install skills, record their commit and con
 Projects track `apm.yml`, `apm.lock.yaml`, and setup instructions—not the installed skills themselves.
 It also supports other APM-compatible sources and user-level installations.
 For configuration options, see each skill’s `SKILL.md` (for example, [pr-review-update](skills/pr-review-update/SKILL.md#configuration) and [pr-feedback-review](skills/pr-feedback-review/SKILL.md#configuration)); supply values in your request rather than editing installed copies.
-To customize a skill for every run, add a section named after it (for example `## setup-codespell`) to your `CLAUDE.md` or `AGENTS.md`; skills that follow [con-skill-conventions](skills/con-skill-conventions/conventions.md) treat it as overriding their defaults.
+To customize a skill for every run, add a section named after it (for example `## setup-codespell`) to your own agent instruction file (for example `~/.claude/CLAUDE.md`, or `CLAUDE.local.md` in a project); skills that follow [con-skill-conventions](skills/con-skill-conventions/conventions.md) treat it as overriding their defaults.
 
 ## Development
 
