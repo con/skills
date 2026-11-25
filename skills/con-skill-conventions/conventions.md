@@ -20,10 +20,7 @@ When a user instruction conflicts with the project's configuration or contributi
 
 ## Respect upstream PR conventions when preparing a pull request
 
-Any skill that prepares a pull request (currently: `setup-chromatic`,
-`setup-codespell`, `setup-duplicates-analysis`, `setup-git-bug`,
-`setup-intuit-auto`, `setup-reuse-compliance`, plus any future skill that
-does the same) MUST, before drafting the PR body and BEFORE handing the
+Any skill that prepares a pull request MUST, before drafting the PR body and BEFORE handing the
 user a `gh pr create` / push command, perform the steps below and report
 the result to the user.
 
