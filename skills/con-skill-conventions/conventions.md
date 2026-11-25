@@ -1,3 +1,17 @@
+## Respect the target project's conventions
+
+Before making a choice the target project will see, look for the project's own answer and use it instead of the skill's default:
+
+- configuration the project already has for the tool, such as a `.jscpd.json` threshold, a `.codespellrc`, or a `[tool.*]` section in `pyproject.toml`;
+- repository settings that limit the action, such as which merge methods are allowed;
+- the project's contribution rules: pull request template, contribution guide, branch and commit style (see below).
+
+Users customize a skill in their agent instruction files (`CLAUDE.md` / `AGENTS.md`, user-level or in the project), for example in a section named after the skill (`## setup-codespell`).
+Those instructions override both the project's configuration and the skill's defaults; a request in the conversation overrides all of them.
+
+If nothing answers the question, use the skill's default and tell the user it was a default.
+If a source above disagrees with the skill's default, follow the source and say so.
+
 ## Respect upstream PR conventions when preparing a pull request
 
 Any skill that prepares a pull request (currently: `setup-chromatic`,
@@ -7,7 +21,7 @@ does the same) MUST, before drafting the PR body and BEFORE handing the
 user a `gh pr create` / push command, perform the steps below and report
 the result to the user.
 
-### 1. Look for a PR description template
+### 1. Use PR description templates if they exist
 
 Check, in this order, and use the first one that exists:
 

@@ -1,6 +1,6 @@
 ---
 name: con-skill-conventions
-description: Shared conventions that skills in this collection follow at run time, such as respecting the target project's pull request template and contribution guide. Not invoked directly. Use when a skill tells you to read it.
+description: "Shared conventions that skills in this collection follow at run time: respecting the target project's own configuration, settings, and contribution rules (pull request template, contribution guide) over the skill's defaults. Not invoked directly. Use when a skill tells you to read it."
 allowed-tools: Read
 user-invocable: false
 ---
