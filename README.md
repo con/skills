@@ -66,7 +66,7 @@ CI checks skill structure, package restoration, licensing, and security; passing
 
 ## Repo-wide conventions
 
-See [`AGENTS.md`](AGENTS.md) (alias `CLAUDE.md`) for cross-cutting rules that apply to every skill in this collection — most notably the rule that any skill preparing a pull request must respect the upstream project's `PULL_REQUEST_TEMPLATE.md` and `CONTRIBUTING.md`.
+See [`AGENTS.md`](AGENTS.md) (alias `CLAUDE.md`) for cross-cutting rules for authoring or modifying skills in this collection, and [`con-skill-conventions`](skills/con-skill-conventions/conventions.md) for the rules skills follow when they run, such as respecting the target project's configuration, pull request template and contribution guide.
 
 ## License
 
