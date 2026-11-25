@@ -23,8 +23,8 @@ language the repositories use, and `review-repo-code-quality` itself: its
 table lists the guides, its Step 1 defines the **static** mark and the
 language detection Phases 1–2 use, and Phase 4 runs it in full (APM
 installs them as this skill's dependencies; in a `con/skills` checkout
-they are sibling directories). Three things are delegated rather than repeated
-here:
+they are sibling directories). Three things are delegated rather than
+repeated here:
 
 - **Depth reviews (Phase 4)** run `review-repo-code-quality` *in full*, one
   report per repository, on the few repositories the graph and matrix

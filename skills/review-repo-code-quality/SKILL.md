@@ -41,9 +41,9 @@ idiom for a closed set of values and a Currency group), **Not findings**
 To add a language, add a sibling `code-quality-review-<language>` skill
 (`user-invocable: false`, `allowed-tools: Read`, its own `apm.yml`) with
 those sections, a row in this table, a row in the repository's README,
-and an entry under `dependencies` in this skill's `apm.yml`. APM installs
-those dependencies with this skill: the guides, the report conventions,
-and `analyze-duplicates`:
+and an entry under `dependencies` in this skill's `apm.yml` and in
+`review-org-code-quality`'s. APM installs the guides, the report
+conventions, and `analyze-duplicates` with this skill:
 
 ```console
 apm install con/skills/skills/review-repo-code-quality#<commit> --target agent-skills
