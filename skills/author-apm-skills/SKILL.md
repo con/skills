@@ -36,8 +36,8 @@ Include only workflow-specific guidance; put substantial conditional detail in l
 Bundle required scripts, templates, and assets inside the skill.
 Resolve their paths relative to the installed skill, not the consumer's cwd.
 Declare real tool prerequisites.
-Do not rely on a parent repository's AGENTS.md or a sibling skill to supply essential operating instructions after deployment.
-In particular, PR-producing skills must carry the required template and contribution-guide checks within their own deployed content.
+Do not rely on a parent repository's AGENTS.md or an undeclared sibling skill to supply essential operating instructions after deployment.
+In particular, PR-producing skills must carry the required template and contribution-guide checks in their own deployed content or in a sibling they declare under `dependencies` (in `con/skills`, `con-skill-conventions`).
 
 Specify how untrusted task inputs are handled when relevant.
 Do not grant permissions, infer approval to post/publish, or expand a task's scope merely because the skill was invoked.
