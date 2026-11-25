@@ -204,6 +204,7 @@ Track canonical skills in `skills/<name>/`; each directory, with its own
 `apm.yml`, is one APM package. The repository is a monorepo of independent
 skills, not a package: there is no repository-root `apm.yml`, and nobody
 should install `con/skills` as a whole.
+Adding a skill directory also adds its row to the README's "Included Skills" table, in alphabetical order.
 Consumers depend on a skill as a subdirectory of this repository, e.g.
 `apm install con/skills/skills/<name>#<full-SHA>` or, in `apm.yml`,
 `{git: con/skills, path: skills/<name>, ref: <full-SHA>}`; the lock records
