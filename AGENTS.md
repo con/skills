@@ -11,7 +11,7 @@ the SKILL.md does not repeat them verbatim.
 
 ---
 
-## Respect the target project's conventions
+## Run-time conventions for skills
 
 These rules reach a running skill only from inside its installed files, so they live in [`skills/con-skill-conventions/conventions.md`](skills/con-skill-conventions/conventions.md), which skills that need them declare as a dependency.
 
