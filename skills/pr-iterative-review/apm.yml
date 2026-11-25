@@ -1,2 +1,6 @@
 name: pr-iterative-review
 version: "0.1.0"
+description: "Independent, domain-aware pull request reviews by several agents, rendered in one layout"
+author: Cody C. Baker
+license: MIT
+type: skill

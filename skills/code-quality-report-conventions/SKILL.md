@@ -9,12 +9,9 @@ user-invocable: false
 
 This skill's payload is [`report-conventions.md`](report-conventions.md),
 that the review skills in this collection read instead of each repeating
-it. It is packaged as its own skill so that it can be installed, pinned,
-and versioned on its own:
-
-```console
-apm install con/skills/skills/code-quality-report-conventions#<commit> con/skills/skills/review-repo-code-quality#<commit> [con/skills/skills/review-org-code-quality#<commit>]
-```
+it. It is packaged as its own skill so that it can be versioned on its own;
+the review skills declare it as a dependency in their `apm.yml`, so APM
+installs it with them.
 
 A skill that depends on it says so in its `SKILL.md` and reads
 `../code-quality-report-conventions/report-conventions.md` relative to its own

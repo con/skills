@@ -1,2 +1,6 @@
 name: scan-projects
 version: "0.1.0"
+description: "Summarize every git repository under a directory into projects.tsv"
+author: Yaroslav Halchenko
+license: MIT
+type: skill
