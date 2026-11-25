@@ -211,7 +211,7 @@ If that file is missing, stop and ask the user to install `con-skill-conventions
 git checkout -b enh-duplication-analysis
 ```
 
-If the project's contributor guide (Step 11) sets a branch-naming
+If the project's contributor guide sets a branch-naming
 convention, follow it instead.
 
 ### Detect Build Tooling (in priority order)
