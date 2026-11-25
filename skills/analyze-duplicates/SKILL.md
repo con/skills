@@ -247,12 +247,3 @@ renders well when posted as a GitHub/Gitea issue. Structure:
 
 </details>
 ```
-
-## Commit Co-Authorship
-
-All commits created during this workflow MUST include a `Co-Authored-By` trailer.
-Get the version via `claude --version`. Format:
-
-```
-Co-Authored-By: Claude Code <VERSION> / Claude <MODEL> <noreply@anthropic.com>
-```

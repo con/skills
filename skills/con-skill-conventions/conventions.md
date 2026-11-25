@@ -7,14 +7,16 @@ Before making a choice the target project will see, look for the project's own a
 - the project's contribution rules: pull request template, contribution guide, branch and commit style (see below).
 
 Commit messages and sign-off follow the project's conventions.
-Every commit made during a run carries an AI-attribution trailer naming the Claude Code version (from `claude --version`) and the model, unless the project has its own convention for attribution trailers:
+Every commit made during a run MUST include an AI-attribution trailer naming the agent tool and its model; if the project has its own convention for attribution trailers, use its format.
+For Claude Code, take the version from `claude --version`:
 
 ```
 Co-Authored-By: Claude Code <VERSION> / Claude <MODEL> <noreply@anthropic.com>
 ```
 
-Users customize a skill in their agent instruction files (`CLAUDE.md` / `AGENTS.md`, user-level or in the project), for example in a section named after the skill (`## setup-codespell`).
-Those instructions override both the project's configuration and the skill's defaults; a request in the conversation overrides all of them.
+Users customize a skill in their own agent instruction files (for example a user-level `CLAUDE.md`), such as a section named after the skill (`## setup-codespell`).
+Those instructions replace the skill's defaults, but not the project's configuration or contribution rules.
+When a user instruction conflicts with the project's configuration or contribution rules, ask the user which to follow; a request in the conversation overrides all of them.
 
 If nothing answers the question, use the skill's default and tell the user it was a default.
 If a source above disagrees with the skill's default, follow the source and say so.
