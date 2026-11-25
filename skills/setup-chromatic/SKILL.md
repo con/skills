@@ -1,6 +1,6 @@
 ---
 name: setup-chromatic
-description: Set up Chromatic visual regression testing for a one- or multi-page web app, with Storybook stories for component and page states, Playwright snapshots of whole pages at several viewports, the two GitHub workflows and a README section. Use when asked to add Chromatic, Storybook, visual snapshots or visual regression testing to a repo, or to explain stories versus Playwright snapshots.
+description: Set up Chromatic visual regression testing for a one- or multi-page web app, with Storybook stories for component and page states, Playwright snapshots of whole pages at several viewports, the GitHub workflows that build them and upload them from the default branch, and a README section. Use when asked to add Chromatic, Storybook, visual snapshots or visual regression testing to a repo, or to explain stories versus Playwright snapshots.
 allowed-tools: Bash, Read, Edit, Write, Glob, Grep, AskUserQuestion, Skill
 user-invocable: true
 ---
@@ -15,13 +15,14 @@ It is fed two ways here, and both are set up, because they catch different thing
 - **Playwright snapshots** boot the real app in Chromium, drive it to a page state the way a person would reach it, and archive the DOM at the end of the test, once per viewport.
   A diff there points at the page as a whole: layout between components, overflow at phone widths, whatever the real boot path rendered.
 
-Each feed gets its own Chromatic project, workflow, token and badge.
-The result is the layout below, which the apps generated from [bbqs-web-app-template](https://github.com/brain-bbqs/bbqs-web-app-template) share, and which [dandi/usage-page](https://github.com/dandi/usage-page) uses with the fork split of [references/fork-pull-requests.md](references/fork-pull-requests.md) in place of the two workflows.
+Each feed gets its own Chromatic project, build workflow, token and badge; one more workflow uploads both, from the default branch.
+The result is the layout below, which [dandi/usage-page](https://github.com/dandi/usage-page) and the apps generated from [bbqs-web-app-template](https://github.com/brain-bbqs/bbqs-web-app-template) share.
 Those are one-page apps; the several-page form (`stories/pages/`, `configs/pages.ts`, a shared `pages.chromatic.test.ts` plus a file per page with states of its own) comes from this skill's templates, with [references/several-pages.md](references/several-pages.md) for what differs.
 
 ```
-.github/workflows/chromatic-storybook.yml   # builds Storybook, uploads it to the Storybook project
-.github/workflows/chromatic-playwright.yml  # runs tests/chromatic, uploads the archives to the Playwright project
+.github/workflows/chromatic-storybook.yml   # builds Storybook with no token, hands it on as an artifact
+.github/workflows/chromatic-playwright.yml  # runs tests/chromatic, builds a Storybook from the archives, hands it on
+.github/workflows/chromatic-publish.yml     # uploads each build to its project from the default branch
 configs/storybook/main.ts                   # html-vite framework, no addons, stories glob
 configs/storybook/preview.ts                # the app's stylesheet, theme pinned through a decorator, Chromatic modes
 configs/playwright.config.ts                # tests/integration (the ordinary Playwright suite)
@@ -44,7 +45,7 @@ The templates are `.ts`; a JS repo uses `.js` for every file here and points the
 For JS, strip every TypeScript-only construct: `import type` lines and `type` specifiers inside imports, `: Type` annotations and return types, `interface` and `type` declarations, `declare const` lines, `as` casts and `as const`.
 `__APP_VERSION__` is then used bare (Vite's `define` replaces the identifier), `el.ownerSVGElement` needs no cast, `PAGES` loses its `as const`, and the Vite config's `./pages.ts` import becomes `./pages.js`; nothing else changes.
 ESM `.js` configs need `"type": "module"` in `package.json`; otherwise name them `.mjs`, and change the `./pages.js` import and the `--config` path in the `test:chromatic` script to `.mjs` as well.
-Sections too long for this file live under [references/](references/): several pages, a shared config package, pull requests from forks, troubleshooting.
+Sections too long for this file live under [references/](references/): several pages, a shared config package, the publish workflow, troubleshooting.
 When in doubt about a detail the templates do not settle, open one of the reference repos named above and copy what it does rather than inventing a variant.
 
 ## When to Use
@@ -73,9 +74,8 @@ Read `AGENTS.md` or `CLAUDE.md`, `README.md`, `package.json`, the Vite config an
 Then ask, in one `AskUserQuestion` call, what the repository cannot answer:
 
 1. **Web server for the snapshot suite**, only when the repo has no Playwright config yet: the built app under `vite preview` (the default: closer to what is deployed, and without the dev server's on-the-fly dependency optimization, which can shift a first capture) or the dev server.
-2. **Where pull requests come from**: only branches pushed to this repository (the two workflows as templated) or outside forks too (the split in [references/fork-pull-requests.md](references/fork-pull-requests.md)).
-3. **Production code**: the page states a person would recognize (nothing loaded, something loaded, signed out, an error card) are reached through `?test&...` URL injections, which means editing the app's entry script, or one shared module when there are several pages. Name the states proposed and the files that would change, and ask whether that edit is welcome; step 5 says how to reach the states either way.
-4. **JS or TS**, only when the repo has neither yet.
+2. **Production code**: the page states a person would recognize (nothing loaded, something loaded, signed out, an error card) are reached through `?test&...` URL injections, which means editing the app's entry script, or one shared module when there are several pages. Name the states proposed and the files that would change, and ask whether that edit is welcome; step 5 says how to reach the states either way.
+3. **JS or TS**, only when the repo has neither yet.
 
 ## Step 1. Install
 
@@ -86,11 +86,11 @@ npx playwright install chromium   # once per machine; Chromatic archives only fr
 
 `storybook` and `@storybook/html-vite` are the whole of Storybook for a framework-less HTML app.
 Nothing else, and no `npx storybook init`: it would drop a `.storybook/` folder at the root with addons and example stories this layout keeps out.
-`chromatic` is the CLI the GitHub Action runs; `@chromatic-com/playwright` is the test fixture that records the archives and the `build-archive-storybook` tool that turns them into a Storybook for upload.
+`chromatic` is the CLI the publish workflow runs, at the version the lockfile pins; `@chromatic-com/playwright` is the test fixture that records the archives and the `build-archive-storybook` tool that turns them into a Storybook for upload.
 If the registry cannot be reached, stop and tell the user rather than hand-writing version ranges; `npm install` resolves current ones.
 A TypeScript repo also needs Vite's client types for the `?raw` imports to typecheck: a `src/vite-env.d.ts` holding `/// <reference types="vite/client" />`, if there is not one already.
 
-Add the scripts (`build-storybook` is what the Chromatic action runs by default, so keep that exact name; `.js` configs in a JS repo):
+Add the scripts (`build-storybook` is what the Storybook workflow runs, so keep that exact name; `.js` configs in a JS repo):
 
 ```json
 "test:chromatic": "playwright test --config configs/playwright.chromatic.config.ts",
@@ -146,7 +146,7 @@ The templates' second state seeds the theme the app does not default to; step 0 
 When the app follows the OS preference by default, seed the default state too, so the test pins the theme rather than Playwright's `colorScheme` default (light) or, where the app leaves the OS choice to CSS instead of writing it into the DOM, whichever browser renders the archive, which carries only the DOM.
 
 Each state must be reachable deterministically.
-If the user approved the edit in step 0 (question 3), reach them through `?test&...` URL injections rather than `page.route` stubs, as the reference repos do: a URL is documented, reusable by a person on the deployed site, and covered by the app's own boot test where it has one.
+If the user approved the edit in step 0 (question 2), reach them through `?test&...` URL injections rather than `page.route` stubs, as the reference repos do: a URL is documented, reusable by a person on the deployed site, and covered by the app's own boot test where it has one.
 If not, reach each state from the test instead: drive the UI (`setInputFiles`, clicks), seed stored state with `addInitScript`, stub network-fed states with `page.route`; say in the test's comment which of the two the state uses (the templates' `?test&mock_file` comments change accordingly).
 The pattern goes in the app's entry script, or with several pages in one module that each page's entry imports (a `src/lib/testInjection.ts`, with every flag listed in the developer docs), so the flags are parsed once:
 
@@ -170,7 +170,7 @@ Two snapshots with one name in a test silently overwrite each other.
 ## Step 6. Chromatic projects and secrets
 
 This step is the user's: it needs their Chromatic account and the repository's settings.
-Tell them what to do, carry on with steps 7 to 11 (or wait, if they want to do it now), and say in the hand-over that both workflows fail until it is done:
+Tell them what to do, carry on with steps 7 to 11 (or wait, if they want to do it now), and say in the hand-over that the publish workflow fails until it is done (the two build workflows need no token):
 
 1. In Chromatic, add a project and pick the repository: this is the Storybook project.
 2. **Add project** again, pick the same repository a second time, and name this one for Playwright. Chromatic calls these [sub-projects](https://www.chromatic.com/docs/combine-stories-e2e/); each posts its own status check on pull requests.
@@ -178,19 +178,22 @@ Tell them what to do, carry on with steps 7 to 11 (or wait, if they want to do i
 
 ## Step 7. Workflows (`.github/workflows/`)
 
-Copy both files from `templates/.github/workflows/`.
-They run `on: push`, deliberately: Chromatic needs every commit on a branch to have a build, or it has no baseline to compare the next one with.
-Both pin the runner image and print it, warn when the branch is behind `main`, skip Dependabot runs (no secrets there), and set `CHROMATIC_STATIC_VERSION` before anything is built.
-The Storybook one turns on TurboSnap (`onlyChanged`); the Playwright one installs Chromium, runs `test:chromatic`, and uploads with `playwright: true`, which builds a Storybook from the archives under `test-results/`; TurboSnap cannot apply to a black-box archive of the running app.
-Pin every action (`actions/checkout`, `actions/setup-node`, `chromaui/action`) to its newest release tag (`git ls-remote --tags https://github.com/<owner>/<action>`), never `@latest`; the templates' comments say why.
-The behind-main step names `main`; use the repo's default branch if it differs.
-If the user said pull requests come from forks, use [references/fork-pull-requests.md](references/fork-pull-requests.md) instead (three workflows, then).
+Copy all three files from `templates/.github/workflows/`: two build the captures with no token, and `chromatic-publish.yml` uploads them.
+The build workflows run `on: push`, deliberately: Chromatic needs every commit on a branch to have a build, or it has no baseline to compare the next one with.
+They also run on `pull_request`, but only for a fork's, which is pushed to the fork and so never reaches this repository's `push`.
+Both pin the runner image and print it, warn when the branch is behind `main`, set `CHROMATIC_STATIC_VERSION` before anything is built, and upload the build as an artifact named `chromatic-build`.
+The Storybook one runs `build-storybook`; the Playwright one installs Chromium, runs `test:chromatic`, and builds a Storybook from the archives under `test-results/` with `build-archive-storybook`.
+`chromatic-publish.yml` runs on `workflow_run` as it is on the default branch, with the two tokens, so it uploads for a fork's pull request too, and it accepts a push to the default branch as the new baseline on its own, so a merge leaves no build waiting for review.
+It holds the tokens while handling a commit that may come from a fork; [references/publish-workflow.md](references/publish-workflow.md) lists the properties that keep that safe and what the three files rely on, and an edit to the publish workflow keeps every one.
+Pin every action (`actions/checkout`, `actions/setup-node`, `actions/upload-artifact`, `actions/download-artifact`) to its newest release tag (`git ls-remote --tags https://github.com/<owner>/<action>`), never `@latest`; the Chromatic CLI is the `chromatic` devDependency, pinned by the lockfile.
+The behind-main step names `main`; use the repo's default branch if it differs (the publish workflow reads it from the repository).
+A repository already on the earlier two-workflow form, where each workflow uploads through `chromaui/action`, moves to these three files rather than adding `autoAcceptChanges` to the old ones.
 
 ## Step 8. Housekeeping
 
 - `.gitignore`: `storybook-static/`, `test-results/`, `playwright-report/` (and `playwright-report-chromatic/` if the html reporter is used), and `.tmp/` for step 10.
 - **The version stamp.** `CHROMATIC_STATIC_VERSION` is this layout's own convention, not a Chromatic setting.
-  Both workflows set it before anything is built; in the Playwright workflow the build, or the dev server, runs inside `webServer.command`, so the step's `env` reaches it.
+  Both build workflows set it before anything is built; in the Playwright workflow the build, or the dev server, runs inside `webServer.command`, so the step's `env` reaches it.
   The Vite config reads it and pins the version it defines:
 
   ```ts
@@ -225,21 +228,21 @@ Run the `analyze-duplicates` skill from this collection over what was added, as 
 `--cross-project` adds the combined scan that finds a cluster spanning two of those folders; without it each folder is scanned alone.
 Neither the report nor `.tmp/` is committed; `.tmp/` is in `.gitignore` from step 8.
 Clusters that touch only files that existed before this change are out of scope; read the ones that include an added file, with one policy: a cluster that is only comments or docstrings is ignored.
-The rationale is repeated on purpose in both workflows, in each page's test file, and between a story and the test that mirrors it, so each file explains itself.
+The rationale is repeated on purpose in both build workflows, in each page's test file, and between a story and the test that mirrors it, so each file explains itself.
 A cluster of code is one of three things:
 
 - A helper copied instead of imported (`buildPage`, `forEachViewport`, the `PAGES` list, or the shared package's export when there is one): import it.
-- A copy that has drifted (the two Playwright configs beyond `testDir`, the reporter folder and `projects` (step 4); the two workflows beyond their names, the two Playwright steps and the `Run Chromatic` step (step 7); two page story files beyond the page's title, markup, stylesheet import and states; a difference confined to comments does not count): realign it.
-- A copy this layout keeps on purpose (the two workflows' shared steps, the two Playwright configs' shared settings when there is no shared package, the import-title-export skeleton of each page story): leave it.
+- A copy that has drifted (the two Playwright configs beyond `testDir`, the reporter folder and `projects` (step 4); the two build workflows beyond their names, the Playwright workflow's three test and archive steps in place of `Build Storybook`, and the upload step's name (step 7); two page story files beyond the page's title, markup, stylesheet import and states; a difference confined to comments does not count): realign it.
+- A copy this layout keeps on purpose (the two build workflows' shared steps, the two Playwright configs' shared settings when there is no shared package, the import-title-export skeleton of each page story): leave it.
 
 Nothing else is restructured on the report's account.
 
 ## Step 11. Verify, then hand over
 
 ```bash
-npm run build-storybook                 # the Storybook the action will upload
+npm run build-storybook                 # the Storybook the workflow builds and the publish uploads
 npm run test:chromatic                  # the archives land in test-results/chromatic-archives/
-./node_modules/.bin/build-archive-storybook --output-dir=storybook-static   # what the action does with them
+./node_modules/.bin/build-archive-storybook --output-dir=storybook-static   # what the Playwright workflow builds from them
 npm run format && npm run lint    # whichever of format, lint, typecheck the repo has (step 0), and pre-commit run --all-files where it uses it
 ```
 
@@ -248,7 +251,8 @@ Call `build-archive-storybook` through its path, not `npm exec`, which takes `--
 Before the hand-over, when the push will open a pull request, check the target repository for a PR template (`.github/PULL_REQUEST_TEMPLATE.md`, `.github/pull_request_template.md`, `.github/PULL_REQUEST_TEMPLATE/*.md`, `docs/PULL_REQUEST_TEMPLATE.md`, or one at the root) and a contributing guide (`CONTRIBUTING.md` at the root, under `.github/` or `docs/`).
 Follow their branch, commit and changelog rules; fill every template section and tick only what was done; flag an issue-first policy before the push; and say what was found, or that none exists.
 Then stop and report: what was added, what step 0's answers decided, what step 6 still needs, the commit and push the user should make (this skill does not push), and what only they can do afterwards: enable "allow edits from maintainers" on the pull request, and link the PR number into the changelog entry once GitHub assigns it.
-Once pushed, both workflows (three, with forks) should go green, the first build of each project becomes its baseline (look it over in Chromatic once), and the two badges render.
+Once pushed, both build workflows should go green; the publish workflow first runs after the merge, since `workflow_run` only fires from a file already on the default branch.
+Its first build of each project becomes the baseline (look it over in Chromatic once), and the two badges render.
 Symptoms after that are in [references/troubleshooting.md](references/troubleshooting.md).
 
 ## When the skill falls short
