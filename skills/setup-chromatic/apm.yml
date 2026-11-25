@@ -1,2 +1,9 @@
 name: setup-chromatic
-version: "0.1.0"
+version: "0.2.1"
+description: "Set up Chromatic visual regression tests from Storybook and Playwright"
+author: Cody C. Baker
+license: MIT
+type: skill
+dependencies:
+  apm:
+    - path: ../analyze-duplicates

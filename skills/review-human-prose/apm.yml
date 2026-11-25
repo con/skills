@@ -1,2 +1,6 @@
 name: review-human-prose
 version: "0.1.0"
+description: "Revise prose so actors, actions, and connections are explicit"
+author: John Lee
+license: MIT
+type: skill

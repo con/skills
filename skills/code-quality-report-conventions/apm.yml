@@ -1,2 +1,6 @@
 name: code-quality-report-conventions
 version: "0.2.1"
+description: "Shared report rules for the review-* skills; not invoked directly"
+author: Cody C. Baker
+license: MIT
+type: skill

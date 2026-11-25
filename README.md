@@ -26,7 +26,7 @@ A collection of [Claude Code Agent Skills](https://agentskills.io/) for software
 | [review-org-code-quality](skills/review-org-code-quality/) | Audit code health of an organization-wide ecosystem of similarly styled, interconnected data/ML/ETL pipelines: reference pattern, dependency graph, read-only per-repo 0–3 matrix (using only the static tools of the `code-quality-review-<language>` guides), depth reviews of the critical repos via `review-repo-code-quality`, systemic findings, and a prioritized action plan. Writes a dated, version-stamped report to `docs/code-reviews/` in a location the user names. |
 | [review-repo-code-quality](skills/review-repo-code-quality/) | Language-agnostic, functionality-preserving code-quality review of a single repository: architecture, dead code, duplication, consolidation, cleanup, currency of versions, standards and tooling, and needs-verification items, each with location, proposed change, safety confidence, and a verification command. Loads a `code-quality-review-<language>` guide for each language the repository uses; house tool preferences (default: the guides', such as pixi) are set per run. Writes a dated, version-stamped report to `docs/code-reviews/`. |
 | [scan-projects](skills/scan-projects/) | Walk subdirectories of git repos, collect metadata (language, license, commit dates, remote URL), and generate concise LLM-produced summaries into a `projects.tsv` file. Ships with helper scripts for batch updates. |
-| [setup-chromatic](skills/setup-chromatic/) | Set up [Chromatic](https://www.chromatic.com) visual regression testing for a web app with two feeds: Storybook stories (component states) and Playwright snapshots (whole-page states, several viewports). Covers configs, two GitHub Actions workflows, two Chromatic projects, and the README section explaining them. |
+| [setup-chromatic](skills/setup-chromatic/) | Set up [Chromatic](https://www.chromatic.com) visual regression testing for a web app with two feeds: Storybook stories (component states) and Playwright snapshots (whole-page states, several viewports). Covers configs, the GitHub Actions workflows (built without a token, uploaded from the default branch, so forks' pull requests get snapshots and merges become the baseline), two Chromatic projects, and the README section explaining them. |
 | [setup-codespell](skills/setup-codespell/) | Add [codespell](https://github.com/codespell-project/codespell) spell-checking to a project end-to-end: config, GitHub Actions workflow, pre-commit hook, exclusion tuning, ambiguous-typo review, and automated fixes via `datalad run`. |
 | [setup-duplicates-analysis](skills/setup-duplicates-analysis/) | Make [jscpd](https://github.com/kucherenko/jscpd) code/text duplication checking part of a project's workflow: `.jscpd.json`, a pre-commit hook or tox env / pixi task / Makefile target / npm script, CI wiring, then refactor duplicates (using `analyze-duplicates` reports) and tighten the threshold until clean. |
 | [setup-git-bug](skills/setup-git-bug/) | Set up [git-bug](https://github.com/git-bug/git-bug) distributed issue tracking: configure GitHub bridge, sync issues, push `refs/bugs/*`, and document the workflow in DEVELOPMENT.md / CLAUDE.md. |
@@ -52,6 +52,7 @@ Reload your agent if needed, then ask it:
 Or install at project scope from the project directory, pinning a reviewed commit: `apm install con/skills/skills/tinuous-analyzer#<full-commit-SHA> --target agent-skills`.
 
 Each skill is its own APM package (`skills/<name>/apm.yml` carries its version), so `apm.lock.yaml` and `apm deps list` show which version of each skill a project has.
+A skill that needs another one from this collection declares it as a dependency, and APM installs it with the skill.
 Install individual skills only; `con/skills` is a monorepo of independent skills, not a package to install as a whole.
 
 The installer uses APM to select and install skills, record their commit and content hashes, ignore downloaded skill directories, and verify restoration.
@@ -64,8 +65,9 @@ For configuration options, see each skill’s `SKILL.md` (for example, [pr-revie
 Skill sources live in `skills/<name>/`, each with its own `apm.yml`.
 Versioning is described in [`AGENTS.md`](AGENTS.md#skill-versions).
 See [author-apm-skills](skills/author-apm-skills/SKILL.md) for authoring and validation guidance.
-Run `tox -e validate,apm,security-static,security-deps` before submitting changes (environment requirements are in `tox.ini`).
-CI checks skill structure, package restoration, and security; passing checks do not guarantee safety.
+Run `tox -e validate,apm,reuse,security-static,security-deps` before submitting changes (environment requirements are in `tox.ini`).
+`pre-commit install` adds the [REUSE](https://reuse.software/) licensing check and the check that each `apm.yml` `license` matches it as commit hooks.
+CI checks skill structure, package restoration, licensing, and security; passing checks do not guarantee safety.
 
 ## Repo-wide conventions
 
@@ -73,4 +75,5 @@ See [`AGENTS.md`](AGENTS.md) (alias `CLAUDE.md`) for cross-cutting rules that ap
 
 ## License
 
-TBD
+MIT; see [`LICENSE`](LICENSE). Per-file terms follow [REUSE](https://reuse.software/) (`REUSE.toml`, `LICENSES/`), and each skill's `apm.yml` declares its license and credits the skill's authors.
+Material quoted from other sources, such as the CRediT role definitions abridged in [credit-contributions](skills/credit-contributions/CREDIT_ROLES.md), keeps its source's terms.
