@@ -96,6 +96,11 @@ git for-each-ref refs/bugs/ --count=1
 
 Proceed with Step 1.
 
+## Project conventions
+
+Before the first change, read `../con-skill-conventions/conventions.md` (installed beside this skill) and follow it for the whole run: the target project's own configuration, settings and contribution rules win over this skill's defaults.
+If that file is missing, stop and ask the user to install `con-skill-conventions`; do not proceed from memory.
+
 ## Step 1: Gather Project Information
 
 ### Detect GitHub remote
@@ -379,14 +384,7 @@ If the commit fails with "files were modified", just re-run the commit.
 
 ### MANDATORY: Respect upstream PR template and CONTRIBUTING.md
 
-Before drafting the PR body, follow the repo-wide rule in this collection's
-top-level `AGENTS.md` ("Respect upstream PR conventions when preparing a
-pull request"): scan for `.github/PULL_REQUEST_TEMPLATE.md` (and the
-Codeberg / Forgejo / GitLab equivalents), use it as the skeleton if
-present, read `CONTRIBUTING.md` for branch-naming / commit-message /
-changelog conventions, fill out checkboxes truthfully, and surface to the
-user both what was found and any items the user still needs to handle
-manually (e.g. enabling "Allow edits from maintainers").
+Before drafting the PR body, follow `../con-skill-conventions/conventions.md`, "Respect upstream PR conventions when preparing a pull request": the target project's PR template, contribution guide, and what to report.
 
 ### Write PR description
 

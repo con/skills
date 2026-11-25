@@ -55,6 +55,11 @@ When in doubt about a detail the templates do not settle, open one of the refere
 - User asks to document a visual-testing setup in a README, or to explain stories versus Playwright snapshots
 - User runs `/setup-chromatic`
 
+## Project conventions
+
+Before the first change, read `../con-skill-conventions/conventions.md` (installed beside this skill) and follow it for the whole run: the target project's own configuration, settings and contribution rules win over this skill's defaults.
+If that file is missing, stop and ask the user to install `con-skill-conventions`; do not proceed from memory.
+
 ## Step 0. Read the repository, then ask
 
 Read `AGENTS.md` or `CLAUDE.md`, `README.md`, `package.json`, the Vite config and the folder the tool configs live in (`configs/` in the reference repos), and settle what the repository already answers:
@@ -248,8 +253,7 @@ npm run format && npm run lint    # whichever of format, lint, typecheck the rep
 
 Call `build-archive-storybook` through its path, not `npm exec`, which takes `--output-dir` as one of its own options and drops it.
 `npm run storybook` is a dev server that never exits, so do not run it; looking at every story in both themes by eye is the user's, in the hand-over.
-Before the hand-over, when the push will open a pull request, check the target repository for a PR template (`.github/PULL_REQUEST_TEMPLATE.md`, `.github/pull_request_template.md`, `.github/PULL_REQUEST_TEMPLATE/*.md`, `docs/PULL_REQUEST_TEMPLATE.md`, or one at the root) and a contributing guide (`CONTRIBUTING.md` at the root, under `.github/` or `docs/`).
-Follow their branch, commit and changelog rules; fill every template section and tick only what was done; flag an issue-first policy before the push; and say what was found, or that none exists.
+Before the hand-over, when the push will open a pull request, follow `../con-skill-conventions/conventions.md`, "Respect upstream PR conventions when preparing a pull request": the target project's PR template, contribution guide, and what to report.
 Then stop and report: what was added, what step 0's answers decided, what step 6 still needs, the commit and push the user should make (this skill does not push), and what only they can do afterwards: enable "allow edits from maintainers" on the pull request, and link the PR number into the changelog entry once GitHub assigns it.
 Once pushed, both build workflows should go green; the publish workflow first runs after the merge, since `workflow_run` only fires from a file already on the default branch.
 Its first build of each project becomes the baseline (look it over in Chromatic once), and the two badges render.

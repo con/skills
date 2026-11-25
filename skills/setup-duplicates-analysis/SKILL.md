@@ -201,6 +201,11 @@ automatically) is a candidate to migrate into the central config file. Fix
 this **before** running the analysis in Step 7, or the analysis will reflect
 the masking rather than the project's real state.
 
+## Project conventions
+
+Before the first change, read `../con-skill-conventions/conventions.md` (installed beside this skill) and follow it for the whole run: the target project's own configuration, settings and contribution rules win over this skill's defaults.
+If that file is missing, stop and ask the user to install `con-skill-conventions`; do not proceed from memory.
+
 ## Step 1: Initial Setup
 
 ### Create Feature Branch
@@ -735,32 +740,7 @@ checks below, and report them, before handing over that command.
 
 ### Respect upstream conventions
 
-1. **PR template** — use the first that exists:
-   `.github/PULL_REQUEST_TEMPLATE.md`, `.github/pull_request_template.md`,
-   `.github/PULL_REQUEST_TEMPLATE/*.md` (pick the one matching this change,
-   or ask), `docs/PULL_REQUEST_TEMPLATE.md`, `PULL_REQUEST_TEMPLATE.md`; on
-   Codeberg/Forgejo/Gitea the same names under `.gitea/` or `.forgejo/`; on
-   GitLab `.gitlab/merge_request_templates/*.md`. If one exists, build the
-   PR body on it instead of the default below: keep its headings and prose,
-   replace its `<!-- ... -->` guidance with real content, fill every section
-   (write `N/A — <reason>` rather than deleting one), and tick a checklist
-   box only for work actually done.
-2. **Contributor guide** — read `CONTRIBUTING.md` / `CONTRIBUTING.rst` /
-   `CONTRIBUTING`, `.github/CONTRIBUTING.md`, `DEVELOPMENT.md`,
-   `HACKING.md` or `docs/development/`, ideally before Step 1 so the branch
-   and commits follow it from the start. Honor its branch-naming,
-   commit-message and sign-off rules. If it requires a changelog entry
-   (`changelog.d/`, `news/`, `changelog/unreleased/`, `CHANGELOG.md`), add
-   one — don't just tick a template's checkbox. Run any lint/format gate it
-   names before the final commit.
-3. **Issue first** — if the guide wants an issue or discussion before a
-   non-trivial PR, say so before handing over the command, and link an
-   existing one or suggest opening one.
-4. **Report** to the user, with the command: which template the body
-   follows (or that there is none), which guide was found (or none) and
-   what it changed (e.g. branch name, changelog entry), and what is left
-   for them — e.g. ticking "allow edits from maintainers" in the web UI,
-   or adding the PR number to a changelog entry once it exists.
+Before drafting the PR body, follow `../con-skill-conventions/conventions.md`, "Respect upstream PR conventions when preparing a pull request": the target project's PR template, contribution guide, and what to report.
 
 ### Write the PR body
 

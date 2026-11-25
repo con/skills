@@ -73,6 +73,11 @@ git tag --sort=-v:refname | head -5
 
 ---
 
+## Project conventions
+
+Before the first change, read `../con-skill-conventions/conventions.md` (installed beside this skill) and follow it for the whole run: the target project's own configuration, settings and contribution rules win over this skill's defaults.
+If that file is missing, stop and ask the user to install `con-skill-conventions`; do not proceed from memory.
+
 ## Step 1: Ask User for Configuration
 
 Ask the following questions (or infer from context if clear):
@@ -628,6 +633,9 @@ Commit in logical chunks (one concern per commit):
 5. `chore: prepare CHANGELOG.md for auto-managed entries` (if CHANGELOG needs editing)
 
 ### 7.2 PR Body Template
+
+Before drafting the PR body, follow `../con-skill-conventions/conventions.md`, "Respect upstream PR conventions when preparing a pull request": the target project's PR template, contribution guide, and what to report.
+If the project has a template, fold the body below into its sections.
 
 Write to `.git-meta/PR_BODY.md`:
 

@@ -182,6 +182,11 @@ Example:
 Co-Authored-By: Claude Code 2.1.123 / Claude Opus 4.7 <noreply@anthropic.com>
 ```
 
+## Project conventions
+
+Before the first change, read `../con-skill-conventions/conventions.md` (installed beside this skill) and follow it for the whole run: the target project's own configuration, settings and contribution rules win over this skill's defaults.
+If that file is missing, stop and ask the user to install `con-skill-conventions`; do not proceed from memory.
+
 ## Execution Steps
 
 When this skill is invoked, follow these steps:
