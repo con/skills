@@ -56,7 +56,7 @@ class ApmManifestTests(unittest.TestCase):
                          ('Short summary for people', '|\n  two\n  lines'),
                          ('Short summary for people', 'Example.'),  # copies SKILL.md
                          ('author: A. Person, B. Person\n', ''),
-                         ('license: MIT', 'license: Apache-2.0'),
+                         ('license: MIT\n', ''),
                          ('type: skill', 'type: hybrid')):
             with self.subTest(old=old, new=new):
                 self.assertEqual(self.check('', VALID.replace(old, new)), ['E010'])

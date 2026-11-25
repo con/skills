@@ -174,7 +174,13 @@ checks the fields, not their order):
   separated: its original author and anyone who wrote a substantial share of
   it. Credit agent-written commits to the person whose pull request they
   came in. Add a name when someone's contribution becomes substantial.
-- `license: MIT`, the license of the whole collection (`LICENSE`).
+- `license`: an SPDX expression naming every license the skill's files carry
+  as REUSE resolves them (`REUSE.toml`, SPDX headers): `MIT`, the
+  collection's license, plus the terms of any third-party material it quotes
+  (`credit-contributions` is `MIT AND CC-BY-4.0` for NISO's CRediT text).
+  APM reads only this string, so `ci/check_reuse.py` (`tox -e reuse`, also a
+  pre-commit hook) fails when it and REUSE disagree. Annotate a new file with
+  other terms in `REUSE.toml` and add its license text under `LICENSES/`.
 - `type: skill`: states explicitly that the package is a skill. apm-cli 0.31
   validates it but routes by the package's structure, which gives the same
   result; the field keeps the intent visible to any later tool or
@@ -209,4 +215,4 @@ still on the repository-root form (`git: con/skills` with `skills: [...]`)
 replaces it with one subdirectory dependency per skill on its next pin move.
 Use `author-apm-skills` for APM authoring and maintenance, and
 `install-apm-skills` for metadata-only consumer setup. Keep generated copies
-out of consumer Git history. Run `tox -e validate,apm,security-static,security-deps`.
+out of consumer Git history. Run `tox -e validate,apm,reuse,security-static,security-deps`.

@@ -58,8 +58,9 @@ For configuration options, see each skill’s `SKILL.md` (for example, [pr-revie
 Skill sources live in `skills/<name>/`, each with its own `apm.yml`.
 Versioning is described in [`AGENTS.md`](AGENTS.md#skill-versions).
 See [author-apm-skills](skills/author-apm-skills/SKILL.md) for authoring and validation guidance.
-Run `tox -e validate,apm,security-static,security-deps` before submitting changes (environment requirements are in `tox.ini`).
-CI checks skill structure, package restoration, and security; passing checks do not guarantee safety.
+Run `tox -e validate,apm,reuse,security-static,security-deps` before submitting changes (environment requirements are in `tox.ini`).
+`pre-commit install` adds the [REUSE](https://reuse.software/) licensing check and the check that each `apm.yml` `license` matches it as commit hooks.
+CI checks skill structure, package restoration, licensing, and security; passing checks do not guarantee safety.
 
 ## Repo-wide conventions
 

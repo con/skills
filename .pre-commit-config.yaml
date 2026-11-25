@@ -1,0 +1,14 @@
+repos:
+  - repo: https://github.com/fsfe/reuse-tool
+    rev: v6.3.0
+    hooks:
+      - id: reuse
+  - repo: local
+    hooks:
+      - id: apm-license-matches-reuse
+        name: apm.yml license matches REUSE
+        entry: python ci/check_reuse.py
+        language: python
+        additional_dependencies: [reuse==6.3.0, pyyaml==6.0.3]
+        pass_filenames: false
+        always_run: true

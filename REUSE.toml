@@ -1,0 +1,31 @@
+version = 1
+SPDX-PackageName = "con/skills"
+SPDX-PackageSupplier = "Center for Open Neuroscience"
+SPDX-PackageDownloadLocation = "https://github.com/con/skills"
+
+# Everything this collection writes is MIT. "closest" lets a file's own
+# SPDX header (e.g. ci/validate_skills.py) speak for that file instead.
+[[annotations]]
+path = "**"
+precedence = "closest"
+SPDX-FileCopyrightText = "2026 Center for Open Neuroscience"
+SPDX-License-Identifier = "MIT"
+
+# This skill's examples contain literal SPDX tags, which are not its own.
+[[annotations]]
+path = "skills/setup-reuse-compliance/SKILL.md"
+precedence = "override"
+SPDX-FileCopyrightText = "2026 Center for Open Neuroscience"
+SPDX-License-Identifier = "MIT"
+
+# The CRediT role names and definitions are NISO's, published under CC BY 4.0
+# (https://credit.niso.org/); the rest of the file is this collection's.
+# A skill whose files carry other terms lists them in its apm.yml `license`.
+[[annotations]]
+path = "skills/credit-contributions/CREDIT_ROLES.md"
+precedence = "override"
+SPDX-FileCopyrightText = [
+    "2026 Center for Open Neuroscience",
+    "2022 National Information Standards Organization (NISO)",
+]
+SPDX-License-Identifier = "MIT AND CC-BY-4.0"
