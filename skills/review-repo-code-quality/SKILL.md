@@ -43,11 +43,7 @@ To add a language, add a sibling `code-quality-review-<language>` skill
 those sections, a row in this table, a row in the repository's README,
 and an entry under `dependencies` in this skill's `apm.yml` and in
 `review-org-code-quality`'s. APM installs the guides, the report
-conventions, and `analyze-duplicates` with this skill:
-
-```console
-apm install con/skills/skills/review-repo-code-quality#<commit> --target agent-skills
-```
+conventions, and `analyze-duplicates` with this skill.
 
 Shared rules — where the report goes, the provenance stamp that records
 which version of this skill produced it, evidence standards, re-review,

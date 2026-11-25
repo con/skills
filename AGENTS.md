@@ -148,8 +148,7 @@ report layout, scoring, or bundled files bumps its `apm.yml` version in the
 same commit: MINOR for a changed or added step or section, PATCH for a
 clarification that changes nothing a run does, MAJOR when earlier reports can
 no longer be compared with new ones or a consumer must change how it uses the
-skill. Adding or removing a dependency is a PATCH bump. Typo and pure
-wording fixes do not bump. Counting starts at the first
+skill. Typo and pure wording fixes do not bump. Counting starts at the first
 merge: a skill stays at its initial version (`0.1.0`) while its introducing
 pull request is still open. The per-skill `apm.yml` versions start with the
 pull request that introduced them; changes made in that pull request did not
