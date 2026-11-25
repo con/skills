@@ -1,9 +1,7 @@
 # Repo-wide conventions for skills in this collection
 
 These rules apply to **every skill** in this repository. When authoring or
-modifying a skill, ensure its instructions enforce them — and when a skill
-is currently running, treat them as part of the skill's contract even if
-the SKILL.md does not repeat them verbatim.
+modifying a skill, ensure its instructions enforce them.
 
 > Note for tooling: this file is named `AGENTS.md` for generic agent
 > tooling. `CLAUDE.md` is a symlink to it so Claude Code picks it up
@@ -14,6 +12,7 @@ the SKILL.md does not repeat them verbatim.
 ## Run-time conventions for skills
 
 These rules reach a running skill only from inside its installed files, so they live in [`skills/con-skill-conventions/conventions.md`](skills/con-skill-conventions/conventions.md), which skills that need them declare as a dependency.
+Read that file before authoring or changing a skill.
 
 @skills/con-skill-conventions/conventions.md
 
