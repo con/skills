@@ -32,7 +32,7 @@ Write all commit messages to `.git-meta/COMMIT_MSG` and use `git commit -F .git-
 
 ## Project conventions
 
-Before the first change, read `../con-skill-conventions/conventions.md` (installed beside this skill) and follow it for the whole run: the target project's own configuration, settings and contribution rules win over this skill's defaults.
+Before the first change, read `../con-skill-conventions/conventions.md` (installed beside this skill) and follow it for the whole run.
 If that file is missing, stop and ask the user to install `con-skill-conventions`; do not proceed from memory.
 
 ## Step 0: Check Existing Configuration
@@ -631,7 +631,7 @@ Commit in logical chunks (one concern per commit):
 
 ### 7.2 PR Body Template
 
-Before drafting the PR body, follow `../con-skill-conventions/conventions.md`, "Respect upstream PR conventions when preparing a pull request": the target project's PR template, contribution guide, and what to report.
+Before drafting the PR body, follow `../con-skill-conventions/conventions.md`, "Respect upstream PR conventions when preparing a pull request".
 
 Write to `.git-meta/PR_BODY.md`:
 

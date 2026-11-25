@@ -81,7 +81,7 @@ workflow: config, wiring, CI, mitigation refactors, threshold tightening.
 
 ## Project conventions
 
-Before the first change, read `../con-skill-conventions/conventions.md` (installed beside this skill) and follow it for the whole run: the target project's own configuration, settings and contribution rules win over this skill's defaults.
+Before the first change, read `../con-skill-conventions/conventions.md` (installed beside this skill) and follow it for the whole run.
 If that file is missing, stop and ask the user to install `con-skill-conventions`; do not proceed from memory.
 
 ## Step 0: Check Existing State (MANDATORY first step)
@@ -737,7 +737,7 @@ checks below, and report them, before handing over that command.
 
 ### Respect upstream conventions
 
-Before drafting the PR body, follow `../con-skill-conventions/conventions.md`, "Respect upstream PR conventions when preparing a pull request": the target project's PR template, contribution guide, and what to report.
+Before drafting the PR body, follow `../con-skill-conventions/conventions.md`, "Respect upstream PR conventions when preparing a pull request".
 
 ### Write the PR body
 

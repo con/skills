@@ -34,7 +34,7 @@ Set up codespell spell-checking infrastructure in a project, identify typos, con
 
 ## Project conventions
 
-Before the first change, read `../con-skill-conventions/conventions.md` (installed beside this skill) and follow it for the whole run: the target project's own configuration, settings and contribution rules win over this skill's defaults.
+Before the first change, read `../con-skill-conventions/conventions.md` (installed beside this skill) and follow it for the whole run.
 If that file is missing, stop and ask the user to install `con-skill-conventions`; do not proceed from memory.
 
 ## Step 0: Check for Existing Codespell Integration
@@ -1357,7 +1357,7 @@ uvx codespell 2>&1
 
 ### PR template and checkboxes
 
-Before drafting the PR body, follow `../con-skill-conventions/conventions.md`, "Respect upstream PR conventions when preparing a pull request": the target project's PR template, contribution guide, and what to report.
+Before drafting the PR body, follow `../con-skill-conventions/conventions.md`, "Respect upstream PR conventions when preparing a pull request".
 For a codespell PR, a template's checkboxes typically come out as:
 
 - tests: usually `[ ]` (codespell config is not user-facing logic)

@@ -169,7 +169,7 @@ Per [bids-specification#2078](https://github.com/bids-standard/bids-specificatio
 
 ## Project conventions
 
-Before the first change, read `../con-skill-conventions/conventions.md` (installed beside this skill) and follow it for the whole run: the target project's own configuration, settings and contribution rules win over this skill's defaults.
+Before the first change, read `../con-skill-conventions/conventions.md` (installed beside this skill) and follow it for the whole run.
 If that file is missing, stop and ask the user to install `con-skill-conventions`; do not proceed from memory.
 
 ## Execution Steps
