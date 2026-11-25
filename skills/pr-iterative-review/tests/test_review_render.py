@@ -868,19 +868,17 @@ class PreviousTests(unittest.TestCase):
 
 
 class VersionTests(unittest.TestCase):
-    def test_skill_version_sources(self):
+    def test_skill_version_comes_from_apm_yml(self):
         self.assertRegex(rr.skill_version(SKILL_DIR), r"^\d+\.\d+\.\d+$")
         with tempfile.TemporaryDirectory() as directory:
             skill = Path(directory)
             self.assertEqual(rr.skill_version(skill), "unknown")
-            (skill / "SKILL.md").write_text(
-                "---\nname: x\n---\nversion: 9.9.9\n", encoding="utf-8"
-            )
-            self.assertEqual(rr.skill_version(skill), "unknown")
+            # A SKILL.md frontmatter version is not read; the validator
+            # refuses one (E011).
             (skill / "SKILL.md").write_text(
                 "---\nname: x\nversion: 1.2.3\n---\nbody\n", encoding="utf-8"
             )
-            self.assertEqual(rr.skill_version(skill), "1.2.3")
+            self.assertEqual(rr.skill_version(skill), "unknown")
             (skill / "apm.yml").write_text(
                 'name: x\nversion: "2.0.1"  # bumped\n', encoding="utf-8"
             )

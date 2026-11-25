@@ -210,23 +210,13 @@ def pages(document: object) -> list:
 
 
 def skill_version(skill_dir: Path) -> str:
-    """This skill's version, from the apm.yml beside SKILL.md.
-
-    Without an apm.yml, the version comes from the SKILL.md frontmatter.
-    """
-    for name in ("apm.yml", "SKILL.md"):
-        try:
-            text = (skill_dir / name).read_text(encoding="utf-8")
-        except OSError:
-            continue
-        if name == "SKILL.md":
-            if not text.startswith("---"):
-                continue
-            text = text.split("\n---", 1)[0]
-        match = _VERSION.search(text)
-        if match:
-            return match.group(2)
-    return "unknown"
+    """This skill's version, from the apm.yml beside SKILL.md."""
+    try:
+        text = (skill_dir / "apm.yml").read_text(encoding="utf-8")
+    except OSError:
+        return "unknown"
+    match = _VERSION.search(text)
+    return match.group(2) if match else "unknown"
 
 
 # ----------------------------------------------------------------------
