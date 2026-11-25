@@ -58,11 +58,8 @@ The commit commands below take the message from a file —
 `git commit -F <GIT_TMP>/COMMIT_MSG` — where `<GIT_TMP>` is whatever
 untracked scratch location the user or project has adopted for commit and
 PR message drafts. Substitute it; if none is established, ask the user (or
-fall back to `git commit -m`). Annotate commits — message style, sign-off,
-AI-attribution trailers such as `Co-Authored-By` — as the user's or
-project's agreed conventions specify; do not invent a format. This applies
-to ALL commits in this workflow: config, wiring, CI, mitigation refactors,
-threshold tightening.
+fall back to `git commit -m`). This applies to ALL commits in this
+workflow: config, wiring, CI, mitigation refactors, threshold tightening.
 
 ## Workflow Overview
 

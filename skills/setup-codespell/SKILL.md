@@ -22,23 +22,6 @@ Set up codespell spell-checking infrastructure in a project, identify typos, con
 - `gh` CLI for PR creation (optional)
 - Git repository
 
-## Commit Co-Authorship
-
-All commits created during this workflow MUST include a `Co-Authored-By` trailer identifying
-both Claude Code version and the model used. Get the version via `claude --version` and
-use the model name from the environment. Format:
-
-```
-Co-Authored-By: Claude Code <VERSION> / Claude <MODEL> <noreply@anthropic.com>
-```
-
-Example:
-```
-Co-Authored-By: Claude Code 2.1.63 / Claude Opus 4.6 <noreply@anthropic.com>
-```
-
-This applies to ALL commits: config, workflow, ambiguous fixes, non-ambiguous fixes, formatting fixups.
-
 ## Workflow Overview
 
 1. **Check existing**: See if codespell is already configured

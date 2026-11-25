@@ -24,10 +24,7 @@ transition, and release-process documentation.
 - Python `build` + `twine` for PyPI uploads (Python projects only)
 - `auto` binary (downloaded during workflow setup, not required locally)
 
-## Commit Co-Authorship
-
-All commits MUST include a `Co-Authored-By` trailer. Get the version via `claude --version`.
-Format: `Co-Authored-By: Claude Code <VERSION> / Claude <MODEL> <noreply@anthropic.com>`
+## Commit messages
 
 Write all commit messages to `.git-meta/COMMIT_MSG` and use `git commit -F .git-meta/COMMIT_MSG`.
 
