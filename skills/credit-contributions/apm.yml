@@ -1,5 +1,5 @@
 name: credit-contributions
-version: "0.1.0"
+version: "0.1.1"
 description: "Record CRediT author roles for a paper and render its LaTeX byline"
 author: Yaroslav Halchenko
 license: MIT AND CC-BY-4.0

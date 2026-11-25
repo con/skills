@@ -1,3 +1,4 @@
+# Versions follow tox.ini ([testenv:reuse] and [testenv:validate]); update them together.
 repos:
   - repo: https://github.com/fsfe/reuse-tool
     rev: v6.3.0
