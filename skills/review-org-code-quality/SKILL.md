@@ -21,9 +21,9 @@ pass. It expects the shared `code-quality-report-conventions` skill
 installed alongside, the `code-quality-review-<language>` guide for each
 language the repositories use, and `review-repo-code-quality` itself: its
 table lists the guides, its Step 1 defines the **static** mark and the
-language detection Phases 1–2 use, and Phase 4 runs it in full (with APM,
-install each as its own package; in a `con/skills` checkout they are
-sibling directories). Three things are delegated rather than repeated
+language detection Phases 1–2 use, and Phase 4 runs it in full (APM
+installs them as this skill's dependencies; in a `con/skills` checkout
+they are sibling directories). Three things are delegated rather than repeated
 here:
 
 - **Depth reviews (Phase 4)** run `review-repo-code-quality` *in full*, one

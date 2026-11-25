@@ -1,2 +1,13 @@
 name: review-repo-code-quality
 version: "0.3.0"
+dependencies:
+  apm:
+    - path: ../code-quality-report-conventions
+    - path: ../analyze-duplicates
+    - path: ../code-quality-review-python
+    - path: ../code-quality-review-ts
+    - path: ../code-quality-review-go
+    - path: ../code-quality-review-rust
+    - path: ../code-quality-review-haskell
+    - path: ../code-quality-review-shell
+    - path: ../code-quality-review-awk

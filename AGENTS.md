@@ -137,8 +137,10 @@ Keep operational instructions self-contained in each skill; this convention prov
 
 ### Skill versions
 
-Every skill is its own APM package: `skills/<name>/apm.yml` declares only its
-`name` (the directory name) and `version: "MAJOR.MINOR.PATCH"`. That
+Every skill is its own APM package: `skills/<name>/apm.yml` declares its
+`name` (the directory name), its `version: "MAJOR.MINOR.PATCH"`, and the
+sibling skills its procedure uses as `dependencies`
+(`apm: [{path: ../<skill>}]`), which APM installs with it. That
 `version` is the one APM reads and records for a consumer, in
 `apm.lock.yaml` and `apm deps list`; APM does not
 read a `SKILL.md` frontmatter `version:` (as of `apm-cli` 0.31 it takes only
@@ -147,7 +149,8 @@ report layout, scoring, or bundled files bumps its `apm.yml` version in the
 same commit: MINOR for a changed or added step or section, PATCH for a
 clarification that changes nothing a run does, MAJOR when earlier reports can
 no longer be compared with new ones or a consumer must change how it uses the
-skill. Typo and pure wording fixes do not bump. Counting starts at the first
+skill. Adding or removing a dependency is a PATCH bump. Typo and pure
+wording fixes do not bump. Counting starts at the first
 merge: a skill stays at its initial version (`0.1.0`) while its introducing
 pull request is still open. The per-skill `apm.yml` versions start with the
 pull request that introduced them; changes made in that pull request did not

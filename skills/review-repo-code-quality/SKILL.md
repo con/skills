@@ -40,12 +40,13 @@ idiom for a closed set of values and a Currency group), **Not findings**
 **Verification** (the commands that show a change preserved behavior).
 To add a language, add a sibling `code-quality-review-<language>` skill
 (`user-invocable: false`, `allowed-tools: Read`, its own `apm.yml`) with
-those sections, a row in this table, and a row in the repository's
-README. Install the guides for the languages you review together with
-this skill, each skill as its own APM package, for example:
+those sections, a row in this table, a row in the repository's README,
+and an entry under `dependencies` in this skill's `apm.yml`. APM installs
+those dependencies with this skill: the guides, the report conventions,
+and `analyze-duplicates`:
 
 ```console
-apm install con/skills/skills/code-quality-report-conventions#<commit> con/skills/skills/review-repo-code-quality#<commit> con/skills/skills/analyze-duplicates#<commit> con/skills/skills/code-quality-review-python#<commit> con/skills/skills/code-quality-review-shell#<commit> --target agent-skills
+apm install con/skills/skills/review-repo-code-quality#<commit> --target agent-skills
 ```
 
 Shared rules — where the report goes, the provenance stamp that records

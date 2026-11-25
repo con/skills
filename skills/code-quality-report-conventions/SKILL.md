@@ -9,13 +9,13 @@ user-invocable: false
 
 This skill's payload is [`report-conventions.md`](report-conventions.md),
 that the review skills in this collection read instead of each repeating
-it. It is packaged as its own skill so that it can be installed, pinned,
-and versioned on its own. Install it with the review skills and the
-`code-quality-review-<language>` guides they read, one for each language
-reviewed (`review-repo-code-quality` lists them):
+it. It is packaged as its own skill so that it can be pinned and
+versioned on its own. The review skills list it under `dependencies` in
+their `apm.yml`, so APM installs it with them, as it does the
+`code-quality-review-<language>` guides:
 
 ```console
-apm install con/skills/skills/code-quality-report-conventions#<commit> con/skills/skills/review-repo-code-quality#<commit> [con/skills/skills/review-org-code-quality#<commit>] con/skills/skills/code-quality-review-<language>#<commit> …
+apm install con/skills/skills/review-repo-code-quality#<commit> [con/skills/skills/review-org-code-quality#<commit>] --target agent-skills
 ```
 
 A skill that depends on it says so in its `SKILL.md` and reads
