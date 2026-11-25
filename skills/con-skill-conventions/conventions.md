@@ -40,7 +40,8 @@ Check, in this order, and use the first one that exists:
 
 If a template is found:
 
-- **Use it as the skeleton** for the PR body. Preserve its section
+- **Use it as the skeleton** for the PR body, and fold the skill's
+  default body into its sections. Preserve its section
   headings (often `Title ----` underlined, or `## Heading`), reproduce
   any prose under each heading from the template (the placeholder
   text in `<!-- ... -->` HTML comments is guidance — read it, then

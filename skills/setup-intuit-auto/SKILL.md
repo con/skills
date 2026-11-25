@@ -632,7 +632,6 @@ Commit in logical chunks (one concern per commit):
 ### 7.2 PR Body Template
 
 Before drafting the PR body, follow `../con-skill-conventions/conventions.md`, "Respect upstream PR conventions when preparing a pull request": the target project's PR template, contribution guide, and what to report.
-If the project has a template, fold the body below into its sections.
 
 Write to `.git-meta/PR_BODY.md`:
 

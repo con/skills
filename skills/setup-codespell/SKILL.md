@@ -1366,10 +1366,6 @@ For a codespell PR, a template's checkboxes typically come out as:
 
 ### Prepare PR Message
 
-If a template exists, the structure below is just the *content* to fold into
-that template's sections. Do NOT overwrite the template's headings with
-this default structure.
-
 Write the PR description to `.git/pr-description.md` (**NOT** `.git/prospective-PR.md`):
 
 **IMPORTANT**: Do NOT include the PR title in the body text - it will be added automatically by `gh pr create --title`.

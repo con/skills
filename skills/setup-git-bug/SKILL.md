@@ -388,9 +388,6 @@ Before drafting the PR body, follow `../con-skill-conventions/conventions.md`, "
 
 ### Write PR description
 
-If a template was found, fold the content below into the template's
-sections rather than overwriting its headings.
-
 Save to `.git/PR_BODY.md`:
 
 ```markdown
