@@ -49,7 +49,7 @@ Use the repository's existing checks.
 In `con/skills`, run:
 
 ```console
-tox -e validate,apm,security-static,security-deps
+tox -e validate,apm,reuse,security-static,security-deps
 ```
 
 The package check must install each skill as its own package into a disposable consumer, verify all selected skills and their declared dependencies, bundled resources, and the versions recorded in the lock, restore a fresh disposable consumer from the same manifest/lock with `apm install --frozen`, and run `apm audit --ci`.

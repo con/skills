@@ -26,8 +26,10 @@ Every skill's ``apm.yml`` (its APM package manifest, beside SKILL.md):
         ``version`` is a ``MAJOR.MINOR.PATCH`` string, ``description`` is
         one line of at most 100 characters that differs from the SKILL.md
         ``description``, ``author`` is a non-empty string, ``license`` is
-        ``MIT``, ``type`` is ``skill``, and any ``dependencies`` are
-        ``apm: [{path: ../<sibling skill>}]`` entries naming other skills here
+        a non-empty string (``ci/check_reuse.py`` checks that it is an SPDX
+        expression matching REUSE), ``type`` is ``skill``, and any
+        ``dependencies`` are ``apm: [{path: ../<sibling skill>}]`` entries
+        naming other skills here
   E011  SKILL.md frontmatter has no ``version:``, ``author:`` or
         ``license:`` (nor under ``metadata:``); they live only in ``apm.yml``,
         the manifest APM reads and records in consumers' locks
@@ -224,8 +226,9 @@ def check_apm_manifest(skill_dir: Path, result: Result) -> None:
     author = data.get("author")
     if not (isinstance(author, str) and author.strip()):
         result.error("E010", manifest, "author must name the skill's significant contributors")
-    if data.get("license") != "MIT":
-        result.error("E010", manifest, f"license must be MIT (see LICENSE), got {data.get('license')!r}")
+    license_ = data.get("license")
+    if not (isinstance(license_, str) and license_.strip()):
+        result.error("E010", manifest, f"license must be a non-empty string, got {license_!r}")
     if data.get("type") != "skill":
         result.error("E010", manifest, f"type must be skill, got {data.get('type')!r}")
     check_manifest_dependencies(skill_dir, data.get("dependencies"), manifest, result)

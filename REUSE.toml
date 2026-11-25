@@ -1,0 +1,29 @@
+version = 1
+
+# Everything this collection writes is MIT. "closest" lets a file's own
+# SPDX header (e.g. ci/validate_skills.py) speak for that file instead.
+[[annotations]]
+path = "**"
+precedence = "closest"
+SPDX-FileCopyrightText = "2026 Center for Open Neuroscience"
+SPDX-License-Identifier = "MIT"
+
+# These skills' examples contain literal copyright and SPDX lines, which are not their own.
+[[annotations]]
+path = ["skills/setup-codespell/SKILL.md", "skills/setup-reuse-compliance/SKILL.md"]
+precedence = "override"
+SPDX-FileCopyrightText = "2026 Center for Open Neuroscience"
+SPDX-License-Identifier = "MIT"
+
+# The CRediT role names and definitions are NISO's, published under CC BY 4.0
+# (https://credit.niso.org/); the rest of the file is this collection's.
+# "override", because REUSE would read the file's CC BY notice ("© NISO, ...")
+# as its only copyright line.
+[[annotations]]
+path = "skills/credit-contributions/CREDIT_ROLES.md"
+precedence = "override"
+SPDX-FileCopyrightText = [
+    "2026 Center for Open Neuroscience",
+    "National Information Standards Organization (NISO)",
+]
+SPDX-License-Identifier = "MIT AND CC-BY-4.0"
