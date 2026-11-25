@@ -11,9 +11,11 @@ the SKILL.md does not repeat them verbatim.
 
 ---
 
-## Respect upstream PR conventions when preparing a pull request
+## Respect the target project's conventions
 
 These rules reach a running skill only from inside its installed files, so they live in [`skills/con-skill-conventions/conventions.md`](skills/con-skill-conventions/conventions.md), which skills that need them declare as a dependency.
+
+@skills/con-skill-conventions/conventions.md
 
 ---
 
