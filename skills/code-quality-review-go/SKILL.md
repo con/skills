@@ -16,33 +16,33 @@ uses its **static** tools before its depth reviews. The category prefixes
 (`ARC`, `DC`, `DUP`, `CON`, `CL`, `NV`) and the **static** / **consent**
 marks are defined in `review-repo-code-quality`.
 
+It is written for single-module command-line tools, small services, and
+data-transfer utilities, built with the standard toolchain and tested with
+`go test`. Protobuf and gRPC code generation, Kubernetes controllers,
+cgo-heavy code, and multi-module workspaces are left out: check their
+conventions before reporting there.
+
 ## Recognize
 
 `*.go` files, with every `go.mod`, `go.sum`, and `go.work`. Out of scope:
-`vendor/`, the fixtures in `testdata/`, and generated files — those with
-a line matching `^// Code generated .* DO NOT EDIT\.$` before the
-`package` clause, often below a license header or a `//go:build` line
+`vendor/`, `testdata/`, and generated files — those with a line matching
+`^// Code generated .* DO NOT EDIT\.$` before the `package` clause
 (`git -C <checkout> grep -lE '^// Code generated .* DO NOT EDIT\.$' -- '*.go'`
 lists them).
 
 ## Project rules
 
-Read each `go.mod` (the `module` path; the `go` line, which is the
-minimum language version; `toolchain`; `require`, `replace`, `exclude`,
-`retract`; `tool` directives), `go.work`, the golangci-lint configuration
-(`.golangci.yml`, `.golangci.yaml`, `.golangci.toml`, `.golangci.json`;
-version 2 files start with `version: "2"` and differ from version 1),
+Read each `go.mod` (the `module` path, the `go` line, `toolchain`,
+`require`, `replace`, and `tool` directives), `go.work`, the golangci-lint
+configuration (`.golangci.yml`, `.yaml`, `.toml`, or `.json`; version 2
+files start with `version: "2"` and differ from version 1),
 `staticcheck.conf`, the task runner (`Makefile`, `Taskfile.yml`,
 `magefile.go`), `.goreleaser.yaml`, `//go:generate` lines, and build
 constraints (`//go:build` lines, and `_<os>` / `_<arch>` file-name
 suffixes). `magefile.go` is code: read it as text.
 
-The `go` line bounds what may be proposed: generics need 1.18; the `min`
-and `max` built-ins and the `slices`, `maps`, and `log/slog` packages
-need 1.21; per-iteration loop variables and `range` over an integer need
-1.22; range-over-func iterators, and with them `maps.Keys`, `maps.Values`,
-`slices.Collect`, and `slices.Sorted`, need 1.23; `tool` directives need
-1.24.
+The `go` line bounds what may be proposed; each check below names the
+version its fix needs.
 
 ## Tools
 
@@ -55,12 +55,11 @@ consent. Run them from the checkout with `GOTOOLCHAIN=local`, so that a
 newer `go` line fails instead of downloading a toolchain (a review never
 allows that download). Leave `-mod` at its default: `readonly` without
 a `vendor/` directory (`go.mod` and `go.sum` are not written), and
-`vendor` with one, which is also what CI builds.
+`vendor` with one.
 
-`./...` stops at a nested `go.mod`, even under a `go.work`. List the
-modules (`git ls-files '*go.mod'`, leaving out `vendor/` and
-`testdata/`), run each command once per module directory, and name the
-modules covered in Method & limits.
+`./...` stops at a nested `go.mod`, even under a `go.work`: run each
+command once per module that `git ls-files '*go.mod'` lists outside
+`vendor/` and `testdata/`, and name the modules in Method & limits.
 
 | Sweep | Tool | Mark | Command |
 |---|---|---|---|
@@ -69,7 +68,7 @@ modules covered in Method & limits.
 | Dead code: unused unexported code | `staticcheck` (`U1000`) | consent | `staticcheck -checks U1000 ./...` |
 | Dead code: unreachable from `main` | `deadcode` | consent | `deadcode -test ./...` |
 | Idiom drift | `go vet`, `staticcheck` | consent | `go vet ./...`; `staticcheck ./...` |
-| Idiom drift | the project's golangci-lint, plus `unparam`, `dupl`, `goconst`, `gocognit`, `exhaustive`, `errorlint`, `copyloopvar`, `revive` | consent | the project's configuration with those linters enabled and the output filters lifted (`--max-issues-per-linter=0 --max-same-issues=0 --uniq-by-line=false`; by default it shows at most 3 issues with the same text, 50 per linter, and one per line), and with `--new=false`, `--new-from-rev=`, `--new-from-merge-base=`, or `--new-from-patch=` where the configuration limits the run to recent changes; the flags that choose linters differ between golangci-lint versions 1 and 2 |
+| Idiom drift | the project's golangci-lint, plus `unparam`, `dupl`, `goconst`, `gocognit`, `exhaustive`, `errorlint`, `copyloopvar`, `revive` | consent | the project's configuration with those linters enabled and the output filters lifted (`--max-issues-per-linter=0 --max-same-issues=0 --uniq-by-line=false`), and with `--new=false`, `--new-from-rev=`, `--new-from-merge-base=`, or `--new-from-patch=` where the configuration limits the run to recent changes |
 | Import graph | `go list` | consent | `go list -f '{{.ImportPath}}: {{join .Imports " "}}' ./...` |
 | Import graph | the `import` blocks and `go.mod`, read as text | static | `grep -n` the `import` blocks of each package's files, with the module path from `go.mod` to tell internal imports from external ones |
 | Modules | `go mod tidy -diff` (Go 1.23 or later) | consent | prints what `go mod tidy` would change, without writing |
@@ -81,7 +80,6 @@ modules covered in Method & limits.
 pass gocyclo `-ignore`.
 
 ## Checks
-
 
 **Closed sets and constants**
 
@@ -97,31 +95,24 @@ pass gocyclo `-ignore`.
     (parsing, decoding, flags); removing it is `NV`.
   - Typing the constants changes the dynamic type of every value that
     reaches an interface: an untyped constant becomes a `string` there,
-    a typed one stays a `Mode` (and so do retyped fields and variables).
+    a typed one stays a `Mode` (as do retyped fields and variables).
     Comparisons with interface values (`raw["mode"] == ModeFast` on a
     `map[string]any` from JSON or YAML), `case string:` in type
-    switches, `v.(string)` (which then panics), plain-string lookups in
-    `context.Value` or `map[any]…`, `reflect.TypeOf` and
-    `reflect.DeepEqual` (testify's `assert.Equal`), and `%T` change
-    silently, and `gob` fails on an interface value holding the new type
-    until it is registered (`gob: type not registered for interface`);
-    `%v`, `%s`, and reflection by kind (`encoding/json`, `database/sql`
-    arguments) do not change. Find each
-    such place first, and convert there with `string(ModeFast)` as part
-    of the change, or rate it `NV`.
+    switches, `v.(string)` (which then panics), `reflect.DeepEqual`
+    (testify's `assert.Equal`), and `%T` change silently; `%v`, `%s`,
+    and `encoding/json` do not. Convert with `string(ModeFast)` at each
+    such place as part of the change, or rate it `NV`.
   - Keep a string set a string type. An `iota` integer type, with a
-    `String` method from `stringer`, suits values that are never
-    persisted or sent; turning a string set into one changes its JSON,
-    database, and flag form (`NV`).
-  - `iota` values depend on position: append new members at the end,
-    never insert or reorder, and reserve the zero value for an unknown
-    member.
+    `String` method from `stringer`, suits values that are never persisted
+    or sent; turning a string set into one changes its JSON and flag form
+    (`NV`). `iota` values depend on position: append new members at the
+    end, never reorder, and reserve the zero value for an unknown member.
   - Changing the type of an exported constant or parameter is an API
     change for importers (`NV` in a library), and adding `String`,
     `MarshalText`, or `MarshalJSON` changes formatting and encoding.
 - **The same literal in several places** (`ARC` across packages, found
-  by searching for the literal; `CON` inside one package, where `goconst`
-  finds it, since it checks one package at a time): one named constant.
+  by searching; `CON` within one package, where `goconst`, which checks
+  one package at a time, finds it): one named constant.
 
 **Packages and structure**
 
@@ -139,13 +130,10 @@ pass gocyclo `-ignore`.
 - `context.Context` not passed as the first parameter, stored in a struct,
   or replaced by `context.Background()` deep in a call chain (`ARC`; `NV`
   when the fix changes cancellation).
-- In a library, the fixes above change the API: removing or moving an
-  exported interface, changing an exported function's result from an
-  interface to a concrete type, and putting `ctx` first in an exported
-  signature are incompatible changes `apidiff` lists; moving `init` work
-  into a setup call keeps the API compatible but changes behavior for
-  every importer that does not call it. They are `NV` unless the old
-  forms stay as deprecated wrappers, or `init` keeps calling the setup.
+- In a library, `apidiff` lists which of these fixes break the API, and
+  `init` work moved into a setup call changes behavior for every importer
+  that does not call it: `NV` unless the old forms stay as deprecated
+  wrappers, or `init` keeps calling the setup.
 
 **Errors**
 
@@ -164,34 +152,32 @@ pass gocyclo `-ignore`.
 - hand-written `contains`, `min`, `max`, and sorting helpers that `slices`
   and the built-ins replace (1.21 or later), and map-key helpers that
   `slices.Sorted(maps.Keys(m))` or `slices.Collect(maps.Keys(m))` replace
-  (1.23 or later). `CL` only where no float operand can be NaN or
-  negative zero, the original sort was not stable, and no caller can tell
-  an empty result from nil: the built-in `min` and `max` return NaN when
-  any operand is NaN and order -0 below 0, which a hand-written comparison
-  does not, `slices.Sort` and `slices.SortFunc` are not stable
-  (`slices.SortStableFunc` replaces a stable sort), and `slices.Collect`
+  (1.23 or later). `CL` only where the result cannot change, else `NV`:
+  the built-in `min` and `max` return NaN when any operand is NaN and
+  order -0 below 0, which a hand-written comparison does not;
+  `slices.Sort` and `slices.SortFunc` are not stable
+  (`slices.SortStableFunc` replaces a stable sort); and `slices.Collect`
   and `slices.Sorted` return nil for an empty map where a helper built
   with `make` returned an empty slice (`encoding/json` then writes `null`,
-  not `[]`); otherwise `NV`;
+  not `[]`);
 - functions copied once per type that generics can merge (1.18 or later)
   — `CON`;
 - names against Go conventions: package-name stutter
   (`config.ConfigLoader`), `Get` prefixes on getters, `Id` for `ID`.
   Renaming an exported name is an API change (`NV` in a library), and in
   any module a rename is `NV` when something reaches the name at run
-  time: an untagged field in `encoding/json`, `xml`, or `gob` output (the
-  key changes), a `text/template` or `html/template` reference such as
-  `{{.Id}}` (it fails when the template runs, not at build time), a
-  reflection-based configuration or ORM mapping, or an interface
-  assertion on the method name. Search templates, struct tags, and type
-  assertions before rating a rename `CL`;
+  time: an untagged field in `encoding/json` or `gob` output (the key
+  changes), a template reference such as `{{.Id}}` (it fails when the
+  template runs, not at build time), a reflection-based configuration
+  mapping, or an interface assertion on the method name; search for each
+  before rating a rename `CL`;
 - goroutines that nothing can stop or wait for (`NV`).
 
 **Modules**
 
 - requirements that `go mod tidy -diff` would drop, and a `tools.go` file
-  of blank imports kept after the `go` line allows `tool` directives
-  (`DC`, `CON`);
+  of blank imports kept after the `go` line reaches 1.24, which allows
+  `tool` directives (`DC`, `CON`);
 - `replace` directives left in a module that others import (`NV`):
   importers ignore them, but removing one changes which code this
   repository's own builds and tests use.
@@ -208,8 +194,7 @@ live sources each item names)
   of deprecated identifiers. For the standard library it reports only
   those deprecated as of the module's `go` line, such as `io/ioutil` once
   the line is 1.19 or later; below that, search for such imports directly
-  (their `io` and `os` replacements need 1.16). Deprecations in
-  dependencies are reported at any `go` line.
+  (their `io` and `os` replacements need 1.16).
 - **Tool formats.** A golangci-lint configuration still in the version 1
   format (`golangci-lint migrate` converts it).
 
@@ -218,25 +203,20 @@ live sources each item names)
 - Exported identifiers in a module that others import: having no caller
   inside the repository does not make them dead. `deadcode` reports them
   and `U1000` does not; removing one is `NV`.
-- Code behind build constraints (`//go:build`, `_linux.go`,
-  `_windows.go`, an `integration` tag): analyze with the tags CI uses.
+- Code behind build constraints (`//go:build`, `_linux.go`, an
+  `integration` tag): analyze with the tags CI uses.
 - Methods that satisfy an interface implicitly (`String`, `Error`,
-  `MarshalJSON`, `ServeHTTP`, `sort.Interface`), functions passed as
-  values, and struct fields used only through reflection (`encoding/json`
-  tags, ORM mappings, templates).
+  `MarshalJSON`, `ServeHTTP`), functions passed as values, and struct
+  fields used only through reflection (`encoding/json` tags, templates).
 - `init` functions; blank imports kept for their side effects
   (`import _ "…"`: database drivers, `embed`, `net/http/pprof`);
-  `//go:embed` variables; `//go:linkname` and cgo `//export` functions.
-- `TestMain`, `Example…` functions (documentation, and tests when they
-  carry an `// Output:` comment), helpers in `_test.go` files, and
-  `testdata/`.
-- Generated code: change the generator, not its output.
+  `//go:embed` variables.
+- `TestMain`, `Example…` functions, and helpers in `_test.go` files.
 
 ## Verification
 
 - **Baseline and after each group** (consent, with the environment from
-  Tools, once per module): the project's entry point (a Makefile target,
-  the CI step), else
+  Tools, once per module): the project's entry point, else
   `go build -o /dev/null ./... && go vet ./... && go test ./...` with the
   flags and build tags CI uses (`-race`, `-tags integration`, …);
   `-o /dev/null` keeps a single `main` package from writing its binary
@@ -245,4 +225,4 @@ live sources each item names)
   nothing.
 - **Modules** (consent): `go mod tidy -diff` prints nothing.
 - **Public API** (consent): `gorelease -base=<last release>` or `apidiff`
-  (both from `golang.org/x/exp/cmd`) lists incompatible changes.
+  lists incompatible changes.
