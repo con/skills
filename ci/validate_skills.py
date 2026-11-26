@@ -21,6 +21,19 @@ Every SKILL.md:
   E009  ``SKILL_DIR/<path>`` must name a file bundled with the skill, and a
         skill using it must define ``SKILL_DIR`` with the shared sentence
 
+Every skill's ``apm.yml`` (its APM package manifest, beside SKILL.md):
+  E010  Present, a YAML mapping whose ``name`` equals the directory name,
+        ``version`` is a ``MAJOR.MINOR.PATCH`` string, ``description`` is
+        one line of at most 100 characters that differs from the SKILL.md
+        ``description``, ``author`` is a non-empty string, ``license`` is
+        a non-empty string (``ci/check_reuse.py`` checks that it is an SPDX
+        expression matching REUSE), ``type`` is ``skill``, and any
+        ``dependencies`` are ``apm: [{path: ../<sibling skill>}]`` entries
+        naming other skills here
+  E011  SKILL.md frontmatter has no ``version:``, ``author:`` or
+        ``license:`` (nor under ``metadata:``); they live only in ``apm.yml``,
+        the manifest APM reads and records in consumers' locks
+
 Every *.py bundled alongside a SKILL.md:
   E005  Python syntax error (py_compile)
   E006  subprocess call with shell=True and a non-literal first argument
@@ -31,7 +44,9 @@ checked when no skill directories are given:
   E012  The file exists; plugin names are unique strings starting with
         ``con-``; each plugin lists skills as ``./skills/<name>`` of
         published skills; every published skill is in exactly one plugin;
-        ``dependencies`` name other plugins of this marketplace
+        ``dependencies`` name other plugins of this marketplace, among them
+        every plugin holding a skill that one of its skills' ``apm.yml``
+        depends on
 
 Exit codes: 0 = all clear, 1 = one or more errors, 2 = usage/internal error.
 Warnings never affect the exit code.
@@ -78,6 +93,9 @@ _SECRET_ASSIGN = re.compile(
 # Bundled-file references, resolved against the loaded skill's own directory
 _SKILL_DIR_REF = re.compile(r'\bSKILL_DIR/([\w./-]*\w)')
 SKILL_DIR_DEFINITION = '`SKILL_DIR` is the absolute path of the directory holding this SKILL.md'
+
+# A skill's package version: MAJOR.MINOR.PATCH
+_SEMVER = re.compile(r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)')
 
 # subprocess(..., shell=True) where the first arg is not a plain string literal
 _SHELL_TRUE = re.compile(r'shell\s*=\s*True')
@@ -182,6 +200,79 @@ def check_skill_md(skill_md: Path, result: Result) -> None:
             result.error("E009", skill_md, f"SKILL_DIR/{ref} is not a file bundled with this skill", i)
 
 
+def check_apm_manifest(skill_dir: Path, result: Result) -> None:
+    """E010/E011: the skill's own APM manifest is the only place its version lives."""
+    manifest = skill_dir / "apm.yml"
+    if not manifest.is_file():
+        result.error("E010", manifest, "missing; every skill is its own APM package (see AGENTS.md)")
+        return
+    try:
+        data = yaml.safe_load(manifest.read_text(encoding="utf-8"))
+    except yaml.YAMLError as exc:
+        result.error("E010", manifest, f"invalid YAML: {exc}")
+        return
+    if not isinstance(data, dict):
+        result.error("E010", manifest, "must be a YAML mapping")
+        return
+    if data.get("name") != skill_dir.name:
+        result.error("E010", manifest, "name must equal the skill directory name")
+    version = data.get("version")
+    if not (isinstance(version, str) and _SEMVER.fullmatch(version)):
+        result.error("E010", manifest, f"version must be a MAJOR.MINOR.PATCH string, got {version!r}")
+
+    fm, _ = _parse_frontmatter((skill_dir / "SKILL.md").read_text(encoding="utf-8"))
+    fm = fm if isinstance(fm, dict) else {}
+
+    # apm.yml description is the human one-liner (apm view, apm deps info);
+    # the SKILL.md one tells the agent when to trigger. APM never merges them.
+    description = data.get("description")
+    if not (isinstance(description, str) and description.strip()):
+        result.error("E010", manifest, "description must be a non-empty one-line summary for people")
+    elif "\n" in description.strip() or len(description) > 100:
+        result.error("E010", manifest, "description must be one line of at most 100 characters")
+    elif description.strip() == str(fm.get("description", "")).strip():
+        result.error("E010", manifest, "description repeats the SKILL.md description; "
+                     "give people a short summary and leave triggering to SKILL.md")
+    author = data.get("author")
+    if not (isinstance(author, str) and author.strip()):
+        result.error("E010", manifest, "author must name the skill's significant contributors")
+    license_ = data.get("license")
+    if not (isinstance(license_, str) and license_.strip()):
+        result.error("E010", manifest, f"license must be a non-empty string, got {license_!r}")
+    if data.get("type") != "skill":
+        result.error("E010", manifest, f"type must be skill, got {data.get('type')!r}")
+    check_manifest_dependencies(skill_dir, data.get("dependencies"), manifest, result)
+
+    meta = fm.get("metadata") if isinstance(fm.get("metadata"), dict) else {}
+    for key in ("version", "author", "license"):
+        if key in fm or key in meta:
+            result.error("E011", skill_dir / "SKILL.md",
+                         f"frontmatter must not carry {key}:; it lives only in apm.yml")
+
+
+def check_manifest_dependencies(skill_dir: Path, deps: object, manifest: Path, result: Result) -> None:
+    """E010: dependencies may only name sibling skills, as same-repo relative paths.
+
+    APM resolves ``path: ../<sibling>`` in a Git-installed skill to the same
+    repository and commit, so the dependency is installed with the skill.
+    """
+    if deps is None:
+        return
+    if not (isinstance(deps, dict) and set(deps) == {"apm"} and isinstance(deps["apm"], list)):
+        result.error("E010", manifest, "dependencies must be a mapping with only an apm: list")
+        return
+    seen: set[str] = set()
+    for entry in deps["apm"]:
+        path = entry.get("path") if isinstance(entry, dict) and set(entry) == {"path"} else None
+        if isinstance(path, str) and path in seen:
+            result.error("E010", manifest, f"dependency {path!r} is listed twice")
+        seen.add(str(path))
+        sibling = skill_dir.parent / str(path)[3:] if isinstance(path, str) and path.startswith("../") else None
+        if (sibling is None or "/" in str(path)[3:] or sibling == skill_dir
+                or not (sibling / "SKILL.md").is_file()):
+            result.error("E010", manifest, f"dependency {entry!r} must be {{path: ../<another skill>}}")
+
+
 def check_python_file(py_path: Path, result: Result) -> None:
     # E005 — syntax
     try:
@@ -247,6 +338,7 @@ def validate_skill(skill_dir: Path) -> Result:
         return result
 
     check_skill_md(skill_md, result)
+    check_apm_manifest(skill_dir, result)
 
     for py_path in sorted(skill_dir.rglob("*.py")):
         check_python_file(py_path, result)
@@ -265,6 +357,18 @@ def check_collection_layout(repo_root: Path) -> Result:
 MARKETPLACE = Path(".claude-plugin") / "marketplace.json"
 
 
+def sibling_dependencies(skill_dir: Path) -> set[str]:
+    """The sibling skills a skill's apm.yml depends on (E010 reports a malformed one)."""
+    try:
+        data = yaml.safe_load((skill_dir / "apm.yml").read_text(encoding="utf-8"))
+        entries = data["dependencies"]["apm"]
+        return {entry["path"][3:] for entry in entries
+                if isinstance(entry, dict) and isinstance(entry.get("path"), str)
+                and entry["path"].startswith("../") and "/" not in entry["path"][3:]}
+    except (OSError, yaml.YAMLError, KeyError, TypeError):
+        return set()
+
+
 def check_marketplace(repo_root: Path) -> Result:
     """Every published skill belongs to exactly one Claude Code plugin."""
     result = Result()
@@ -272,7 +376,7 @@ def check_marketplace(repo_root: Path) -> Result:
     try:
         plugins = json.loads(path.read_text(encoding="utf-8"))["plugins"]
         names = [plugin["name"] for plugin in plugins]
-    except (OSError, ValueError, KeyError, TypeError) as exc:
+    except (OSError, ValueError, KeyError, TypeError, RecursionError) as exc:
         result.error("E012", path, f"cannot read the plugin names: {exc!r}")
         return result
     if not all(isinstance(name, str) for name in names):
@@ -306,6 +410,20 @@ def check_marketplace(repo_root: Path) -> Result:
             where = ", ".join(repr(n) for n in plugin_names) or "none"
             result.error("E012", path, f"skill {skill!r} is in {len(plugin_names)} plugins "
                          f"({where}); put it in exactly one")
+    # A plugin install brings only its own skills and its dependencies' plugins,
+    # so a skill's apm.yml dependency in another plugin needs that plugin listed.
+    listed = {plugin["name"]: {d for d in plugin.get("dependencies", []) if isinstance(d, str)}
+              for plugin in plugins if isinstance(plugin.get("dependencies", []), list)}
+    for skill, plugin_names in owners.items():
+        if len(plugin_names) != 1:
+            continue
+        home = plugin_names[0]
+        for needed in sorted(sibling_dependencies(repo_root / "skills" / skill)):
+            needed_home = owners.get(needed, [])
+            if len(needed_home) == 1 and needed_home[0] not in {home} | listed.get(home, set()):
+                result.error("E012", path, f"plugin {home!r} lists {skill!r}, which depends on "
+                             f"{needed!r} in {needed_home[0]!r}: add {needed_home[0]!r} to "
+                             f"{home!r}'s dependencies")
     return result
 
 

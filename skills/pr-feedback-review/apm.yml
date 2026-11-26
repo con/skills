@@ -1,0 +1,6 @@
+name: pr-feedback-review
+version: "0.1.0"
+description: "Sort a pull request's review comments into what to address or dismiss"
+author: Yaroslav Halchenko
+license: MIT
+type: skill

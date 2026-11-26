@@ -10,12 +10,15 @@ from validate_skills import MARKETPLACE, check_marketplace
 
 
 class MarketplaceTests(unittest.TestCase):
-    def check(self, plugins, skills=('a', 'b')):
+    def check(self, plugins, skills=('a', 'b'), depends=None):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             for skill in skills:
                 (root / 'skills' / skill).mkdir(parents=True)
                 (root / 'skills' / skill / 'SKILL.md').write_text('')
+            for skill, needed in (depends or {}).items():
+                (root / 'skills' / skill / 'apm.yml').write_text(json.dumps(
+                    {'name': skill, 'dependencies': {'apm': [{'path': f'../{n}'} for n in needed]}}))
             if plugins is not None:
                 (root / MARKETPLACE).parent.mkdir()
                 text = plugins if isinstance(plugins, str) else json.dumps({'plugins': plugins})
@@ -50,6 +53,16 @@ class MarketplaceTests(unittest.TestCase):
             with self.subTest(plugins=plugins):
                 errors = self.check(plugins)
                 self.assertTrue(any(message in e for e in errors), errors)
+
+    def test_apm_dependencies_across_plugins(self):
+        split = [{'name': 'con-one', 'skills': ['./skills/a']},
+                 {'name': 'con-two', 'skills': ['./skills/b']}]
+        errors = self.check(split, depends={'b': ['a']})
+        self.assertTrue(any("add 'con-one' to 'con-two'" in e for e in errors), errors)
+        split[1]['dependencies'] = ['con-one']
+        self.assertEqual(self.check(split, depends={'b': ['a']}), [])
+        together = [{'name': 'con-one', 'skills': ['./skills/a', './skills/b']}]
+        self.assertEqual(self.check(together, depends={'b': ['a']}), [])
 
     def test_directory(self):
         with tempfile.TemporaryDirectory() as directory:

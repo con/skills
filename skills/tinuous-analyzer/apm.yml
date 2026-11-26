@@ -1,0 +1,6 @@
+name: tinuous-analyzer
+version: "0.1.0"
+description: "Find when a test began failing in con/tinuous CI logs, and what changed"
+author: Yaroslav Halchenko
+license: MIT
+type: skill

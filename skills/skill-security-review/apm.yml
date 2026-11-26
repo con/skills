@@ -1,0 +1,6 @@
+name: skill-security-review
+version: "0.1.0"
+description: "Audit a skill directory for prompt injection and unsafe permissions"
+author: Yaroslav Halchenko, John Lee
+license: MIT
+type: skill

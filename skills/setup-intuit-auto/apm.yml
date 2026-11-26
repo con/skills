@@ -1,0 +1,6 @@
+name: setup-intuit-auto
+version: "0.1.0"
+description: "Set up label-driven releases with intuit/auto"
+author: Yaroslav Halchenko
+license: MIT
+type: skill

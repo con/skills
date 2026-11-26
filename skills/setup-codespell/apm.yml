@@ -1,0 +1,6 @@
+name: setup-codespell
+version: "0.1.0"
+description: "Add codespell spell-checking to a project: config, CI, pre-commit, fixes"
+author: Yaroslav Halchenko
+license: MIT
+type: skill

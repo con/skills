@@ -1,0 +1,6 @@
+name: github-project-status
+version: "0.1.0"
+description: "Judge whether a GitHub project is active, in maintenance, or abandoned"
+author: Yaroslav Halchenko
+license: MIT
+type: skill

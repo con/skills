@@ -1,6 +1,5 @@
 ---
 name: review-org-code-quality
-version: 0.2.0
 description: Audit code health across an organization-wide ecosystem of similarly styled, interconnected data/ML/ETL pipelines or repositories. Focuses on systemic risk (template drift, contract fragility, cross-repo duplication, blast radius, bus factor) rather than single-repo code smells, and writes a dated report. Use when asked to review, audit, or assess the health of a set of related repositories or pipelines. For one repository use review-repo-code-quality instead.
 allowed-tools: Bash, Read, Write, Glob, Grep, AskUserQuestion, Agent, Skill
 user-invocable: true
@@ -20,8 +19,8 @@ root cause.
 This skill is the breadth pass; `review-repo-code-quality` is the depth
 pass. It expects the shared `code-quality-report-conventions` skill installed
 alongside, and `review-repo-code-quality` when Phase 4's depth reviews are
-wanted (in APM, select all three; in a `con/skills` checkout they are
-sibling directories). Two things are delegated rather than repeated here:
+wanted (APM installs both as dependencies; in a `con/skills` checkout they
+are sibling directories). Two things are delegated rather than repeated here:
 
 - **Depth reviews (Phase 4)** run `review-repo-code-quality` *in full*, one
   report per repository, on the few repositories the graph and matrix
@@ -161,8 +160,8 @@ Follow `report-conventions.md` §2 with `{reviews dir}` = `code-reviews`
 and `{kind}` = `org-code-quality-review`. A multi-repository review has no single
 natural home, so ask the user where it goes — the organization's utility
 or template repository is the usual answer — and record the choice in
-"Method & limits". The provenance stamp (§1) cites this skill's `name:`
-and `version:` frontmatter and the `con/skills` commit it was installed
+"Method & limits". The provenance stamp (§1) cites this skill's `name:`,
+the `version` in its `apm.yml`, and the `con/skills` commit it was installed
 from.
 
 ## Output template

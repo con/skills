@@ -1,0 +1,9 @@
+name: setup-duplicates-analysis
+version: "0.1.1"
+description: "Make jscpd duplication checks part of a project's workflow and CI"
+author: Yaroslav Halchenko
+license: MIT
+type: skill
+dependencies:
+  apm:
+    - path: ../analyze-duplicates

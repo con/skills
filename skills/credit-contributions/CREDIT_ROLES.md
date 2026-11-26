@@ -31,8 +31,9 @@ hyphen for the en-dash, "and" for "&") and normalises on output.
 | 13 | Writing – original draft | `writing-original-draft` | Preparation, creation and/or presentation of the published work, specifically writing the initial draft (including substantive translation). |
 | 14 | Writing – review & editing | `writing-review-editing` | Preparation, creation and/or presentation of the published work by those from the original research group, specifically critical review, commentary or revision — including pre- or post-publication stages. |
 
-Definitions abridged from the NISO standard. The full URI for each role is
-`https://credit.niso.org/contributor-roles/<URI suffix>/`.
+Role names and definitions © NISO, from <https://credit.niso.org/>, licensed under
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); definitions abridged here.
+The full URI for each role is `https://credit.niso.org/contributor-roles/<URI suffix>/`.
 
 ## Degree of Contribution (Optional)
 

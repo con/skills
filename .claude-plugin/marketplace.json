@@ -101,7 +101,7 @@
         "./skills/credit-contributions",
         "./skills/review-human-prose"
       ],
-      "license": "MIT",
+      "license": "MIT AND CC-BY-4.0",
       "keywords": ["credit", "authorship", "papers", "prose", "documentation"],
       "category": "productivity",
       "homepage": "https://github.com/con/skills",

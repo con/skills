@@ -1,0 +1,6 @@
+name: bot-pr-sweep
+version: "0.7.0"
+description: "Merge passing dependabot and pre-commit-ci pull requests across repositories"
+author: Cody C. Baker
+license: MIT
+type: skill
