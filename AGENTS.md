@@ -137,8 +137,9 @@ Keep operational instructions self-contained in each skill; this convention prov
 
 ### Skill versions
 
-Every skill is its own APM package: `skills/<name>/apm.yml` declares only its
-`name` (the directory name) and `version: "MAJOR.MINOR.PATCH"`. That
+Every skill is its own APM package: `skills/<name>/apm.yml` declares its
+`name` (the directory name) and `version: "MAJOR.MINOR.PATCH"`, plus the
+metadata described under "Skill manifest metadata" below. That
 `version` is the one APM reads and records for a consumer, in
 `apm.lock.yaml` and `apm deps list`; APM does not
 read a `SKILL.md` frontmatter `version:` (as of `apm-cli` 0.31 it takes only
@@ -160,6 +161,43 @@ A skill whose output records which version of the skill produced it (e.g.
 version at run time from the `apm.yml` beside its `SKILL.md`, which APM
 deploys with it.
 
+### Skill manifest metadata
+
+Each `apm.yml` also carries, after `version` (`ci/validate_skills.py` E010
+checks the fields, not their order):
+
+- `description`: one line of at most 100 characters for people, shown by
+  `apm view` and `apm deps info`. It is not the `SKILL.md`
+  `description`, which tells an agent when to use the skill; APM never merges
+  or falls back between the two, so do not copy one into the other.
+- `author`: the people who contributed significantly to this skill, comma
+  separated: its original author and anyone who wrote a substantial share of
+  it. Credit agent-written commits to the person whose pull request they
+  came in. Add a name when someone's contribution becomes substantial.
+- `license`: an SPDX expression naming every license the skill's files carry
+  as REUSE resolves them (`REUSE.toml`, SPDX headers): `MIT`, the
+  collection's license, plus the terms of any third-party material it quotes
+  (`credit-contributions` is `MIT AND CC-BY-4.0` for NISO's CRediT text).
+  APM reads only this string, so `ci/check_reuse.py` (`tox -e reuse`, also a
+  pre-commit hook) fails when it and REUSE disagree. Annotate a new file with
+  other terms in `REUSE.toml` and add its license text under `LICENSES/`.
+- `type: skill`: states explicitly that the package is a skill. apm-cli 0.31
+  validates it but routes by the package's structure, which gives the same
+  result; the field keeps the intent visible to any later tool or
+  distribution mechanism that reads it.
+- `dependencies` (only when needed): sibling skills this skill's procedure
+  runs or requires, as `apm: [{path: ../<skill>}]`. APM installs them with
+  the skill, so a consumer needs no separate selection for them. Declare a
+  sibling the procedure names as its normal path even if it has a fallback;
+  leave out one that is optional by design, such as `suggest-skill-fixes`,
+  so installing it stays the consumer's choice.
+
+Keep these fields out of the `SKILL.md` frontmatter (E011 fails on
+`version:`, `author:` or `license:` there, also under `metadata:`); only
+`name` appears in both, because APM and the agent runtimes each require it.
+Changing this metadata alone (a description, an added author) does not bump
+the version; adding or removing a dependency is a PATCH bump.
+
 ## APM distribution
 
 Track canonical skills in `skills/<name>/`; each directory, with its own
@@ -177,4 +215,4 @@ still on the repository-root form (`git: con/skills` with `skills: [...]`)
 replaces it with one subdirectory dependency per skill on its next pin move.
 Use `author-apm-skills` for APM authoring and maintenance, and
 `install-apm-skills` for metadata-only consumer setup. Keep generated copies
-out of consumer Git history. Run `tox -e validate,apm,security-static,security-deps`.
+out of consumer Git history. Run `tox -e validate,apm,reuse,security-static,security-deps`.

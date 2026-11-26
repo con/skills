@@ -1,2 +1,6 @@
 name: install-apm-skills
-version: "0.1.0"
+version: "0.1.1"
+description: "Install and update pinned skills in a project, tracking metadata only"
+author: John Lee
+license: MIT
+type: skill

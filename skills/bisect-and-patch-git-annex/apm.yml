@@ -1,2 +1,6 @@
 name: bisect-and-patch-git-annex
 version: "0.1.0"
+description: "Bisect git-annex CI regressions, write reproducers, and submit fix PRs"
+author: Yaroslav Halchenko
+license: MIT
+type: skill
