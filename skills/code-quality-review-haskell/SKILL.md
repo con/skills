@@ -128,8 +128,9 @@ Its defaults (weeder 2.11.0) root only `Main.main` and the `Paths_`
 modules, and no exposed module (`root-modules = []`), so a library's
 exports show up as weeds; with the settings above a planted sample showed
 only its dead code. HIE files are specific to the GHC that wrote them
-(weeder exits 2 on a mismatch): build weeder and stan with that GHC (a
-fetch: ask first, as Step 1 says).
+(weeder exits 2 on a mismatch): use weeder and stan built with that GHC.
+A review installs no tool (`review-repo-code-quality` Step 1), so without
+them these checks are not run, and Method & limits says so.
 
 ## Checks
 

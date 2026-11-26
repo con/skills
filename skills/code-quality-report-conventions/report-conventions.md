@@ -61,11 +61,11 @@ disagree, trust the source commit.
   Use `date +%F` for the date. If the repository already has a reviews
   directory under a different name (`docs/annual-reviews/`,
   `docs/healthstatus-review/`, …), keep using it; do not start a second one.
-- **Multi-repository reviews** have no single natural home. Ask the user
-  where to write, offering (a) the organization's utility or template
-  repository, (b) a dedicated reviews repository, or (c) a path they
-  name; the same `docs/{reviews dir}/YYYY-MM-DD-{kind}.md` shape applies
-  there (for example `docs/code-reviews/2026-10-11-org-code-quality-review.md`).
+- **Multi-repository reviews** have no single natural home. Write where
+  the request says; otherwise in the organization's utility or template
+  repository when the request names one; otherwise in the current
+  directory. The same `docs/{reviews dir}/YYYY-MM-DD-{kind}.md` shape
+  applies there (for example `docs/code-reviews/2026-10-11-org-code-quality-review.md`).
   Record the chosen location in the report's "Method & limits" section
   so the next run finds it.
 - **Never overwrite** an existing report. If the dated path exists,
@@ -73,14 +73,15 @@ disagree, trust the source commit.
   report written by the same run is editing, not overwriting.
 - **Security-sensitive findings** — hardcoded credentials, over-broad
   access, unpatched CVEs, internal hosts, secrets in logs — go only to a
-  private location the user names, never into the default path of a
-  public repository. Check visibility first
+  private location the request names, never into the default path of a
+  public repository. Without such a location, leave them out of every
+  report and say in its summary how many were withheld. Check visibility first
   (`gh repo view --json visibility`, or the remote URL and the hosting
   site). Never quote a secret value; cite `file:line` only. Everything
   else may go in the default path. A public report then says, in its
   summary, `N security-sensitive findings withheld; see <location>`,
   so the reader knows the companion exists.
-- **Do not commit or push** unless asked. Tell the user the path.
+- **Do not commit or push** unless the request says to. Report the path.
 
 ## 3. Evidence rules
 

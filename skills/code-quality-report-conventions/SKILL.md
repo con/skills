@@ -16,8 +16,8 @@ guides.
 
 A skill that depends on it says so in its `SKILL.md` and reads
 `../code-quality-report-conventions/report-conventions.md` relative to its own
-directory. If that file is not installed, the calling skill stops and asks
-the user to install `code-quality-report-conventions`; it does not proceed from memory.
+directory. If that file is not installed, the calling skill stops and reports
+that `code-quality-report-conventions` must be installed; it does not proceed from memory.
 
 Bump the version in this skill's `apm.yml` when the report layout, the provenance stamp, or the
 evidence rules change (see `AGENTS.md`, "Skill versions"); the skills that

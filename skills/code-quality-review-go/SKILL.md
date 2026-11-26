@@ -52,8 +52,8 @@ module's dependencies over the network unless the module is vendored,
 and runs cgo preprocessing; and the `go` command switches to, and if
 needed downloads, the toolchain that `go.mod` asks for. All of them need
 consent. Run them from the checkout with `GOTOOLCHAIN=local`, so that a
-newer `go` line fails instead of downloading a toolchain (ask before
-allowing that download). Leave `-mod` at its default: `readonly` without
+newer `go` line fails instead of downloading a toolchain (a review never
+allows that download). Leave `-mod` at its default: `readonly` without
 a `vendor/` directory (`go.mod` and `go.sum` are not written), and
 `vendor` with one, which is also what CI builds.
 

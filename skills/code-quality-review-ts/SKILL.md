@@ -69,8 +69,8 @@ workspace, `<checkout>/packages/<name>/node_modules/.bin/tsc …`), or as
 not use `npx`: plain `npx` installs whatever it does not find without
 asking (for `tsc`, an unrelated package), and `npx --no` still runs,
 without notice, any copy in a parent directory's `node_modules/.bin`,
-npm's global prefix, or its `_npx` cache, whatever the version. Ask
-before fetching a tool the project does not install
+npm's global prefix, or its `_npx` cache, whatever the version. A
+review installs no tool the project does not install
 (`review-repo-code-quality` Step 1); compare each project tool's
 `--version` with the lock file. Given a directory, oxlint skips what
 `.gitignore` lists even with `--no-ignore` (which turns off only

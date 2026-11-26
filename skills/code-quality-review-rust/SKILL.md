@@ -71,7 +71,7 @@ these). The rustup proxies take the toolchain from a `rust-toolchain.toml`
 in the working directory or a parent, downloading a `channel` that is not
 installed and running the binaries a `path` names. So all of these need
 consent: run them in the throwaway checkout with `RUSTUP_AUTO_INSTALL=0`
-(rustup 1.28.1 or later; ask before installing a missing toolchain), with
+(rustup 1.28.1 or later; a review installs no toolchain), with
 `CARGO_TARGET_DIR=<scratch>/target` (builds otherwise write `target/` into
 the checkout), and with `--locked` where the command takes it
 (`cargo fmt`, cargo-modules 0.28.0, and cargo-semver-checks 0.51.0 reject
@@ -330,7 +330,8 @@ live sources each item names)
   `cargo hack check --workspace --each-feature --locked`, and
   `cargo hack check --rust-version --workspace --locked`, which installs
   that toolchain itself (`rustup toolchain add`) when it is missing:
-  check `rustup toolchain list` and ask first.
+  check `rustup toolchain list` first, and skip the check when it is not
+  installed.
 - **Public API** (consent):
   `cargo semver-checks -p <crate> --baseline-rev <ref>` lists breaking
   changes against a git revision (by default, against crates.io).

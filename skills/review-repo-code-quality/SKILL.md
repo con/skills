@@ -1,7 +1,7 @@
 ---
 name: review-repo-code-quality
 description: Functionality-preserving code-quality review of a single repository — architecture, dead code, duplication, consolidation, cleanup, and items needing verification — written as a dated Markdown report with per-finding location, proposed change, safety confidence, and a verification command. Language-agnostic; it loads a code-quality-review-<language> guide for each language the repository uses. Use when asked to review, audit, or assess the code quality or health of one codebase. For an organization of related repositories use review-org-code-quality instead.
-allowed-tools: Bash, Read, Write, Glob, Grep, AskUserQuestion, Agent, Skill, WebFetch
+allowed-tools: Bash, Read, Write, Glob, Grep, Agent, Skill, WebFetch
 user-invocable: true
 ---
 
@@ -50,8 +50,9 @@ which version of this skill produced it, evidence standards, re-review,
 and confidence/status labels — live in
 [`../code-quality-report-conventions/report-conventions.md`](../code-quality-report-conventions/report-conventions.md),
 a sibling skill installed alongside this one. Read that file first; it is
-part of this skill's contract. If it is not installed, stop and ask the
-user to install `code-quality-report-conventions`; do not proceed from memory.
+part of this skill's contract. If it is not installed, stop and report
+that `code-quality-report-conventions` must be installed; do not proceed
+from memory.
 
 ## When to use
 
@@ -63,15 +64,23 @@ repositories its graph flags as most critical.
 
 ## Inputs
 
-Ask for anything missing before starting:
+Take these from the request that starts the review, whether a person, a
+schedule or a calling skill makes it. The skill asks nothing during a run,
+so it can run as an unattended routine; what the request leaves out takes
+the default given here.
 
-- Repository path (and package subpath for a monorepo).
+- Repository path (and package subpath for a monorepo); default: the
+  repository holding the current directory. If there is none, stop and
+  report that.
 - Scope: which directories are in, which are out (vendored code, generated
   files, golden fixtures are usually out), and which languages (all of
-  them unless the user names some).
-- Known pain points or an earlier report to re-verify.
+  them unless the request names some).
+- Known pain points or an earlier report to re-verify (default: none).
 - Whether changes should be applied after the report is written
   (default: **no** — write the report only).
+- Whether this repository's tests and tooling may run (Step 1): yes, no,
+  or sandbox only, meaning a sandbox the request names or a throwaway
+  checkout you create, never the user's working tree (default: **no**).
 
 ## Configuration
 
@@ -108,10 +117,9 @@ the scope excludes. Read the Recognize section of every installed
 `../code-quality-review-*/SKILL.md` (the table's guides and any others),
 match them against that list and, where a guide says so, against file
 contents (shell inside CI workflows, for example), and load each guide
-that matches. A language still unmatched either has a guide in the table
-that is not installed — ask the user whether to stop and install it or
-to review that language with the general checks only — or has no guide,
-and gets the general checks only. The general checks are the
+that matches. A language still unmatched gets the general checks only,
+whether its guide in the table is not installed (Method & limits names
+it) or it has no guide. The general checks are the
 language-independent parts of this procedure: Step 2's duplication,
 project-rule-drift, inert-configuration and currency sweeps and its
 "in any language" idiom checks, `lizard` where it supports the language,
@@ -178,24 +186,24 @@ Every tool a guide lists is marked **static** or **consent**:
   and plugins, a type check or build, a dependency install, the test
   suite, a tool the project pins and installs.
 
-A tool that is not installed is fetched only after asking the user, at a
-pinned version and outside the reviewed repository; Method & limits
-records each tool's version.
+A review installs no tool: where one is missing, its sweep uses the
+guide's other tool or plain searches, and Method & limits says so.
+Method & limits records each tool's version.
 
 Run the project's own linter and test suite once to get a **baseline**
 (count of tests passing, lint clean or not; the project's own entry
 point — a CI step, task runner, or Makefile target — comes first, and
 each guide's Verification section names the usual commands), but only
-after the user has confirmed that executing this repository's tests or
-tooling is acceptable (ask via AskUserQuestion, unless a calling skill
-already answered for the user — consent given, or declined and not to be
-asked again; prefer a container, VM, or throwaway checkout). The same
-consent covers every tool a guide marks **consent**. Record the exact
-command. If the user declines, the review is read-only analysis: only
-**static** tools and plain searches (`grep`) run. If the user declines or
-the suite cannot run here (needs credentials, network, or services),
-record `baseline not run: <reason>` and rate any finding whose safety
-depends on it **Low** confidence.
+with **consent**: the request says this repository's tests and tooling
+may run (Inputs: yes, or sandbox only in that sandbox or a throwaway
+checkout; prefer a container, VM, or throwaway checkout either way). A
+calling skill passes its own answer on. The review never asks for it.
+The same consent covers every tool a guide marks **consent**. Record the
+exact command. Without consent, the review is read-only analysis: only
+**static** tools and plain searches (`grep`) run. Without consent, or
+when the suite cannot run here (needs credentials, network, or
+services), record `baseline not run: <reason>` and rate any finding
+whose safety depends on it **Low** confidence.
 
 ### Step 2 — Mechanical sweep
 
@@ -223,11 +231,11 @@ and say so in Method & limits.
   reads the project's `.jscpd.json`). Add `--fail-on-empty` to its jscpd
   command: `jscpd analyzed no files` with exit status 1 then means the
   scan did not run, although a report is still written. The skill's
-  availability check itself falls back to `npx --yes jscpd@latest`, so if
-  `command -v jscpd` finds nothing, ask before running the skill at all;
-  prefer an installed or pinned jscpd and tell the user which was used. If
-  that is declined or jscpd cannot be installed, search for repeated
-  multi-line idioms by hand and say so in Method & limits. Without
+  availability check itself falls back to `npx --yes jscpd@latest`, an
+  unpinned package from the registry, so if `command -v jscpd` finds
+  nothing, skip the skill (Step 1: a review installs no tool), search for
+  repeated multi-line idioms by hand, and say so in Method & limits.
+  Record which jscpd was used. Without
   consent, do not let it pass the project's `.jscpd.json` as `--config`
   (its `blame`, `history`, and `baselineFromRef` keys make jscpd run git
   and add worktrees under `.git/`); use your own options, read that file
@@ -463,15 +471,15 @@ did not make. Commit only if asked. Do not bump a version or write a changelog
 entry for a tests-only change unless the project's rules say to.
 
 Work group by group from "Recommended order of changes". Applying changes
-needs the same execution consent as Step 1; if it was declined or the
-baseline was not run, ask again before running any verification (a request
-to apply changes is a fresh decision, even after a caller's "do not ask
-again") and say in the report which groups are unverified. After each group,
+needs the request's execution consent (Step 1) and a baseline, since each
+group is verified by running it; without either, apply nothing and say so
+in the report. After each group,
 run its verification and the baseline test command; the counts must match
 the baseline. Mark each finding `APPLIED` (or `PARTLY APPLIED` with the
 reason) in the report as you go. If the maintainer rejects a change,
 undo it, mark it `REVERTED AT THE AUTHOR'S REQUEST`, keep the reasoning
-under the finding, and offer to record the preference in `AGENTS.md`.
+under the finding, and note in the report that the preference could be
+recorded in `AGENTS.md`.
 
 ## Operating rules
 
@@ -497,7 +505,8 @@ under the finding, and offer to record the preference in `AGENTS.md`.
 
 ## When the skill falls short
 
-At the end, if `../suggest-skill-fixes/SKILL.md` exists, follow it. Typical
+At the end, if `../suggest-skill-fixes/SKILL.md` exists, follow it as an
+unattended run, which only reports. Typical
 triggers here: a finding the user rejects every time, a language with no
 guide or a guide whose tool has changed, a layout the Step 2 sweep does not
 cover, or a project rule the procedure has no place for. Suggestions go in

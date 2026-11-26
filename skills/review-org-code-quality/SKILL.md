@@ -1,7 +1,7 @@
 ---
 name: review-org-code-quality
 description: Audit code health across an organization-wide ecosystem of similarly styled, interconnected data/ML/ETL pipelines or repositories. Focuses on systemic risk (template drift, contract fragility, cross-repo duplication, blast radius, bus factor) rather than single-repo code smells, and writes a dated report. Use when asked to review, audit, or assess the health of a set of related repositories or pipelines. For one repository use review-repo-code-quality instead.
-allowed-tools: Bash, Read, Write, Glob, Grep, AskUserQuestion, Agent, Skill, WebFetch
+allowed-tools: Bash, Read, Write, Glob, Grep, Agent, Skill, WebFetch
 user-invocable: true
 ---
 
@@ -45,7 +45,7 @@ repeated here:
   sibling `code-quality-report-conventions` skill
   (`../code-quality-report-conventions/report-conventions.md`). Read it first; it is
   part of this skill's contract. If that file or `review-repo-code-quality`
-  is not installed, stop and ask the user to install the missing skill; do
+  is not installed, stop and report which skill must be installed; do
   not proceed from memory.
 
 ## When to use
@@ -72,12 +72,17 @@ Inputs you have:
 - Known incidents or pain points: {FILL}
 - Out of scope: {FILL}
 - House preferences: the tools your team prefers, which reviews recommend where a repository uses something else (default "guides": the language guides' own, such as pixi for Python environments; or name yours per concern, or "none"): {FILL}
-- May Phase 4 depth reviews execute those repositories' tests and tooling (yes / no / sandbox only — "sandbox only" means a sandbox the user names, or a throwaway checkout you create, never the user's working tree): {FILL}
+- May Phase 4 depth reviews execute those repositories' tests and tooling (yes / no / sandbox only, default no — "sandbox only" means a sandbox the request names, or a throwaway checkout you create, never the user's working tree): {FILL}
 
 Work in the phases below. At each phase, distinguish between what you OBSERVED (with file paths /
 line refs), what you INFERRED, and what you could NOT determine. Never fabricate a file reference.
 Prefer breadth first, then depth on the highest-risk nodes.
 ```
+
+Fill the inputs from the request that starts the review, whether a person,
+a schedule or a calling skill makes it, and write `not given` for any it
+leaves out (`no` for execution). The skill asks nothing during a run, so
+it can run as an unattended routine.
 
 ## Phase 0 — Establish the reference pattern
 
@@ -152,7 +157,7 @@ Look across the matrix for **systemic** issues:
 
 1. **Drift clusters.** Which pipelines have diverged from the template, in what direction, and did divergences propagate by copy-paste? Group by "generation" — pipelines forked from the same ancestor often share the same bug.
 2. **Contract fragility.** For every edge in the graph: is the schema enforced on both sides, one side, or neither? Rank edges by (criticality × lack of enforcement).
-3. **Copy-paste logic across repos.** Copy each repository into `<scratch>/copies/<repo>` the way `review-repo-code-quality` Step 1 makes its copy, prefixing `_` to a name that one of `analyze-duplicates`' default ignore patterns matches (`build`, `dist`, `venv-tools`), and run `analyze-duplicates` once, from `<scratch>` on `copies`, under the rules `review-repo-code-quality` Step 2 gives for it (asking before jscpd is fetched is a question separate from the depth-set execution consent, which covers only Phase 4). That one scan path holds the clones within and between repositories, named `<repo>/<path>`; `--cross-project` would find none, since jscpd 5.4.3 by default does not follow the symlinks its combined scan is built from. Group the hits into clusters. Each duplicate is a place a fix won't land; the recommendation is a shared-library helper plus a migration, not N tickets.
+3. **Copy-paste logic across repos.** Copy each repository into `<scratch>/copies/<repo>` the way `review-repo-code-quality` Step 1 makes its copy, prefixing `_` to a name that one of `analyze-duplicates`' default ignore patterns matches (`build`, `dist`, `venv-tools`), and run `analyze-duplicates` once, from `<scratch>` on `copies`, under the rules `review-repo-code-quality` Step 2 gives for it (a review installs no jscpd, whatever the depth-set execution consent, which covers only Phase 4). That one scan path holds the clones within and between repositories, named `<repo>/<path>`; `--cross-project` would find none, since jscpd 5.4.3 by default does not follow the symlinks its combined scan is built from. Group the hits into clusters. Each duplicate is a place a fix won't land; the recommendation is a shared-library helper plus a migration, not N tickets.
 4. **Shared library blast radius.** What breaks if the shared lib ships a breaking change? Which pipelines are N versions behind and why? Does the shared layer itself have CI?
 5. **Failure propagation.** Trace a failure from a hub node downstream: does it cascade, stall, or silently produce stale data? Where are the circuit breakers?
 6. **Convention gaps.** Things the template *doesn't* specify that everyone solved differently (e.g. timezone handling, null semantics, late-arriving data, what a `limit` parameter means).
@@ -173,24 +178,22 @@ Then pick the **depth set**: the hub nodes, the shared library/template,
 and any repository whose matrix row drove a "Fix now" or "Fix
 systemically" item — usually two to five. Run `review-repo-code-quality`
 in full on each (its own Inputs, its own report at that repository's
-default path), and link each report from "Per-repository notes". Ask
-before starting if the set is larger than five or the repositories are not
-the user's own. Its consent gate for executing a repository's tests and
+default path), and link each report from "Per-repository notes". If the
+set is larger than five, review the five whose items scored highest and
+list the rest in Method & limits. Its consent gate for executing a repository's tests and
 tooling is answered once, by the core prompt's input, for the whole depth
 set rather than per repository: "yes" is passed down as consent given,
 "sandbox only" as consent given for the named sandbox or throwaway
-checkout (say which), and "no" as "declined, do not ask again". The core
+checkout (say which), and "no", the default, as declined. The core
 prompt's house preferences are passed down as its `HOUSE_PREFERENCES`.
 Depth reviews are report-only (its Step 6, applying changes, is not run)
-unless the user asks for changes to be applied.
+unless the request asks for changes to be applied.
 
 ## Where to write the report
 
 Follow `report-conventions.md` §2 with `{reviews dir}` = `code-reviews`
-and `{kind}` = `org-code-quality-review`. A multi-repository review has no single
-natural home, so ask the user where it goes — the organization's utility
-or template repository is the usual answer — and record the choice in
-"Method & limits". The provenance stamp (§1) cites this skill's `name:`,
+and `{kind}` = `org-code-quality-review`; §2 says where a
+multi-repository review goes. Record the location in "Method & limits". The provenance stamp (§1) cites this skill's `name:`,
 the `version` in its `apm.yml`, and the `con/skills` commit it was installed
 from.
 
@@ -256,7 +259,7 @@ matrix cell was scored from, with `file:line` citations.
   report often lands in a utility repository that may be public.
 - **Judge against the house pattern first, generic best practice second.** "Doesn't use X framework" isn't a finding if the template doesn't either — but "the template lacks any DQ gate" is.
 - **Prefer fixes that land in one place.** If the same issue appears in 5+ pipelines, the recommendation is a template/shared-lib change plus a migration, not 5 tickets.
-- **Distinguish intentional from accidental divergence.** Ask, or check commit messages/ADRs, before flagging.
+- **Distinguish intentional from accidental divergence.** Check commit messages and ADRs before flagging; where they do not settle it, say the divergence may be intentional.
 - **Say whether a risk has ever fired.** "Never triggered; fully armed" is a different finding from "has bitten twice". Check run history where it exists.
 - **Don't audit the data itself** unless asked — this is code health. Note where data-quality tooling is missing; don't run it.
 
@@ -273,7 +276,8 @@ matrix cell was scored from, with `file:line` citations.
 
 ## When the skill falls short
 
-At the end, if `../suggest-skill-fixes/SKILL.md` exists, follow it. Typical
+At the end, if `../suggest-skill-fixes/SKILL.md` exists, follow it as an
+unattended run, which only reports. Typical
 triggers here: a dimension the user rescores by hand every time, an
 ecosystem layout Phase 1 cannot map, a house pattern Phase 0 has no way
 to express, or a language with no guide. Suggestions go in the reply, not
