@@ -216,3 +216,27 @@ replaces it with one subdirectory dependency per skill on its next pin move.
 Use `author-apm-skills` for APM authoring and maintenance, and
 `install-apm-skills` for metadata-only consumer setup. Keep generated copies
 out of consumer Git history. Run `tox -e validate,apm,reuse,security-static,security-deps`.
+
+## Claude Code plugin marketplace
+
+`.claude-plugin/marketplace.json` also publishes the skills as Claude Code
+plugins (marketplace `con-skills`). Every skill in `skills/` belongs to
+exactly one plugin, listed there as `./skills/<name>`
+(`ci/validate_skills.py` fails with E012 otherwise): add a new skill to the
+plugin whose topic fits, or start a plugin for it. Plugin names start with
+`con-`, which E012 also checks: a plugin's name becomes the namespace of its
+skills (`/con-code-quality:review-repo-code-quality`), and a generic name
+would share that namespace with other marketplaces' plugins. A plugin whose
+skills depend on a skill in another plugin (their `apm.yml` `dependencies`)
+lists that plugin under its own `dependencies`, as `con-code-quality` and
+`con-project-setup` do with `con-common`; E012 checks this too. A plugin's
+`license` names exactly the licenses its skills' `apm.yml` files declare
+(`ci/check_reuse.py` checks it). Each plugin's `source` is the repository root, so an installed
+plugin holds the whole repository and relative paths into sibling skills
+(`../<skill>/...`) still resolve. Plugins declare no `version`: Claude Code
+versions them by commit, so every merge is a new plugin version without a
+bump. Codex (0.172.0) installs from the same file. Add no plugin manifest at
+the repository root (`.claude-plugin/plugin.json`,
+`.codex-plugin/plugin.json`): Codex would use it for every plugin and refuse
+each install on the name mismatch. Add no `.agents/plugins/marketplace.json`
+either: Codex would read it instead of this file.

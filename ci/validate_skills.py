@@ -39,6 +39,15 @@ Every *.py bundled alongside a SKILL.md:
   E006  subprocess call with shell=True and a non-literal first argument
         (potential shell injection)
 
+The Claude Code plugin marketplace (``.claude-plugin/marketplace.json``),
+checked when no skill directories are given:
+  E012  The file exists; plugin names are unique strings starting with
+        ``con-``; each plugin lists skills as ``./skills/<name>`` of
+        published skills; every published skill is in exactly one plugin;
+        ``dependencies`` name other plugins of this marketplace, among them
+        every plugin holding a skill that one of its skills' ``apm.yml``
+        depends on
+
 Exit codes: 0 = all clear, 1 = one or more errors, 2 = usage/internal error.
 Warnings never affect the exit code.
 
@@ -52,6 +61,7 @@ Usage:
 from __future__ import annotations
 
 import ast
+import json
 import py_compile
 import re
 import sys
@@ -344,6 +354,79 @@ def check_collection_layout(repo_root: Path) -> Result:
     return result
 
 
+MARKETPLACE = Path(".claude-plugin") / "marketplace.json"
+
+
+def sibling_dependencies(skill_dir: Path) -> set[str]:
+    """The sibling skills a skill's apm.yml depends on (E010 reports a malformed one)."""
+    try:
+        data = yaml.safe_load((skill_dir / "apm.yml").read_text(encoding="utf-8"))
+        entries = data["dependencies"]["apm"]
+        return {entry["path"][3:] for entry in entries
+                if isinstance(entry, dict) and isinstance(entry.get("path"), str)
+                and entry["path"].startswith("../") and "/" not in entry["path"][3:]}
+    except (OSError, yaml.YAMLError, KeyError, TypeError):
+        return set()
+
+
+def check_marketplace(repo_root: Path) -> Result:
+    """Every published skill belongs to exactly one Claude Code plugin."""
+    result = Result()
+    path = repo_root / MARKETPLACE
+    try:
+        plugins = json.loads(path.read_text(encoding="utf-8"))["plugins"]
+        names = [plugin["name"] for plugin in plugins]
+    except (OSError, ValueError, KeyError, TypeError, RecursionError) as exc:
+        result.error("E012", path, f"cannot read the plugin names: {exc!r}")
+        return result
+    if not all(isinstance(name, str) for name in names):
+        result.error("E012", path, "give every plugin a string name")
+        return result
+
+    owners: dict[str, list[str]] = {d.name: [] for d in find_skill_dirs(repo_root)}
+    for name in sorted({n for n in names if names.count(n) > 1}):
+        result.error("E012", path, f"plugin name {name!r} is used more than once")
+    for plugin in plugins:
+        name = plugin["name"]
+        if not name.startswith("con-"):
+            result.error("E012", path, f"plugin name {name!r} must start with 'con-'")
+        if not all(isinstance(plugin.get(key, []), list) for key in ("skills", "dependencies")):
+            result.error("E012", path, f"plugin {name!r}: give 'skills' and 'dependencies' as lists")
+            continue
+        for dependency in plugin.get("dependencies", []):
+            if isinstance(dependency, str) and "@" not in dependency and (
+                    dependency == name or dependency not in names):
+                result.error("E012", path, f"plugin {name!r} depends on {dependency!r}, "
+                             "which is not another plugin of this marketplace")
+        for entry in plugin.get("skills", []):
+            skill = entry.removeprefix("./skills/") if isinstance(entry, str) else ""
+            if skill == entry or skill not in owners:
+                result.error("E012", path, f"plugin {name!r} lists {entry!r}; "
+                             "list published skills as ./skills/<name>")
+                continue
+            owners[skill].append(name)
+    for skill, plugin_names in owners.items():
+        if len(plugin_names) != 1:
+            where = ", ".join(repr(n) for n in plugin_names) or "none"
+            result.error("E012", path, f"skill {skill!r} is in {len(plugin_names)} plugins "
+                         f"({where}); put it in exactly one")
+    # A plugin install brings only its own skills and its dependencies' plugins,
+    # so a skill's apm.yml dependency in another plugin needs that plugin listed.
+    listed = {plugin["name"]: {d for d in plugin.get("dependencies", []) if isinstance(d, str)}
+              for plugin in plugins if isinstance(plugin.get("dependencies", []), list)}
+    for skill, plugin_names in owners.items():
+        if len(plugin_names) != 1:
+            continue
+        home = plugin_names[0]
+        for needed in sorted(sibling_dependencies(repo_root / "skills" / skill)):
+            needed_home = owners.get(needed, [])
+            if len(needed_home) == 1 and needed_home[0] not in {home} | listed.get(home, set()):
+                result.error("E012", path, f"plugin {home!r} lists {skill!r}, which depends on "
+                             f"{needed!r} in {needed_home[0]!r}: add {needed_home[0]!r} to "
+                             f"{home!r}'s dependencies")
+    return result
+
+
 def main(argv: list[str] | None = None) -> int:
     args = sys.argv[1:] if argv is None else argv
 
@@ -356,6 +439,10 @@ def main(argv: list[str] | None = None) -> int:
             print("\n".join(layout.errors))
             return 1
         skill_dirs = find_skill_dirs(repo_root)
+        marketplace = check_marketplace(repo_root)
+        if marketplace.errors:
+            print("\n".join(marketplace.errors))
+            return 1
 
     if not skill_dirs:
         sys.stderr.write("warning: no skill directories found\n")
