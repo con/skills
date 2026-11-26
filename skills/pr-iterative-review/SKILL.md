@@ -255,8 +255,8 @@ gets, with its lenses, in `LENS_FILES`:
 - `skill-security-review`, to the reviewer with the skills lens;
 - `review-human-prose`, to the reviewer with the docs lens;
 - `code-quality-review-shell`, to the reviewer with the ci-infra lens;
-- `code-quality-review-<language>` for each language in the changed code
-  (python, ts, go, shell), to `project-fit`.
+- `code-quality-review-<language>` for each language in the changed code,
+  to `project-fit`.
 
 **Reviewers.** Three by default: `correctness`, `domain` (with the lenses
 chosen above; with more than three lenses, split them between `domain`
