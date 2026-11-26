@@ -4,3 +4,12 @@ description: "Independent, domain-aware pull request reviews by several agents, 
 author: Cody C. Baker
 license: MIT
 type: skill
+dependencies:
+  apm:
+    - path: ../code-quality-review-python
+    - path: ../code-quality-review-ts
+    - path: ../code-quality-review-go
+    - path: ../code-quality-review-rust
+    - path: ../code-quality-review-haskell
+    - path: ../code-quality-review-shell
+    - path: ../code-quality-review-awk

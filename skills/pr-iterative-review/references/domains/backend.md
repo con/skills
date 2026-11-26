@@ -19,7 +19,9 @@ changelog, API documentation. The authentication and authorization model;
 the database and migration tooling and how the project deploys (rolling
 deploys mean old and new code run against one schema); the error-handling
 and logging conventions; who calls the changed interface (other services,
-the frontend, scripts, downstream packages).
+the frontend, scripts, downstream packages). For a library, the language
+guide you were given (`code-quality-review-<language>`) says how the
+language marks internals, and so what is public.
 
 ## Checks
 
@@ -31,12 +33,18 @@ the frontend, scripts, downstream packages).
 **Deprecation** (tiers as in the brief's Deprecation section)
 - Retiring any of those goes through the brief's steps, in the form the
   interface offers:
-  - Python: the old name, argument or default keeps working beside the new
-    one. Once removal is planned it warns with `warnings.warn(…,
-    DeprecationWarning, stacklevel=2)`, with `FutureWarning` where end
-    users rather than developers should see it, or with PEP 702's
+  - Library APIs: the old name, argument or default keeps working beside
+    the new one, marked the language's way: in Python, PEP 702's
     `@deprecated` (`warnings.deprecated` from Python 3.13,
-    `typing_extensions.deprecated` before).
+    `typing_extensions.deprecated` before) or `warnings.warn(…,
+    DeprecationWarning, stacklevel=2)`, with `FutureWarning` where end
+    users rather than developers should see it; a `Deprecated:`
+    paragraph in a Go doc comment; `#[deprecated(since, note)]` in Rust;
+    a `@deprecated` JSDoc tag in TypeScript; a `DEPRECATED` pragma in
+    Haskell. The language guide's Verification section names the tool
+    that lists breaking API changes (`griffe check`, `gorelease` or
+    `apidiff`, `cargo semver-checks`, a declaration diff); it is not
+    **static**, so only CI's run of it counts here.
   - Command-line tools: an old flag stays as an alias that warns on stderr
     and leaves the exit status alone.
   - Web APIs: `deprecated: true` in OpenAPI, `@deprecated(reason: …)` in
@@ -85,7 +93,8 @@ the frontend, scripts, downstream packages).
 
 - **static**: search for every caller of a changed function,
   endpoint, flag or setting, in tests, scripts, docs and configuration; read
-  the migration file itself.
+  the migration file itself; the language guides' **static** tools on the
+  changed files.
 - **CI only**: the project's tests; printing a migration's SQL (`manage.py
   sqlmigrate`, `alembic upgrade --sql`) runs project code; starting the
   service.

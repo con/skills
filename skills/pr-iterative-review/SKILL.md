@@ -247,16 +247,22 @@ entry) give no domain; the project-fit reviewer covers them. A change no
 lens matches gets the correctness and project-fit angles only, and the
 review says so under `not_checked`. `--domains` replaces this choice.
 
-**Companion skills.** Reviewers do not know `SKILL_DIR`, so look for these
-skills yourself, installed beside this one (`../<name>/SKILL.md` from this
-file's directory), and give each reviewer the absolute paths of the ones it
-gets, with its lenses, in `LENS_FILES`:
+**Language guides and companion skills.** Reviewers do not know
+`SKILL_DIR`, so find these skills beside this one (`../<name>/SKILL.md`
+from this file's directory) and give each reviewer the absolute paths of
+the ones it gets, with its lenses, in `LENS_FILES`:
 
-- `skill-security-review`, to the reviewer with the skills lens;
-- `review-human-prose`, to the reviewer with the docs lens;
-- `code-quality-review-shell`, to the reviewer with the ci-infra lens;
-- `code-quality-review-<language>` for each language in the changed code,
-  to `project-fit`.
+- the `code-quality-review-<language>` guide for each language in the
+  changed code (by extension, and by shebang for a script without one),
+  to `project-fit` and to the reviewer with the backend lens, and
+  `code-quality-review-shell` to the reviewer with the ci-infra lens. The
+  guides are this skill's dependencies, so APM installs them with it; a
+  language with no guide gets the lenses' checks only;
+- `skill-security-review`, to the reviewer with the skills lens, and
+  `review-human-prose`, to the reviewer with the docs lens, when they are
+  installed.
+
+A missing one goes under `not_checked`.
 
 **Reviewers.** Three by default: `correctness`, `domain` (with the lenses
 chosen above; with more than three lenses, split them between `domain`
@@ -274,12 +280,12 @@ and gives the placeholder values: `COUNT` (the number of reviewers),
 `TARGET` (`OWNER/REPO#N`, or for `--local` the branch and the repository's
 directory), `SHA` (`HEAD_SHA`), `ID`, `FOCUS`, `WORK`, `TREE`
 (`WORK/tree`), `PR_FILES`, `RULE_FILES` and `LENS_FILES` (the absolute
-paths of this reviewer's lenses and companion skills). No reviewer sees
-another's output in this round. Save each reply as `WORK/round1-ID.json`;
-if one is not valid JSON in the brief's format, ask that reviewer once to
-correct it. In any round, if a reviewer cannot be started, or its reply is
-still unusable after that one request, stop and report it, as in step 7;
-never write a reviewer's reply yourself.
+paths of this reviewer's lenses, language guides and companion skills).
+No reviewer sees another's output in this round. Save each reply as
+`WORK/round1-ID.json`; if one is not valid JSON in the brief's format, ask
+that reviewer once to correct it. In any round, if a reviewer cannot be
+started, or its reply is still unusable after that one request, stop and
+report it, as in step 7; never write a reviewer's reply yourself.
 
 ### 4. Cross-check until agreement
 

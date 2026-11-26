@@ -87,8 +87,8 @@ standard such as WCAG AA)
 ## Verification
 
 - **static**: read the changed components and the code paths that render
-  them; search for the risky APIs named above; compare the `package.json` and lockfile diff
-  for new client dependencies.
+  them; search for the risky APIs named above; compare the `package.json`
+  and lockfile diff for new client dependencies.
 - **CI only**: building the bundle (it runs the project's configuration and
   plugins), component and end-to-end tests, Storybook, and accessibility
   checkers run against a build. The pull request's visual review and
