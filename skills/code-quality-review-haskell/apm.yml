@@ -1,0 +1,6 @@
+name: code-quality-review-haskell
+version: "0.1.0"
+description: "Haskell checks, tools and false positives for review-repo-code-quality"
+author: Cody C. Baker
+license: MIT
+type: skill

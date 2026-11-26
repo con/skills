@@ -11,12 +11,13 @@ This skill's payload is [`report-conventions.md`](report-conventions.md),
 that the review skills in this collection read instead of each repeating
 it. It is packaged as its own skill so that it can be versioned on its own;
 the review skills declare it as a dependency in their `apm.yml`, so APM
-installs it with them.
+installs it with them, as it does the `code-quality-review-<language>`
+guides.
 
 A skill that depends on it says so in its `SKILL.md` and reads
 `../code-quality-report-conventions/report-conventions.md` relative to its own
-directory. If that file is not installed, the calling skill stops and asks
-the user to install `code-quality-report-conventions`; it does not proceed from memory.
+directory. If that file is not installed, the calling skill stops and reports
+that `code-quality-report-conventions` must be installed; it does not proceed from memory.
 
 Bump the version in this skill's `apm.yml` when the report layout, the provenance stamp, or the
 evidence rules change (see `AGENTS.md`, "Skill versions"); the skills that

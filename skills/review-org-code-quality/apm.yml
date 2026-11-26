@@ -1,5 +1,5 @@
 name: review-org-code-quality
-version: "0.2.1"
+version: "0.3.0"
 description: "Audit code health across an organization's interconnected pipelines"
 author: Cody C. Baker
 license: MIT
@@ -11,3 +11,10 @@ dependencies:
     - path: ../analyze-duplicates
     - path: ../scan-projects
     - path: ../github-project-status
+    - path: ../code-quality-review-python
+    - path: ../code-quality-review-ts
+    - path: ../code-quality-review-go
+    - path: ../code-quality-review-rust
+    - path: ../code-quality-review-haskell
+    - path: ../code-quality-review-shell
+    - path: ../code-quality-review-awk

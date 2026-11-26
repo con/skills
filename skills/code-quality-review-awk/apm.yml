@@ -1,0 +1,6 @@
+name: code-quality-review-awk
+version: "0.1.0"
+description: "POSIX awk and gawk checks, tools and portability for review-repo-code-quality"
+author: Cody C. Baker
+license: MIT
+type: skill
