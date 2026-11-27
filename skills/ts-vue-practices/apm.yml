@@ -1,0 +1,9 @@
+name: ts-vue-practices
+version: "0.1.0"
+description: "Vue 3 practices on top of ts-practices: components, templates, routing, review tools"
+author: Cody C. Baker
+license: MIT
+type: skill
+dependencies:
+  apm:
+    - path: ../ts-practices

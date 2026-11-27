@@ -1,0 +1,6 @@
+name: haskell-practices
+version: "0.1.0"
+description: "Haskell practices: rules, checks, review tools and verification"
+author: Cody C. Baker
+license: MIT
+type: skill

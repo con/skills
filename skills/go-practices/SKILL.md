@@ -1,20 +1,21 @@
 ---
-name: code-quality-review-go
-description: Go guide for review-repo-code-quality and review-org-code-quality — where a Go module states its rules, its review tools and which need execution consent (anything that loads packages does), Go checks such as typed constants for closed sets, error wrapping, and interface placement, currency, false positives, and verification commands. Not invoked directly. Use when a review skill tells you to read it, or when asked what those reviews check for Go.
+name: go-practices
+description: Go practices — where a Go module states its rules, its review tools and which need execution consent (anything that loads packages does), Go checks such as typed constants for closed sets, error wrapping, and interface placement, currency, false positives, and verification commands. Use when writing, changing, or reviewing Go code, including in a pull-request review or a code-quality review (review-repo-code-quality and review-org-code-quality read it).
 allowed-tools: Read
 user-invocable: false
 ---
 
-# Go guide for the code-quality reviews
+# Go practices
 
-`review-repo-code-quality` holds the review procedure, the report layout,
-and the architecture principles that apply to every language; this guide
-adds what holds for Go only. It is not a review on its own: a review
-starts from `review-repo-code-quality`, which reads this guide in Step 1
-for every repository with Go code in scope, and `review-org-code-quality`
-uses its **static** tools before its depth reviews. The category prefixes
-(`ARC`, `DC`, `DUP`, `CON`, `CL`, `NV`) and the **static** / **consent**
-marks are defined in `review-repo-code-quality`.
+What holds for Go code only, for three kinds of work: writing or changing
+it, reviewing a pull request, and the code-quality reviews
+(`review-repo-code-quality` reads this guide in Step 1;
+`review-org-code-quality` runs its **static** tools). When writing code,
+follow Project rules and Checks and leave Not findings alone; when
+reviewing, report against them. The procedure, the architecture
+principles, the category prefixes (`ARC`, `DC`, `DUP`, `CON`, `CL`, `NV`),
+and the **static** / **consent** marks on the Tools are defined in
+`review-repo-code-quality`.
 
 It is written for single-module command-line tools, small services, and
 data-transfer utilities, built with the standard toolchain and tested with

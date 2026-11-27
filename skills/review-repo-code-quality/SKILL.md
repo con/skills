@@ -1,7 +1,7 @@
 ---
 name: review-repo-code-quality
-description: Functionality-preserving code-quality review of a single repository — architecture, dead code, duplication, consolidation, cleanup, and items needing verification — written as a dated Markdown report with per-finding location, proposed change, safety confidence, and a verification command. Language-agnostic; it loads a code-quality-review-<language> guide for each language the repository uses. Use when asked to review, audit, or assess the code quality or health of one codebase. For an organization of related repositories use review-org-code-quality instead.
-allowed-tools: Bash, Read, Write, Glob, Grep, Agent, Skill, WebFetch
+description: Functionality-preserving code-quality review of a single repository — architecture, dead code, duplication, consolidation, cleanup, and items needing verification — written as a dated Markdown report with per-finding location, proposed change, safety confidence, and a verification command. Language-agnostic; it loads a <language>-practices guide for each language the repository uses. Use when asked to review, audit, or assess the code quality or health of one codebase. For an organization of related repositories use review-org-code-quality instead.
+allowed-tools: Bash, Read, Write, Glob, Grep, Agent, Skill, WebFetch, AskUserQuestion
 user-invocable: true
 ---
 
@@ -20,13 +20,15 @@ sibling skill:
 
 | Language | Guide |
 |---|---|
-| Python | `code-quality-review-python` |
-| TypeScript and JavaScript | `code-quality-review-ts` |
-| Go | `code-quality-review-go` |
-| Rust | `code-quality-review-rust` |
-| Haskell | `code-quality-review-haskell` |
-| Shell (POSIX sh, Bash), including shell embedded in CI workflows, Makefiles, and Dockerfiles | `code-quality-review-shell` |
-| AWK (POSIX awk, gawk), including programs embedded in shell scripts, Makefiles, and CI steps | `code-quality-review-awk` |
+| Python | `python-practices` |
+| TypeScript and JavaScript | `ts-practices` |
+| Vue 3, read with the TypeScript guide | `ts-vue-practices` |
+| Vuetify 3, read with the Vue guide | `ts-vuetify-practices` |
+| Go | `go-practices` |
+| Rust | `rust-practices` |
+| Haskell | `haskell-practices` |
+| Shell (POSIX sh, Bash), including shell embedded in CI workflows, Makefiles, and Dockerfiles | `shell-practices` |
+| AWK (POSIX awk, gawk), including programs embedded in shell scripts, Makefiles, and CI steps | `awk-practices` |
 
 Every guide has the same sections, which the steps below refer to:
 **Recognize** (the files it covers), **Project rules** (where the
@@ -38,12 +40,17 @@ each with the report category it usually lands in, among them the
 idiom for a closed set of values and a Currency group), **Not findings**
 (what looks dead or wrong in that language but is not), and
 **Verification** (the commands that show a change preserved behavior).
-To add a language, add a sibling `code-quality-review-<language>` skill
-(`user-invocable: false`, `allowed-tools: Read`, its own `apm.yml`) with
-those sections, a row in this table, a row in the repository's README,
-and an entry under `dependencies` in this skill's `apm.yml` and in
-`review-org-code-quality`'s. APM installs the guides, the report
-conventions, and `analyze-duplicates` with this skill.
+The guides also serve writing code and reviewing pull requests, so they
+hold a language's practices, not review steps. To add a language, add a
+sibling `<language>-practices` skill (`user-invocable: false`,
+`allowed-tools: Read`, its own `apm.yml`) with those sections, a row in
+this table, a row in the repository's README, and an entry under
+`dependencies` in this skill's `apm.yml` and in
+`review-org-code-quality`'s. A framework gets its own guide the same way,
+`<language>-<framework>-practices`, holding only what the framework adds;
+it names the guide it builds on, and its `apm.yml` depends on it. APM
+installs the guides, the report conventions, and `analyze-duplicates`
+with this skill.
 
 Shared rules — where the report goes, the provenance stamp that records
 which version of this skill produced it, evidence standards, re-review,
@@ -65,9 +72,15 @@ repositories its graph flags as most critical.
 ## Inputs
 
 Take these from the request that starts the review, whether a person, a
-schedule or a calling skill makes it. The skill asks nothing during a run,
-so it can run as an unattended routine; what the request leaves out takes
-the default given here.
+schedule or a calling skill makes it. When a person started the review
+in a conversation and the request leaves the execution consent, the
+apply-changes choice, or `HOUSE_PREFERENCES` or `MAX_SUBAGENTS`
+(Configuration) unset, ask for all of them in one `AskUserQuestion`
+prompt before Step 1, offering each default; the same prompt carries the
+run-settings question (Configuration, "Recommended run settings") when
+the session differs from the recommendation. Ask nothing after that. A schedule or a calling skill is
+asked nothing, so the skill can run as an unattended routine. Whatever is
+still unset takes the default given here.
 
 - Repository path (and package subpath for a monorepo); default: the
   repository holding the current directory. If there is none, stop and
@@ -123,15 +136,19 @@ for whoever starts a review:
 | `MAX_SUBAGENTS` | `3` | traces are independent but small; batching candidates costs less than one subagent each |
 | Scope | one package or directory tree per review in a large repository | a report of several thousand lines is hard to act on |
 
-A skill cannot change the session's reasoning effort or its modes, and
-this one asks nothing during a run. So, before Step 1, read the settings
-the session shows (report-conventions §1 says how) and compare them
-with this table. Keep to `MAX_SUBAGENTS` and batch whatever mode is on.
-Where a setting differs from the recommendation and the request did not
-ask for that setting, carry on, and open the closing reply with one
-line per such setting: its value, the recommended one, and how to
-change it for the next run. The Run settings table records the values
-either way.
+Before Step 1, read the settings the session shows (report-conventions
+§1 says how) and compare them with this table. A skill cannot change
+the session's reasoning effort or its modes; only the person can. So
+when a person started the review in a conversation, and a setting
+differs from the recommendation without the request having asked for
+it, add one question to the Inputs prompt: it names each such setting,
+its value, the recommended one and how to change it in this agent, and
+offers to continue as set or to stop so the person can change the
+settings and start again. Stop only on that answer. A schedule or a
+calling skill is asked nothing: carry on, and open the closing reply
+with one line per differing setting, so the next run can be set up
+differently. Either way, keep to `MAX_SUBAGENTS` and batch whatever
+mode is on. The Run settings table records the values in effect.
 
 ## Procedure
 
@@ -149,7 +166,7 @@ Read `AGENTS.md` / `CLAUDE.md` and `CONTRIBUTING.md`, whichever exist.
 Then find the languages in scope: list the tracked files (`git ls-files`)
 by extension, and by shebang for scripts without one, leaving out what
 the scope excludes. Read the Recognize section of every installed
-`../code-quality-review-*/SKILL.md` (the table's guides and any others),
+`../*-practices/SKILL.md` (the table's guides and any others),
 match them against that list and, where a guide says so, against file
 contents (shell inside CI workflows, for example), and load each guide
 that matches. A language still unmatched gets the general checks only,
@@ -255,7 +272,8 @@ each guide's Verification section names the usual commands), but only
 with **consent**: the request says this repository's tests and tooling
 may run (Inputs: yes, or sandbox only in that sandbox or a throwaway
 checkout; prefer a container, VM, or throwaway checkout either way). A
-calling skill passes its own answer on. The review never asks for it.
+calling skill passes its own answer on. Nothing is asked after Step 1
+begins (Inputs).
 The same consent covers every tool a guide marks **consent**. Record the
 exact command. Without consent, the review is read-only analysis: only
 **static** tools and plain searches (`grep`) run.
@@ -544,7 +562,7 @@ Report layout (fill every section; say "none" rather than deleting one):
 
 {The two provenance tables of report-conventions §1: Provenance (Reviewed
 at; Generated by; Conventions; Using, which names each
-`code-quality-review-{language}` guide loaded, `analyze-duplicates` and
+`{language}-practices` guide loaded, `analyze-duplicates` and
 `suggest-skill-fixes` where used; Previous review) and Run settings (Agent,
 Model, Reasoning effort, Agent options, Subagents, Permission mode, Dates
 worked).}
