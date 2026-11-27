@@ -73,6 +73,7 @@ Inputs you have:
 - Out of scope: {FILL}
 - How the report is kept, if the checkout will not outlive the session (left in the working tree / commit on a review branch / pull request, default left in the working tree; report-conventions §2): {FILL}
 - Subagents at a time (default 3; 0 for none; `review-repo-code-quality`'s `MAX_SUBAGENTS`): {FILL}
+- If a multi-agent or workflow mode (Claude Code's ultracode, for example) is on for the session (stop / allow, default stop; `review-repo-code-quality`'s `MULTI_AGENT_MODE`): {FILL}
 - House preferences: the tools your team prefers, which reviews recommend where a repository uses something else (default "guides": the language guides' own, such as pixi for Python environments; or name yours per concern, or "none"): {FILL}
 - May Phase 4 depth reviews execute those repositories' tests and tooling (yes / no / sandbox only, default no — "sandbox only" means a sandbox the request names, or a throwaway checkout you create, never the user's working tree): {FILL}
 
@@ -80,6 +81,12 @@ Work in the phases below. At each phase, distinguish between what you OBSERVED (
 line refs), what you INFERRED, and what you could NOT determine. Never fabricate a file reference.
 Prefer breadth first, then depth on the highest-risk nodes.
 ```
+
+Before anything else, including the prompt below, apply
+`review-repo-code-quality`'s `MULTI_AGENT_MODE` check with the value the
+request gives (default `stop`): when such a mode is on and the value is
+`stop`, reply as that skill's Configuration says and end, with no report
+and no subagent started. The value is passed down to the depth reviews.
 
 Fill the inputs from the request that starts the review, whether a person,
 a schedule or a calling skill makes it. When a person started the review
