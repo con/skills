@@ -1,5 +1,5 @@
 name: review-org-code-quality
-version: "0.3.0"
+version: "0.4.0"
 description: "Audit code health across an organization's interconnected pipelines"
 author: Cody C. Baker
 license: MIT

@@ -1,5 +1,5 @@
 name: review-repo-code-quality
-version: "0.3.0"
+version: "0.4.0"
 description: "Functionality-preserving code-quality review of one repository"
 author: Cody C. Baker
 license: MIT

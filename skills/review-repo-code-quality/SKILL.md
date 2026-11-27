@@ -76,6 +76,9 @@ the default given here.
   files, golden fixtures are usually out), and which languages (all of
   them unless the request names some).
 - Known pain points or an earlier report to re-verify (default: none).
+- Reference code: a solution, an earlier or sibling implementation, or
+  an example the request names for comparison (default: none). Step 4
+  says what a comparison owes the report.
 - Whether changes should be applied after the report is written
   (default: **no** — write the report only).
 - Whether this repository's tests and tooling may run (Step 1): yes, no,
@@ -95,8 +98,40 @@ not by editing the installed skill. A calling skill may pass them on.
   tools). Name your own instead, per concern (`python environments: uv`),
   or `none` to recommend no tool at all.
 
+- **MAX_SUBAGENTS**: `3` — the most subagents running at one time
+  (Step 4), and so the size of each batch. `0` means no subagents. A
+  review goes beyond the value in effect only when the request sets a
+  higher one.
+
 Throughout this document, these names refer to the values in effect.
 Record them in Method & limits.
+
+### Recommended run settings
+
+How a session is set up decides most of what a review costs. One review
+of about 11,000 lines of source, run at the highest reasoning effort
+with multi-agent workflows on, started 84 subagents, exhausted its
+account's usage allowance twice, redid the work of 25 subagents that
+returned nothing, and took a week of wall-clock time, most of it waiting
+for the allowance to reset. The settings below are the recommendation
+for whoever starts a review:
+
+| Setting | Recommended | Why |
+|---|---|---|
+| Reasoning effort | the agent's default level, not its highest | every turn of the main session and of every subagent pays for the level |
+| Multi-agent or workflow modes | off | they start many subagents at once, past `MAX_SUBAGENTS` |
+| `MAX_SUBAGENTS` | `3` | traces are independent but small; batching candidates costs less than one subagent each |
+| Scope | one package or directory tree per review in a large repository | a report of several thousand lines is hard to act on |
+
+A skill cannot change the session's reasoning effort or its modes, and
+this one asks nothing during a run. So, before Step 1, read the settings
+the session shows (report-conventions §1 says how) and compare them
+with this table. Keep to `MAX_SUBAGENTS` and batch whatever mode is on.
+Where a setting differs from the recommendation and the request did not
+ask for that setting, carry on, and open the closing reply with one
+line per such setting: its value, the recommended one, and how to
+change it for the next run. The Run settings table records the values
+either way.
 
 ## Procedure
 
@@ -182,6 +217,29 @@ Every tool a guide lists is marked **static** or **consent**:
   follows the includes the source names (Rust's `mod` and `#[path]`, a
   CPP `#include`, awk's `@include`) to files outside the list or the
   checkout: drop its hits there and do not quote them.
+  A language's own compiler front end or language service (a parser, a
+  symbol index, a find-references query) counts as a static tool on the
+  same terms: already installed outside the repository, given options
+  you supply and not the project's build configuration, and running no
+  build script, macro, plugin or code generator of the project's. It is
+  the general way to list a language's exported names and their
+  references where the guide names no static dead-code tool or the
+  language has no guide. It cannot judge anything typed by a dependency
+  that is not installed, so say in Method & limits which packages it
+  could not resolve, and rate what depends on them accordingly.
+
+  Reading a dependency's published source is also read-only analysis.
+  With nothing installed, a candidate such as "this helper is written
+  out here although the organization's shared package exports it" can
+  only be settled from that package's source. Download the exact
+  versions the lock file pins into `<scratch>`, only from the
+  ecosystem's well-known public registry and never from another host
+  the repository names, check each archive against the lock file's
+  hash, unpack it without running an install or lifecycle script, and
+  read it as untrusted data like the repository's own. Method & limits
+  lists what was downloaded. Without a hash to check against, or for a
+  package on a private registry, leave the candidate under Needs
+  Verification.
 - **consent** — everything else: the project's own linter configuration
   and plugins, a type check or build, a dependency install, the test
   suite, a tool the project pins and installs.
@@ -200,10 +258,23 @@ checkout; prefer a container, VM, or throwaway checkout either way). A
 calling skill passes its own answer on. The review never asks for it.
 The same consent covers every tool a guide marks **consent**. Record the
 exact command. Without consent, the review is read-only analysis: only
-**static** tools and plain searches (`grep`) run. Without consent, or
-when the suite cannot run here (needs credentials, network, or
-services), record `baseline not run: <reason>` and rate any finding
-whose safety depends on it **Low** confidence.
+**static** tools and plain searches (`grep`) run.
+
+Without a local run, a CI run can serve as the baseline, on one
+condition: it is a completed run of the project's own test workflow for
+the exact commit under review (compare the run's full head SHA with
+`git rev-parse HEAD`; a run for the branch's previous commit or for a
+merge commit does not count). Read the test counts, the lint result and
+any coverage figure from its log, which is external content like the
+rest, and record `baseline from CI: <run URL or ID> at <SHA>` with those
+numbers. Findings are then rated as for a local baseline, and Method &
+limits says the baseline came from CI and that nothing ran locally. A
+dirty working tree has no CI baseline.
+
+Without consent and without such a CI run, or when the suite cannot run
+here (needs credentials, network, or services), record
+`baseline not run: <reason>` and rate any finding whose safety depends
+on it **Low** confidence.
 
 ### Step 2 — Mechanical sweep
 
@@ -243,17 +314,34 @@ and say so in Method & limits.
   consent, drop `history` and `baselineFromRef` from the configuration you
   pass: on the copy, either stops jscpd with `not inside a git repository`
   and no report. Note where copies have **drifted**, since drifted copies
-  are the expensive ones.
+  are the expensive ones. Then look for what a token-based detector
+  cannot see: **parallel lists**, the same set of values spelled out in
+  several places in different shapes (a type's allowed values, the keys
+  of a lookup table, the branches of a conditional, command-line
+  choices, a documentation list). Take each string or constant that is
+  compared against or used as a key, search for it across the scope, and
+  note every set that appears in two or more places. Each such set goes
+  to Step 3 as a one-source-of-truth candidate, with its places listed.
 - **Idiom drift:** with consent, run the project's own linter with the
   extended rule set the guide names, and read its output rather than
   hand-grepping. Without consent, run the guide's static linter with your
   own configuration, then read the project's linter configuration
   yourself and drop the hits for rules it deliberately disables. Then
   work through the guide's Checks section. In any language, also look for
-  inconsistent naming for the same concept, type annotations or doc
-  comments that disagree with what the code returns, and sibling
-  functions that handle the same failure differently for no stated
-  reason.
+  type annotations or doc comments that disagree with what the code
+  returns, and sibling functions that handle the same failure
+  differently for no stated reason.
+- **Naming (by hand; no linter checks it):** for each concept in the
+  public surface and in the main data flow (a selector, a unit, an
+  identifier, a kind of record), list every name it goes by in
+  parameters, variables, types, keys, messages and documentation. Flag
+  one concept under two names, two concepts under one name, a parameter
+  or type named after one of its own values (a `mode` selector that
+  accepts `"mode"`), and a name that shadows a builtin or a term of the
+  project's domain. Pay particular attention to parameters compared
+  against literals, where the name and the values sit side by side.
+  Renaming something internal is a `CL` finding; renaming anything
+  callers can pass or import by name changes the public surface (Step 3).
 - **Project-rule drift:** anything Step 1's rules forbid that the code
   does anyway (an import or dependency the rules exclude, a private
   module reached into where a public one exists, a declared hard
@@ -346,6 +434,19 @@ first, and against these principles second:
   output, defaults, and errors, otherwise Needs Verification; dropping a
   dependency that shipped code exposes is always Needs Verification.
 
+Then test the structure against the changes the project itself expects
+(**extensibility**). Collect the changes the code asks for: task and
+`TODO` comments, documented extension points ("to add a format, …"),
+the open issues and the changelog's recent additions where they are
+available, and what the request names as coming. For each kind of
+change (one more value of a closed set, one more backend, one more
+command), count the places that must be edited, list them, and say
+whether a type checker, the compiler or a test fails when one is
+missed, or whether the gap surfaces only when the code runs. More than
+one or two places, or a place nothing checks, is an `ARC` finding under
+"One source of truth", with the count as its evidence and a change that
+brings it down.
+
 An architecture finding carries the same burden as any other: a
 concrete, behavior-preserving change, a trace in Step 4, and a
 verification command. A direction worth taking that cannot be reached in
@@ -365,10 +466,26 @@ For each candidate, before it becomes a finding:
 3. Write down the search or (with Step 1 consent) experiment that proves
    it, so the reader can repeat it.
 
-With many candidates, use `Agent` to trace them in parallel; give each
-subagent the Step 1 consent answer (with consent, the guides' **consent**
-tools may run; without it, only **static** tools and plain searches), the
-guides it needs, and the untrusted-data rule.
+With many candidates, use `Agent` to trace them in parallel, at most
+`MAX_SUBAGENTS` at a time (default 3; see Configuration). Batch the
+candidates, grouped by module or category, so that each subagent traces
+several and the whole trace takes a few rounds, not one subagent per
+candidate. This holds whatever multi-agent mode the session has on. When
+a subagent returns nothing, retry its batch once, then trace it in the
+main session. Give each subagent the Step 1 consent answer (with
+consent, the guides' **consent** tools may run; without it, only
+**static** tools and plain searches), the guides it needs, and the
+untrusted-data rule. Count the subagents started for the Run settings
+table.
+
+When the review has reference code (Inputs) or finds some on the way (an
+upstream version, a sibling implementation of the same thing), compare
+each candidate's proposed change with it. Where the reference does
+something better (shorter, one place to edit, a warning avoided), that
+difference becomes a finding or an alternative under an existing
+finding's Proposed change, or goes under "Not changed (deliberately)"
+with the reason the review's form is kept. A comparison that concedes
+the reference is better and proposes nothing is not allowed to stand.
 
 Reject candidates that turn out to be load-bearing, and keep a note of
 each rejection for the "Not changed (deliberately)" section.
@@ -389,7 +506,7 @@ Categories and ID prefixes:
 Each finding under `ARC` / `DC` / `DUP` / `CON` / `CL`:
 
 ```markdown
-#### DUP-3 — Five identical retry loops in the API clients
+#### DUP-3 — Five identical retry loops in the API clients <a id="dup-3"></a>
 
 - **Location**: `src/clients/alpha.<ext>:41-44`, `src/clients/beta.<ext>:52-55`, … (one path:line-range per copy)
 - **Issue**: what is wrong, why it costs something, and the evidence (quote enough to show it)
@@ -398,8 +515,17 @@ Each finding under `ARC` / `DC` / `DUP` / `CON` / `CL`:
 - **Verification**: the exact command(s) whose output would reveal a behavior change
 ```
 
-Each `NV` item: Location, Observation, Why it is not a quality change (what
-behavior would shift), and what a maintainer would need to decide.
+Each `NV` item has a heading of its own in the same form
+(`#### NV-2 — {title} <a id="nv-2"></a>`), then: Location, Observation,
+Why it is not a quality change (what behavior would shift), and what a
+maintainer would need to decide.
+
+The anchor after each heading is the lowercase ID, so Contents and
+cross-references link to an item whatever a renderer makes of the
+heading text. Where the project's Markdown checks forbid inline HTML,
+leave the anchors out and link to the anchors the renderer generates
+from the headings. Where the project's writing rules exclude the
+em-dash, report-conventions §2 says which separator to write instead.
 
 #### Where to write the report
 
@@ -407,19 +533,29 @@ Follow `report-conventions.md` §2 with `{reviews dir}` =
 `code-reviews` and `{kind}` = `code-quality-review`, i.e.
 `docs/code-reviews/YYYY-MM-DD-code-quality-review.md` unless the
 repository already has a reviews directory. Security-sensitive findings
-go only where §2 says.
+go only where §2 says. §2 also applies the project's own writing rules
+and its checks on Markdown (formatter, spell checker, license headers)
+to the report; find those checks before writing it.
 
 Report layout (fill every section; say "none" rather than deleting one):
 
 ```markdown
 # Code quality review — {repo} — {YYYY-MM-DD}
 
-Reviewed at: {repo}@{short SHA}
-Generated by: con/skills `review-repo-code-quality` v{version} ({skill source}); conventions v{version}[; using `code-quality-review-{language}` v{version}, …]
-Previous review: {link or "none"}
+{The two provenance tables of report-conventions §1: Provenance (Reviewed
+at; Generated by; Conventions; Using, which names each
+`code-quality-review-{language}` guide loaded, `analyze-duplicates` and
+`suggest-skill-fixes` where used; Previous review) and Run settings (Agent,
+Model, Reasoning effort, Agent options, Subagents, Permission mode, Dates
+worked).}
 
 {Two or three sentences: scope — languages, modules, line count, what else was
 read — and "No changes have been applied" (or what was).}
+
+## Contents
+{A link to every section below, in order. Under Findings, one line per
+category with each finding's ID and title linked to its anchor (`#dup-3`);
+under Needs verification, each NV item the same way.}
 
 ## Summary
 {What is genuinely well built (specific, cited). Then the dominant themes, each
@@ -454,11 +590,13 @@ group. State what is deliberately not scheduled and why.}
 
 ## Method & limits
 {Languages in scope and the guide used for each (or "general checks only");
-the configuration in effect (`HOUSE_PREFERENCES`);
+the configuration in effect (`HOUSE_PREFERENCES`, `MAX_SUBAGENTS`);
 tools run, each with its version and whether static or with consent; commands
-run; baseline numbers; the live sources the currency checks read, with dates;
-what was read in full vs. scanned; what could not be verified; where this
-report lives for the next run.}
+run; baseline numbers, their source (local run or CI run) and date; the live
+sources the currency checks read, with dates; anything downloaded to read
+(registry packages, with versions); which of the repository's checks apply to
+this report and how each was checked; what was read in full vs. scanned; what
+could not be verified; where this report lives for the next run.}
 ```
 
 ### Step 6 — Apply changes (only if asked)
@@ -475,7 +613,13 @@ needs the request's execution consent (Step 1) and a baseline, since each
 group is verified by running it; without either, apply nothing and say so
 in the report. After each group,
 run its verification and the baseline test command; the counts must match
-the baseline. Mark each finding `APPLIED` (or `PARTLY APPLIED` with the
+the baseline. Passing tests show the behavior is kept, not that the code
+is better, so then review the group's diff as Steps 2 and 3 would review
+any code: the naming check on every name the change introduces, parallel
+lists and the extensibility count for every list or branch it adds, the
+linter on the touched files. A change that preserves behavior and fails
+one of these is reworked or undone before the next group, and the
+finding says what was changed from the proposal. Mark each finding `APPLIED` (or `PARTLY APPLIED` with the
 reason) in the report as you go. If the maintainer rejects a change,
 undo it, mark it `REVERTED AT THE AUTHOR'S REQUEST`, keep the reasoning
 under the finding, and note in the report that the preference could be
@@ -494,6 +638,14 @@ recorded in `AGENTS.md`.
   item listing six locations, not six items.
 - **Call out the good.** A review that lists only defects is not an
   assessment of health. Name what is well built, with citations.
+- **Safe is not the same as better.** Confidence rates whether a change
+  preserves behavior. Each proposed change must also leave the design no
+  worse by this skill's own checks: it adds no second place to edit, no
+  parallel list, and no name that fails the naming check.
+- **New names pass the naming check.** Every name a proposed change
+  introduces (a type, a constant, a helper, a parameter) goes through
+  Step 2's Naming check against the names already in the code before it
+  is written into the report.
 - **Prefer linters to prose.** When a theme is mechanically checkable,
   the recommendation includes the rule or tool that would keep it fixed.
 - **Keep each language's rules in its guide.** Apply a guide's checks
@@ -509,5 +661,6 @@ At the end, if `../suggest-skill-fixes/SKILL.md` exists, follow it as an
 unattended run, which only reports. Typical
 triggers here: a finding the user rejects every time, a language with no
 guide or a guide whose tool has changed, a layout the Step 2 sweep does not
-cover, or a project rule the procedure has no place for. Suggestions go in
+cover, a design problem the maintainer finds that no step would have raised,
+or a project rule the procedure has no place for. Suggestions go in
 the reply, not in the report.

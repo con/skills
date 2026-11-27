@@ -85,8 +85,11 @@ Suggested by: con/skills `suggest-skill-fixes` v{version} for `{calling skill}` 
   A skill without an `apm.yml` is `unversioned`.
 - **`{skill source}`.** Take it as `code-quality-report-conventions` §1
   does (`../code-quality-report-conventions/report-conventions.md`). If that
-  skill is not installed, use `git -C {skill dir} rev-parse --short HEAD`,
-  or `source commit unknown`. In a pull request body it is a commit SHA
+  skill is not installed, use `git -C {skill dir} rev-parse --short HEAD`
+  only when `git -C {skill dir} rev-parse --show-prefix` prints
+  `skills/{calling skill}/` (the directory is part of a checkout of the
+  collection, not a copy installed inside another project, whose commit
+  that command would name instead); otherwise `source commit unknown`. In a pull request body it is a commit SHA
   (with or without `con/skills@`) or `source commit unknown`, never a local
   path or URL.
 - **A calling skill's own stamp** records this skill as its own rules say
