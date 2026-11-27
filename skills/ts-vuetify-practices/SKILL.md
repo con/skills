@@ -1,19 +1,19 @@
 ---
 name: ts-vuetify-practices
-description: Vuetify 3 practices on top of ts-vue-practices — prefer a component's own props (to, href, active) and Vuetify's utility classes over custom CSS, wrapper links, and click handlers that navigate; a named route in a Vuetify :to passes its own params; static searches, false positives, and checks in the browser. Use when writing, changing, or reviewing Vue components that use Vuetify — especially when adding navigation, click handling, layout or spacing, or before adding a style scoped block, a wrapper a or router-link, or a click handler that navigates — including in a pull-request review or a code-quality review.
+description: Vuetify 3 practices on top of ts-vue-practices — prefer a component's own props (to, href, active) and Vuetify's utility classes over custom CSS, wrapper links, and click handlers that navigate; a named route in a Vuetify :to passes its own params; false positives, and checks in the browser, with the static searches and the worked example in references/review.md. Use when writing, changing, or reviewing Vue components that use Vuetify — especially when adding navigation, click handling, layout or spacing, or before adding a style scoped block, a wrapper a or router-link, or a click handler that navigates — including in a pull-request review or a code-quality review.
 allowed-tools: Read
 user-invocable: false
 ---
 
 # Vuetify practices
 
-What Vuetify 3 adds to `ts-vue-practices` and `ts-practices`, for three
-kinds of work: writing or changing components, reviewing a pull request,
-and the code-quality reviews (`review-repo-code-quality` reads this guide
-in Step 1 with the other two). Read `general-practices` and those two
-first: `general-practices` says how to weigh the guides and defines the
-**static** / **consent** marks and the category prefixes (`ARC`, `DC`,
-`DUP`, `CON`, `CL`, `NV`).
+The house's practices for Vue components that use Vuetify 3, on top of
+`ts-vue-practices` and `ts-practices`, for three kinds of work: writing or
+changing components, reviewing a pull request, and the code-quality
+reviews. Read `general-practices` and those two first: `general-practices`
+says how to weigh the guides and defines the marks and categories used
+here. [references/review.md](references/review.md) holds the static
+searches a review runs and the worked example behind the rules.
 
 Vuetify components already cover most of what a feature needs:
 navigation, active state, spacing, colors, elevation, and alignment.
@@ -39,23 +39,7 @@ The `vuetify` version in the lock file; the `createVuetify` call (its
 every instance); and the router definition, for the params each named
 route's path requires.
 
-## Tools
-
-| Sweep | Tool | Mark | Command |
-|---|---|---|---|
-| Custom CSS, wrapper links, navigating handlers, named routes | `git grep` | static | the searches below, on the tracked files |
-
-```sh
-git -C <checkout> grep -c '<style' -- '*.vue'        # components with a style block
-git -C <checkout> grep -nF ':deep(.v-' -- '*.vue'     # overrides of Vuetify internals
-git -C <checkout> grep -nE 'window\.open\(|location\.(href|assign|replace)|router\.push\(' -- '*.vue' '*.ts'
-git -C <checkout> grep -nE '@click\.stop([^.a-z]|$)' -- '*.vue'   # .stop without .prevent
-git -C <checkout> grep -nE "name: *['\"]" -- '*.vue' '*.ts'      # named routes: check their params
-```
-
-Each hit is a candidate, not a finding: read the component around it.
-
-## Checks
+## Preferences
 
 - **Navigation goes through `to` or `href`, not a click handler** (`NV`:
   the element becomes a real link). `v-list-item`, `v-btn`, `v-card`,
@@ -101,52 +85,10 @@ Each hit is a candidate, not a finding: read the component around it.
   the params as arguments, and moving a `<router-link>`'s `to` onto a
   Vuetify component is not a markup-only change.
 - **A pattern already in the file is checked before it is spread**: the
-  existing use may be the bug, as in the worked example below.
+  existing use may be the bug, as in the worked example in
+  [references/review.md](references/review.md).
 
-**Worked example.** dandi-archive
-[#2926](https://github.com/dandi/dandi-archive/pull/2926) made
-file-browser rows behave as links. Its first version nested an `<a>` or
-`<router-link>` in each `v-list-item` title, with a stretched overlay,
-`z-index` rules, and an `openItem` handler calling
-`window.open(…, "_self")`. The rewrite put the link on the row, for 12
-lines added and 70 removed:
-
-```vue
-<v-list-item
-  color="primary"
-  :href="item.asset ? inlineURI(item.asset.asset_id) : undefined"
-  :to="item.asset ? undefined : locationRoute(item.path)"
-  :active="false"
->
-  <v-list-item-title :title="item.name">{{ item.name }}</v-list-item-title>
-  <template #append>
-    <v-btn icon variant="text" @click.stop.prevent="setItemToDelete(item)">…</v-btn>
-    <v-btn v-bind="openWithProps" @click.stop.prevent>Open With</v-btn>
-  </template>
-</v-list-item>
-```
-
-As merged, it broke browser Back
-([#3004](https://github.com/dandi/dandi-archive/issues/3004)):
-`locationRoute()` returned `{ name: 'fileBrowser', query }`, and the
-`fileBrowser` path needs a `version` that the landing route
-`/dandiset/:identifier/:version?` may lack. The old `..` row already used
-that helper on a `v-list-item`, but only inside a subfolder; the rewrite
-put it on every row. The fix
-([#3008](https://github.com/dandi/dandi-archive/pull/3008)) passes the
-params:
-
-```ts
-function locationRoute(newLocation: string): RouteLocationRaw {
-  return {
-    name: 'fileBrowser',
-    params: { identifier: props.identifier, version: props.version },
-    query: { location: newLocation, page: '1' },
-  } as RouteLocationRaw;
-}
-```
-
-**Public surface and deprecation**
+## Public surface and deprecation
 
 - Vuetify reports its own deprecations in a development build's console,
   through Vue's `warn`: `[Vuetify UPGRADE] '…' is deprecated, use '…'

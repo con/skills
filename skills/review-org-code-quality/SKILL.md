@@ -134,7 +134,8 @@ baseline belongs to the depth reviews in Phase 4. First find each
 repository's languages the way `review-repo-code-quality` Step 1 does, not
 from the single `language` column `scan-projects` records, which names
 only the most common file type (sometimes Markdown or YAML). Then read
-those guides and run only the tools they mark **static**, giving each
+those guides (each one's `SKILL.md` and `references/review.md`) and
+run only the tools they mark **static**, giving each
 repository its own scratch directory, `<scratch>/repos/<repo>`, as the
 guides' `<scratch>`: their commands write fixed names there,
 `review-repo-code-quality` Step 1's copy among them, and a shared one
