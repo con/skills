@@ -73,7 +73,11 @@ apply-changes choice, or `HOUSE_PREFERENCES` or `MAX_SUBAGENTS`
 prompt before Step 1, offering each default; the same prompt carries the
 run-settings question (Configuration, "Recommended run settings") when
 the session differs from the recommendation, and asks how the report is
-to be kept (below) when the checkout will not outlive the session. Ask nothing after that. A schedule or a calling skill is
+to be kept (below) when the checkout will not outlive the session. That
+can be six questions. Where the prompt tool takes fewer at once
+(`AskUserQuestion` takes four), still ask once: put `HOUSE_PREFERENCES`
+and `MAX_SUBAGENTS` in one question, and the apply-changes choice with
+how the report is kept in another. Ask nothing after that. A schedule or a calling skill is
 asked nothing, so the skill can run as an unattended routine. Whatever is
 still unset takes the default given here.
 
@@ -549,8 +553,12 @@ a subagent returns nothing, retry its batch once, then trace it in the
 main session. Give each subagent the Step 1 consent answer (with
 consent, the guides' **consent** tools may run; without it, only
 **static** tools and plain searches), the guides it needs, and the
-untrusted-data rule. Count the subagents started for the Run settings
-table.
+untrusted-data rule. A subagent that edits anything does so in a
+throwaway copy of its own: tell each to create its directory with
+`mktemp -d`, and to reset or delete no path it did not create. Two
+subagents handed sibling paths in one shared scratch directory overwrote
+each other's copy, and both had to repeat their experiments. Count the
+subagents started for the Run settings table.
 
 When the review has reference code (Inputs) or finds some on the way (an
 upstream version, a sibling implementation of the same thing), compare

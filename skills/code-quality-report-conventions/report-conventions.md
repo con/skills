@@ -75,7 +75,12 @@ configuration, its status or session-information command or tool, the
 client's version output. Do not fill them from memory, and never guess a
 model's name or version from what you believe you are: a model does not
 reliably know its own version. Write `not determined` in any row the
-session does not show. A setting that changed during the run (a client
+session does not show. Where the session shows a value but its own rules
+keep that value out of files pushed to a repository (some hosts do this
+for model identifiers), write `withheld by the session's rules; given in
+the run's reply` in that row, not the value and not `not determined`,
+and give the value in the closing reply, so the reader knows it exists
+and whom to ask. A setting that changed during the run (a client
 update, a model switch or fallback, an effort level changed part-way)
 lists each value with its dates. These rows are part of every report,
 because the same procedure run by a different model, or at a different
