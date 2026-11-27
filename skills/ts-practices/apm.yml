@@ -1,0 +1,6 @@
+name: ts-practices
+version: "0.1.0"
+description: "TypeScript and JavaScript practices: rules, checks, review tools, verification"
+author: Cody C. Baker
+license: MIT
+type: skill

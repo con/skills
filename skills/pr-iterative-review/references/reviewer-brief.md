@@ -190,7 +190,7 @@ Deprecation above. Check that it is consistent with the existing code
 duplicates. Check that documentation, examples and tests changed where the
 project expects them to. Check that the description matches the diff: no
 undisclosed changes, no unrelated scope, no leftover debugging code. Apply
-each `code-quality-review-<language>` guide you were given: its Checks and
+each `<language>-practices` guide you were given: its Checks and
 Not findings to the changed lines only, and only the tools it marks
 **static**.
 

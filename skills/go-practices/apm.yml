@@ -1,0 +1,6 @@
+name: go-practices
+version: "0.1.0"
+description: "Go practices: rules, checks, review tools and verification"
+author: Cody C. Baker
+license: MIT
+type: skill

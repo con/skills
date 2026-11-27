@@ -95,5 +95,5 @@ section)
   request itself.
 - **CI only**: building the container, `terraform plan` (it also needs
   credentials), running the workflow locally.
-- If your companion skills include `code-quality-review-shell`, apply its
-  checks to the shell inside `run:` steps.
+- Apply the `shell-practices` guide's checks to the shell inside `run:`
+  steps.

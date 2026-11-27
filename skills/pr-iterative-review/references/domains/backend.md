@@ -20,7 +20,7 @@ the database and migration tooling and how the project deploys (rolling
 deploys mean old and new code run against one schema); the error-handling
 and logging conventions; who calls the changed interface (other services,
 the frontend, scripts, downstream packages). For a library, the language
-guide you were given (`code-quality-review-<language>`) says how the
+guide you were given (`<language>-practices`) says how the
 language marks internals, and so what is public.
 
 ## Checks

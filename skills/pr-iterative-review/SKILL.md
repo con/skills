@@ -252,10 +252,10 @@ review says so under `not_checked`. `--domains` replaces this choice.
 from this file's directory) and give each reviewer the absolute paths of
 the ones it gets, with its lenses, in `LENS_FILES`:
 
-- the `code-quality-review-<language>` guide for each language in the
+- the `<language>-practices` guide for each language in the
   changed code (by extension, and by shebang for a script without one),
   to `project-fit` and to the reviewer with the backend lens, and
-  `code-quality-review-shell` to the reviewer with the ci-infra lens. The
+  `shell-practices` to the reviewer with the ci-infra lens. The
   guides are this skill's dependencies, so APM installs them with it; a
   language with no guide gets the lenses' checks only;
 - `skill-security-review`, to the reviewer with the skills lens, and
