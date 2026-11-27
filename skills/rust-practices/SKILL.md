@@ -230,6 +230,18 @@ lists by hand. rustfmt also checks the modules a file declares
   would do (`clippy::ptr_arg`, `needless_pass_by_value`) — an API change
   in a library (`NV`).
 
+**Public surface and deprecation**
+
+- **Internals**: private items, `pub(crate)`, and private modules
+  (Modules, visibility, and manifests); `#[doc(hidden)]` marks an item
+  that is public only for macros or tests.
+- **Deprecating** a public item: keep it and add
+  `#[deprecated(since = "1.4.0", note = "use g instead")]`; the
+  `deprecated` lint then warns at every use, in other crates too.
+  Removal waits for a SemVer-incompatible release (a new major version,
+  or a new minor one before 1.0).
+- **Breaking changes**: Verification's Public API step lists them.
+
 **Currency** (reported as `review-repo-code-quality` Step 2 says; read the
 live sources each item names)
 

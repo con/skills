@@ -219,6 +219,22 @@ not that the fix is safe).
 - a `requires-python` lower bound that CI never tests (`NV`: the claim or
   the test matrix has to change).
 
+**Public surface and deprecation**
+
+- **Internals** carry a leading underscore (modules and names), and
+  `__all__` lists what a star import binds and the documentation
+  promises; reaching into another package's `_name` is a finding
+  (Imports and modules).
+- **Deprecating** a public function, argument, or module: keep it
+  working, and call `warnings.warn("…", DeprecationWarning, stacklevel=2)`
+  where it is used, naming the replacement, or decorate it with
+  `@warnings.deprecated("…")` (PEP 702; Python 3.13, else
+  `typing_extensions.deprecated`), which type checkers also report at
+  each use. `DeprecationWarning` is shown by default only in `__main__`
+  and under test runners (PEP 565); a warning the users of an
+  application must see is a `FutureWarning`.
+- **Breaking changes**: Verification's Public surface step lists them.
+
 **Currency** (reported as `review-repo-code-quality` Step 2 says; read the
 live sources each item names rather than trusting its examples)
 

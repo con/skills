@@ -186,6 +186,18 @@ than passing that configuration itself.
 - `package.json` scripts that repeat one another, or that nothing calls
   (`DUP`, `DC`; see Not findings for the scripts npm runs by name).
 
+**Public surface and deprecation**
+
+- **Internals**: once `package.json` sets `exports`, a path it does not
+  list cannot be imported from the package, and a module member that is
+  not exported is private; in a library, adding to `exports` or exporting
+  a member widens the API.
+- **Deprecating** an export, option, or prop: keep it working and mark it
+  `/** @deprecated Use … instead. */`; editors strike its uses through,
+  and `@typescript-eslint/no-deprecated` (typed linting, consent) reports
+  them. Where callers are not type-checked, also warn once at run time.
+- **Breaking changes**: Verification's Public surface step lists them.
+
 **Currency** (reported as `review-repo-code-quality` Step 2 says; read the
 live sources each item names, and run every `npm view` from a scratch
 directory: a project's `.npmrc` can redirect the registry and send its
@@ -258,5 +270,14 @@ token there)
   tests included, so run it only in the throwaway checkout), `test`
   (vitest, jest, playwright), and `build`, since bundling catches broken
   imports a type check can miss.
+- **Public surface** (consent, for a library that publishes types):
+  emit declarations before and after with
+  `tsc -p <the configuration that builds the package> --declaration
+  --emitDeclarationOnly --noEmit false --outDir <scratch>/api-before`
+  (then `api-after`), check that each directory holds the package's
+  `.d.ts` files — a configuration with `"noEmit": true` or a solution
+  file writes nothing and still exits 0 — and diff them; or compare the
+  `.d.ts` files, or the API Extractor report, the project's own build
+  writes.
 - **Static, after any edit**: the static oxlint or biome command above on
   the changed files.

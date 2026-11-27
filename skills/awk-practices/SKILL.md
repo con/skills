@@ -255,6 +255,14 @@ behavior)
 - **Ambiguous redirections** (`CL`): `print "x" > "out" ".txt"`, which
   gawk's lint flags, writes `out.txt` in all four: parenthesize it.
 
+**Public surface and deprecation**
+
+- A program's `-v` variables, the input fields and separators it
+  expects, and its output format are what callers and downstream steps
+  depend on; changing any of them is `NV`. To retire a variable, keep
+  accepting it and print a warning to standard error
+  (`print "…" > "/dev/stderr"`, a file Linux and macOS provide).
+
 **Currency** (reported as `review-repo-code-quality` Step 2 says; read the
 live sources each item names)
 

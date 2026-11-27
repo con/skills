@@ -183,6 +183,18 @@ pass gocyclo `-ignore`.
   importers ignore them, but removing one changes which code this
   repository's own builds and tests use.
 
+**Public surface and deprecation**
+
+- **Internals**: lowercase identifiers, and packages under `internal/`
+  (Packages and structure).
+- **Deprecating** an exported identifier: keep it, as a wrapper around
+  its replacement if need be, and start a paragraph of its doc comment
+  with `Deprecated: `, naming the replacement
+  (https://go.dev/wiki/Deprecated); `staticcheck`'s `SA1019` (consent)
+  reports uses. Removal waits for a new major version, which changes the
+  module path (`/v2`).
+- **Breaking changes**: Verification's Public API step lists them.
+
 **Currency** (reported as `review-repo-code-quality` Step 2 says; read the
 live sources each item names)
 
