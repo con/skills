@@ -13,3 +13,5 @@ dependencies:
     - path: ../haskell-practices
     - path: ../shell-practices
     - path: ../awk-practices
+    - path: ../ts-vue-practices
+    - path: ../ts-vuetify-practices

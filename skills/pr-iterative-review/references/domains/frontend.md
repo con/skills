@@ -20,7 +20,10 @@ The component library or design system the project already uses; how it
 fetches data and holds state; its browser support (`browserslist`); its
 accessibility and internationalization setup; whether it tests visual
 changes (Storybook, Chromatic, Playwright snapshots); the backend contract
-the changed views consume (schema, types, API client).
+the changed views consume (schema, types, API client). The guides you were
+given (`ts-practices`, with `ts-vue-practices` and `ts-vuetify-practices`
+for a Vue or Vuetify project) add the framework's own Checks and Not
+findings: apply them to the changed components.
 
 ## Checks
 
@@ -88,7 +91,8 @@ standard such as WCAG AA)
 
 - **static**: read the changed components and the code paths that render
   them; search for the risky APIs named above; compare the `package.json`
-  and lockfile diff for new client dependencies.
+  and lockfile diff for new client dependencies; the guides' **static**
+  tools on the changed files.
 - **CI only**: building the bundle (it runs the project's configuration and
   plugins), component and end-to-end tests, Storybook, and accessibility
   checkers run against a build. The pull request's visual review and

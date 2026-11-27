@@ -252,12 +252,15 @@ review says so under `not_checked`. `--domains` replaces this choice.
 from this file's directory) and give each reviewer the absolute paths of
 the ones it gets, with its lenses, in `LENS_FILES`:
 
-- the `<language>-practices` guide for each language in the
-  changed code (by extension, and by shebang for a script without one),
-  to `project-fit` and to the reviewer with the backend lens, and
-  `shell-practices` to the reviewer with the ci-infra lens. The
-  guides are this skill's dependencies, so APM installs them with it; a
-  language with no guide gets the lenses' checks only;
+- the `<language>-practices` guide for each language in the changed
+  code (by extension, and by shebang for a script without one), to
+  `project-fit` and to the reviewers with the backend or frontend lens,
+  and `shell-practices` to the reviewer with the ci-infra lens. With
+  `ts-practices`, the frontend reviewer also gets `ts-vue-practices` when
+  the change touches `.vue` files, and `ts-vuetify-practices` when the
+  project depends on `vuetify`. The guides are this skill's dependencies,
+  so APM installs them with it; a language with no guide gets the lenses'
+  checks only;
 - `skill-security-review`, to the reviewer with the skills lens, and
   `review-human-prose`, to the reviewer with the docs lens, when they are
   installed.
