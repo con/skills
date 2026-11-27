@@ -203,11 +203,13 @@ checkout (say which), and "no", the default, as declined. The core
 prompt's house preferences are passed down as its `HOUSE_PREFERENCES`,
 and its subagent limit as its `MAX_SUBAGENTS`. Run the depth reviews one
 after another, so that the limit holds for the session as a whole.
-`review-repo-code-quality`'s "Recommended run settings" apply to this
-skill too: compare the session with them before Phase 0 and, as that
-section says, put the question in the one prompt before Phase 0 when a
-person started the review, or report the differences in the closing
-reply otherwise.
+`review-repo-code-quality`'s "Recommended run settings" (the most
+capable model at its highest reasoning effort, among others) apply to
+this skill too: compare the session with them right after the
+`MULTI_AGENT_MODE` check and, as that section says, put the question,
+which recommends stopping and starting a new session, in the one prompt
+before Phase 0 when a person started the review, or report the
+differences in the closing reply otherwise.
 Depth reviews are report-only (its Step 6, applying changes, is not run)
 unless the request asks for changes to be applied.
 

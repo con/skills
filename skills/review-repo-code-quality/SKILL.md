@@ -139,35 +139,48 @@ Record them in Method & limits.
 
 ### Recommended run settings
 
-How a session is set up decides most of what a review costs. One review
-of about 11,000 lines of source, run at the highest reasoning effort
-with multi-agent workflows on, started 84 subagents, exhausted its
-account's usage allowance twice, redid the work of 25 subagents that
-returned nothing, and took a week of wall-clock time, most of it waiting
-for the allowance to reset. The settings below are the recommendation
-for whoever starts a review:
+This skill recommends the most capable model the agent offers, at its
+highest reasoning effort. The steps that decide a review's worth
+(Step 3's architecture pass, Step 4's judgment of whether a change
+preserves behavior, Step 6's re-review) are judgment no tool makes, and
+a weaker model or a lower effort gives a thinner review that looks
+complete. What a review costs is held down by the other rows: no
+multi-agent mode and few subagents. One review of about 11,000 lines of
+source, run with multi-agent workflows on, started 84 subagents,
+exhausted its account's usage allowance twice, redid the work of 25
+subagents that returned nothing, and took a week of wall-clock time,
+most of it waiting for the allowance to reset.
 
 | Setting | Recommended | Why |
 |---|---|---|
-| Reasoning effort | the agent's default level, not its highest | every turn of the main session and of every subagent pays for the level |
+| Model | the most capable one the agent offers | the design and safety judgments are the review |
+| Reasoning effort | the highest level, on the main session and every subagent | the same |
 | Multi-agent or workflow modes | off (`MULTI_AGENT_MODE: stop` ends the review when one is on) | they start many subagents at once, past `MAX_SUBAGENTS` |
 | `MAX_SUBAGENTS` | `3` | traces are independent but small; batching candidates costs less than one subagent each |
 | Scope | one package or directory tree per review in a large repository | a report of several thousand lines is hard to act on |
 
-Before Step 1, and after the `MULTI_AGENT_MODE` check has let the review
-start, read the settings the session shows (report-conventions §1 says
-how) and compare them with this table. A skill cannot change
-the session's reasoning effort or its modes; only the person can. So
-when a person started the review in a conversation, and a setting
-differs from the recommendation without the request having asked for
-it, add one question to the Inputs prompt: it names each such setting,
-its value, the recommended one and how to change it in this agent, and
-offers to continue as set or to stop so the person can change the
-settings and start again. Stop only on that answer. A schedule or a
-calling skill is asked nothing: carry on, and open the closing reply
-with one line per differing setting, so the next run can be set up
-differently. Either way, keep to `MAX_SUBAGENTS` and batch whatever
-mode is on. The Run settings table records the values in effect.
+Right after the `MULTI_AGENT_MODE` check has let the review start, and
+before anything else, read the settings the session shows
+(report-conventions §1 says how) and compare them with this table. For
+the model, compare the one in use with the models the agent lists as
+available; where the session does not show whether a more capable one
+exists, name the model in use and say that this could not be checked.
+A skill cannot change the session's model, reasoning effort or modes;
+only the person can, and for the model and the effort that usually
+means starting a new session. So when a person started the review in a
+conversation, and a setting differs from the recommendation without the
+request having asked for it, add one question to the Inputs prompt. It
+opens with "This skill recommends the most capable model available at
+its highest reasoning effort", names each differing setting with its
+value and the recommended one, and offers two answers, the recommended
+one first: stop, so the person can start a new session with those
+settings and run the review there (say how in this agent), or continue
+as set. On "stop", end the review there, having read nothing and
+written no report. Stop only on that answer. A schedule or a calling
+skill is asked nothing: carry on, and open the closing reply with one
+line per differing setting, so the next run can be set up differently.
+Either way, keep to `MAX_SUBAGENTS` and batch whatever mode is on. The
+Run settings table records the values in effect.
 
 ## Procedure
 
