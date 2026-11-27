@@ -105,6 +105,15 @@ and so consent; without it, search the templates
   not a click on a thing: after a form submit, a search, or a query
   sync.
 
+**Public surface and deprecation**
+
+- An application's public surface is its routes: the paths and query
+  parameters people bookmark and link to. Renaming a path keeps the old
+  one as a `redirect` in the router (`NV` without it). In a component
+  library, props, emits, and slots are the API, and a deprecated prop
+  keeps working with `/** @deprecated */` on its type, as in
+  `ts-practices`.
+
 **Currency** (reported as `review-repo-code-quality` Step 2 says; read
 the live sources)
 

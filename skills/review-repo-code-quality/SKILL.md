@@ -343,12 +343,20 @@ first, and against these principles second:
   single-implementation abstractions, and wrappers that add nothing are
   candidates for removal.
 - **A deliberate public surface.** What the project exposes — documented
-  API, command-line interface, file formats, configuration keys, entry
-  points — is chosen and kept small, and internals are marked with the
-  language's convention. A change to that surface is a behavior change:
-  it goes under Needs Verification unless a compatibility path (a
-  re-export, an alias, a deprecation period) keeps every existing caller
-  working.
+  API, command-line interface, file formats, configuration keys,
+  environment variables, routes and URLs, entry points — is chosen and
+  kept small, and internals are marked with the language's convention
+  (each guide's Public surface and deprecation group). A change to that
+  surface is a behavior change: it goes under Needs Verification unless a
+  compatibility path (a re-export, an alias, a redirect, a deprecation
+  period) keeps every existing caller working. Unless the project states
+  its own deprecation policy, which then applies, retiring something
+  public takes three steps: soft deprecation, documented with no warning
+  (PEP 387's term); a run-time warning in the language's form once
+  removal is planned; removal in a later major release (under SemVer, or
+  a new minor release before 1.0). A removal that breaks the project's
+  compatibility promise is a finding of its own; keeping the promise but
+  skipping a step is a smaller one.
 - **Cross-cutting concerns solved once.** Retries, timeouts, caching,
   validation, and error reporting are implemented once and reused, not
   rewritten at each call site. Each job has one library: two libraries

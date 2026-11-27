@@ -147,6 +147,13 @@ function locationRoute(newLocation: string): RouteLocationRaw {
 }
 ```
 
+**Public surface and deprecation**
+
+- Vuetify reports its own deprecations in a development build's console,
+  through Vue's `warn`: `[Vuetify UPGRADE] '…' is deprecated, use '…'
+  instead.` Each one is a currency item (`CL` where the replacement
+  renders the same, else `NV`).
+
 ## Not findings
 
 - `router.push` for navigation that is not a click on a thing:

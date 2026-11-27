@@ -231,6 +231,18 @@ exports show up as weeds. HIE files are specific to the GHC that wrote them
 - Missing upper bounds (`cabal check` lists them), `allow-newer`, and git
   pins in `source-repository-package` or `extra-deps` (`NV`).
 
+**Public surface and deprecation**
+
+- **Internals**: names left out of export lists, and modules in
+  `other-modules` rather than `exposed-modules`; a `….Internal` module a
+  library exposes is documented as unstable.
+- **Deprecating** an exported name or module: keep it and add
+  `{-# DEPRECATED name "Use … instead" #-}` (for a module, after its
+  name in the `module` line); GHC warns at each use (`-Wdeprecations`, on
+  by default). Removal waits for a major version under the PVP (a change
+  to `A.B` in `A.B.C`).
+- **Breaking changes**: Verification's Public API step lists them.
+
 **Currency** (reported as `review-repo-code-quality` Step 2 says; read the
 live sources each item names rather than trusting its examples)
 

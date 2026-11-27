@@ -159,6 +159,14 @@ clean.
 - **Executable bit and shebang** (`CL`): a script with a shebang that is
   not executable, or run as `bash script.sh` despite one. Changing how it
   is invoked is `NV`.
+- **Public surface and deprecation** (`NV` to change): a script's
+  options, arguments, the environment variables it reads, its exit
+  statuses, and the output other scripts or CI parse are its interface,
+  as are the functions of a library that other scripts source. To retire
+  an option or variable, keep accepting it, print a one-line warning
+  naming the replacement to standard error
+  (`echo "--old is deprecated; use --new" >&2`), and keep it in the
+  usage text until it is removed.
 - **Currency** (`CL`, or `NV` where behavior changes): obsolete commands —
   `egrep` and `fgrep` (obsolescent: upstream GNU grep 3.8 and later
   warns; use `grep -E` and `grep -F`), `which` (use `command -v`) — and
