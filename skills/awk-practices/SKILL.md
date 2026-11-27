@@ -1,20 +1,20 @@
 ---
-name: code-quality-review-awk
-description: AWK guide for review-repo-code-quality and review-org-code-quality — the POSIX awk and gawk programs it covers (including programs embedded in shell scripts, Makefiles, and CI steps) and their portability to mawk, BusyBox awk, and the one-true-awk, its review tools and which need execution consent, awk checks such as a lookup array for a closed set of values, gawk features under a POSIX shebang, string and numeric comparison, and commands built from data, currency (gawk 5.4, POSIX.1-2024), false positives, and verification commands. Not invoked directly. Use when a review skill tells you to read it, or when asked what those reviews check for AWK.
+name: awk-practices
+description: AWK practices — the POSIX awk and gawk programs it covers (including programs embedded in shell scripts, Makefiles, and CI steps) and their portability to mawk, BusyBox awk, and the one-true-awk, its review tools and which need execution consent, awk checks such as a lookup array for a closed set of values, gawk features under a POSIX shebang, string and numeric comparison, and commands built from data, currency (gawk 5.4, POSIX.1-2024), false positives, and verification commands. Use when writing, changing, or reviewing awk programs, including in a pull-request review or a code-quality review (review-repo-code-quality and review-org-code-quality read it).
 allowed-tools: Read
 user-invocable: false
 ---
 
-# AWK guide for the code-quality reviews
+# AWK practices
 
-`review-repo-code-quality` holds the review procedure, the report layout,
-and the architecture principles that apply to every language; this guide
-adds what holds for awk programs only. It is not a review on its own: a
-review starts from `review-repo-code-quality`, which reads this guide in
-Step 1 for every repository with awk code in scope, and
-`review-org-code-quality` uses its **static** tools before its depth
-reviews. The category prefixes (`ARC`, `DC`, `DUP`, `CON`, `CL`, `NV`) and
-the **static** / **consent** marks are defined in
+What holds for awk programs only, for three kinds of work: writing or
+changing it, reviewing a pull request, and the code-quality reviews
+(`review-repo-code-quality` reads this guide in Step 1;
+`review-org-code-quality` runs its **static** tools). When writing code,
+follow Project rules and Checks and leave Not findings alone; when
+reviewing, report against them. The procedure, the architecture
+principles, the category prefixes (`ARC`, `DC`, `DUP`, `CON`, `CL`, `NV`),
+and the **static** / **consent** marks on the Tools are defined in
 `review-repo-code-quality`.
 
 It is written for awk one-liners and short programs in shell scripts,
@@ -37,7 +37,7 @@ Dockerfile `RUN` lines, and the `%post`, `%test`, and `%runscript`
 sections of Singularity/Apptainer recipes. Out of scope: generated
 programs, and templates a build fills in.
 
-`code-quality-review-shell` reviews the command around an embedded
+`shell-practices` reviews the command around an embedded
 program; this guide reviews the program text against the awk the command
 names, and how values reach it: `-v`, operands, `ENVIRON`, or text the
 shell splices in.

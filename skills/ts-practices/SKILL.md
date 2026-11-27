@@ -1,32 +1,35 @@
 ---
-name: code-quality-review-ts
-description: TypeScript and JavaScript guide for review-repo-code-quality and review-org-code-quality — where a project states its rules, its review tools and which need execution consent (ESLint and knip configurations are code), checks such as a long or growing string-literal union that becomes one as-const list, currency, false positives, and verification commands. Not invoked directly. Use when a review skill tells you to read it, or when asked what those reviews check for TypeScript or JavaScript.
+name: ts-practices
+description: TypeScript and JavaScript practices — where a project states its rules, its review tools and which need execution consent (ESLint and knip configurations are code), checks such as a long or growing string-literal union that becomes one as-const list, currency, false positives, and verification commands. Framework guides build on it (ts-vue-practices for Vue 3, ts-vuetify-practices for Vuetify 3). Use when writing, changing, or reviewing TypeScript or JavaScript, including in a pull-request review or a code-quality review (review-repo-code-quality and review-org-code-quality read it).
 allowed-tools: Read
 user-invocable: false
 ---
 
-# TypeScript and JavaScript guide for the code-quality reviews
+# TypeScript and JavaScript practices
 
-`review-repo-code-quality` holds the review procedure, the report layout,
-and the architecture principles that apply to every language; this guide
-adds what holds for TypeScript and JavaScript only. It is not a review on
-its own: a review starts from `review-repo-code-quality`, which reads this
-guide in Step 1 for every repository with such code in scope, and
-`review-org-code-quality` uses its **static** tools before its depth
-reviews. The category prefixes (`ARC`, `DC`, `DUP`, `CON`, `CL`, `NV`) and
-the **static** / **consent** marks are defined in
+What holds for TypeScript and JavaScript code only, for three kinds of
+work: writing or changing it, reviewing a pull request, and the
+code-quality reviews (`review-repo-code-quality` reads this guide in Step
+1; `review-org-code-quality` runs its **static** tools). When writing
+code, follow Project rules and Checks and leave Not findings alone; when
+reviewing, report against them. The procedure, the architecture
+principles, the category prefixes (`ARC`, `DC`, `DUP`, `CON`, `CL`, `NV`),
+and the **static** / **consent** marks on the Tools are defined in
 `review-repo-code-quality`.
 
-It is written for a Vue 3 single-page frontend built with Vite, small Node
-scripts, and JavaScript or TypeScript GitHub Actions. Other frameworks and
-runtimes (React, Angular, Svelte, server frameworks, Deno, Bun) and
+It is written for frontends built with Vite, small Node scripts, and
+JavaScript or TypeScript GitHub Actions. What a framework adds lives in
+its own guide, read together with this one: `ts-vue-practices` for Vue 3,
+and `ts-vuetify-practices` for Vuetify 3 on top of it. Other frameworks
+and runtimes (React, Angular, Svelte, server frameworks, Deno, Bun) and
 monorepo tools are left out: check their conventions before reporting
 there.
 
 ## Recognize
 
 `*.ts`, `*.tsx`, `*.mts`, `*.cts`, `*.js`, `*.jsx`, `*.mjs`, `*.cjs`, and
-the `<script>` blocks of `*.vue` components. Out of scope unless the
+the `<script>` blocks of `*.vue` components (`ts-vue-practices` covers the
+rest of a component). Out of scope unless the
 project edits them by hand: `node_modules/`, build output (`dist/`,
 `build/`, `coverage/`), minified or vendored bundles, and generated
 clients and types (OpenAPI code generation, `*.d.ts` files a build emits).
@@ -86,12 +89,11 @@ Step 1 shows.
 | Idiom drift | `biome lint`, your configuration | static | `biome lint --config-path=<scratch>/biome.json --reporter=concise <paths>` |
 | Import graph and cycles | `madge`, your tsconfig | static | `madge --circular --extensions ts,tsx,mts,cts,js,jsx,mjs,cjs [--ts-config <scratch>/tsconfig.json] <paths>`, where your `tsconfig.json` holds only an absolute `baseUrl` and the `paths` entries inside the checkout that you read from the project's tsconfig and the files it extends; leave out `--ts-config` where the project maps no paths; madge reads no imports from `.mts` / `.cts` files (say so in Method & limits) |
 | Types | `tsc` | consent | `<checkout>/node_modules/.bin/tsc --noEmit -p <tsconfig>` |
-| Complexity | `lizard` | static | `lizard -l typescript -l tsx -l javascript -l vue -w <paths>`; it skips `.mts` and `.cts` files in a directory, and given one by name parses it with its C reader and reports wrong functions, so leave them out of a file list (say so in Method & limits) |
+| Complexity | `lizard` | static | `lizard -l typescript -l tsx -l javascript -w <paths>`; it skips `.mts` and `.cts` files in a directory, and given one by name parses it with its C reader and reports wrong functions, so leave them out of a file list (say so in Method & limits) |
 | Tests | the project's runner | consent | see Verification |
 
-Plain `tsc` does not read `.vue` files: where the project checks them with
-`vue-tsc`, a `tsc` wrapper, use its copy in place of `tsc` throughout.
-Check what each tsc run covers: `tsc --listFilesOnly -p <tsconfig>` must
+Plain `tsc` does not read `.vue` files; `ts-vue-practices` names the
+wrapper that does. Check what each tsc run covers: `tsc --listFilesOnly -p <tsconfig>` must
 list the sources. A solution-style root `tsconfig.json` (`"files": []`
 with `references`) compiles nothing, so `tsc --noEmit` on it exits 0
 having checked no file. Run each command with `-p` on every referenced
@@ -235,7 +237,6 @@ token there)
   from pnpm 9; Yarn 2 and later do not: where they do not run, an uncalled
   one is dead), plus scripts that CI, documentation, other scripts, or a
   task runner invoke.
-- Vue components used only from templates.
 - Side-effect imports (`import "./polyfills"`, stylesheet imports),
   declaration merging and module augmentation (`declare module`,
   `declare global`), and ambient `*.d.ts` files.

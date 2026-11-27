@@ -1,6 +1,0 @@
-name: code-quality-review-python
-version: "0.1.0"
-description: "Python checks, tools and false positives for review-repo-code-quality"
-author: Cody C. Baker
-license: MIT
-type: skill

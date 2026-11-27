@@ -1,20 +1,20 @@
 ---
-name: code-quality-review-rust
-description: Rust guide for review-repo-code-quality and review-org-code-quality — where a crate or Cargo workspace states its rules, its review tools and which need execution consent, Rust checks such as a set of values matched as strings that becomes one enum, panics and error types in library code, and feature combinations, currency (editions, rust-version, lazy_static, archived actions-rs actions, RustSec advisories), false positives, and verification commands. Not invoked directly. Use when a review skill tells you to read it, or when asked what those reviews check for Rust.
+name: rust-practices
+description: Rust practices — where a crate or Cargo workspace states its rules, its review tools and which need execution consent, Rust checks such as a set of values matched as strings that becomes one enum, panics and error types in library code, and feature combinations, currency (editions, rust-version, lazy_static, archived actions-rs actions, RustSec advisories), false positives, and verification commands. Use when writing, changing, or reviewing Rust code, including in a pull-request review or a code-quality review (review-repo-code-quality and review-org-code-quality read it).
 allowed-tools: Read
 user-invocable: false
 ---
 
-# Rust guide for the code-quality reviews
+# Rust practices
 
-`review-repo-code-quality` holds the review procedure, the report layout,
-and the architecture principles that apply to every language; this guide
-adds what holds for Rust only. It is not a review on its own: a review
-starts from `review-repo-code-quality`, which reads this guide in Step 1
-for every repository with Rust code in scope, and
-`review-org-code-quality` uses its **static** tools before its depth
-reviews. The category prefixes (`ARC`, `DC`, `DUP`, `CON`, `CL`, `NV`) and
-the **static** / **consent** marks are defined in
+What holds for Rust code only, for three kinds of work: writing or
+changing it, reviewing a pull request, and the code-quality reviews
+(`review-repo-code-quality` reads this guide in Step 1;
+`review-org-code-quality` runs its **static** tools). When writing code,
+follow Project rules and Checks and leave Not findings alone; when
+reviewing, report against them. The procedure, the architecture
+principles, the category prefixes (`ARC`, `DC`, `DUP`, `CON`, `CL`, `NV`),
+and the **static** / **consent** marks on the Tools are defined in
 `review-repo-code-quality`.
 
 It is written for command-line tools and small async services (tokio, an

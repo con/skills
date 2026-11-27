@@ -1,20 +1,20 @@
 ---
-name: code-quality-review-shell
-description: Shell guide for review-repo-code-quality and review-org-code-quality — the POSIX sh and Bash it covers (including shell embedded in CI workflows, Makefiles, and Dockerfiles), its static review tools, shell checks such as strict mode, quoting, Bash features under /bin/sh, and snippets copied between workflow steps, false positives, and verification commands. Not invoked directly. Use when a review skill tells you to read it, or when asked what those reviews check for shell scripts.
+name: shell-practices
+description: Shell practices — the POSIX sh and Bash it covers (including shell embedded in CI workflows, Makefiles, and Dockerfiles), its static review tools, shell checks such as strict mode, quoting, Bash features under /bin/sh, and snippets copied between workflow steps, false positives, and verification commands. Use when writing, changing, or reviewing shell scripts or embedded shell, including in a pull-request review or a code-quality review (review-repo-code-quality and review-org-code-quality read it).
 allowed-tools: Read
 user-invocable: false
 ---
 
-# Shell guide for the code-quality reviews
+# Shell practices
 
-`review-repo-code-quality` holds the review procedure, the report layout,
-and the architecture principles that apply to every language; this guide
-adds what holds for shell scripts only. It is not a review on its own: a
-review starts from `review-repo-code-quality`, which reads this guide in
-Step 1 for every repository with shell code in scope, and
-`review-org-code-quality` uses its **static** tools before its depth
-reviews. The category prefixes (`ARC`, `DC`, `DUP`, `CON`, `CL`, `NV`) and
-the **static** / **consent** marks are defined in
+What holds for shell scripts only, for three kinds of work: writing or
+changing it, reviewing a pull request, and the code-quality reviews
+(`review-repo-code-quality` reads this guide in Step 1;
+`review-org-code-quality` runs its **static** tools). When writing code,
+follow Project rules and Checks and leave Not findings alone; when
+reviewing, report against them. The procedure, the architecture
+principles, the category prefixes (`ARC`, `DC`, `DUP`, `CON`, `CL`, `NV`),
+and the **static** / **consent** marks on the Tools are defined in
 `review-repo-code-quality`.
 
 It is written for Bash and POSIX sh in research software: helper,
@@ -34,7 +34,7 @@ steps in GitHub Actions workflows and composite actions (`action.yml` or
 lines, and the `%post`, `%test`, and `%runscript` sections of
 Singularity/Apptainer recipes.
 
-Awk programs embedded in shell belong to `code-quality-review-awk`; this
+Awk programs embedded in shell belong to `awk-practices`; this
 guide reviews the command around each one.
 
 ## Project rules

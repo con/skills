@@ -1,20 +1,20 @@
 ---
-name: code-quality-review-haskell
-description: Haskell guide for review-repo-code-quality and review-org-code-quality — where a Cabal or Stack project states its rules, its review tools and which need execution consent, Haskell checks such as a closed set of strings that becomes a sum type deriving Enum and Bounded, partial functions, String and Text, orphan instances, and laziness, currency (GHC releases, GHC2024, Stackage, CI actions), false positives, and verification commands. Not invoked directly. Use when a review skill tells you to read it, or when asked what those reviews check for Haskell.
+name: haskell-practices
+description: Haskell practices — where a Cabal or Stack project states its rules, its review tools and which need execution consent, Haskell checks such as a closed set of strings that becomes a sum type deriving Enum and Bounded, partial functions, String and Text, orphan instances, and laziness, currency (GHC releases, GHC2024, Stackage, CI actions), false positives, and verification commands. Use when writing, changing, or reviewing Haskell code, including in a pull-request review or a code-quality review (review-repo-code-quality and review-org-code-quality read it).
 allowed-tools: Read
 user-invocable: false
 ---
 
-# Haskell guide for the code-quality reviews
+# Haskell practices
 
-`review-repo-code-quality` holds the review procedure, the report layout,
-and the architecture principles that apply to every language; this guide
-adds what holds for Haskell only. It is not a review on its own: a review
-starts from `review-repo-code-quality`, which reads this guide in Step 1
-for every repository with Haskell code in scope, and
-`review-org-code-quality` uses its **static** tools before its depth
-reviews. The category prefixes (`ARC`, `DC`, `DUP`, `CON`, `CL`, `NV`) and
-the **static** / **consent** marks are defined in
+What holds for Haskell code only, for three kinds of work: writing or
+changing it, reviewing a pull request, and the code-quality reviews
+(`review-repo-code-quality` reads this guide in Step 1;
+`review-org-code-quality` runs its **static** tools). When writing code,
+follow Project rules and Checks and leave Not findings alone; when
+reviewing, report against them. The procedure, the architecture
+principles, the category prefixes (`ARC`, `DC`, `DUP`, `CON`, `CL`, `NV`),
+and the **static** / **consent** marks on the Tools are defined in
 `review-repo-code-quality`.
 
 It is written for one large, long-lived application built with cabal-install
