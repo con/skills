@@ -4,3 +4,6 @@ description: "Python practices for scientific packages: rules, checks, review to
 author: Cody C. Baker
 license: MIT
 type: skill
+dependencies:
+  apm:
+    - path: ../general-practices

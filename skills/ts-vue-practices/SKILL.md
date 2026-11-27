@@ -10,14 +10,12 @@ user-invocable: false
 What Vue 3 adds to `ts-practices`, for three kinds of work: writing or
 changing Vue components, reviewing a pull request, and the code-quality
 reviews (`review-repo-code-quality` reads this guide in Step 1 with
-`ts-practices`; `review-org-code-quality` runs its **static** tools).
-Read `ts-practices` first: everything there holds inside `<script>`
-blocks too, and this guide only adds to it. When writing code, follow
-Project rules and Checks and leave Not findings alone; when reviewing,
-report against them. The procedure, the architecture principles, the
-category prefixes (`ARC`, `DC`, `DUP`, `CON`, `CL`, `NV`), and the
-**static** / **consent** marks on the Tools are defined in
-`review-repo-code-quality`.
+`ts-practices`; `review-org-code-quality` runs its **static** tools). Read
+`general-practices` and `ts-practices` first: everything in `ts-practices`
+holds inside `<script>` blocks too, this guide only adds to it, and
+`general-practices` says how to weigh the guides and defines the
+**static** / **consent** marks, the category prefixes (`ARC`, `DC`, `DUP`,
+`CON`, `CL`, `NV`), and the architecture principles.
 
 It is written for Vue 3 single-page applications built with Vite, with
 the Composition API in `<script setup>` and vue-router. Vue 2 and the
@@ -104,6 +102,15 @@ and so consent; without it, search the templates
   element becomes an anchor). Keep `router.push` for navigation that is
   not a click on a thing: after a form submit, a search, or a query
   sync.
+
+**Public surface and deprecation**
+
+- An application's public surface is its routes: the paths and query
+  parameters people bookmark and link to. Renaming a path keeps the old
+  one as a `redirect` in the router (`NV` without it). In a component
+  library, props, emits, and slots are the API, and a deprecated prop
+  keeps working with `/** @deprecated */` on its type, as in
+  `ts-practices`.
 
 **Currency** (reported as `review-repo-code-quality` Step 2 says; read
 the live sources)

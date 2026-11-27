@@ -10,12 +10,11 @@ user-invocable: false
 What holds for Python code only, for three kinds of work: writing or
 changing it, reviewing a pull request, and the code-quality reviews
 (`review-repo-code-quality` reads this guide in Step 1;
-`review-org-code-quality` runs its **static** tools). When writing code,
-follow Project rules and Checks and leave Not findings alone; when
-reviewing, report against them. The procedure, the architecture
-principles, the category prefixes (`ARC`, `DC`, `DUP`, `CON`, `CL`, `NV`),
-and the **static** / **consent** marks on the Tools are defined in
-`review-repo-code-quality`.
+`review-org-code-quality` runs its **static** tools). Read
+`general-practices` first: it says how to weigh this guide against the
+project's own rules and your own judgment, and defines the **static** /
+**consent** marks on the Tools, the category prefixes (`ARC`, `DC`, `DUP`,
+`CON`, `CL`, `NV`), and the architecture principles.
 
 It is written for pure-Python scientific packages and command-line tools
 on the NumPy stack, tested with pytest. Web frameworks and compiled
@@ -218,6 +217,22 @@ not that the fix is safe).
   `pyproject.toml` (`ARC`);
 - a `requires-python` lower bound that CI never tests (`NV`: the claim or
   the test matrix has to change).
+
+**Public surface and deprecation**
+
+- **Internals** carry a leading underscore (modules and names), and
+  `__all__` lists what a star import binds and the documentation
+  promises; reaching into another package's `_name` is a finding
+  (Imports and modules).
+- **Deprecating** a public function, argument, or module: keep it
+  working, and call `warnings.warn("…", DeprecationWarning, stacklevel=2)`
+  where it is used, naming the replacement, or decorate it with
+  `@warnings.deprecated("…")` (PEP 702; Python 3.13, else
+  `typing_extensions.deprecated`), which type checkers also report at
+  each use. `DeprecationWarning` is shown by default only in `__main__`
+  and under test runners (PEP 565); a warning the users of an
+  application must see is a `FutureWarning`.
+- **Breaking changes**: Verification's Public surface step lists them.
 
 **Currency** (reported as `review-repo-code-quality` Step 2 says; read the
 live sources each item names rather than trusting its examples)

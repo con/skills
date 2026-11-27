@@ -10,12 +10,11 @@ user-invocable: false
 What holds for awk programs only, for three kinds of work: writing or
 changing it, reviewing a pull request, and the code-quality reviews
 (`review-repo-code-quality` reads this guide in Step 1;
-`review-org-code-quality` runs its **static** tools). When writing code,
-follow Project rules and Checks and leave Not findings alone; when
-reviewing, report against them. The procedure, the architecture
-principles, the category prefixes (`ARC`, `DC`, `DUP`, `CON`, `CL`, `NV`),
-and the **static** / **consent** marks on the Tools are defined in
-`review-repo-code-quality`.
+`review-org-code-quality` runs its **static** tools). Read
+`general-practices` first: it says how to weigh this guide against the
+project's own rules and your own judgment, and defines the **static** /
+**consent** marks on the Tools, the category prefixes (`ARC`, `DC`, `DUP`,
+`CON`, `CL`, `NV`), and the architecture principles.
 
 It is written for awk one-liners and short programs in shell scripts,
 Makefiles, GitHub Actions steps, and container recipes, and the
@@ -254,6 +253,14 @@ behavior)
   literal wants `index($0, pat)`, not `$0 ~ pat`.
 - **Ambiguous redirections** (`CL`): `print "x" > "out" ".txt"`, which
   gawk's lint flags, writes `out.txt` in all four: parenthesize it.
+
+**Public surface and deprecation**
+
+- A program's `-v` variables, the input fields and separators it
+  expects, and its output format are what callers and downstream steps
+  depend on; changing any of them is `NV`. To retire a variable, keep
+  accepting it and print a warning to standard error
+  (`print "…" > "/dev/stderr"`, a file Linux and macOS provide).
 
 **Currency** (reported as `review-repo-code-quality` Step 2 says; read the
 live sources each item names)

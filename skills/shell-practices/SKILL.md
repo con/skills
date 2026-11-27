@@ -10,12 +10,11 @@ user-invocable: false
 What holds for shell scripts only, for three kinds of work: writing or
 changing it, reviewing a pull request, and the code-quality reviews
 (`review-repo-code-quality` reads this guide in Step 1;
-`review-org-code-quality` runs its **static** tools). When writing code,
-follow Project rules and Checks and leave Not findings alone; when
-reviewing, report against them. The procedure, the architecture
-principles, the category prefixes (`ARC`, `DC`, `DUP`, `CON`, `CL`, `NV`),
-and the **static** / **consent** marks on the Tools are defined in
-`review-repo-code-quality`.
+`review-org-code-quality` runs its **static** tools). Read
+`general-practices` first: it says how to weigh this guide against the
+project's own rules and your own judgment, and defines the **static** /
+**consent** marks on the Tools, the category prefixes (`ARC`, `DC`, `DUP`,
+`CON`, `CL`, `NV`), and the architecture principles.
 
 It is written for Bash and POSIX sh in research software: helper,
 release, test, and data-processing scripts, and the shell in GitHub
@@ -159,6 +158,14 @@ clean.
 - **Executable bit and shebang** (`CL`): a script with a shebang that is
   not executable, or run as `bash script.sh` despite one. Changing how it
   is invoked is `NV`.
+- **Public surface and deprecation** (`NV` to change): a script's
+  options, arguments, the environment variables it reads, its exit
+  statuses, and the output other scripts or CI parse are its interface,
+  as are the functions of a library that other scripts source. To retire
+  an option or variable, keep accepting it, print a one-line warning
+  naming the replacement to standard error
+  (`echo "--old is deprecated; use --new" >&2`), and keep it in the
+  usage text until it is removed.
 - **Currency** (`CL`, or `NV` where behavior changes): obsolete commands —
   `egrep` and `fgrep` (obsolescent: upstream GNU grep 3.8 and later
   warns; use `grep -E` and `grep -F`), `which` (use `command -v`) — and

@@ -10,12 +10,11 @@ user-invocable: false
 What holds for Go code only, for three kinds of work: writing or changing
 it, reviewing a pull request, and the code-quality reviews
 (`review-repo-code-quality` reads this guide in Step 1;
-`review-org-code-quality` runs its **static** tools). When writing code,
-follow Project rules and Checks and leave Not findings alone; when
-reviewing, report against them. The procedure, the architecture
-principles, the category prefixes (`ARC`, `DC`, `DUP`, `CON`, `CL`, `NV`),
-and the **static** / **consent** marks on the Tools are defined in
-`review-repo-code-quality`.
+`review-org-code-quality` runs its **static** tools). Read
+`general-practices` first: it says how to weigh this guide against the
+project's own rules and your own judgment, and defines the **static** /
+**consent** marks on the Tools, the category prefixes (`ARC`, `DC`, `DUP`,
+`CON`, `CL`, `NV`), and the architecture principles.
 
 It is written for single-module command-line tools, small services, and
 data-transfer utilities, built with the standard toolchain and tested with
@@ -182,6 +181,18 @@ pass gocyclo `-ignore`.
 - `replace` directives left in a module that others import (`NV`):
   importers ignore them, but removing one changes which code this
   repository's own builds and tests use.
+
+**Public surface and deprecation**
+
+- **Internals**: lowercase identifiers, and packages under `internal/`
+  (Packages and structure).
+- **Deprecating** an exported identifier: keep it, as a wrapper around
+  its replacement if need be, and start a paragraph of its doc comment
+  with `Deprecated: `, naming the replacement
+  (https://go.dev/wiki/Deprecated); `staticcheck`'s `SA1019` (consent)
+  reports uses. Removal waits for a new major version, which changes the
+  module path (`/v2`).
+- **Breaking changes**: Verification's Public API step lists them.
 
 **Currency** (reported as `review-repo-code-quality` Step 2 says; read the
 live sources each item names)

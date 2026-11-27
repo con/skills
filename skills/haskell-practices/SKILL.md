@@ -10,12 +10,11 @@ user-invocable: false
 What holds for Haskell code only, for three kinds of work: writing or
 changing it, reviewing a pull request, and the code-quality reviews
 (`review-repo-code-quality` reads this guide in Step 1;
-`review-org-code-quality` runs its **static** tools). When writing code,
-follow Project rules and Checks and leave Not findings alone; when
-reviewing, report against them. The procedure, the architecture
-principles, the category prefixes (`ARC`, `DC`, `DUP`, `CON`, `CL`, `NV`),
-and the **static** / **consent** marks on the Tools are defined in
-`review-repo-code-quality`.
+`review-org-code-quality` runs its **static** tools). Read
+`general-practices` first: it says how to weigh this guide against the
+project's own rules and your own judgment, and defines the **static** /
+**consent** marks on the Tools, the category prefixes (`ARC`, `DC`, `DUP`,
+`CON`, `CL`, `NV`), and the architecture principles.
 
 It is written for one large, long-lived application built with cabal-install
 (sometimes Stack), with a test suite, CPP for platform and feature flags,
@@ -230,6 +229,18 @@ exports show up as weeds. HIE files are specific to the GHC that wrote them
   every component (`CON`: a `common` stanza, or Hpack's top-level fields).
 - Missing upper bounds (`cabal check` lists them), `allow-newer`, and git
   pins in `source-repository-package` or `extra-deps` (`NV`).
+
+**Public surface and deprecation**
+
+- **Internals**: names left out of export lists, and modules in
+  `other-modules` rather than `exposed-modules`; a `….Internal` module a
+  library exposes is documented as unstable.
+- **Deprecating** an exported name or module: keep it and add
+  `{-# DEPRECATED name "Use … instead" #-}` (for a module, after its
+  name in the `module` line); GHC warns at each use (`-Wdeprecations`, on
+  by default). Removal waits for a major version under the PVP (a change
+  to `A.B` in `A.B.C`).
+- **Breaking changes**: Verification's Public API step lists them.
 
 **Currency** (reported as `review-repo-code-quality` Step 2 says; read the
 live sources each item names rather than trusting its examples)

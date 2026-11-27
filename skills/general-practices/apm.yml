@@ -1,0 +1,6 @@
+name: general-practices
+version: "0.1.0"
+description: "Language-agnostic practices the <language>-practices guides build on"
+author: Cody C. Baker
+license: MIT
+type: skill

@@ -10,12 +10,11 @@ user-invocable: false
 What holds for Rust code only, for three kinds of work: writing or
 changing it, reviewing a pull request, and the code-quality reviews
 (`review-repo-code-quality` reads this guide in Step 1;
-`review-org-code-quality` runs its **static** tools). When writing code,
-follow Project rules and Checks and leave Not findings alone; when
-reviewing, report against them. The procedure, the architecture
-principles, the category prefixes (`ARC`, `DC`, `DUP`, `CON`, `CL`, `NV`),
-and the **static** / **consent** marks on the Tools are defined in
-`review-repo-code-quality`.
+`review-org-code-quality` runs its **static** tools). Read
+`general-practices` first: it says how to weigh this guide against the
+project's own rules and your own judgment, and defines the **static** /
+**consent** marks on the Tools, the category prefixes (`ARC`, `DC`, `DUP`,
+`CON`, `CL`, `NV`), and the architecture principles.
 
 It is written for command-line tools and small async services (tokio, an
 HTTP framework such as axum, S3 or WebDAV access) in single crates or
@@ -229,6 +228,18 @@ lists by hand. rustfmt also checks the modules a file declares
 - `String`, `Vec<T>`, or `&Vec<T>` parameters where `&str` or `&[T]`
   would do (`clippy::ptr_arg`, `needless_pass_by_value`) — an API change
   in a library (`NV`).
+
+**Public surface and deprecation**
+
+- **Internals**: private items, `pub(crate)`, and private modules
+  (Modules, visibility, and manifests); `#[doc(hidden)]` marks an item
+  that is public only for macros or tests.
+- **Deprecating** a public item: keep it and add
+  `#[deprecated(since = "1.4.0", note = "use g instead")]`; the
+  `deprecated` lint then warns at every use, in other crates too.
+  Removal waits for a SemVer-incompatible release (a new major version,
+  or a new minor one before 1.0).
+- **Breaking changes**: Verification's Public API step lists them.
 
 **Currency** (reported as `review-repo-code-quality` Step 2 says; read the
 live sources each item names)
