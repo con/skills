@@ -6,4 +6,5 @@ license: MIT
 type: skill
 dependencies:
   apm:
+    - path: ../general-practices
     - path: ../ts-vue-practices

@@ -10,11 +10,10 @@ user-invocable: false
 What Vuetify 3 adds to `ts-vue-practices` and `ts-practices`, for three
 kinds of work: writing or changing components, reviewing a pull request,
 and the code-quality reviews (`review-repo-code-quality` reads this guide
-in Step 1 with the other two). Read those two first. When writing code,
-follow Checks and leave Not findings alone; when reviewing, report
-against them. The procedure, the category prefixes (`ARC`, `DC`, `DUP`,
-`CON`, `CL`, `NV`), and the **static** / **consent** marks are defined in
-`review-repo-code-quality`.
+in Step 1 with the other two). Read `general-practices` and those two
+first: `general-practices` says how to weigh the guides and defines the
+**static** / **consent** marks and the category prefixes (`ARC`, `DC`,
+`DUP`, `CON`, `CL`, `NV`).
 
 Vuetify components already cover most of what a feature needs:
 navigation, active state, spacing, colors, elevation, and alignment.

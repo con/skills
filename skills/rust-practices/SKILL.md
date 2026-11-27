@@ -10,12 +10,11 @@ user-invocable: false
 What holds for Rust code only, for three kinds of work: writing or
 changing it, reviewing a pull request, and the code-quality reviews
 (`review-repo-code-quality` reads this guide in Step 1;
-`review-org-code-quality` runs its **static** tools). When writing code,
-follow Project rules and Checks and leave Not findings alone; when
-reviewing, report against them. The procedure, the architecture
-principles, the category prefixes (`ARC`, `DC`, `DUP`, `CON`, `CL`, `NV`),
-and the **static** / **consent** marks on the Tools are defined in
-`review-repo-code-quality`.
+`review-org-code-quality` runs its **static** tools). Read
+`general-practices` first: it says how to weigh this guide against the
+project's own rules and your own judgment, and defines the **static** /
+**consent** marks on the Tools, the category prefixes (`ARC`, `DC`, `DUP`,
+`CON`, `CL`, `NV`), and the architecture principles.
 
 It is written for command-line tools and small async services (tokio, an
 HTTP framework such as axum, S3 or WebDAV access) in single crates or
