@@ -31,21 +31,20 @@ sibling skill:
 | Shell (POSIX sh, Bash), including shell embedded in CI workflows, Makefiles, and Dockerfiles | `shell-practices` |
 | AWK (POSIX awk, gawk), including programs embedded in shell scripts, Makefiles, and CI steps | `awk-practices` |
 
-Every guide has the same sections, which the steps below refer to:
-**Recognize** (the files it covers), **Project rules** (where the
-language keeps its configuration, and the version settings that bound
-what may be proposed), **Tools** (for each sweep, a tool marked
-**static** or **consent**, as defined in Step 1, including a way to draw
-the import graph), **Checks** (the language's idioms and design checks,
-each with the report category it usually lands in, among them the
-idiom for a closed set of values and a Currency group), **Not findings**
-(what looks dead or wrong in that language but is not), and
-**Verification** (the commands that show a change preserved behavior).
-The guides also serve writing code and reviewing pull requests, so they
-hold a language's practices, not review steps; `general-practices`, which
-they all build on, says how to weigh them and how to add one. APM
-installs the guides, `general-practices`, the report conventions, and
-`analyze-duplicates` with this skill.
+Each guide is two files, laid out as `general-practices` describes: a
+short `SKILL.md` with the language's preferences, which also serves
+writing code and reviewing pull requests, and a `references/review.md`
+with what this review needs beyond them: **Project rules** in full,
+**Tools** (for each sweep, a tool marked **static** or **consent**,
+including a way to draw the import graph), **Checks** (each with the
+report category it usually lands in, among them the idiom for a closed
+set of values and a Currency group), **Not findings** (what looks dead
+or wrong in that language but is not), and **Verification** (the
+commands that show a change preserved behavior). In this skill, "the
+guide" means both files, and the steps below refer to those sections.
+`general-practices`, which every guide builds on, says how to weigh them
+and how to add one. APM installs the guides, `general-practices`, the
+report conventions, and `analyze-duplicates` with this skill.
 
 Shared rules — where the report goes, the provenance stamp that records
 which version of this skill produced it, evidence standards, re-review,
@@ -118,19 +117,19 @@ Record them in Method & limits.
 Read `AGENTS.md` / `CLAUDE.md` and `CONTRIBUTING.md`, whichever exist.
 
 Then find the languages in scope: list the tracked files (`git ls-files`)
-by extension, and by shebang for scripts without one, leaving out what
-the scope excludes. Read the Recognize section of every installed
-`../*-practices/SKILL.md` (the table's guides and any others),
-match them against that list and, where a guide says so, against file
-contents (shell inside CI workflows, for example), and load each guide
-that matches. A language still unmatched gets the general checks only,
-whether its guide in the table is not installed (Method & limits names
-it) or it has no guide. The general checks are the
+by extension, and by shebang for scripts without one, leaving out what the
+scope excludes. Read the Recognize section of every installed
+`../*-practices/SKILL.md` (the table's guides and any others), match them
+against that list and, where a guide says so, against file contents (shell
+inside CI workflows, for example), and load each guide that matches: its
+`SKILL.md` and its `references/review.md`. A language still unmatched gets
+the general checks only, whether its guide in the table is not installed
+(Method & limits names it) or it has no guide. The general checks are the
 language-independent parts of this procedure: Step 2's duplication,
-project-rule-drift, inert-configuration and currency sweeps and its
-"in any language" idiom checks, `lizard` where it supports the language,
-plain searches, and Step 3. Say in Method & limits which languages got
-only these.
+project-rule-drift, inert-configuration and currency sweeps and its "in
+any language" idiom checks, `lizard` where it supports the language, plain
+searches, and Step 3. Say in Method & limits which languages got only
+these.
 
 Then read, in this order, whatever exists: the files each loaded guide's
 Project rules section lists (linters, formatters, type checkers, build

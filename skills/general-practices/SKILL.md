@@ -32,9 +32,10 @@ read this first.
   behaves differently, follow what it does and say so; the guide is then
   due a fix, which `suggest-skill-fixes` can propose.
 - **Writing and reviewing use the same guide.** When writing code, follow
-  Project rules and Checks, leave Not findings alone, and run the
-  Verification commands that apply. When reviewing, report against them,
-  and name the guide a finding comes from.
+  a guide's Project rules and Preferences, leave its Not findings alone,
+  and run the Verification that applies. When reviewing, report against
+  them, and name the guide a finding comes from; a code-quality review
+  also reads the guide's `references/review.md`.
 
 ## Tool marks
 
@@ -127,21 +128,24 @@ these second:
 
 ## Adding a guide
 
-Every guide has the same sections: **Recognize** (the files it covers),
-**Project rules** (where the language keeps its configuration, and the
-version settings that bound what may be proposed), **Tools** (for each
-sweep, a tool marked **static** or **consent**, including a way to draw
-the import graph), **Checks** (each with the category it usually lands
-in; among them the idiom for a closed set of values, a **Public surface
-and deprecation** group, and a **Currency** group), **Not findings**
-(what looks dead or wrong in that language but is not), and
-**Verification** (the commands that show a change preserved behavior).
-Each also says, after its intro, which kinds of projects it is written
-for.
+Every guide is two files. Its `SKILL.md` is the short core that any of
+the three kinds of work loads: after the intro, the kinds of projects it
+is written for, then **Recognize** (the files it covers), **Project
+rules** (what to read, and what bounds what may be proposed),
+**Preferences** (the house's choices and the pitfalls worth knowing,
+among them the idiom for a closed set of values), **Public surface and
+deprecation**, **Not findings**, and **Verification**, each in a few
+lines. Its `references/review.md` holds what a code-quality review needs
+beyond that: **Project rules** in full, **Tools** (for each sweep, a tool
+marked **static** or **consent**, including a way to draw the import
+graph), **Checks** (each with the category it usually lands in, among
+them a **Currency** group naming live sources), **Not findings** in full,
+and **Verification** commands. Keep the core short: a preference belongs
+there, a tool flag or a version-specific behavior in the reference.
 
 To add a language, add a sibling `<language>-practices` skill
 (`user-invocable: false`, `allowed-tools: Read`, its own `apm.yml`
-depending on `general-practices`) with those sections, a row in
+depending on `general-practices`) with those two files, a row in
 `review-repo-code-quality`'s guide table and in the repository's README,
 and an entry under `dependencies` in `review-repo-code-quality`'s and
 `review-org-code-quality`'s `apm.yml`. A framework gets its own guide the
