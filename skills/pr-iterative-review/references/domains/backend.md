@@ -20,7 +20,7 @@ the database and migration tooling and how the project deploys (rolling
 deploys mean old and new code run against one schema); the error-handling
 and logging conventions; who calls the changed interface (other services,
 the frontend, scripts, downstream packages). The Public surface and
-deprecation group of each language guide you were given
+deprecation section of each language guide you were given
 (`<language>-practices`) says what is public in that language and how
 internals are marked.
 
@@ -36,9 +36,10 @@ internals are marked.
   the interface offers:
   - Library APIs: the old name, argument or default keeps working beside
     the new one, marked as the language guide's Public surface and
-    deprecation group says, or the language's own way where no guide
-    covers it. Where the group names the guide's step that lists breaking
-    API changes, that step is **consent**: only CI's run of it counts.
+    deprecation section says, or the language's own way where no guide
+    covers it. The tools that list breaking API changes, which that
+    section points to, build or import the project: only CI's run of one
+    counts.
   - Command-line tools: an old flag stays as an alias that warns on stderr
     and leaves the exit status alone.
   - Web APIs: `deprecated: true` in OpenAPI, `@deprecated(reason: …)` in
@@ -87,8 +88,7 @@ internals are marked.
 
 - **static**: search for every caller of a changed function,
   endpoint, flag or setting, in tests, scripts, docs and configuration; read
-  the migration file itself; the language guides' **static** tools on the
-  changed files.
+  the migration file itself.
 - **CI only**: the project's tests; printing a migration's SQL (`manage.py
   sqlmigrate`, `alembic upgrade --sql`) runs project code; starting the
   service.

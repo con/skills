@@ -22,8 +22,9 @@ accessibility and internationalization setup; whether it tests visual
 changes (Storybook, Chromatic, Playwright snapshots); the backend contract
 the changed views consume (schema, types, API client). The guides you were
 given (`ts-practices`, with `ts-vue-practices` and `ts-vuetify-practices`
-for a Vue or Vuetify project) add the framework's own Checks and Not
-findings: apply them to the changed components.
+for a Vue or Vuetify project) add the framework's own Preferences, Public
+surface and deprecation section and Not findings: apply them to the
+changed components.
 
 ## Checks
 
@@ -79,7 +80,7 @@ standard such as WCAG AA)
   keeps the old path as a redirect, and a renamed parameter is still read.
   In a component library, props, events and slots are its API and go
   through the deprecation cycle; the guides' Public surface and
-  deprecation groups give the framework's form.
+  deprecation sections give the framework's form.
 
 **Tests** (should-fix for new behaviour)
 - Behaviour tested through what the user sees (roles, labels, text), not
@@ -98,8 +99,7 @@ standard such as WCAG AA)
 
 - **static**: read the changed components and the code paths that render
   them; search for the risky APIs named above; compare the `package.json`
-  and lockfile diff for new client dependencies; the guides' **static**
-  tools on the changed files.
+  and lockfile diff for new client dependencies.
 - **CI only**: building the bundle (it runs the project's configuration and
   plugins), component and end-to-end tests, Storybook, and accessibility
   checkers run against a build. The pull request's visual review and

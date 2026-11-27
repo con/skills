@@ -95,9 +95,9 @@ none of its configuration: run it from a scratch directory with your own
 configuration, writing nothing into the checkout. Use one only if it is
 already installed, and record its version under `ran`; never install one
 during a review, and list a missing one under `not_checked`. Everything
-else, including what a language guide marks **consent**, is **CI only**:
-the review never runs it, and reads the pull request's
-CI results instead; where CI has no result for it (always, with `--local`),
+else, including what a language guide's Verification runs, is
+**CI only**: the review never runs it, and reads the pull request's CI
+results instead; where CI has no result for it (always, with `--local`),
 it goes under `not_checked`. To add a domain, add a lens with these
 sections and a row here.
 
@@ -258,12 +258,14 @@ the ones it gets, with its lenses, in `LENS_FILES`:
 - the `<language>-practices` guide for each language in the changed
   code (by extension, and by shebang for a script without one), to
   `project-fit` and to the reviewers with the backend or frontend lens,
-  and `shell-practices` to the reviewer with the ci-infra lens. With
-  `ts-practices`, the frontend reviewer also gets `ts-vue-practices` when
-  the change touches `.vue` files, and `ts-vuetify-practices` when the
-  project depends on `vuetify`. These and `general-practices` are this
-  skill's dependencies, so APM installs them with it; a language with no
-  guide gets the lenses' checks only;
+  and `shell-practices` to the reviewer with the ci-infra lens: the
+  guide's `SKILL.md`, its short core, and not its `references/review.md`,
+  which is for code-quality reviews. With `ts-practices`, the frontend
+  reviewer also gets `ts-vue-practices` when the change touches `.vue`
+  files, and `ts-vuetify-practices` when the project depends on
+  `vuetify`. These and `general-practices` are this skill's dependencies,
+  so APM installs them with it; a language with no guide gets the lenses'
+  checks only;
 - `skill-security-review`, to the reviewer with the skills lens, and
   `review-human-prose`, to the reviewer with the docs lens, when they are
   installed.

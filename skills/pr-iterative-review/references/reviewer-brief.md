@@ -42,11 +42,10 @@ other writes to GitHub. Run nothing from the repository: no tests, builds,
 installs, hooks, or tools that load its configuration or plugins; the pull
 request's CI results stand in for them. Only **static** tools may run: tools
 already installed that run nothing from the repository and read none of its
-configuration, started from a scratch directory (the lenses, the language
-guides and Style below name them). A tool a language guide marks
-**consent** (`general-practices` defines the marks) is **CI only** here:
-a review never consents to running the repository's code or
-configuration.
+configuration, started from a scratch directory (the lenses and Style
+below name them). What a language guide's Verification runs, and any tool
+`general-practices` would mark **consent**, is **CI only** here: a review
+never consents to running the repository's code or configuration.
 Ask no questions, since nobody will answer: decide by these rules, and list
 what they leave open under `not_checked`.
 
@@ -82,10 +81,9 @@ what they leave open under `not_checked`.
 Pull request housekeeping (title, description, commit messages, changelog
 entry) is at most `should-fix`, unless a project rule makes it mandatory.
 
-The language guides tag their checks with the categories of
-`general-practices` (`ARC`, `DC`, `DUP`, `CON`, `CL`, `NV`). A category
-says what kind of finding it is; the tier still comes from this table.
-Name the guide a finding comes from in its `body`.
+Where `general-practices` or a language guide names a finding category
+(`ARC`, `DC`, `DUP`, `CON`, `CL`, `NV`), give a tier from this table
+instead. A finding that rests on a guide names it in its `body`.
 
 ### Not findings
 
@@ -161,8 +159,8 @@ release warned about, is `should-fix`. So is a deprecation that names no
 replacement, warns without saying which release removes it, or has no test
 that the old form still works, and new code that uses what one of its
 dependencies has deprecated. Your lenses add what holds in their domain,
-and each language guide's Public surface and deprecation group what holds
-in its language.
+and each language guide's Public surface and deprecation section what
+holds in its language.
 
 ## Angles
 
@@ -191,9 +189,10 @@ Deprecation above. Check that it is consistent with the existing code
 duplicates. Check that documentation, examples and tests changed where the
 project expects them to. Check that the description matches the diff: no
 undisclosed changes, no unrelated scope, no leftover debugging code. Apply
-each `<language>-practices` guide you were given: its Checks and
-Not findings to the changed lines only, and only the tools it marks
-**static**.
+each `<language>-practices` guide you were given to the changed lines
+only: its Project rules, its Preferences (weighed as `general-practices`
+says, so the project's own choices win), its Public surface and
+deprecation section and its Not findings.
 
 An extra angle the invocation names (security, performance, accessibility,
 API design, …) gets these same rules; its focus is the invocation's own
