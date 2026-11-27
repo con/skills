@@ -133,6 +133,10 @@ not by editing the installed skill. A calling skill may pass them on.
   why. With `allow`, the review runs with the mode on, still bounded by
   `MAX_SUBAGENTS`. When the session shows nothing about such a mode,
   carry on and write `not determined` in the Run settings table.
+- **SUBAGENT_TIERS**: `split` — whether subagents doing mechanical work
+  run on a cheaper model or a lower reasoning effort than the session
+  ("Model and effort per step" below). `uniform` runs every subagent at
+  the session's own model and effort.
 
 Throughout this document, these names refer to the values in effect.
 Record them in Method & limits.
@@ -154,7 +158,7 @@ most of it waiting for the allowance to reset.
 | Setting | Recommended | Why |
 |---|---|---|
 | Model | the most capable one the agent offers | the design and safety judgments are the review |
-| Reasoning effort | the highest level, on the main session and every subagent | the same |
+| Reasoning effort | the highest level, on the main session and on every subagent that judges ("Model and effort per step") | the same |
 | Multi-agent or workflow modes | off (`MULTI_AGENT_MODE: stop` ends the review when one is on) | they start many subagents at once, past `MAX_SUBAGENTS` |
 | `MAX_SUBAGENTS` | `3` | traces are independent but small; batching candidates costs less than one subagent each |
 | Scope | one package or directory tree per review in a large repository | a report of several thousand lines is hard to act on |
@@ -181,6 +185,43 @@ skill is asked nothing: carry on, and open the closing reply with one
 line per differing setting, so the next run can be set up differently.
 Either way, keep to `MAX_SUBAGENTS` and batch whatever mode is on. The
 Run settings table records the values in effect.
+
+### Model and effort per step
+
+The session's model and effort cannot change during a run, but a
+subagent's can, where the agent's subagent tool takes a model or an
+effort level per call (Claude Code's does). With `SUBAGENT_TIERS`
+`split`, the default, the review chains two kinds of work: gathering,
+handed to subagents on a cheaper tier, and judging, kept at the
+session's model and its highest effort.
+
+| Work | Where it runs |
+|---|---|
+| Step 1: reading the project's rules, choosing guides | main session |
+| Step 2: running each sweep's tools and collecting their output; fetching the Currency sweep's live sources | gathering subagent: a lower effort, or the agent's cheaper model |
+| Step 2: the Naming check, parallel lists | main session, or a judging subagent |
+| Step 3: architecture pass and extensibility | main session |
+| Step 4, item 1: finding every call site and dynamic reference for a batch of candidates | gathering subagent |
+| Step 4, items 2 and 3: whether a change preserves behavior, the confidence rating, the comparison with reference code | main session, or a judging subagent at the session's model and highest effort |
+| Step 5: writing the report | main session |
+| Step 5: checking the report against the repository's Markdown checks | gathering subagent |
+| Step 6: applying a group and running its verification | main session |
+| Step 6: re-reviewing the applied diff | main session, or a judging subagent |
+
+A gathering subagent returns evidence, not verdicts: the exact commands
+it ran, their output, and hits as `path:line` with the quoted line. It
+does not decide that something is dead, duplicated or safe. The judging
+side decides from that evidence, and for every finding rated **High**
+it repeats the search the finding rests on, since a gatherer's "no
+callers found" is the cheapest thing to get wrong. Each gathering
+subagent gets the same consent answer, guides and untrusted-data rule
+as any other (Step 4), and every subagent counts toward
+`MAX_SUBAGENTS`.
+
+Where the subagent tool takes neither a model nor an effort per call,
+or with `SUBAGENT_TIERS` `uniform`, everything runs at the session's
+settings. The Run settings table's Model and Reasoning effort rows give
+the tiers used for gathering and for judging.
 
 ## Procedure
 
@@ -533,7 +574,8 @@ For each candidate, before it becomes a finding:
    it, so the reader can repeat it.
 
 With many candidates, use `Agent` to trace them in parallel, at most
-`MAX_SUBAGENTS` at a time (default 3; see Configuration). Batch the
+`MAX_SUBAGENTS` at a time (default 3; see Configuration), split into
+gathering and judging as "Model and effort per step" says. Batch the
 candidates, grouped by module or category, so that each subagent traces
 several and the whole trace takes a few rounds, not one subagent per
 candidate. This holds whatever multi-agent mode the session has on. When
@@ -666,7 +708,7 @@ group. State what is deliberately not scheduled and why.}
 ## Method & limits
 {Languages in scope and the guide used for each (or "general checks only");
 the configuration in effect (`HOUSE_PREFERENCES`, `MAX_SUBAGENTS`,
-`MULTI_AGENT_MODE`);
+`MULTI_AGENT_MODE`, `SUBAGENT_TIERS`);
 tools run, each with its version and whether static or with consent; commands
 run; baseline numbers, their source (local run or CI run) and date; the live
 sources the currency checks read, with dates; anything downloaded to read
