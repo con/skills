@@ -100,7 +100,9 @@ still unset takes the default given here.
   report-conventions §2 says when to ask and what an unasked run reports).
 - Whether this repository's tests and tooling may run (Step 1): yes, no,
   or sandbox only, meaning a sandbox the request names or a throwaway
-  checkout you create, never the user's working tree (default: **no**).
+  checkout you create, never the user's working tree (default: **yes**;
+  a review that must stay read-only, an unattended one included, says no
+  in its request).
 
 ## Configuration
 
@@ -346,10 +348,11 @@ Run the project's own linter and test suite once to get a **baseline**
 (count of tests passing, lint clean or not; the project's own entry
 point — a CI step, task runner, or Makefile target — comes first, and
 each guide's Verification section names the usual commands), but only
-with **consent**: the request says this repository's tests and tooling
-may run (Inputs: yes, or sandbox only in that sandbox or a throwaway
-checkout; prefer a container, VM, or throwaway checkout either way). A
-calling skill passes its own answer on. Nothing is asked after Step 1
+with **consent**: the Inputs answer on running this repository's tests
+and tooling is yes, the default when nothing sets it, or sandbox only,
+and then only in that sandbox or a throwaway checkout (prefer a
+container, VM, or throwaway checkout either way). Only a no withholds
+it. A calling skill passes its own answer on. Nothing is asked after Step 1
 begins (Inputs).
 The same consent covers every tool a guide marks **consent**. Record the
 exact command. Without consent, the review is read-only analysis: only
@@ -731,7 +734,7 @@ did not make. Commit only if asked. Do not bump a version or write a changelog
 entry for a tests-only change unless the project's rules say to.
 
 Work group by group from "Recommended order of changes". Applying changes
-needs the request's execution consent (Step 1) and a baseline, since each
+needs execution consent (Step 1) and a baseline, since each
 group is verified by running it; without either, apply nothing and say so
 in the report. After each group,
 run its verification and the baseline test command; the counts must match
