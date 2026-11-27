@@ -94,7 +94,10 @@ Step 1 shows.
 
 Plain `tsc` does not read `.vue` files; `ts-vue-practices` names the
 wrapper that does. Check what each tsc run covers: `tsc --listFilesOnly -p <tsconfig>` must
-list the sources. A solution-style root `tsconfig.json` (`"files": []`
+list the sources. Look at what it leaves out as well: tests, stories and
+scripts that no configuration includes are type-checked by nothing,
+since Vite, Vitest, Playwright, Storybook, Babel and SWC strip types
+without checking them (Checks, "Dependencies and configuration"). A solution-style root `tsconfig.json` (`"files": []`
 with `references`) compiles nothing, so `tsc --noEmit` on it exits 0
 having checked no file. Run each command with `-p` on every referenced
 configuration instead. A configuration that itself has `references` fails
@@ -152,6 +155,14 @@ than passing that configuration itself.
 - **Default and named exports** mixed against the project's own rule
   (`CL`).
 - **One shape declared in several files** (`DUP`): export it once.
+- **Where a shared constant or helper goes**, when a finding proposes
+  one: a suite that automocks a module (`vi.mock("./x")` or
+  `jest.mock("./x")` with no factory) gets that module's functions as
+  stubs returning `undefined` and its arrays empty. An `as const` list or
+  a helper moved into such a module fails those suites, or lets them pass
+  while they no longer run the real code. List the mocks without a
+  factory (`grep -rnE '(vi|jest)\.mock\([^,()]+\)' <tests>`) and choose a
+  module none of them names, or say which suites need a factory.
 
 **Types and idioms**
 
@@ -183,6 +194,12 @@ than passing that configuration itself.
 - `@types/*` packages for libraries that ship their own types (`DC`);
 - several `tsconfig` files repeating options instead of using `extends`
   (`CON`);
+- TypeScript files that no `tsconfig` covers, usually tests and stories
+  (`NV`: including them widens what CI enforces; with consent, say how
+  many errors a scratch configuration over them reports today). Until
+  they are covered, a rename or a changed signature goes unchecked
+  wherever it reaches them: count those uses, and rate such a change no
+  higher than **Medium**;
 - `package.json` scripts that repeat one another, or that nothing calls
   (`DUP`, `DC`; see Not findings for the scripts npm runs by name).
 
