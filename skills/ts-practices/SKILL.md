@@ -227,8 +227,10 @@ token there)
   dead; removing one is `NV`.
 - Files found by convention: file-system routes, configuration files that
   tools load (`*.config.*`), tests found by glob, service and web workers
-  loaded by URL, dynamic `import()` with a computed path, and modules
-  loaded by glob (`import.meta.glob`, webpack `require.context`).
+  loaded by URL, dynamic `import()` with a computed path, modules
+  loaded by glob (`import.meta.glob`, webpack `require.context`), and
+  modules an HTML page loads (a `<script src>`, or an import inside an
+  inline `<script type="module">`).
 - `package.json` scripts the package manager runs by name: lifecycle
   scripts (`prepare`, `prepublishOnly`, `prepack`, `postpack`,
   `preinstall`, `install`, `postinstall`, `version`, …) and the
@@ -241,7 +243,10 @@ token there)
   declaration merging and module augmentation (`declare module`,
   `declare global`), and ambient `*.d.ts` files.
 - knip hits in a workspace or entry point that its configuration does not
-  describe: correct the analysis before reporting them.
+  describe: correct the analysis before reporting them. knip 6.48 reports
+  every module that only a page's inline `<script type="module">` imports
+  as an unused file: copy each inline script into a file in the throwaway
+  checkout and name it as an entry.
 
 ## Verification
 

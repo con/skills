@@ -308,6 +308,18 @@ and say so in Method & limits.
   language's cases). Also: unreachable branches, guards that can never
   fire, lint-ignore entries for rules the selected rule set never reaches,
   configuration that is never consulted.
+- **Dead styles:** no guide covers stylesheets, and no static tool can
+  tell whether a selector matches markup that scripts build at run time.
+  With consent, and where the project already installs a browser test
+  runner (Playwright, say), load the pages with CSS coverage on
+  (`page.coverage.startCSSCoverage()` in Chromium), drive every state the
+  styles distinguish (interaction states, themes, print, narrow and wide
+  viewports), and treat a rule that never applied as a candidate to
+  confirm by `grep` for its class names in the markup sources. Collect
+  coverage one document at a time: a navigation discards what was
+  recorded for the previous document. Otherwise `grep` the selectors'
+  class names and ids against the markup sources and mark the result
+  `not verified empirically` (Low confidence).
 - **Duplication:** run the `analyze-duplicates` skill (jscpd) if
   available, from `<scratch>`, on the Step 1 copy given as the relative
   path `copy`, with `--output <scratch>/jscpd.md`, so nothing (`.tmp/`,
@@ -533,6 +545,15 @@ Each finding under `ARC` / `DC` / `DUP` / `CON` / `CL`:
 - **Verification**: the exact command(s) whose output would reveal a behavior change
 ```
 
+Where the change could alter behavior that nothing the project ships
+would reveal (styling, generated markup, anything without a test), do not
+name a command that passes either way. Either write a self-contained
+check during the review (with consent, using only what the project
+already installs), see it pass on the unchanged code and fail on a
+deliberate break, and put it in the report's Appendix for the
+Verification line to cite; or write `no project command reveals this`
+there and rate the finding no higher than **Medium**.
+
 Each `NV` item has a heading of its own in the same form
 (`#### NV-2 — {title} <a id="nv-2"></a>`), then: Location, Observation,
 Why it is not a quality change (what behavior would shift), and what a
@@ -615,6 +636,10 @@ sources the currency checks read, with dates; anything downloaded to read
 (registry packages, with versions); which of the repository's checks apply to
 this report and how each was checked; what was read in full vs. scanned; what
 could not be verified; where this report lives for the next run.}
+
+## Appendix
+{Only when a Verification line cites a check the project does not ship: that
+check, complete enough to run from a clean checkout.}
 ```
 
 ### Step 6 — Apply changes (only if asked)
