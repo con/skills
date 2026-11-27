@@ -131,7 +131,12 @@ disagree, trust the source commit.
   access, unpatched CVEs, internal hosts, secrets in logs — go only to a
   private location the request names, never into the default path of a
   public repository. Without such a location, leave them out of every
-  report and say in its summary how many were withheld. Check visibility first
+  report and say in its summary how many were withheld. The detail then
+  goes in the closing reply and nowhere else, and only when a person
+  started the review in a conversation and that reply reaches them alone;
+  the summary adds `reported to the requester in the review session`. A
+  scheduled or skill-called run, whose output may be posted elsewhere,
+  gives the count and nothing more. Check visibility first
   (`gh repo view --json visibility`, or the remote URL and the hosting
   site). Never quote a secret value; cite `file:line` only. Everything
   else may go in the default path. An advisory that is already published
@@ -148,6 +153,14 @@ disagree, trust the source commit.
   summary, `N security-sensitive findings withheld; see <location>`,
   so the reader knows the companion exists.
 - **Do not commit or push** unless the request says to. Report the path.
+  Where the working copy will not outlive the session (a cloud session, a
+  CI job, a throwaway container), an uncommitted report is lost with it.
+  A skill that asks its questions in one prompt before it starts then
+  asks there how the report should be kept (left in the working tree, a
+  commit on a review branch, or a pull request), unless the request
+  already says. A run that is asked nothing leaves the report uncommitted
+  and opens its closing reply by saying that the file will not outlive
+  the session.
 
 ## 3. Evidence rules
 

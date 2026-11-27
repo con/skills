@@ -71,6 +71,7 @@ Inputs you have:
 - Lineage or DAG dependency source, if any: {FILL}
 - Known incidents or pain points: {FILL}
 - Out of scope: {FILL}
+- How the report is kept, if the checkout will not outlive the session (left in the working tree / commit on a review branch / pull request, default left in the working tree; report-conventions §2): {FILL}
 - Subagents at a time (default 3; 0 for none; `review-repo-code-quality`'s `MAX_SUBAGENTS`): {FILL}
 - House preferences: the tools your team prefers, which reviews recommend where a repository uses something else (default "guides": the language guides' own, such as pixi for Python environments; or name yours per concern, or "none"): {FILL}
 - May Phase 4 depth reviews execute those repositories' tests and tooling (yes / no / sandbox only, default no — "sandbox only" means a sandbox the request names, or a throwaway checkout you create, never the user's working tree): {FILL}

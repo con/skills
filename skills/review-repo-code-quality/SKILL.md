@@ -78,7 +78,8 @@ apply-changes choice, or `HOUSE_PREFERENCES` or `MAX_SUBAGENTS`
 (Configuration) unset, ask for all of them in one `AskUserQuestion`
 prompt before Step 1, offering each default; the same prompt carries the
 run-settings question (Configuration, "Recommended run settings") when
-the session differs from the recommendation. Ask nothing after that. A schedule or a calling skill is
+the session differs from the recommendation, and asks how the report is
+to be kept (below) when the checkout will not outlive the session. Ask nothing after that. A schedule or a calling skill is
 asked nothing, so the skill can run as an unattended routine. Whatever is
 still unset takes the default given here.
 
@@ -94,6 +95,9 @@ still unset takes the default given here.
   says what a comparison owes the report.
 - Whether changes should be applied after the report is written
   (default: **no** — write the report only).
+- How the report is kept: left in the working tree, committed on a review
+  branch, or opened as a pull request (default: left in the working tree;
+  report-conventions §2 says when to ask and what an unasked run reports).
 - Whether this repository's tests and tooling may run (Step 1): yes, no,
   or sandbox only, meaning a sandbox the request names or a throwaway
   checkout you create, never the user's working tree (default: **no**).
