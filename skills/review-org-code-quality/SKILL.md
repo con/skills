@@ -18,9 +18,10 @@ root cause.
 
 This skill is the breadth pass; `review-repo-code-quality` is the depth
 pass. It expects the shared `code-quality-report-conventions` skill
-installed alongside, the `<language>-practices` guide for each
-language the repositories use, and `review-repo-code-quality` itself: its
-table lists the guides, its Step 1 defines the **static** mark and the
+installed alongside, `general-practices` (which defines the **static**
+mark), the `<language>-practices` guide for each language the
+repositories use, and `review-repo-code-quality` itself: its table lists
+the guides, its Step 1 shows how to run a static tool and holds the
 language detection Phases 1–2 use, and Phase 4 runs it in full (APM
 installs them as this skill's dependencies; in a `con/skills` checkout
 they are sibling directories). Three things are delegated rather than
@@ -32,7 +33,7 @@ repeated here:
   repeat their findings. Phases 0–3 do not run the repo skill at all.
 - **Language specifics** — which tools sweep a language, and which of them
   are **static** (they execute nothing from a repository and write
-  nothing into it; `review-repo-code-quality` Step 1 defines the mark) —
+  nothing into it; `general-practices` defines the mark) —
   come from the language guides. Phases 0–3 run only their **static**
   tools and plain searches (Phase 3's jscpd aside, under its own
   question); Phase 4's depth reviews load the guides through

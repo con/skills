@@ -11,6 +11,7 @@ dependencies:
     - path: ../analyze-duplicates
     - path: ../scan-projects
     - path: ../github-project-status
+    - path: ../general-practices
     - path: ../python-practices
     - path: ../ts-practices
     - path: ../ts-vue-practices
