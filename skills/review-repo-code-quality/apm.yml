@@ -8,6 +8,7 @@ dependencies:
   apm:
     - path: ../code-quality-report-conventions
     - path: ../analyze-duplicates
+    - path: ../general-practices
     - path: ../python-practices
     - path: ../ts-practices
     - path: ../ts-vue-practices

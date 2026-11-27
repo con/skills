@@ -14,7 +14,8 @@ applying each change with a stated verification step, without the review
 having touched the code.
 
 This skill is language-agnostic: it holds the procedure, the report
-layout, and the architecture principles that apply to any codebase.
+layout, and the architecture pass; the principles that pass applies to any
+codebase are in `general-practices`.
 What holds for one language only lives in that language's guide, a
 sibling skill:
 
@@ -30,27 +31,20 @@ sibling skill:
 | Shell (POSIX sh, Bash), including shell embedded in CI workflows, Makefiles, and Dockerfiles | `shell-practices` |
 | AWK (POSIX awk, gawk), including programs embedded in shell scripts, Makefiles, and CI steps | `awk-practices` |
 
-Every guide has the same sections, which the steps below refer to:
-**Recognize** (the files it covers), **Project rules** (where the
-language keeps its configuration, and the version settings that bound
-what may be proposed), **Tools** (for each sweep, a tool marked
-**static** or **consent**, as defined in Step 1, including a way to draw
-the import graph), **Checks** (the language's idioms and design checks,
-each with the report category it usually lands in, among them the
-idiom for a closed set of values and a Currency group), **Not findings**
-(what looks dead or wrong in that language but is not), and
-**Verification** (the commands that show a change preserved behavior).
-The guides also serve writing code and reviewing pull requests, so they
-hold a language's practices, not review steps. To add a language, add a
-sibling `<language>-practices` skill (`user-invocable: false`,
-`allowed-tools: Read`, its own `apm.yml`) with those sections, a row in
-this table, a row in the repository's README, and an entry under
-`dependencies` in this skill's `apm.yml` and in
-`review-org-code-quality`'s. A framework gets its own guide the same way,
-`<language>-<framework>-practices`, holding only what the framework adds;
-it names the guide it builds on, and its `apm.yml` depends on it. APM
-installs the guides, the report conventions, and `analyze-duplicates`
-with this skill.
+Each guide is two files, laid out as `general-practices` describes: a
+short `SKILL.md` with the language's preferences, which also serves
+writing code and reviewing pull requests, and a `references/review.md`
+with what this review needs beyond them: **Project rules** in full,
+**Tools** (for each sweep, a tool marked **static** or **consent**,
+including a way to draw the import graph), **Checks** (each with the
+report category it usually lands in, among them the idiom for a closed
+set of values and a Currency group), **Not findings** (what looks dead
+or wrong in that language but is not), and **Verification** (the
+commands that show a change preserved behavior). In this skill, "the
+guide" means both files, and the steps below refer to those sections.
+`general-practices`, which every guide builds on, says how to weigh them
+and how to add one. APM installs the guides, `general-practices`, the
+report conventions, and `analyze-duplicates` with this skill.
 
 Shared rules — where the report goes, the provenance stamp that records
 which version of this skill produced it, evidence standards, re-review,
@@ -247,19 +241,19 @@ Before anything below, apply the `MULTI_AGENT_MODE` check
 Read `AGENTS.md` / `CLAUDE.md` and `CONTRIBUTING.md`, whichever exist.
 
 Then find the languages in scope: list the tracked files (`git ls-files`)
-by extension, and by shebang for scripts without one, leaving out what
-the scope excludes. Read the Recognize section of every installed
-`../*-practices/SKILL.md` (the table's guides and any others),
-match them against that list and, where a guide says so, against file
-contents (shell inside CI workflows, for example), and load each guide
-that matches. A language still unmatched gets the general checks only,
-whether its guide in the table is not installed (Method & limits names
-it) or it has no guide. The general checks are the
+by extension, and by shebang for scripts without one, leaving out what the
+scope excludes. Read the Recognize section of every installed
+`../*-practices/SKILL.md` (the table's guides and any others), match them
+against that list and, where a guide says so, against file contents (shell
+inside CI workflows, for example), and load each guide that matches: its
+`SKILL.md` and its `references/review.md`. A language still unmatched gets
+the general checks only, whether its guide in the table is not installed
+(Method & limits names it) or it has no guide. The general checks are the
 language-independent parts of this procedure: Step 2's duplication,
-project-rule-drift, inert-configuration and currency sweeps and its
-"in any language" idiom checks, `lizard` where it supports the language,
-plain searches, and Step 3. Say in Method & limits which languages got
-only these.
+project-rule-drift, inert-configuration and currency sweeps and its "in
+any language" idiom checks, `lizard` where it supports the language, plain
+searches, and Step 3. Say in Method & limits which languages got only
+these.
 
 Then read, in this order, whatever exists: the files each loaded guide's
 Project rules section lists (linters, formatters, type checkers, build
@@ -267,7 +261,8 @@ and dependency manifests), `CHANGELOG.md`, and the CI workflows. Note
 every rule the project states about itself. Findings are measured against
 these first; generic best practice second.
 
-Every tool a guide lists is marked **static** or **consent**:
+Every tool a guide lists is marked **static** or **consent**, as
+`general-practices` defines them. In a review:
 
 - **static** — reads the source and nothing else of the repository's: it
   runs no repository code, loads none of the repository's configuration
@@ -317,6 +312,7 @@ Every tool a guide lists is marked **static** or **consent**:
   follows the includes the source names (Rust's `mod` and `#[path]`, a
   CPP `#include`, awk's `@include`) to files outside the list or the
   checkout: drop its hits there and do not quote them.
+
   A language's own compiler front end or language service (a parser, a
   symbol index, a find-references query) counts as a static tool on the
   same terms: already installed outside the repository, given options
@@ -342,7 +338,8 @@ Every tool a guide lists is marked **static** or **consent**:
   Verification.
 - **consent** — everything else: the project's own linter configuration
   and plugins, a type check or build, a dependency install, the test
-  suite, a tool the project pins and installs.
+  suite, a tool the project pins and installs. It runs only with this
+  review's consent (Inputs).
 
 A review installs no tool: where one is missing, its sweep uses the
 guide's other tool or plain searches, and Method & limits says so.
@@ -509,44 +506,10 @@ the import graph (each guide's Tools section names a way to draw it;
 where a language has no tool, or the tool needs consent you do not have,
 read the imports).
 Measure that structure against the project's own stated design (Step 1)
-first, and against these principles second:
-
-- **One source of truth.** A fact the code depends on — a closed set of
-  allowed values, a constant, a schema, a default, a version string — is
-  defined once and referenced everywhere else. A long or growing set of
-  values spelled out in several places (signatures, validation lists,
-  command-line choices, documentation, comparisons) belongs in one named,
-  enumerated type; the guide gives that language's idiom and its
-  pitfalls.
-- **Boundaries and direction.** Dependencies point one way: entry points
-  call into the core, the core does not import them, and lower layers do
-  not reach up. Import cycles are findings, and so is reaching into
-  another module's private names where a public interface exists.
-- **Effects at the edges.** Reading the environment and configuration,
-  network and filesystem access, logging setup, and global state live in
-  a few named places near the entry points, not in code that runs when a
-  module is loaded and not scattered through the core.
-- **Cohesion and size.** A module, type, or function does one job. Name
-  the outliers in length and complexity relative to the rest of this
-  codebase, with their numbers (`lizard`, a static tool, measures most
-  languages; a guide may name a native one). Pass-through layers,
-  single-implementation abstractions, and wrappers that add nothing are
-  candidates for removal.
-- **A deliberate public surface.** What the project exposes — documented
-  API, command-line interface, file formats, configuration keys, entry
-  points — is chosen and kept small, and internals are marked with the
-  language's convention. A change to that surface is a behavior change:
-  it goes under Needs Verification unless a compatibility path (a
-  re-export, an alias, a deprecation period) keeps every existing caller
-  working.
-- **Cross-cutting concerns solved once.** Retries, timeouts, caching,
-  validation, and error reporting are implemented once and reused, not
-  rewritten at each call site. Each job has one library: two libraries
-  doing the same job (HTTP clients, date handling, logging, command-line
-  parsing, serialization) are a finding that names the one to keep —
-  `CON` only when the Step 4 trace shows every moved call site keeps its
-  output, defaults, and errors, otherwise Needs Verification; dropping a
-  dependency that shipped code exposes is always Needs Verification.
+first, and against the architecture principles in `general-practices`
+second: one source of truth, boundaries and direction, effects at the
+edges, cohesion and size, a deliberate public surface, and cross-cutting
+concerns solved once.
 
 Then test the structure against the changes the project itself expects
 (**extensibility**). Collect the changes the code asks for: task and
@@ -611,16 +574,8 @@ each rejection for the "Not changed (deliberately)" section.
 
 ### Step 5 — Write the report
 
-Categories and ID prefixes:
-
-| Prefix | Category | Contains |
-|---|---|---|
-| `ARC` | Architecture | Step 3 findings: a fact defined in several places, boundaries crossed or dependencies pointing the wrong way, import cycles, effects outside the edges, cohesion and public-surface problems |
-| `DC` | Dead code | Unreferenced symbols, unreachable branches, inert config |
-| `DUP` | Duplication | Verbatim or near-verbatim repeats, drifted twins |
-| `CON` | Consolidation | Structural tidy-ups that remove a concept rather than a line |
-| `CL` | Cleanup | Local idiom fixes, naming, annotations |
-| `NV` | Needs verification | Observations whose fix would change behavior, or that need a maintainer's judgment |
+Categories and ID prefixes are the six `general-practices` defines:
+`ARC`, `DC`, `DUP`, `CON`, `CL`, and `NV`.
 
 Each finding under `ARC` / `DC` / `DUP` / `CON` / `CL`:
 
