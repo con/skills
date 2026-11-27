@@ -77,9 +77,9 @@ standard such as WCAG AA)
 **Public surface** (tiers as in the brief's Deprecation section)
 - Routes and query parameters people bookmark or link to: a renamed route
   keeps the old path as a redirect, and a renamed parameter is still read.
-  In a component library, props, events and slots are its API and are
-  retired in the brief's steps; the guides' Public surface and deprecation
-  groups give the framework's form.
+  In a component library, props, events and slots are its API and go
+  through the deprecation cycle; the guides' Public surface and
+  deprecation groups give the framework's form.
 
 **Tests** (should-fix for new behaviour)
 - Behaviour tested through what the user sees (roles, labels, text), not

@@ -6,6 +6,7 @@ license: MIT
 type: skill
 dependencies:
   apm:
+    - path: ../general-practices
     - path: ../python-practices
     - path: ../ts-practices
     - path: ../go-practices

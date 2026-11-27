@@ -32,8 +32,8 @@ internals are marked.
   every caller, and check that the docs, schema and changelog say so.
 
 **Deprecation** (tiers as in the brief's Deprecation section)
-- Retiring any of those goes through the brief's steps, in the form the
-  interface offers:
+- Retiring any of those goes through the deprecation cycle, in the form
+  the interface offers:
   - Library APIs: the old name, argument or default keeps working beside
     the new one, marked as the language guide's Public surface and
     deprecation group says, or the language's own way where no guide

@@ -30,10 +30,11 @@ pattern the others follow.
   schema versioned? Are existing outputs migrated, or can readers still read
   them?
 - Retiring a column, field, path or configuration key goes through the
-  brief's Deprecation steps: the new one is written beside the old, readers
-  accept both, a renamed configuration key is still read and warns, and the
-  old one goes only after its consumers have moved. A schema that carries a
-  version gets a new one for an incompatible change.
+  deprecation cycle (the brief's Deprecation section): the new one is
+  written beside the old, readers accept both, a renamed configuration key
+  is still read and warns, and the old one goes only after its consumers
+  have moved. A schema that carries a version gets a new one for an
+  incompatible change.
 
 **Re-runs and failure** (usually blocking)
 - Running a stage twice gives the same result: no duplicated rows, no

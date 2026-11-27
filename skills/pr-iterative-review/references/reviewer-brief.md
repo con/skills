@@ -44,8 +44,9 @@ request's CI results stand in for them. Only **static** tools may run: tools
 already installed that run nothing from the repository and read none of its
 configuration, started from a scratch directory (the lenses, the language
 guides and Style below name them). A tool a language guide marks
-**consent** is **CI only** here: a review never consents to running the
-repository's code or configuration.
+**consent** (`general-practices` defines the marks) is **CI only** here:
+a review never consents to running the repository's code or
+configuration.
 Ask no questions, since nobody will answer: decide by these rules, and list
 what they leave open under `not_checked`.
 
@@ -80,6 +81,11 @@ what they leave open under `not_checked`.
 
 Pull request housekeeping (title, description, commit messages, changelog
 entry) is at most `should-fix`, unless a project rule makes it mandatory.
+
+The language guides tag their checks with the categories of
+`general-practices` (`ARC`, `DC`, `DUP`, `CON`, `CL`, `NV`). A category
+says what kind of finding it is; the tier still comes from this table.
+Name the guide a finding comes from in its `body`.
 
 ### Not findings
 
@@ -140,26 +146,17 @@ only one --obvious way to do it."
 ### Deprecation
 
 Anything public, such as a name, argument, default, endpoint, flag,
-configuration key, output field or file format, is retired in steps rather
-than removed or changed incompatibly in one release:
-
-1. **Soft deprecation**, the default: the old form keeps working and stays
-   tested; its documentation and the changelog mark it deprecated and name
-   the replacement. Nothing warns at run time (PEP 387's soft deprecation).
-   Marking public API deprecated is a minor release under Semantic
-   Versioning.
-2. **Warning**, only once removal is planned: using the old form warns at
-   run time, naming the replacement and the release that removes it.
-3. **Removal**, in a later major release (before 1.0, a later minor one),
-   after at least one release that carried the warning.
-
-A deprecation policy the project states replaces these steps. A change
-that updates every caller, all inside the repository, retires nothing.
+configuration key, output field or file format, is retired in the three
+steps of the deprecation cycle in `general-practices` ("A deliberate
+public surface"), or as the project's own deprecation policy says where it
+states one, rather than removed or changed incompatibly in one release. A
+change that updates every caller, all inside the repository, retires
+nothing.
 
 Breaking the project's compatibility promise is `blocking`: under Semantic
 Versioning from 1.0, a removal or incompatible change outside a major
 release, or any change its stated policy forbids. Keeping the promise but
-skipping these steps, such as a removal in a major release that no earlier
+skipping a step, such as a removal in a major release that no earlier
 release warned about, is `should-fix`. So is a deprecation that names no
 replacement, warns without saying which release removes it, or has no test
 that the old form still works, and new code that uses what one of its
