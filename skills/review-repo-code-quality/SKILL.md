@@ -309,6 +309,7 @@ Every tool a guide lists is marked **static** or **consent**, as
   follows the includes the source names (Rust's `mod` and `#[path]`, a
   CPP `#include`, awk's `@include`) to files outside the list or the
   checkout: drop its hits there and do not quote them.
+
   A language's own compiler front end or language service (a parser, a
   symbol index, a find-references query) counts as a static tool on the
   same terms: already installed outside the repository, given options
