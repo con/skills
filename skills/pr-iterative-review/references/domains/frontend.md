@@ -74,6 +74,13 @@ standard such as WCAG AA)
   dates and numbers formatted without the locale; fixed widths that break
   on small screens or with long words.
 
+**Public surface** (tiers as in the brief's Deprecation section)
+- Routes and query parameters people bookmark or link to: a renamed route
+  keeps the old path as a redirect, and a renamed parameter is still read.
+  In a component library, props, events and slots are its API and are
+  retired in the brief's steps; the guides' Public surface and deprecation
+  groups give the framework's form.
+
 **Tests** (should-fix for new behaviour)
 - Behaviour tested through what the user sees (roles, labels, text), not
   component internals; visual changes covered by the project's stories or

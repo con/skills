@@ -43,7 +43,9 @@ installs, hooks, or tools that load its configuration or plugins; the pull
 request's CI results stand in for them. Only **static** tools may run: tools
 already installed that run nothing from the repository and read none of its
 configuration, started from a scratch directory (the lenses, the language
-guides and Style below name them).
+guides and Style below name them). A tool a language guide marks
+**consent** is **CI only** here: a review never consents to running the
+repository's code or configuration.
 Ask no questions, since nobody will answer: decide by these rules, and list
 what they leave open under `not_checked`.
 
@@ -161,7 +163,9 @@ skipping these steps, such as a removal in a major release that no earlier
 release warned about, is `should-fix`. So is a deprecation that names no
 replacement, warns without saying which release removes it, or has no test
 that the old form still works, and new code that uses what one of its
-dependencies has deprecated. Your lenses add what holds in their domain.
+dependencies has deprecated. Your lenses add what holds in their domain,
+and each language guide's Public surface and deprecation group what holds
+in its language.
 
 ## Angles
 

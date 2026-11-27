@@ -95,7 +95,8 @@ none of its configuration: run it from a scratch directory with your own
 configuration, writing nothing into the checkout. Use one only if it is
 already installed, and record its version under `ran`; never install one
 during a review, and list a missing one under `not_checked`. Everything
-else is **CI only**: the review never runs it, and reads the pull request's
+else, including what a language guide marks **consent**, is **CI only**:
+the review never runs it, and reads the pull request's
 CI results instead; where CI has no result for it (always, with `--local`),
 it goes under `not_checked`. To add a domain, add a lens with these
 sections and a row here.

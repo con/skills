@@ -19,9 +19,10 @@ changelog, API documentation. The authentication and authorization model;
 the database and migration tooling and how the project deploys (rolling
 deploys mean old and new code run against one schema); the error-handling
 and logging conventions; who calls the changed interface (other services,
-the frontend, scripts, downstream packages). For a library, the language
-guide you were given (`<language>-practices`) says how the
-language marks internals, and so what is public.
+the frontend, scripts, downstream packages). The Public surface and
+deprecation group of each language guide you were given
+(`<language>-practices`) says what is public in that language and how
+internals are marked.
 
 ## Checks
 
@@ -34,17 +35,10 @@ language marks internals, and so what is public.
 - Retiring any of those goes through the brief's steps, in the form the
   interface offers:
   - Library APIs: the old name, argument or default keeps working beside
-    the new one, marked the language's way: in Python, PEP 702's
-    `@deprecated` (`warnings.deprecated` from Python 3.13,
-    `typing_extensions.deprecated` before) or `warnings.warn(…,
-    DeprecationWarning, stacklevel=2)`, with `FutureWarning` where end
-    users rather than developers should see it; a `Deprecated:`
-    paragraph in a Go doc comment; `#[deprecated(since, note)]` in Rust;
-    a `@deprecated` JSDoc tag in TypeScript; a `DEPRECATED` pragma in
-    Haskell. The language guide's Verification section names the tool
-    that lists breaking API changes (`griffe check`, `gorelease` or
-    `apidiff`, `cargo semver-checks`, a declaration diff); it is not
-    **static**, so only CI's run of it counts here.
+    the new one, marked as the language guide's Public surface and
+    deprecation group says, or the language's own way where no guide
+    covers it. Where the group names the guide's step that lists breaking
+    API changes, that step is **consent**: only CI's run of it counts.
   - Command-line tools: an old flag stays as an alias that warns on stderr
     and leaves the exit status alone.
   - Web APIs: `deprecated: true` in OpenAPI, `@deprecated(reason: …)` in
