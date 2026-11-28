@@ -147,7 +147,7 @@ Every tool a guide lists is marked **static** or **consent**, as
 `general-practices` defines them. In a review:
 
 - **static** — run it so that the definition holds: pass your own
-  configuration, or the flag that skips the project's, from a scratch
+  configuration, or the flag that skips the project's, and run it from a scratch
   directory outside the checkout so it finds none in the working
   directory or its parents, with caches off and output in a scratch
   directory. Ignore files count as configuration
