@@ -46,8 +46,8 @@ guide" means both files, and the steps below refer to those sections.
 builds on, says how to weigh them and how to add one, and defines the
 tool marks, the categories, and the architecture principles used below.
 Step 1 reads it before the guides. APM installs the guides,
-`general-practices`, the
-report conventions, and `analyze-duplicates` with this skill.
+`general-practices`, the report conventions, and `analyze-duplicates`
+with this skill.
 
 Shared rules — where the report goes, the provenance stamp that records
 which version of this skill produced it, evidence standards, re-review,
@@ -147,10 +147,10 @@ Every tool a guide lists is marked **static** or **consent**, as
 `general-practices` defines them. In a review:
 
 - **static** — run it so that the definition holds: pass your own
-  configuration, or the flag that skips the project's, and run it from a scratch
-  directory outside the checkout so it finds none in the working
-  directory or its parents, with caches off and output in a scratch
-  directory. Ignore files count as configuration
+  configuration, or the flag that skips the project's, and run it from
+  a scratch directory outside the checkout so it finds none in the
+  working directory or its parents, with caches off and output in a
+  scratch directory. Ignore files count as configuration
   too: given a directory, several tools skip what `.gitignore`, `.ignore`,
   or `.eslintignore` lists, so pass the scope's tracked files as absolute
   paths — `git -C <checkout> ls-files -z --format='<checkout>/%(path)' --
