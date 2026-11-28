@@ -45,8 +45,8 @@ guide" means both files, and the steps below refer to those sections.
 `general-practices` (`../general-practices/SKILL.md`), which every guide
 builds on, says how to weigh them and how to add one, and defines the
 tool marks, the categories, and the architecture principles used below.
-Read it in Step 1 before the guides; if it is not installed, stop as for
-the report conventions. APM installs the guides, `general-practices`, the
+Step 1 reads it before the guides. APM installs the guides,
+`general-practices`, the
 report conventions, and `analyze-duplicates` with this skill.
 
 Shared rules — where the report goes, the provenance stamp that records
