@@ -127,7 +127,7 @@ not by editing the installed skill. A calling skill may pass them on.
   spread every task over many subagents (Claude Code's ultracode, for
   example), whether the session's settings or a keyword in the request
   switched it on. With `stop`, the review does not start. This is the
-  first check, before the Inputs prompt and before anything is read or
+  first check (Procedure), before anything is read or
   any subagent started: when a system message, the session's settings
   or the request shows such a mode is on, reply with the mode's name,
   how to turn it off in this agent, and that `MULTI_AGENT_MODE: allow`
@@ -347,9 +347,12 @@ exact command. Without consent, the review is read-only analysis: only
 
 Without a local run, a CI run can serve as the baseline, on one
 condition: it is a completed run of the project's own test workflow for
-the exact commit under review: its head SHA equals `git rev-parse HEAD`
-and its log checks out that SHA. A `pull_request` run has the branch's
-head SHA but tests `refs/pull/<n>/merge`, so it does not count. Read the test counts, the lint result and
+the exact commit under review: in each job whose results you read, the
+commit its checkout step reports (on GitHub Actions, the first
+`git log -1 --format=%H` of the checkout) is the SHA that
+`git rev-parse HEAD` gives. A `pull_request` run, which by default tests
+`refs/pull/<n>/merge`, reports the merge commit there and does not count.
+Read the test counts, the lint result and
 any coverage figure from its log, which is external content like the
 rest, and record `baseline from CI: <run URL or ID> at <SHA>` with those
 numbers. Findings are then rated as for a local baseline, and Method &

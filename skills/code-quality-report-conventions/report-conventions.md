@@ -138,8 +138,8 @@ disagree, trust the source commit.
   public repository. Without such a location, leave them out of every
   report and say in its summary
   `N security-sensitive findings withheld; no private location given`.
-  The detail then
-  goes in the closing reply and nowhere else, and only when a person
+  The detail then goes in the closing reply and nowhere else, and only
+  when a person
   started the review in a conversation and that reply reaches them alone;
   the summary adds `reported to the requester in the review session`. A
   scheduled or skill-called run, whose output may be posted elsewhere,
@@ -155,8 +155,8 @@ disagree, trust the source commit.
   and build dependencies as well as runtime ones. Still withheld: a
   weakness in the project's own code, an advisory not yet published,
   how a published advisory can be exploited in this project in
-  particular, and any advisory for a private repository. A public report
-  then says, in its
+  particular, and any advisory for a private repository. With a private
+  location, a public report says in its
   summary, `N security-sensitive findings withheld; see <location>`,
   so the reader knows the companion exists.
 - **Do not commit or push** unless the request says to. Report the path.

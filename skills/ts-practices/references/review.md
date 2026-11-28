@@ -132,8 +132,8 @@ than passing that configuration itself.
   stubs returning `undefined` and its arrays empty. An `as const` list or
   a helper moved into such a module fails those suites, or lets them pass
   while they no longer run the real code. List the mocks without a
-  factory (`grep -rnE '(vi|jest)\.mock\([^,()]+\)' <tests>`; the search
-  misses `vi.mock(import("./x"))`, a call split over lines, and Jest's
+  factory (`grep -rnE '(vi|jest)\.mock\((import\([^()]*\)|[^,()]+)\)' <tests>`; the search
+  misses a call split over lines and Jest's
   `automock: true` setting, so look for those too) and choose a
   module none of them names, or say which suites need a factory.
 
@@ -234,8 +234,8 @@ token there)
   `declare global`), and ambient `*.d.ts` files.
 - knip hits in a workspace or entry point that its configuration does not
   describe: correct the analysis before reporting them. knip (6.48) reads
-  HTML only through its Vite plugin (enabled by a `vite`, `vitest` or
-  `vite-plus` dependency), for the root `index.html` and the `.html` files
+  HTML only through its Vite-family plugins (enabled by a `vite`, `vitest`,
+  `vite-plus` or `electron-vite` dependency), for the root `index.html` and the `.html` files
   in `build.rollupOptions.input`, following module scripts' `src` and
   relative imports in inline module scripts. Modules that only another
   page, a classic `<script src>` or an import-map specifier loads, or any
