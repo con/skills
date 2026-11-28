@@ -1,0 +1,9 @@
+name: awk-practices
+version: "0.1.0"
+description: "POSIX awk and gawk practices: portability, checks, review tools, verification"
+author: Cody C. Baker
+license: MIT
+type: skill
+dependencies:
+  apm:
+    - path: ../general-practices

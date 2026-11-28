@@ -1,0 +1,9 @@
+name: python-practices
+version: "0.1.0"
+description: "Python practices for scientific packages: rules, checks, review tools, verification"
+author: Cody C. Baker
+license: MIT
+type: skill
+dependencies:
+  apm:
+    - path: ../general-practices

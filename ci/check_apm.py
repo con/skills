@@ -58,6 +58,28 @@ def with_dependencies(selection: list[str]) -> list[str]:
     return sorted(found)
 
 
+def dependency_order(selection: list[str]) -> list[str]:
+    """``selection`` with every skill before the skills it depends on, else in reverse name order.
+
+    apm-cli 0.31 records a local package as resolved by the first other
+    listed skill that depends on it, and its audit fails (``ambiguous
+    resolved_by parent``) when that skill is itself reachable both directly
+    and through another skill. Listing dependents first makes that parent
+    a skill nothing else depends on, which the consumer reaches one way.
+    """
+    ordered: list[str] = []
+    def visit(name: str) -> None:
+        if name in ordered:
+            return
+        for dependency in sorted(sibling_dependencies(ROOT / 'skills' / name)):
+            if dependency in selection:
+                visit(dependency)
+        ordered.append(name)
+    for name in sorted(selection):
+        visit(name)
+    return ordered[::-1]
+
+
 def lock_entries(lock: object) -> list[dict]:
     dependencies = lock.get('dependencies') if isinstance(lock, dict) else None
     if not isinstance(dependencies, list):
@@ -154,7 +176,7 @@ def main() -> None:
                 'name': 'con-skills-consumer', 'version': '0.0.0',
                 'targets': ['agent-skills'],
                 'dependencies': {'apm': [{'path': f'../package/skills/{name}'}
-                                         for name in selection]},
+                                         for name in dependency_order(selection)]},
             }))
             run('apm', 'install', '--no-policy', cwd=consumer)
         ignore = consumer / '.gitignore'

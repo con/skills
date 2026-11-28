@@ -1,5 +1,5 @@
 name: review-repo-code-quality
-version: "0.2.1"
+version: "0.3.0"
 description: "Functionality-preserving code-quality review of one repository"
 author: Cody C. Baker
 license: MIT
@@ -8,3 +8,13 @@ dependencies:
   apm:
     - path: ../code-quality-report-conventions
     - path: ../analyze-duplicates
+    - path: ../general-practices
+    - path: ../python-practices
+    - path: ../ts-practices
+    - path: ../ts-vue-practices
+    - path: ../ts-vuetify-practices
+    - path: ../go-practices
+    - path: ../rust-practices
+    - path: ../haskell-practices
+    - path: ../shell-practices
+    - path: ../awk-practices

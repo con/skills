@@ -1,0 +1,9 @@
+name: shell-practices
+version: "0.1.0"
+description: "POSIX sh and Bash practices: rules, checks, review tools and verification"
+author: Cody C. Baker
+license: MIT
+type: skill
+dependencies:
+  apm:
+    - path: ../general-practices

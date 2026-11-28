@@ -1,0 +1,10 @@
+name: ts-vuetify-practices
+version: "0.1.0"
+description: "Vuetify 3 practices: component props over custom CSS, wrapper links and click handlers"
+author: Cody C. Baker
+license: MIT
+type: skill
+dependencies:
+  apm:
+    - path: ../general-practices
+    - path: ../ts-vue-practices
