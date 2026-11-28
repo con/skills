@@ -68,10 +68,7 @@ Step 1 shows.
 
 Plain `tsc` does not read `.vue` files; `ts-vue-practices` names the
 wrapper that does. Check what each tsc run covers: `tsc --listFilesOnly -p <tsconfig>` must
-list the sources. Look at what it leaves out as well: tests, stories and
-scripts that no configuration includes are type-checked by nothing,
-since Vite, Vitest, Playwright, Storybook, Babel and SWC strip types
-without checking them (Checks, "Dependencies and configuration"). A solution-style root `tsconfig.json` (`"files": []`
+list the sources; what it leaves out is a Checks item ("Dependencies and configuration"). A solution-style root `tsconfig.json` (`"files": []`
 with `references`) compiles nothing, so `tsc --noEmit` on it exits 0
 having checked no file. Run each command with `-p` on every referenced
 configuration instead. A configuration that itself has `references` fails
@@ -135,7 +132,9 @@ than passing that configuration itself.
   stubs returning `undefined` and its arrays empty. An `as const` list or
   a helper moved into such a module fails those suites, or lets them pass
   while they no longer run the real code. List the mocks without a
-  factory (`grep -rnE '(vi|jest)\.mock\([^,()]+\)' <tests>`) and choose a
+  factory (`grep -rnE '(vi|jest)\.mock\([^,()]+\)' <tests>`; the search
+  misses `vi.mock(import("./x"))`, a call split over lines, and Jest's
+  `automock: true` setting, so look for those too) and choose a
   module none of them names, or say which suites need a factory.
 
 **Types and idioms**
@@ -234,10 +233,14 @@ token there)
   declaration merging and module augmentation (`declare module`,
   `declare global`), and ambient `*.d.ts` files.
 - knip hits in a workspace or entry point that its configuration does not
-  describe: correct the analysis before reporting them. knip 6.48 reports
-  every module that only a page's inline `<script type="module">` imports
-  as an unused file: copy each inline script into a file in the throwaway
-  checkout and name it as an entry.
+  describe: correct the analysis before reporting them. knip (6.48) reads
+  HTML only through its Vite plugin (enabled by a `vite`, `vitest` or
+  `vite-plus` dependency), for the root `index.html` and the `.html` files
+  in `build.rollupOptions.input`, following module scripts' `src` and
+  relative imports in inline module scripts. Modules that only another
+  page, a classic `<script src>` or an import-map specifier loads, or any
+  page in a project without Vite, come back as unused files: name them as
+  entries in the configuration you pass.
 
 ## Verification
 

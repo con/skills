@@ -24,8 +24,8 @@ from the theme, and break when Vuetify's internal DOM changes. Adding a
 `<style>` block to a component is a signal to stop and look for the prop.
 
 It is written for Vuetify 3 with vue-router 4, and the rules come from
-the review history of dandi-archive's web frontend. Vuetify 2 is left
-out.
+the review history of dandi-archive's web frontend (its
+`vuetify-component-api` skill). Vuetify 2 is left out.
 
 ## Recognize
 
@@ -97,9 +97,6 @@ route's path requires.
 
 ## Not findings
 
-- `router.push` for navigation that is not a click on a thing:
-  redirecting after a form submit, reacting to a search, syncing query
-  parameters.
 - CSS for something Vuetify has no prop or utility class for, with a
   comment saying what.
 - A component with both `:href` and `:to` bound, one of them `undefined`.
@@ -118,6 +115,3 @@ For a linked component, in a dev server or deploy preview:
   shows no `Missing required param`;
 - an end-to-end test covers the page, as dandi-archive's
   `e2e/tests/fileBrowserPage.spec.ts` does for its file browser.
-
-These rules come from dandi-archive's `vuetify-component-api` skill, by
-the same author, adapted so that other projects can install them.

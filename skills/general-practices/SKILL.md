@@ -150,5 +150,6 @@ depending on `general-practices`) with those two files, a row in
 and an entry under `dependencies` in `review-repo-code-quality`'s and
 `review-org-code-quality`'s `apm.yml`. A framework gets its own guide the
 same way, `<language>-<framework>-practices`, holding only what the
-framework adds; it names the guide it builds on, and its `apm.yml`
-depends on that guide.
+framework adds (its `references/review.md` may then hold only the
+sections where it adds something); it names the guide it builds on, and
+its `apm.yml` depends on that guide.

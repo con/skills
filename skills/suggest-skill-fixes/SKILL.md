@@ -87,9 +87,9 @@ Suggested by: con/skills `suggest-skill-fixes` v{version} for `{calling skill}` 
   does (`../code-quality-report-conventions/report-conventions.md`). If that
   skill is not installed, use `git -C {skill dir} rev-parse --short HEAD`
   only when `git -C {skill dir} rev-parse --show-prefix` prints
-  `skills/{calling skill}/` (the directory is part of a checkout of the
-  collection, not a copy installed inside another project, whose commit
-  that command would name instead); otherwise `source commit unknown`. In a pull request body it is a commit SHA
+  `skills/{calling skill}/` and `git -C {skill dir} ls-files --error-unmatch
+  SKILL.md` succeeds (a checkout of the collection, not a copy installed in
+  another project); otherwise `source commit unknown`. In a pull request body it is a commit SHA
   (with or without `con/skills@`) or `source commit unknown`, never a local
   path or URL.
 - **A calling skill's own stamp** records this skill as its own rules say

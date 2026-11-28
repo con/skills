@@ -133,10 +133,12 @@ disagree, trust the source commit.
   reading them. Say in Method & limits which checks apply and how each
   was checked, including any that could not be run.
 - **Security-sensitive findings** — hardcoded credentials, over-broad
-  access, unpatched CVEs, internal hosts, secrets in logs — go only to a
+  access, unpublished vulnerabilities, internal hosts, secrets in logs — go only to a
   private location the request names, never into the default path of a
   public repository. Without such a location, leave them out of every
-  report and say in its summary how many were withheld. The detail then
+  report and say in its summary
+  `N security-sensitive findings withheld; no private location given`.
+  The detail then
   goes in the closing reply and nowhere else, and only when a person
   started the review in a conversation and that reply reaches them alone;
   the summary adds `reported to the requester in the review session`. A
