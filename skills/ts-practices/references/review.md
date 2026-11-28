@@ -68,7 +68,7 @@ Step 1 shows.
 
 Plain `tsc` does not read `.vue` files; `ts-vue-practices` names the
 wrapper that does. Check what each tsc run covers: `tsc --listFilesOnly -p <tsconfig>` must
-list the sources. A solution-style root `tsconfig.json` (`"files": []`
+list the sources; what it leaves out is a Checks item ("Dependencies and configuration"). A solution-style root `tsconfig.json` (`"files": []`
 with `references`) compiles nothing, so `tsc --noEmit` on it exits 0
 having checked no file. Run each command with `-p` on every referenced
 configuration instead. A configuration that itself has `references` fails
@@ -126,6 +126,17 @@ than passing that configuration itself.
 - **Default and named exports** mixed against the project's own rule
   (`CL`).
 - **One shape declared in several files** (`DUP`): export it once.
+- **Where a shared constant or helper goes**, when a finding proposes
+  one: a suite that automocks a module (`vi.mock("./x")` or
+  `jest.mock("./x")` with no factory) gets that module's functions as
+  stubs returning `undefined` and its arrays empty. An `as const` list or
+  a helper moved into such a module fails those suites, or lets them pass
+  while they no longer run the real code. List the mocks without a
+  factory
+  (`grep -rnE '(vi|jest)\.mock\((import\([^()]*\)|[^,()]+)\)' <tests>`;
+  the search misses a call split over lines and Jest's `automock: true`
+  setting, so look for those too) and choose a module none of them
+  names, or say which suites need a factory.
 
 **Types and idioms**
 
@@ -157,6 +168,12 @@ than passing that configuration itself.
 - `@types/*` packages for libraries that ship their own types (`DC`);
 - several `tsconfig` files repeating options instead of using `extends`
   (`CON`);
+- TypeScript files that no `tsconfig` covers, usually tests and stories
+  (`NV`: including them widens what CI enforces; with consent, say how
+  many errors a scratch configuration over them reports today). Until
+  they are covered, a rename or a changed signature goes unchecked
+  wherever it reaches them: count those uses, and rate such a change no
+  higher than **Medium**;
 - `package.json` scripts that repeat one another, or that nothing calls
   (`DUP`, `DC`; see Not findings for the scripts npm runs by name).
 
@@ -201,8 +218,10 @@ token there)
   dead; removing one is `NV`.
 - Files found by convention: file-system routes, configuration files that
   tools load (`*.config.*`), tests found by glob, service and web workers
-  loaded by URL, dynamic `import()` with a computed path, and modules
-  loaded by glob (`import.meta.glob`, webpack `require.context`).
+  loaded by URL, dynamic `import()` with a computed path, modules
+  loaded by glob (`import.meta.glob`, webpack `require.context`), and
+  modules an HTML page loads (a `<script src>`, or an import inside an
+  inline `<script type="module">`).
 - `package.json` scripts the package manager runs by name: lifecycle
   scripts (`prepare`, `prepublishOnly`, `prepack`, `postpack`,
   `preinstall`, `install`, `postinstall`, `version`, …) and the
@@ -215,7 +234,16 @@ token there)
   declaration merging and module augmentation (`declare module`,
   `declare global`), and ambient `*.d.ts` files.
 - knip hits in a workspace or entry point that its configuration does not
-  describe: correct the analysis before reporting them.
+  describe: correct the analysis before reporting them. knip (6.48) reads
+  HTML only through its Vite-family plugins (enabled by a `vite`, `vitest`,
+  `vite-plus` or `electron-vite` dependency), for the root `index.html` and
+  the `.html` files in `build.rollupOptions.input` (electron-vite instead:
+  `renderer.build.rollupOptions.input`, by default
+  `src/renderer/index.html`), following module scripts' `src` and
+  relative imports in inline module scripts. Modules that only another
+  page, a classic `<script src>` or an import-map specifier loads, or any
+  page in a project without Vite, come back as unused files: name them as
+  entries in the configuration you pass.
 
 ## Verification
 

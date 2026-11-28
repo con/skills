@@ -1,5 +1,5 @@
 name: suggest-skill-fixes
-version: "0.1.0"
+version: "0.1.1"
 description: "Shared closing step: suggest fixes to the skill a run used; not invoked directly"
 author: Cody C. Baker
 license: MIT

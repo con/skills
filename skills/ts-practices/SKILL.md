@@ -93,7 +93,8 @@ idiomatic.
 
 Exports reached from outside the source tree (`package.json` `exports`,
 `main`, `types`, `bin`, a library's published API), files found by
-convention (routes, `*.config.*`, test globs, workers, `import.meta.glob`),
+convention (routes, `*.config.*`, test globs, workers, `import.meta.glob`,
+modules an HTML page loads),
 scripts the package manager runs by name, side-effect imports,
 `declare module` / `declare global`, and ambient `*.d.ts` files. The full
 list is in [references/review.md](references/review.md).
