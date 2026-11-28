@@ -1,0 +1,91 @@
+{
+  "schema": 1,
+  "repo": "acme/widgets",
+  "pr": 42,
+  "head_sha": "0123456789abcdef0123456789abcdef01234567",
+  "domains": ["backend", "ci-infra"],
+  "reviewers": [
+    {"id": "correctness", "focus": "logic, failure paths, tests"},
+    {"id": "domain", "focus": "backend and ci-infra lenses"},
+    {"id": "project-fit", "focus": "project rules, consistency, docs"}
+  ],
+  "rounds": 2,
+  "summary": "Adds a `--retries` option to the command line and a greeting step to CI. The option works for the usual case, but both new shell commands run text that an outside contributor controls, so this cannot merge as is.",
+  "ci": "3 passed, 1 failed (`lint`: ruff E501 in `src/widgets/cli.py`)",
+  "findings": [
+    {
+      "tier": "blocking",
+      "title": "The pull request title is run as shell code in CI",
+      "body": "`${{ github.event.pull_request.title }}` is expanded into the script before the shell parses it, so a title such as `\"; curl …| sh; echo \"` runs arbitrary commands on the runner with this job's token. Pass it through an environment variable instead; the shell then treats it as data.",
+      "path": ".github/workflows/test.yml",
+      "start_line": 13,
+      "line": 15,
+      "suggestion": "      - name: Greet\n        env:\n          TITLE: ${{ github.event.pull_request.title }}\n        run: |\n          echo \"Testing $TITLE\"",
+      "confirmed_by": ["domain", "correctness"]
+    },
+    {
+      "tier": "blocking",
+      "title": "`shell=True` runs the name argument as a command",
+      "body": "`widgets 'x; rm -rf ~'` runs `rm -rf ~`: the f-string puts the argument into a shell command line. Pass a list and let `subprocess` quote nothing. `check=True` also makes a failed fetch visible instead of printing the greeting anyway.",
+      "path": "src/widgets/cli.py",
+      "line": 11,
+      "suggestion": "        subprocess.run([\"widget-fetch\", args.name], check=True)",
+      "confirmed_by": ["correctness", "domain"]
+    },
+    {
+      "tier": "should-fix",
+      "title": "Every retry runs even after a fetch succeeds",
+      "body": "The loop has no exit, so the default `--retries 3` fetches three times on every call. Stop after the first success, and re-raise the last error once the attempts are used up.",
+      "path": "src/widgets/cli.py",
+      "start_line": 10,
+      "line": 11,
+      "confirmed_by": ["correctness", "project-fit"]
+    },
+    {
+      "tier": "should-fix",
+      "title": "The README still shows the old usage",
+      "body": "`README.md:12` documents `widgets NAME` only. The project's CONTRIBUTING asks for user-facing options to be documented in the same pull request.",
+      "path": "README.md",
+      "line": 12,
+      "confirmed_by": ["project-fit", "domain"]
+    },
+    {
+      "tier": "optional",
+      "title": "Note the removal of `db/legacy.sql` in the changelog",
+      "body": "The file was the only record of how the old table was dropped. One line in `CHANGELOG.md` keeps that history findable.",
+      "path": "db/legacy.sql",
+      "start_line": 1,
+      "line": 2,
+      "side": "LEFT",
+      "confirmed_by": ["project-fit", "correctness"]
+    },
+    {
+      "tier": "optional",
+      "title": "No test covers `--retries`",
+      "body": "`tests/test_cli.py` exercises only the name argument. A test with a fake `widget-fetch` that fails once would pin down the retry behaviour fixed above.",
+      "path": "tests/test_cli.py",
+      "confirmed_by": ["project-fit", "lead"]
+    },
+    {
+      "tier": "nit",
+      "title": "`attempt` is never used",
+      "body": "Name the loop variable `_`, as the rest of the package does.",
+      "path": "src/widgets/cli.py",
+      "line": 10,
+      "suggestion": "    for _ in range(args.retries):",
+      "confirmed_by": ["project-fit", "correctness"]
+    }
+  ],
+  "checked": [
+    "`parse_args(argv)` keeps `main()` callable from tests, as the package's other entry points are",
+    "The new step runs on the same runner image and Python version as the existing ones"
+  ],
+  "ran": [
+    "ruff 0.16.9 with its own configuration (`--isolated --select E,F,B,S`) on the changed Python file: S602 at `src/widgets/cli.py:11`",
+    "actionlint 1.7.7 on a copy of the workflow: no errors"
+  ],
+  "not_checked": [
+    "The test suite: running the pull request's code was not authorized",
+    "Behaviour on Windows, which CI does not cover"
+  ]
+}

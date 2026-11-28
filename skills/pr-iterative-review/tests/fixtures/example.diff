@@ -1,0 +1,41 @@
+diff --git a/.github/workflows/test.yml b/.github/workflows/test.yml
+index 1111111..2222222 100644
+--- a/.github/workflows/test.yml
++++ b/.github/workflows/test.yml
+@@ -10,6 +10,9 @@ jobs:
+     runs-on: ubuntu-latest
+     steps:
+       - uses: actions/checkout@v4
++      - name: Greet
++        run: |
++          echo "Testing ${{ github.event.pull_request.title }}"
+       - uses: actions/setup-python@v5
+         with:
+           python-version: "3.12"
+diff --git a/db/legacy.sql b/db/legacy.sql
+deleted file mode 100644
+index 5555555..0000000
+--- a/db/legacy.sql
++++ /dev/null
+@@ -1,2 +0,0 @@
+--- legacy table, unused since 2.0
+-DROP TABLE IF EXISTS widgets_old;
+diff --git a/src/widgets/cli.py b/src/widgets/cli.py
+index 3333333..4444444 100644
+--- a/src/widgets/cli.py
++++ b/src/widgets/cli.py
+@@ -1,8 +1,12 @@
+ import argparse
++import subprocess
+ 
+ 
+-def main():
++def main(argv=None):
+     parser = argparse.ArgumentParser()
+     parser.add_argument("name")
+-    args = parser.parse_args()
++    parser.add_argument("--retries", type=int, default=3)
++    args = parser.parse_args(argv)
++    for attempt in range(args.retries):
++        subprocess.run(f"widget-fetch {args.name}", shell=True)
+     print(f"Hello, {args.name}")
