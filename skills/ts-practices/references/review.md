@@ -132,10 +132,11 @@ than passing that configuration itself.
   stubs returning `undefined` and its arrays empty. An `as const` list or
   a helper moved into such a module fails those suites, or lets them pass
   while they no longer run the real code. List the mocks without a
-  factory (`grep -rnE '(vi|jest)\.mock\((import\([^()]*\)|[^,()]+)\)' <tests>`; the search
-  misses a call split over lines and Jest's
-  `automock: true` setting, so look for those too) and choose a
-  module none of them names, or say which suites need a factory.
+  factory
+  (`grep -rnE '(vi|jest)\.mock\((import\([^()]*\)|[^,()]+)\)' <tests>`;
+  the search misses a call split over lines and Jest's `automock: true`
+  setting, so look for those too) and choose a module none of them
+  names, or say which suites need a factory.
 
 **Types and idioms**
 
@@ -235,8 +236,10 @@ token there)
 - knip hits in a workspace or entry point that its configuration does not
   describe: correct the analysis before reporting them. knip (6.48) reads
   HTML only through its Vite-family plugins (enabled by a `vite`, `vitest`,
-  `vite-plus` or `electron-vite` dependency), for the root `index.html` and the `.html` files
-  in `build.rollupOptions.input`, following module scripts' `src` and
+  `vite-plus` or `electron-vite` dependency), for the root `index.html` and
+  the `.html` files in `build.rollupOptions.input` (electron-vite instead:
+  `renderer.build.rollupOptions.input`, by default
+  `src/renderer/index.html`), following module scripts' `src` and
   relative imports in inline module scripts. Modules that only another
   page, a classic `<script src>` or an import-map specifier loads, or any
   page in a project without Vite, come back as unused files: name them as
