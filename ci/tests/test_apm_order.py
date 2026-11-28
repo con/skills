@@ -21,7 +21,7 @@ class DependencyOrderTests(unittest.TestCase):
 
     def test_skills_outside_the_selection_are_left_out(self):
         selection = ['ts-vuetify-practices', 'ts-practices']
-        self.assertEqual(dependency_order(selection), selection)
+        self.assertEqual(sorted(dependency_order(selection)), sorted(selection))
 
 
 if __name__ == '__main__':

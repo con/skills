@@ -59,7 +59,7 @@ def with_dependencies(selection: list[str]) -> list[str]:
 
 
 def dependency_order(selection: list[str]) -> list[str]:
-    """``selection`` with every skill before the skills it depends on, else sorted.
+    """``selection`` with every skill before the skills it depends on, else in reverse name order.
 
     apm-cli 0.31 records a local package as resolved by the first other
     listed skill that depends on it, and its audit fails (``ambiguous

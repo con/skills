@@ -75,12 +75,14 @@ disagree, trust the source commit.
   access, unpatched CVEs, internal hosts, secrets in logs — go only to a
   private location the request names, never into the default path of a
   public repository. Without such a location, leave them out of every
-  report and say in its summary how many were withheld. Check visibility first
-  (`gh repo view --json visibility`, or the remote URL and the hosting
-  site). Never quote a secret value; cite `file:line` only. Everything
-  else may go in the default path. A public report then says, in its
-  summary, `N security-sensitive findings withheld; see <location>`,
-  so the reader knows the companion exists.
+  report and say in its summary
+  `N security-sensitive findings withheld; no private location given`.
+  Check visibility first (`gh repo view --json visibility`, or the remote
+  URL and the hosting site). Never quote a secret value; cite
+  `file:line` only. Everything else may go in the default path. A public
+  report then says, in its summary,
+  `N security-sensitive findings withheld; see <location>`, so the reader
+  knows the companion exists.
 - **Do not commit or push** unless the request says to. Report the path.
 
 ## 3. Evidence rules
